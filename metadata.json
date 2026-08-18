@@ -1,0 +1,6 @@
+{
+  "name": "Apple Store Online",
+  "description": "Trang Cửa Hàng Apple Trực Tuyến với đầy đủ sản phẩm, phụ kiện, ưu đãi giáo dục và hỗ trợ chuyên gia.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
