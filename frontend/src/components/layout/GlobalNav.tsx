@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom';
 
 // Mega menu data for each nav item
 const megaMenuData: Record<string, { title: string; links: string[] }[]> = {
-  'Cửa Hàng': [
+  'Cửa hàng': [
     { title: 'Mua Hàng', links: ['Mua Sắm Sản Phẩm Mới Nhất', 'Mac', 'iPad', 'iPhone', 'Apple Watch', 'AirPods', 'Phụ Kiện'] },
     { title: 'Liên Kết Nhanh', links: ['Tình Trạng Đơn Hàng', 'Apple Trade In', 'Tài Chính', 'Ưu Đãi Sinh Viên'] },
     { title: 'Cửa Hàng Đặc Biệt', links: ['Giáo Dục', 'Doanh Nghiệp'] },
@@ -37,7 +37,7 @@ const megaMenuData: Record<string, { title: string; links: string[] }[]> = {
     { title: 'Mức giá', links: ['Trên 25 triệu', 'Từ 20 đến 25 triệu', 'Từ 15 đến 20 triệu', 'Từ 10 đến 15 triệu', 'Từ 5 đến 10 triệu', 'Dưới 5 triệu'] },
     { title: 'Sản phẩm hot 🔥', links: ['Apple Watch Series 11 42mm GPS', 'Apple Watch SE 3 2025 40mm GPS', 'Apple Watch Ultra 3 49mm LTE', 'Apple Watch Series 10 42mm GPS', 'Apple Watch Series 10 46mm GPS'] },
   ],
-  'Hỗ Trợ': [
+  'Hỗ trợ': [
     { title: 'Tìm Trợ Giúp', links: ['iPhone', 'Mac', 'iPad', 'Watch', 'AirPods', 'Bảo Hành'] },
     { title: 'Chủ Đề Hữu Ích', links: ['Mua AppleCare+', 'Tài Khoản Apple', 'Thanh Toán'] },
     { title: 'Liên Hệ', links: ['Nhận Hỗ Trợ', 'Cộng Đồng'] },
@@ -147,7 +147,7 @@ export function GlobalNav() {
         {/* Mobile Navigation Drawer */}
         {mobileMenuOpen && (
           <div className="md:hidden bg-[#1d1d1f] border-t border-neutral-800 px-6 py-6 space-y-4 text-sm text-neutral-200">
-            <Link to="/" className="block py-1 hover:text-white">Cửa Hàng</Link>
+            <Link to="/" className="block py-1 hover:text-white">Cửa hàng</Link>
             <Link to="/" className="block py-1 hover:text-white">Mac</Link>
             <Link to="/" className="block py-1 hover:text-white">iPad</Link>
             <Link to="/" className="block py-1 hover:text-white">iPhone</Link>
@@ -156,7 +156,7 @@ export function GlobalNav() {
             <Link to="/" className="block py-1 hover:text-white">TV & Nhà</Link>
             <Link to="/" className="block py-1 hover:text-white">Giải Trí</Link>
             <Link to="/" className="block py-1 hover:text-white">Phụ Kiện</Link>
-            <Link to="/" className="block py-1 hover:text-white">Hỗ Trợ</Link>
+            <Link to="/" className="block py-1 hover:text-white">Hỗ trợ</Link>
           </div>
         )}
       </nav>
