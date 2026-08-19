@@ -1,6 +1,7 @@
 import React from 'react';
 import Spline from '@splinetool/react-spline';
-import { ArrowRight, ChevronRight } from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 export function HeroSection() {
   return (
@@ -27,13 +28,12 @@ export function HeroSection() {
               với chính sách bảo hành chính hãng và vô vàn ưu đãi—<span className="text-[#84cc16]">trải nghiệm mua sắm tuyệt vời chưa từng có.</span>
             </p>
             <div className="flex items-center space-x-4 pt-2">
-              <button 
+              <Link
+                to="/iphone"
                 className="px-8 py-4 group rounded-full font-bold transition-all duration-300 flex items-center bg-[#22c55e] hover:bg-[#0a2540] text-white shadow-lg shadow-green-500/30"
               >
                 Mua sắm ngay <ChevronRight className="w-5 h-5 ml-1 group-hover:translate-x-1 transition-transform" />
-              </button>
-              <button className="px-6 py-3 text-[#0a2540] font-medium hover:text-[#22c55e] transition-colors flex items-center">
-              </button>
+              </Link>
             </div>
           </div>
         </section>

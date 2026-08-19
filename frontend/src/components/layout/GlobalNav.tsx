@@ -10,12 +10,12 @@ const megaMenuData: Record<string, { title: string; links: string[] }[]> = {
     { title: 'Liên Kết Nhanh', links: ['Tình Trạng Đơn Hàng', 'Apple Trade In', 'Tài Chính', 'Ưu Đãi Sinh Viên'] },
     { title: 'Cửa Hàng Đặc Biệt', links: ['Giáo Dục', 'Doanh Nghiệp'] },
   ],
-  'LapTop': [
+  'Laptop': [
     { title: 'Dòng máy', links: ['MacBook Neo', 'Macbook Air', 'Macbook Pro', 'iMac', 'Mac Studio', 'Mac Mini'] },
     { title: 'Mức giá', links: ['Trên 50 triệu', 'Từ 40 đến 50 triệu', 'Từ 30 đến 40 triệu', 'Từ 20 đến 30 triệu', 'Dưới 20 triệu'] },
     { title: 'Sản phẩm HOT 🔥', links: ['MacBook Neo A18 Pro', 'Macbook Air M5 2026', 'MacBook Pro M5 2026', 'MacBook Pro M5 2025', 'MacBook Air M4 2025', 'MacBook Air M2 13 inch'] },
   ],
-  'TabLet': [
+  'Tablet': [
     { title: 'Dòng máy', links: ['iPad (Apple)', 'Samsung Tab', 'Xiaomi'] },
     { title: 'Mức giá', links: ['Trên 25 triệu', 'Từ 20 đến 25 triệu', 'Từ 15 đến 20 triệu', 'Từ 10 đến 15 triệu', 'Từ 5 đến 10 triệu', 'Dưới 5 triệu'] },
     { title: 'Sản phẩm HOT 🔥', links: ['iPad Air M4', 'iPad Pro M5', 'iPad Air M3', 'iPad A16', 'iPad mini 7'] },
@@ -25,7 +25,7 @@ const megaMenuData: Record<string, { title: string; links: string[] }[]> = {
     { title: 'Mua Sắm iPhone', links: ['Mua iPhone', 'Phụ kiện iPhone', 'Apple Trade In', 'Tài chính hỗ trợ'] },
     { title: 'Tìm Hiểu Thêm', links: ['Apple Intelligence', 'iOS 18', 'AppleCare+'] }
   ],
-  'SmartPhone': [
+  'Smartphone': [
     { title: 'Dòng máy', links: ['iPhone (Apple)', 'Samsung', 'Xiaomi', 'OPPO'] },
     { title: 'Mức giá điện thoại', links: ['Trên 20 triệu', 'Từ 10 đến 20 triệu', 'Dưới 10 triệu'] },
     { title: 'Điện thoại HOT 🔥', links: ['iPhone 17 Pro Max', 'iPhone 17 Pro', 'iPhone 17', 'iPhone Air', 'iPhone 17e', 'iPhone 16 Plus', 'iPhone 16', 'iPhone 15 Plus'] },
@@ -44,7 +44,7 @@ const megaMenuData: Record<string, { title: string; links: string[] }[]> = {
   ],
 };
 
-const navItems = ['Cửa Hàng', 'LapTop', 'TabLet', 'iPhone', 'SmartPhone', 'Watch', 'Hỗ Trợ'];
+const navItems = ['Cửa hàng', 'Laptop', 'Tablet', 'iPhone', 'Smartphone', 'Watch', 'Hỗ trợ'];
 
 export function GlobalNav() {
   const { mobileMenuOpen, toggleMobileMenu } = useAppStore();
@@ -69,7 +69,7 @@ export function GlobalNav() {
       >
         <div className="max-w-[1024px] mx-auto px-4 h-[44px] flex items-center justify-between">
           <Link to="/" className="hover:opacity-80 transition-opacity" onClick={handleCloseMenu}>
-            <img src="/images/logo.png" alt="H&M Logo" className="h-7 w-auto object-contain" />
+            <img src="/images/logo.png" alt="Logo cửa hàng" className="h-7 w-auto object-contain" />
           </Link>
 
           {/* Desktop Nav Links */}
