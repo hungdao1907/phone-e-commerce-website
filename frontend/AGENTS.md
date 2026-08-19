@@ -203,3 +203,19 @@ After a coding task, summarize:
 - remaining relevant issues
 
 Keep the report concise.
+
+## Project Design Documentation
+
+For UI, layout, styling or visual design work, read:
+
+`docs/DESIGN_SYSTEM.md`
+
+For animation, interaction or motion work, read:
+
+`docs/MOTION_SYSTEM.md`
+
+Do not invent a new design or motion language without checking these documents first.
+
+Only read these documents when they are relevant to the requested task.
+
+Only read these documents when they are relevant
