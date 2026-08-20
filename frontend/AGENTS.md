@@ -1,14 +1,14 @@
-# Project: Phone E-commerce Frontend
+# Dự án: Frontend thương mại điện tử điện thoại
 
-## Project Goal
+## Mục tiêu dự án
 
-Build a premium, modern e-commerce frontend for phones, laptops and accessories.
+Xây dựng frontend thương mại điện tử cao cấp, hiện đại cho điện thoại, laptop và phụ kiện.
 
-Current priority is frontend UI/UX only.
+Ưu tiên hiện tại chỉ là UI/UX frontend.
 
-Backend, database, authentication, inventory, admin logic and payment integration will be implemented later.
+Backend, cơ sở dữ liệu, xác thực, tồn kho, logic quản trị và tích hợp thanh toán sẽ được triển khai sau.
 
-## Current Stack
+## Tech stack hiện tại
 
 - React 19
 - TypeScript
@@ -23,9 +23,9 @@ Backend, database, authentication, inventory, admin logic and payment integratio
 - Spline
 - Lucide React
 
-## Current Architecture
+## Kiến trúc hiện tại
 
-Important existing areas:
+Các khu vực quan trọng đang có:
 
 - `src/pages`
 - `src/components/layout`
@@ -33,189 +33,191 @@ Important existing areas:
 - `src/data`
 - `src/store`
 
-Existing routes:
+Các route hiện có:
 
 - `/`
 - `/iphone`
 
-The existing iPhone 3D experience is important and must be preserved unless explicitly requested.
+Trải nghiệm iPhone 3D hiện có là quan trọng và phải được giữ nguyên, trừ khi có yêu cầu rõ ràng.
 
-## Frontend Priorities
+## Ưu tiên frontend
 
-Prioritize:
+Ưu tiên theo thứ tự:
 
-1. visual quality
+1. chất lượng hình ảnh
 2. layout
-3. responsive behavior
-4. interaction
+3. hành vi responsive
+4. tương tác
 5. animation
 6. accessibility
-7. clean reusable components
+7. component sạch, có thể tái sử dụng
 
-Do not prioritize backend architecture yet.
+Chưa ưu tiên kiến trúc backend ở giai đoạn này.
 
-## Design Direction
+## Hướng thiết kế
 
-The UI should feel:
+UI cần tạo cảm giác:
 
-- premium
-- clean
-- modern
-- spacious
-- product-focused
-- visually creative
-- motion-rich but not chaotic
+- cao cấp
+- sạch sẽ
+- hiện đại
+- thoáng
+- tập trung vào sản phẩm
+- sáng tạo về thị giác
+- giàu motion nhưng không hỗn loạn
 
-Avoid generic AI-generated SaaS styling.
+Tránh phong cách SaaS chung chung do AI tạo ra.
 
-Avoid:
+Tránh:
 
-- excessive gradients
-- excessive glassmorphism
-- random neon glow
-- excessive rounded cards
-- unnecessary dashboard-like styling
-- excessive animation
-- inconsistent visual languages
+- gradient quá mức
+- glassmorphism quá mức
+- neon glow ngẫu nhiên
+- card bo góc quá nhiều
+- phong cách giống dashboard không cần thiết
+- animation quá mức
+- các ngôn ngữ thị giác không nhất quán
 
-Use strong visual hierarchy.
+Sử dụng visual hierarchy rõ ràng.
 
-## Motion Direction
+## Hướng motion
 
-Animation is an important part of this project.
+Animation là một phần quan trọng của dự án.
 
-Prefer:
+Ưu tiên:
 
-- smooth section reveals
-- staggered elements
-- subtle card interactions
-- image depth
-- scroll-based storytelling where appropriate
-- premium transitions
-- transform and opacity based animations
+- section reveal mượt mà
+- phần tử xuất hiện theo stagger
+- tương tác card tinh tế
+- chiều sâu cho hình ảnh
+- kể chuyện dựa trên scroll khi phù hợp
+- transition cao cấp
+- animation dựa trên `transform` và `opacity`
 
-Avoid:
+Tránh:
 
-- excessive bouncing
-- spinning
-- aggressive scaling
-- constant infinite animation without purpose
-- distracting motion
+- bounce quá mức
+- xoay tròn
+- scale mạnh
+- animation lặp vô hạn liên tục không có mục đích
+- motion gây xao nhãng
 
-Respect reduced-motion preferences where practical.
+Tôn trọng tuỳ chọn reduced motion khi phù hợp.
 
-## React Rules
+## Quy tắc React
 
-- Use functional components.
-- Use TypeScript.
-- Avoid `any`.
-- Keep components focused.
-- Reuse components instead of duplicating markup.
-- Avoid unnecessary `useEffect`.
-- Avoid unnecessary global state.
-- Do not introduce abstractions without a clear benefit.
+- Dùng functional component.
+- Dùng TypeScript.
+- Tránh `any`.
+- Giữ component tập trung vào một trách nhiệm.
+- Tái sử dụng component thay vì lặp lại markup.
+- Tránh `useEffect` không cần thiết.
+- Tránh global state không cần thiết.
+- Không tạo abstraction nếu không có lợi ích rõ ràng.
 
-## Styling Rules
+## Quy tắc styling
 
-- Use Tailwind CSS as the primary styling approach.
-- Follow existing project conventions.
-- Keep mobile responsiveness in mind.
-- Avoid adding a new styling library without explicit approval.
-- Avoid large global CSS changes for a local component task.
+- Dùng Tailwind CSS làm phương thức styling chính.
+- Tuân theo convention hiện có của dự án.
+- Luôn cân nhắc responsive trên mobile.
+- Không thêm thư viện styling mới nếu chưa được phê duyệt rõ ràng.
+- Tránh thay đổi global CSS lớn cho một task component cục bộ.
 
-## Data Rules
+## Quy tắc dữ liệu
 
-For now:
+Ở giai đoạn hiện tại:
 
-- use mock frontend data
-- do not design backend/database schemas unless requested
-- do not create fake APIs
-- do not add backend dependencies
+- dùng mock data cho frontend
+- không thiết kế schema backend/cơ sở dữ liệu nếu chưa được yêu cầu
+- không tạo API giả
+- không thêm dependency backend
 
-Product UI should remain easy to connect to a backend later.
+Product UI cần dễ kết nối với backend về sau.
 
-## Existing Feature Protection
+## Bảo vệ feature hiện có
 
-Unless explicitly requested, do not modify:
+Trừ khi có yêu cầu rõ ràng, không sửa:
 
 - `IphonePage.tsx`
-- the existing 3D viewer
-- GLB model files
-- Hero behavior
-- WaveGallery behavior
-- GlobalNav behavior
-- unrelated homepage sections
+- 3D viewer hiện có
+- các file GLB model
+- hành vi Hero
+- hành vi WaveGallery
+- hành vi GlobalNav
+- các homepage section không liên quan
 
-Do not refactor unrelated files as part of a small UI task.
+Không refactor file không liên quan trong một task UI nhỏ.
 
-## Dependency Rules
+## Quy tắc dependency
 
-Before installing a package:
+Trước khi cài một package:
 
-1. check whether an existing dependency already solves the problem
-2. prefer the current stack
-3. do not install a package for a trivial utility
-4. ask only if introducing the dependency would meaningfully affect architecture
+1. kiểm tra xem dependency hiện có đã giải quyết được vấn đề chưa
+2. ưu tiên stack hiện tại
+3. không cài package cho utility đơn giản
+4. chỉ hỏi khi dependency mới ảnh hưởng đáng kể đến kiến trúc
 
-## Workflow
+## Quy trình làm việc
 
-Before editing:
+Trước khi chỉnh sửa:
 
-1. inspect relevant existing files
-2. understand the current component/data flow
-3. keep the task scope narrow
+1. kiểm tra các file hiện có liên quan
+2. hiểu luồng component/dữ liệu hiện tại
+3. giữ phạm vi task hẹp
 
-For small well-defined tasks, implement directly.
+Với task nhỏ, được xác định rõ, hãy triển khai trực tiếp.
 
-For architecture-changing tasks, produce a short plan before implementation.
+Với task làm thay đổi kiến trúc, hãy lập kế hoạch ngắn trước khi triển khai.
 
-After editing:
+Sau khi chỉnh sửa:
 
-1. run `npm run lint`
-2. run `npm run build` when appropriate
-3. fix errors caused by the changes
-4. review the diff for unrelated modifications
+1. chạy `npm run lint`
+2. chạy `npm run build` khi phù hợp
+3. sửa các lỗi do thay đổi gây ra
+4. review diff để phát hiện thay đổi không liên quan
 
 ## Git
 
-Current development branch:
+Branch phát triển hiện tại:
 
 `Minh`
 
-Do not:
+Không:
 
-- switch branches
-- commit automatically
-- run `git add .`
+- chuyển branch
+- tự động commit
+- chạy `git add .`
 - reset history
-- modify Git configuration
+- thay đổi cấu hình Git
 
-unless explicitly asked.
+trừ khi được yêu cầu rõ ràng.
 
-## Final Response
+## Phản hồi cuối
 
-After a coding task, summarize:
+Sau một coding task, hãy tóm tắt:
 
-- files created
-- files modified
-- what changed
-- validation performed
-- remaining relevant issues
+- file được tạo
+- file được chỉnh sửa
+- nội dung đã thay đổi
+- validation đã thực hiện
+- các vấn đề liên quan còn lại
 
-Keep the report concise.
+Giữ báo cáo ngắn gọn.
 
-## Project Design Documentation
+## Tài liệu thiết kế của dự án
 
-For UI, layout, styling or visual design work, read:
+Với công việc UI, layout, styling hoặc visual design, hãy đọc:
 
 `docs/DESIGN_SYSTEM.md`
 
-For animation, interaction or motion work, read:
+Với công việc animation, interaction hoặc motion, hãy đọc:
 
 `docs/MOTION_SYSTEM.md`
 
-Do not invent a new design or motion language without checking these documents first.
+Không tạo một ngôn ngữ thiết kế hoặc motion mới nếu chưa kiểm tra các tài liệu này.
 
-Only read these documents when they are relevant to the requested task.
+Khi task yêu cầu hoặc phù hợp với việc đánh giá thiết kế frontend, hãy dùng `$design-taste-frontend` theo hướng dẫn có sẵn.
 
-Only read these documents when they are relevant
+Chỉ đọc các tài liệu này khi chúng liên quan đến task được yêu cầu.
+
+Chỉ đọc các tài liệu này khi chúng liên quan.

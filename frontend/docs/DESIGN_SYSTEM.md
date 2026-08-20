@@ -1,325 +1,331 @@
-# Design System
+# Hệ thống thiết kế
 
-## Project Direction
+## Định hướng dự án
 
-This project is a premium consumer technology e-commerce frontend.
+Dự án này là frontend thương mại điện tử công nghệ tiêu dùng cao cấp.
 
-The visual direction should feel:
+Hướng thị giác cần tạo cảm giác:
 
-- premium
-- modern
-- spacious
+- cao cấp
+- hiện đại
+- thoáng
 - editorial
-- product-focused
-- clean
-- motion-rich but controlled
+- tập trung vào sản phẩm
+- sạch sẽ
+- giàu motion nhưng có kiểm soát
 
-The website should not look like a generic SaaS dashboard or an AI-generated template.
+Website không được trông như dashboard SaaS chung chung hoặc template do AI tạo ra.
 
 ---
 
-## Design Principles
+## Nguyên tắc thiết kế
 
-### 1. Product First
+### 1. Ưu tiên sản phẩm
 
-Products, imagery and typography should carry the visual hierarchy.
+Sản phẩm, hình ảnh và typography phải dẫn dắt visual hierarchy.
 
-Avoid adding decorative elements that compete with the product.
+Tránh thêm các chi tiết trang trí cạnh tranh với sản phẩm.
 
-### 2. Spacious Layout
+### 2. Layout thoáng
 
-Use generous spacing between major sections.
+Sử dụng khoảng cách rộng rãi giữa các section chính.
 
-Do not make the interface unnecessarily dense.
+Không làm giao diện dày đặc một cách không cần thiết.
 
-### 3. Strong Hierarchy
+### 3. Hierarchy rõ ràng
 
-Use clear differences between:
+Tạo khác biệt rõ rệt giữa:
 
 - eyebrow text
-- section headings
-- body copy
+- tiêu đề section
+- nội dung body
 - metadata
-- CTA labels
+- nhãn CTA
 
-### 4. Controlled Accent Color
+### 4. Accent color có kiểm soát
 
-Green is the primary accent color.
+Xanh lá là accent color chính.
 
-Use it for:
+Dùng màu này cho:
 
-- primary CTA
-- active states
-- small highlights
-- selected controls
-- subtle interaction feedback
+- CTA chính
+- trạng thái active
+- điểm nhấn nhỏ
+- control được chọn
+- phản hồi tương tác tinh tế
 
-Do not use green glow everywhere.
+Không dùng green glow ở mọi nơi.
 
-### 5. Immersive Moments
+### 5. Những khoảnh khắc immersive
 
-Only selected sections should feel highly immersive.
+Chỉ một số section được chọn mới nên mang cảm giác immersive mạnh.
 
-Examples:
+Ví dụ:
 
 - Hero
-- 3D product showcase
+- phần giới thiệu sản phẩm 3D
 - WaveGallery
 
-Commerce UI such as ProductCard, filters and cart should remain calmer.
+Commerce UI như ProductCard, filter và cart nên yên tĩnh hơn.
 
 ---
 
-## Color System
+## Hệ thống màu
 
 ### Background
 
-Primary background:
+Background chính:
 
 `#F5F5F7`
 
-White surface:
+Surface trắng:
 
 `#FFFFFF`
 
-Dark immersive surface:
+Surface immersive tối:
 
-Use a very dark navy or forest tone when needed.
+Dùng tông navy hoặc forest rất tối khi cần.
 
-Avoid using many unrelated dark colors.
+Tránh dùng nhiều màu tối không liên quan.
 
-### Text
+### Văn bản
 
-Primary text:
+Văn bản chính:
 
 `#1D1D1F`
 
-Secondary text:
+Văn bản phụ:
 
 `#6E6E73`
 
-Muted text should remain readable.
+Văn bản muted vẫn phải dễ đọc.
 
 ### Accent
 
-Primary accent:
+Accent chính:
 
-Green currently used by the project.
+Màu xanh lá hiện đang được dự án sử dụng.
 
-Use the existing project green consistently unless the design system is intentionally changed later.
+Dùng nhất quán màu xanh lá hiện có của dự án, trừ khi design system được thay đổi có chủ đích sau này.
 
-Do not introduce multiple competing accent colors.
+Không đưa vào nhiều accent color cạnh tranh với nhau.
 
 ---
 
-## Color Balance
+## Cân bằng màu sắc
 
-Target approximately:
+Mục tiêu xấp xỉ:
 
-- 80% neutral / light surfaces
-- 15% dark immersive sections
+- 80% surface trung tính / sáng
+- 15% section immersive tối
 - 5% accent color
 
-This is a guideline, not a strict formula.
+Đây là hướng dẫn, không phải công thức cứng.
 
 ---
 
 ## Typography
 
-Primary body font:
+Font body chính:
 
 Inter
 
-Display typography may use the existing Anton font when appropriate.
+Display typography có thể dùng Anton hiện có khi phù hợp.
 
 ### Hierarchy
 
-Large display headings:
-- bold
-- high contrast
-- generous line-height control
+Tiêu đề display lớn:
 
-Section headings:
-- strong but smaller than hero text
+- đậm
+- tương phản cao
+- kiểm soát line-height rộng rãi
+
+Tiêu đề section:
+
+- nổi bật nhưng nhỏ hơn Hero text
 
 Body:
-- readable
-- restrained line length
+
+- dễ đọc
+- độ dài dòng tiết chế
 
 Metadata / eyebrow:
-- smaller
-- uppercase when appropriate
-- increased letter spacing
 
-Avoid using too many font sizes in a single section.
+- nhỏ hơn
+- viết hoa khi phù hợp
+- letter spacing lớn hơn
+
+Tránh dùng quá nhiều cỡ chữ trong một section.
 
 ---
 
 ## Layout
 
-Prefer centered containers.
+Ưu tiên container căn giữa.
 
-Typical maximum content width:
+Chiều rộng nội dung tối đa phổ biến:
 
-`1280px` to `1440px`
+`1280px` đến `1440px`
 
-Use responsive horizontal padding.
+Dùng horizontal padding responsive.
 
-Suggested pattern:
+Mẫu gợi ý:
 
 - mobile: 16px
 - tablet: 24px
-- desktop: 32px or more when appropriate
+- desktop: 32px hoặc lớn hơn khi phù hợp
 
-Do not make every section full-width if content readability suffers.
+Không làm mọi section full-width nếu điều đó làm giảm khả năng đọc nội dung.
 
 ---
 
-## Section Structure
+## Cấu trúc section
 
-A typical content section should follow:
+Một content section điển hình nên theo thứ tự:
 
 Eyebrow
 → Heading
 → Supporting text
 → Content
-→ Optional CTA
+→ CTA tuỳ chọn
 
-Do not force this structure when the section does not need all elements.
+Không ép cấu trúc này lên section không cần đủ các thành phần.
 
 ---
 
 ## Spacing
 
-Use consistent spacing rhythm.
+Dùng nhịp spacing nhất quán.
 
-Prefer a small set of spacing values instead of arbitrary values everywhere.
+Ưu tiên một nhóm giá trị spacing nhỏ thay vì giá trị tuỳ ý ở khắp nơi.
 
-Major sections should have generous vertical separation.
+Các section chính cần có khoảng cách dọc rộng rãi.
 
-Product cards and commerce UI should use tighter spacing than hero sections.
-
----
-
-## Border Radius
-
-Use rounded corners carefully.
-
-Product cards:
-- medium to large radius
-
-Buttons:
-- consistent radius
-
-Do not apply large rounded corners to every container.
-
-Avoid creating a "card inside card inside card" visual hierarchy.
+Product card và commerce UI nên dùng spacing chặt hơn Hero section.
 
 ---
 
-## Shadows
+## Border radius
 
-Use shadows to communicate depth.
+Dùng bo góc một cách thận trọng.
 
-Prefer:
+Product card:
 
-- soft
-- wide
-- low-opacity
+- radius trung bình đến lớn
 
-Avoid:
+Button:
 
-- heavy black shadows
-- neon shadows
-- excessive floating effects
+- radius nhất quán
 
-Immersive components may use stronger depth when justified.
+Không áp dụng bo góc lớn cho mọi container.
+
+Tránh tạo visual hierarchy kiểu "card trong card trong card".
 
 ---
 
-## Product Cards
+## Shadow
 
-ProductCard should feel:
+Dùng shadow để thể hiện chiều sâu.
 
-- clean
-- premium
-- image-first
-- easy to scan
+Ưu tiên:
 
-Priority:
+- mềm
+- rộng
+- opacity thấp
 
-1. product image
-2. product name
-3. product price
-4. brand / metadata
-5. supporting actions
+Tránh:
 
-Avoid overcrowding cards.
+- shadow đen nặng
+- shadow neon
+- hiệu ứng nổi quá mức
 
-ProductCard should be reusable across:
+Component immersive có thể có chiều sâu mạnh hơn khi hợp lý.
+
+---
+
+## Product card
+
+ProductCard cần tạo cảm giác:
+
+- sạch sẽ
+- cao cấp
+- ưu tiên hình ảnh
+- dễ scan
+
+Thứ tự ưu tiên:
+
+1. hình ảnh sản phẩm
+2. tên sản phẩm
+3. giá sản phẩm
+4. thương hiệu / metadata
+5. hành động hỗ trợ
+
+Tránh nhồi quá nhiều nội dung vào card.
+
+ProductCard phải có thể tái sử dụng cho:
 
 - FeaturedProductsSection
 - ProductsPage
-- recommendations
+- gợi ý sản phẩm
 
-Special interaction effects may be applied only in a specific presentation context.
+Hiệu ứng tương tác đặc biệt chỉ được áp dụng trong bối cảnh trình bày cụ thể.
 
 ---
 
-## Product Images
+## Hình ảnh sản phẩm
 
-Use:
+Dùng:
 
 - `object-contain`
-- consistent image area
-- generous whitespace
+- vùng hình ảnh nhất quán
+- khoảng trắng rộng rãi
 
-Do not crop important product hardware unless intentionally designed.
+Không crop phần cứng quan trọng của sản phẩm trừ khi có chủ đích thiết kế.
 
-Keep image proportions stable across cards.
+Giữ tỷ lệ hình ảnh ổn định giữa các card.
 
 ---
 
-## Buttons
+## Button
 
 ### Primary
 
-Used for the main action.
+Dùng cho hành động chính.
 
-Examples:
+Ví dụ:
 
 - Mua ngay
 - Khám phá sản phẩm
 - Thêm vào giỏ hàng
 
-Primary actions may use the green accent.
+Hành động chính có thể dùng accent xanh lá.
 
 ### Secondary
 
-Should be quieter.
+Nên yên tĩnh hơn.
 
-Examples:
+Ví dụ:
 
 - Xem chi tiết
 - Tìm hiểu thêm
 
-Avoid multiple visually dominant CTA buttons inside the same small area.
+Tránh đặt nhiều CTA nổi bật về thị giác trong cùng một khu vực nhỏ.
 
 ---
 
 ## Navigation
 
-Preserve the current mega-menu architecture.
+Giữ nguyên kiến trúc mega-menu hiện có.
 
-Navigation should feel:
+Navigation cần tạo cảm giác:
 
-- minimal
-- precise
-- premium
+- tối giản
+- chính xác
+- cao cấp
 
-Naming should be consistent.
+Tên gọi phải nhất quán.
 
-Prefer:
+Ưu tiên:
 
 - Laptop
 - Tablet
@@ -328,7 +334,7 @@ Prefer:
 - Watch
 - Hỗ trợ
 
-Avoid inconsistent casing such as:
+Tránh cách viết hoa không nhất quán như:
 
 - LapTop
 - TabLet
@@ -336,68 +342,68 @@ Avoid inconsistent casing such as:
 
 ---
 
-## Homepage Visual Rhythm
+## Nhịp thị giác của homepage
 
-Preferred structure:
+Cấu trúc ưu tiên:
 
 Hero
-→ Brand transition / marquee
-→ Featured commerce content
-→ Immersive visual section
+→ Chuyển tiếp thương hiệu / marquee
+→ Nội dung thương mại nổi bật
+→ Section thị giác immersive
 → Footer
 
-The page should alternate between:
+Trang nên luân phiên giữa:
 
-calm
-→ emphasis
-→ calm
+bình tĩnh
+→ nhấn mạnh
+→ bình tĩnh
 → immersive
 
-Avoid making every section visually intense.
+Tránh làm mọi section đều quá mạnh về thị giác.
 
 ---
 
 ## Accessibility
 
-Always consider:
+Luôn cân nhắc:
 
-- readable contrast
-- semantic interactive elements
-- visible keyboard focus
-- useful image alt text
-- mobile touch targets
-- reduced motion where relevant
-
----
-
-## Anti-Patterns
-
-Avoid:
-
-- generic SaaS cards
-- excessive glassmorphism
-- excessive gradients
-- random neon glow
-- excessive pill-shaped UI
-- unnecessary dashboards
-- too many cards
-- too many badges
-- overly dense layouts
-- inconsistent spacing
-- decorative animation without purpose
-- introducing new visual languages inside isolated sections
+- độ tương phản dễ đọc
+- phần tử tương tác có ngữ nghĩa
+- keyboard focus hiển thị rõ
+- alt text hữu ích cho hình ảnh
+- touch target trên mobile
+- reduced motion khi liên quan
 
 ---
 
-## Existing Elements To Preserve
+## Anti-pattern
 
-Unless explicitly redesigning them:
+Tránh:
 
-- Spline hero experience
+- card SaaS chung chung
+- glassmorphism quá mức
+- gradient quá mức
+- neon glow ngẫu nhiên
+- UI dạng pill quá nhiều
+- dashboard không cần thiết
+- quá nhiều card
+- quá nhiều badge
+- layout quá dày đặc
+- spacing không nhất quán
+- animation trang trí không có mục đích
+- đưa ngôn ngữ thị giác mới vào các section riêng lẻ
+
+---
+
+## Các phần tử hiện có cần giữ nguyên
+
+Trừ khi đang redesign rõ ràng chúng:
+
+- trải nghiệm Spline Hero
 - iPhone 3D viewer
-- WaveGallery perspective interaction
-- current mega-menu architecture
-- large editorial typography
-- spacious homepage opening
+- tương tác phối cảnh WaveGallery
+- kiến trúc mega-menu hiện tại
+- typography editorial lớn
+- phần mở đầu homepage thoáng
 
-Improve around these elements rather than replacing them automatically.
+Hãy cải thiện xung quanh các phần tử này thay vì tự động thay thế chúng.

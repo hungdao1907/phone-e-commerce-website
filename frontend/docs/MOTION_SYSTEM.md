@@ -1,359 +1,361 @@
-# Motion System
+# Hệ thống motion
 
-## Motion Philosophy
+## Triết lý motion
 
-Motion is an important part of this project.
+Motion là một phần quan trọng của dự án.
 
-Animation should make the interface feel:
+Animation cần khiến giao diện tạo cảm giác:
 
-- premium
-- responsive
-- spatial
-- intentional
-- polished
+- cao cấp
+- phản hồi tốt
+- có chiều không gian
+- có chủ đích
+- hoàn thiện
 
-Motion must support visual hierarchy and interaction.
+Motion phải hỗ trợ visual hierarchy và tương tác.
 
-Do not animate elements only because animation is possible.
+Không animate phần tử chỉ vì có thể animate.
 
 ---
 
-## Motion Intensity
+## Cường độ motion
 
-There are three motion levels.
+Có ba cấp độ motion.
 
-### Level 1 — Functional
+### Level 1 — Chức năng
 
-Used for:
+Dùng cho:
 
-- buttons
-- links
-- hover states
-- focus states
-- dropdowns
+- button
+- link
+- hover state
+- focus state
+- dropdown
 
-Movement should be subtle.
+Chuyển động phải tinh tế.
 
-### Level 2 — Presentation
+### Level 2 — Trình bày
 
-Used for:
+Dùng cho:
 
-- section reveals
-- ProductCard interactions
-- image transitions
-- staggered content
+- section reveal
+- tương tác ProductCard
+- chuyển tiếp hình ảnh
+- nội dung xuất hiện theo stagger
 
-Movement can be more noticeable but should remain controlled.
+Chuyển động có thể dễ nhận thấy hơn nhưng vẫn phải có kiểm soát.
 
 ### Level 3 — Immersive
 
-Reserved for:
+Chỉ dành cho:
 
 - Hero 3D
 - iPhone 3D viewer
 - WaveGallery
-- future major storytelling sections
+- các section kể chuyện lớn trong tương lai
 
-Do not use Level 3 motion for ordinary commerce UI.
+Không dùng motion Level 3 cho commerce UI thông thường.
 
 ---
 
-## Core Motion Patterns
+## Các mẫu motion cốt lõi
 
-The project should reuse a small set of motion patterns.
+Dự án nên tái sử dụng một nhóm nhỏ motion pattern.
 
-### 1. Section Reveal
+### 1. Section reveal
 
-Use for major content entering the viewport.
+Dùng cho nội dung chính khi đi vào viewport.
 
-Typical starting state:
+Trạng thái bắt đầu điển hình:
 
 - opacity: 0
-- translateY: 24px to 40px
+- translateY: 24px đến 40px
 
-Final state:
+Trạng thái cuối:
 
 - opacity: 1
 - translateY: 0
 
-Typical duration:
+Thời lượng điển hình:
 
-300ms to 600ms
+300ms đến 600ms
 
-Avoid very long entrance animations.
-
----
-
-### 2. Stagger Reveal
-
-Use when multiple related items appear together.
-
-Examples:
-
-- ProductCards
-- category cards
-- feature items
-
-Typical delay between items:
-
-60ms to 120ms
-
-Stagger should communicate sequence, not slow down the user.
+Tránh animation xuất hiện quá dài.
 
 ---
 
-### 3. Card Focus
+### 2. Stagger reveal
 
-Used mainly in curated or featured sections.
+Dùng khi nhiều phần tử liên quan xuất hiện cùng nhau.
 
-Possible behavior:
+Ví dụ:
 
-Active card:
-- scale around 1.02 to 1.05
-- slight translateY upward
-- stronger depth/shadow
+- ProductCard
+- category card
+- feature item
 
-Surrounding cards:
-- slightly reduced scale
-- slightly reduced opacity
-- optional small blur in special featured contexts
+Độ trễ điển hình giữa các phần tử:
 
-Do not use strong group blur in large product catalogs.
+60ms đến 120ms
+
+Stagger phải truyền đạt trình tự, không làm người dùng chậm lại.
 
 ---
 
-### 4. Image Depth
+### 3. Card focus
 
-Product images may move independently from their card.
+Chủ yếu dùng trong các section curated hoặc featured.
 
-Typical hover behavior:
+Hành vi có thể có:
 
-- scale: 1.03 to 1.07
-- translateY: -2px to -8px
+Card active:
 
-Movement should remain small.
+- scale khoảng 1.02 đến 1.05
+- translateY nhẹ lên trên
+- chiều sâu/shadow mạnh hơn
 
-Do not distort the image.
+Các card xung quanh:
+
+- giảm scale nhẹ
+- giảm opacity nhẹ
+- blur nhỏ tuỳ chọn trong bối cảnh featured đặc biệt
+
+Không dùng group blur mạnh trong catalog sản phẩm lớn.
 
 ---
 
-### 5. CTA Motion
+### 4. Chiều sâu hình ảnh
 
-CTA interactions should be subtle.
+Hình ảnh sản phẩm có thể chuyển động độc lập với card.
 
-Examples:
+Hành vi hover điển hình:
 
-Arrow:
+- scale: 1.03 đến 1.07
+- translateY: -2px đến -8px
+
+Chuyển động phải nhỏ.
+
+Không làm biến dạng hình ảnh.
+
+---
+
+### 5. CTA motion
+
+Tương tác CTA phải tinh tế.
+
+Ví dụ:
+
+Mũi tên:
 
 `translateX(0) → translateX(4px)`
 
 Button:
 
-small scale or background transition
+scale nhỏ hoặc transition background
 
-Avoid bouncing CTA elements.
+Tránh làm CTA bounce.
 
 ---
 
-### 6. Menu Motion
+### 6. Menu motion
 
-Mega-menu and navigation motion should be quick and precise.
+Motion của mega-menu và navigation cần nhanh, chính xác.
 
-Use:
+Dùng:
 
 - opacity
 - translateY
-- subtle backdrop transitions
+- backdrop transition tinh tế
 
-Avoid oversized movement.
+Tránh chuyển động quá lớn.
 
-Menu interaction should never feel slower than navigation intent.
+Tương tác menu không bao giờ được chậm hơn ý định điều hướng của người dùng.
 
 ---
 
-## 3D Motion
+## Motion 3D
 
-3D motion is reserved for specific experiences.
+Motion 3D được dành cho các trải nghiệm cụ thể.
 
-Current important experiences:
+Các trải nghiệm quan trọng hiện tại:
 
 - Hero Spline scene
 - iPhone GLB viewer
-- WaveGallery perspective
+- phối cảnh WaveGallery
 
-Do not add 3D tilt to every component.
+Không thêm 3D tilt cho mọi component.
 
-When 3D card tilt is used:
+Khi dùng card tilt 3D:
 
-- keep maximum rotation approximately 4° to 8°
-- reset smoothly
-- disable or simplify on touch devices
+- giữ rotation tối đa khoảng 4° đến 8°
+- reset mượt mà
+- tắt hoặc đơn giản hoá trên thiết bị cảm ứng
 
 ---
 
-## Hover Timing
+## Thời gian hover
 
-Typical hover transition:
+Hover transition điển hình:
 
-200ms to 400ms
+200ms đến 400ms
 
-More complex card interactions:
+Tương tác card phức tạp hơn:
 
-300ms to 500ms
+300ms đến 500ms
 
-Avoid slow hover interactions above approximately 600ms unless intentionally cinematic.
+Tránh tương tác hover chậm vượt khoảng 600ms, trừ khi có chủ đích cinematic.
 
 ---
 
 ## Easing
 
-Prefer smooth easing.
+Ưu tiên easing mượt mà.
 
-Examples conceptually:
+Ví dụ về mặt khái niệm:
 
-- ease-out for entrances
-- ease-in-out for state transitions
-- spring only when the interaction benefits from physical feedback
+- ease-out cho hiệu ứng đi vào
+- ease-in-out cho chuyển trạng thái
+- chỉ dùng spring khi tương tác được hưởng lợi từ phản hồi vật lý
 
-Avoid excessive spring/bounce effects.
-
----
-
-## Scroll Animation
-
-Scroll-based animation may be used for:
-
-- section reveals
-- storytelling
-- image sequencing
-- selected featured experiences
-
-Do not make normal reading depend on scroll animation.
-
-Content must remain understandable without animation.
+Tránh hiệu ứng spring/bounce quá mức.
 
 ---
 
-## Continuous Animation
+## Scroll animation
 
-Continuous loops should be rare.
+Animation dựa trên scroll có thể dùng cho:
 
-Allowed examples:
+- section reveal
+- kể chuyện
+- chuỗi hình ảnh
+- trải nghiệm featured được chọn
+
+Không để việc đọc thông thường phụ thuộc vào scroll animation.
+
+Nội dung vẫn phải dễ hiểu khi không có animation.
+
+---
+
+## Continuous animation
+
+Vòng lặp liên tục nên hiếm khi được dùng.
+
+Ví dụ được phép:
 
 - brand marquee
-- subtle existing visual atmosphere
-- 3D auto-rotation where already appropriate
+- bầu không khí thị giác tinh tế đang có
+- 3D auto-rotation khi đã phù hợp
 
-Avoid adding continuous motion to:
+Tránh thêm continuous motion vào:
 
-- ProductCards
-- buttons
-- pricing
-- filters
-- cart items
-- text blocks
+- ProductCard
+- button
+- giá
+- filter
+- cart item
+- text block
 
-Continuous motion increases distraction and rendering cost.
+Continuous motion làm tăng sự xao nhãng và chi phí render.
 
 ---
 
-## ProductCard Motion
+## ProductCard motion
 
-Default ProductCard:
+ProductCard mặc định:
 
-- subtle hover lift
-- image depth
+- hover lift tinh tế
+- chiều sâu hình ảnh
 - shadow transition
 
-Featured ProductCard may use stronger interaction such as:
+ProductCard featured có thể dùng tương tác mạnh hơn như:
 
-- group de-emphasis
+- giảm nhấn mạnh theo nhóm
 - stagger entrance
 - focused card scale
-- small blur on surrounding cards
+- blur nhỏ cho các card xung quanh
 
-Full catalog ProductCard should remain calmer.
+ProductCard trong catalog đầy đủ nên yên tĩnh hơn.
 
 ---
 
 ## Mobile / Touch
 
-Do not rely on hover.
+Không phụ thuộc vào hover.
 
-On touch devices:
+Trên thiết bị cảm ứng:
 
-- remove pointer tilt
-- remove hover-only information
-- use simple press feedback when helpful
-- keep cards fully visible
+- bỏ pointer tilt
+- bỏ thông tin chỉ xuất hiện khi hover
+- dùng phản hồi nhấn đơn giản khi hữu ích
+- giữ card hiển thị đầy đủ
 
-Motion should never block content access.
+Motion không bao giờ được cản trở truy cập nội dung.
 
 ---
 
-## Reduced Motion
+## Reduced motion
 
-Respect:
+Tôn trọng:
 
 `prefers-reduced-motion`
 
-When reduced motion is enabled:
+Khi reduced motion được bật:
 
-- remove large entrance translations
-- disable decorative 3D tilt
-- stop unnecessary continuous animation where practical
-- preserve usability
-- preserve content hierarchy
+- bỏ translate lớn lúc xuất hiện
+- tắt 3D tilt trang trí
+- dừng continuous animation không cần thiết khi phù hợp
+- giữ khả năng sử dụng
+- giữ content hierarchy
 
-Do not hide content because motion is disabled.
+Không ẩn nội dung vì motion bị tắt.
 
 ---
 
-## Performance
+## Hiệu năng
 
-Prefer GPU-friendly properties:
+Ưu tiên các thuộc tính thân thiện với GPU:
 
 - transform
 - opacity
 
-Avoid continuously animating:
+Tránh animate liên tục:
 
 - width
 - height
 - top
 - left
-- large blur values
+- blur lớn
 
-Avoid React state updates on every pointer move when a CSS or MotionValue solution is available.
+Tránh cập nhật React state ở mọi lần pointer move khi có thể dùng giải pháp CSS hoặc MotionValue.
 
-Avoid layout thrashing.
-
----
-
-## Motion Consistency
-
-Before adding a new animation, ask:
-
-1. Does an existing motion pattern already solve this?
-2. Does this interaction need movement?
-3. Is the motion level appropriate for the component?
-4. Does it compete with Hero, WaveGallery or 3D experiences?
-5. Does it work on mobile?
-6. Does it respect reduced motion?
-
-Prefer reuse over inventing a new animation style.
+Tránh layout thrashing.
 
 ---
 
-## Homepage Motion Rhythm
+## Tính nhất quán của motion
 
-Recommended intensity:
+Trước khi thêm animation mới, hãy hỏi:
+
+1. Một motion pattern hiện có đã giải quyết được việc này chưa?
+2. Tương tác này có cần chuyển động không?
+3. Cấp độ motion có phù hợp với component không?
+4. Nó có cạnh tranh với trải nghiệm Hero, WaveGallery hoặc 3D không?
+5. Nó có hoạt động trên mobile không?
+6. Nó có tôn trọng reduced motion không?
+
+Ưu tiên tái sử dụng thay vì tạo ra style animation mới.
+
+---
+
+## Nhịp motion của homepage
+
+Cường độ được khuyến nghị:
 
 Hero:
 Level 3
 
 BrandMarquee:
-Level 2, lightweight continuous motion
+Level 2, continuous motion nhẹ
 
 FeaturedProducts:
 Level 2
@@ -362,30 +364,30 @@ WaveGallery:
 Level 3
 
 Footer:
-Level 1 or mostly static
+Level 1 hoặc phần lớn tĩnh
 
-This creates a rhythm:
+Điều này tạo ra nhịp:
 
 immersive
-→ calm transition
-→ interactive commerce
+→ chuyển tiếp bình tĩnh
+→ thương mại có tương tác
 → immersive
-→ calm ending
+→ kết thúc bình tĩnh
 
 ---
 
-## Anti-Patterns
+## Anti-pattern
 
-Avoid:
+Tránh:
 
-- bounce everywhere
-- large rotations
-- random parallax
-- excessive blur
-- excessive scale
-- long delays
-- slow navigation
-- infinite card animations
-- animation on every text element
-- multiple unrelated motion styles in one section
-- motion that causes layout shift
+- bounce ở mọi nơi
+- rotation lớn
+- parallax ngẫu nhiên
+- blur quá mức
+- scale quá mức
+- delay dài
+- navigation chậm
+- animation card vô hạn
+- animation cho mọi text element
+- nhiều style motion không liên quan trong một section
+- motion gây layout shift
