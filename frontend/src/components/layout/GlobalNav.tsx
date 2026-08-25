@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
-import { Search, ShoppingBag, Menu, X } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { Search, ShoppingBag, Menu, X, User } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 
 // Mega menu data for each nav item
 const megaMenuData: Record<string, { title: string; links: string[] }[]> = {
@@ -49,6 +49,15 @@ const navItems = ['Cửa Hàng', 'LapTop', 'TabLet', 'iPhone', 'SmartPhone', 'Wa
 export function GlobalNav() {
   const { mobileMenuOpen, toggleMobileMenu } = useAppStore();
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
+  const previousMenuRef = useRef<string | null>(null);
+  
+  const location = useLocation();
+  const isIphonePage = location.pathname === '/iphone';
+
+  if (activeMenu) {
+    previousMenuRef.current = activeMenu;
+  }
+  const displayMenu = activeMenu || previousMenuRef.current;
 
   const handleMouseEnter = (item: string) => {
     setActiveMenu(item);
@@ -61,10 +70,13 @@ export function GlobalNav() {
   return (
     <>
       <nav
-        className={`sticky top-0 z-50 text-[#1d1d1f] text-xs font-medium transition-colors duration-300 ${activeMenu
-          ? 'bg-white/95 backdrop-blur-md border-b border-neutral-200/60'
-          : 'bg-transparent border-b border-transparent hover:bg-white/80 hover:backdrop-blur-md'
-          }`}
+        className={`${isIphonePage ? 'fixed w-full' : 'sticky'} top-0 z-50 text-xs font-medium transition-colors duration-300 ${
+          activeMenu
+            ? 'bg-white border-b border-neutral-200/60 text-[#1d1d1f]'
+            : isIphonePage
+              ? 'bg-transparent border-b border-transparent hover:bg-black/90 text-[#f5f5f7]'
+              : 'bg-transparent border-b border-transparent hover:bg-white/95 text-[#1d1d1f]'
+        }`}
         onMouseLeave={handleCloseMenu}
       >
         <div className="max-w-[1024px] mx-auto px-4 h-[44px] flex items-center justify-between">
@@ -73,13 +85,14 @@ export function GlobalNav() {
           </Link>
 
           {/* Desktop Nav Links */}
-          <ul className="hidden md:flex items-center space-x-7 text-[#1d1d1f]">
+          <ul className="hidden md:flex items-center space-x-7">
             {navItems.map((item) => (
               <li key={item}>
                 <button
                   onMouseEnter={() => handleMouseEnter(item)}
-                  className={`nav-glow-link flex items-center gap-1 transition-all duration-300 relative pb-1 ${activeMenu === item ? 'text-[#22c55e]' : 'text-[#1d1d1f]'
-                    }`}
+                  className={`nav-glow-link flex items-center gap-1 transition-all duration-300 relative pb-1 ${
+                    activeMenu === item ? 'text-[#22c55e]' : 'inherit'
+                  }`}
                 >
                   {item}
                   {/* Active underline glow */}
@@ -93,9 +106,12 @@ export function GlobalNav() {
           </ul>
 
           {/* Icons & Mobile Toggle */}
-          <div className="flex items-center space-x-5 text-[#1d1d1f]">
+          <div className="flex items-center space-x-5">
             <Link to="/" className="nav-glow-link hover:text-[#22c55e] transition-colors" aria-label="Tìm kiếm" onClick={handleCloseMenu}>
               <Search className="w-4 h-4" />
+            </Link>
+            <Link to="/login" className="nav-glow-link hover:text-[#22c55e] transition-colors" aria-label="Đăng nhập" onClick={handleCloseMenu}>
+              <User className="w-4 h-4" />
             </Link>
             <Link to="/" className="nav-glow-link hover:text-[#22c55e] transition-colors" aria-label="Giỏ hàng" onClick={handleCloseMenu}>
               <ShoppingBag className="w-4 h-4" />
@@ -110,15 +126,19 @@ export function GlobalNav() {
           </div>
         </div>
 
-        {/* Mega Menu Dropdown — positioned absolute so it overlays content */}
         <div
-          className={`hidden md:block absolute left-0 right-0 top-[44px] bg-white/95 backdrop-blur-xl border-b border-neutral-200/60 overflow-hidden transition-all duration-500 ease-in-out ${activeMenu ? 'max-h-[400px] opacity-100 shadow-xl' : 'max-h-0 opacity-0'
-            }`}
+          className={`hidden md:block absolute left-0 right-0 top-[44px] bg-white overflow-hidden transition-all duration-[400ms] ease-[cubic-bezier(0.4,0,0.2,1)] ${
+            activeMenu ? 'max-h-[450px] border-b border-neutral-200/60 opacity-100 shadow-xl' : 'max-h-0 border-transparent opacity-0'
+          }`}
         >
-          {activeMenu && megaMenuData[activeMenu] && (
-            <div className="max-w-[1024px] mx-auto px-4 py-10">
+          <div 
+            className={`max-w-[1024px] mx-auto px-4 py-10 transition-all duration-[400ms] ease-[cubic-bezier(0.4,0,0.2,1)] transform ${
+              activeMenu ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-8'
+            }`}
+          >
+            {displayMenu && megaMenuData[displayMenu] && (
               <div className="flex flex-wrap gap-x-12 gap-y-10">
-                {megaMenuData[activeMenu].map((col, idx) => (
+                {megaMenuData[displayMenu].map((col, idx) => (
                   <div key={idx}>
                     <h4 className="text-[11px] text-neutral-400 uppercase tracking-wider mb-4">{col.title}</h4>
                     <ul className="space-y-2.5">
@@ -140,8 +160,8 @@ export function GlobalNav() {
                   </div>
                 ))}
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
 
         {/* Mobile Navigation Drawer */}
@@ -164,7 +184,7 @@ export function GlobalNav() {
       {/* Backdrop overlay when mega menu is open */}
       {activeMenu && (
         <div
-          className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 transition-opacity duration-300"
+          className="fixed inset-0 bg-black/50 z-40 transition-opacity duration-300"
           onClick={handleCloseMenu}
         />
       )}
