@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Phone } from 'lucide-react';
+import './login.css';
 
 // Custom inline SVG icons for Google and Apple
 const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
