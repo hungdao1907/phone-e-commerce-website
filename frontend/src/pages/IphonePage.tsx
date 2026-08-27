@@ -549,7 +549,7 @@ export function IphonePage() {
   const current = IPHONE_VARIANTS[activeIndex];
 
   return (
-    <div className="w-full bg-black overflow-clip">
+    <div className="iphone-page w-full bg-black relative">
       <style>{CSS_STYLES}</style>
 
       {/* 1. MÀN HÌNH ĐẦU: HERO VIDEO */}
