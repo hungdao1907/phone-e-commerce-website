@@ -4,7 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import ReactLenis from 'lenis/react';
 import { GlobalNav } from './components/layout/GlobalNav';
 import { Footer } from './components/layout/Footer';
-import { HomePage } from './pages/HomePage';
+import { HomePage } from './pages/home/HomePage';
 import 'lenis/dist/lenis.css';
 
 const IphonePage = lazy(() =>

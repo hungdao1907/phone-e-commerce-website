@@ -3,8 +3,8 @@ import { createPortal } from 'react-dom';
 import { motion, AnimatePresence, useInView, useReducedMotion } from 'motion/react';
 import type { Variants } from 'motion/react';
 import { CheckCircle2 } from 'lucide-react';
-import { GlassButton } from '../ui/glass-button';
-import { GlassDescriptionBadge } from '../ui/glass-description-badge';
+import { GlassButton } from '../components/glass-button';
+import { GlassDescriptionBadge } from '../components/glass-description-badge';
 
 export type EcosystemDeviceId = 'smartphone' | 'laptop' | 'tablet' | 'watch';
 

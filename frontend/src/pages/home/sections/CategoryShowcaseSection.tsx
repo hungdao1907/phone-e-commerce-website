@@ -1,7 +1,7 @@
 import { motion, useReducedMotion } from 'motion/react';
-import { CategoryStarField } from '../ui/category-star-field';
-import { ExpandingCards } from '../ui/expanding-cards';
-import type { CategoryCardItem } from '../ui/expanding-cards';
+import { CategoryStarField } from '../components/category-star-field';
+import { ExpandingCards } from '../components/expanding-cards';
+import type { CategoryCardItem } from '../components/expanding-cards';
 
 const PREMIUM_EASE = [0.22, 1, 0.36, 1] as const;
 

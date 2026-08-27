@@ -1,5 +1,5 @@
 import { useReducedMotion } from 'motion/react';
-import { AppleHelloEnglishEffect } from '../ui/apple-hello-effect';
+import { AppleHelloEnglishEffect } from '../components/apple-hello-effect';
 
 type CinematicVideoSectionProps = {
   helloReady?: boolean;

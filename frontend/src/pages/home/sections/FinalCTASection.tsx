@@ -5,7 +5,7 @@ import {
   FinalCTAVisual,
   type UsageType,
   type PriorityType,
-} from '../ui/FinalCTAVisual';
+} from '../components/FinalCTAVisual';
 
 const EASING = [0.22, 1, 0.36, 1] as const;
 
