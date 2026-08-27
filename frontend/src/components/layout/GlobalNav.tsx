@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Search, ShoppingBag, Menu, X } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 
 // Mega menu data for each nav item
 const megaMenuData: Record<string, { title: string; links: string[] }[]> = {
@@ -49,6 +49,8 @@ const navItems = ['Cửa hàng', 'Laptop', 'Tablet', 'iPhone', 'Smartphone', 'Wa
 export function GlobalNav() {
   const { mobileMenuOpen, toggleMobileMenu } = useAppStore();
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
+  const { pathname } = useLocation();
+  const usesDarkHomeTreatment = pathname === '/' && !activeMenu;
 
   const handleMouseEnter = (item: string) => {
     setActiveMenu(item);
@@ -61,9 +63,11 @@ export function GlobalNav() {
   return (
     <>
       <nav
-        className={`sticky top-0 z-50 text-[#1d1d1f] text-xs font-medium transition-colors duration-300 ${activeMenu
+        className={`sticky top-0 z-50 text-xs font-medium transition-colors duration-300 ${activeMenu
           ? 'bg-white/95 backdrop-blur-md border-b border-neutral-200/60'
-          : 'bg-transparent border-b border-transparent hover:bg-white/80 hover:backdrop-blur-md'
+          : pathname === '/'
+            ? 'border-b border-white/[0.06] bg-[#050806]/80 text-white backdrop-blur-md'
+            : 'border-b border-transparent bg-transparent text-[#1d1d1f] hover:bg-white/80 hover:backdrop-blur-md'
           }`}
         onMouseLeave={handleCloseMenu}
       >
@@ -73,12 +77,12 @@ export function GlobalNav() {
           </Link>
 
           {/* Desktop Nav Links */}
-          <ul className="hidden md:flex items-center space-x-7 text-[#1d1d1f]">
+          <ul className={`hidden items-center space-x-7 md:flex ${usesDarkHomeTreatment ? 'text-white/75' : 'text-[#1d1d1f]'}`}>
             {navItems.map((item) => (
               <li key={item}>
                 <button
                   onMouseEnter={() => handleMouseEnter(item)}
-                  className={`nav-glow-link flex items-center gap-1 transition-all duration-300 relative pb-1 ${activeMenu === item ? 'text-[#22c55e]' : 'text-[#1d1d1f]'
+                  className={`nav-glow-link relative flex items-center gap-1 pb-1 transition-all duration-300 ${activeMenu === item ? 'text-[#22c55e]' : usesDarkHomeTreatment ? 'text-white/75 hover:text-white' : 'text-[#1d1d1f]'
                     }`}
                 >
                   {item}
@@ -93,7 +97,7 @@ export function GlobalNav() {
           </ul>
 
           {/* Icons & Mobile Toggle */}
-          <div className="flex items-center space-x-5 text-[#1d1d1f]">
+          <div className={`flex items-center space-x-5 ${usesDarkHomeTreatment ? 'text-white/75' : 'text-[#1d1d1f]'}`}>
             <Link to="/" className="nav-glow-link hover:text-[#22c55e] transition-colors" aria-label="Tìm kiếm" onClick={handleCloseMenu}>
               <Search className="w-4 h-4" />
             </Link>

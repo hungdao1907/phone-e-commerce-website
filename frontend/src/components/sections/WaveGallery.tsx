@@ -1,40 +1,75 @@
-import React from 'react';
+import {
+  ImagesScrollingAnimation,
+  type TechnologyStory,
+} from '../ui/images-scrolling-animation';
+import { TextEffect } from '../ui/text-effect';
 
-const waveImages = [
-  'https://images.unsplash.com/photo-1591337676887-a217a6c9ba82?w=600&h=900&fit=crop',
-  'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=600&h=900&fit=crop',
-  'https://images.unsplash.com/photo-1611186871348-b1ce696e52c9?w=600&h=900&fit=crop',
-  'https://images.unsplash.com/photo-1587033411391-5d9e51cce126?w=600&h=900&fit=crop',
-  'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=600&h=900&fit=crop',
-  'https://images.unsplash.com/photo-1546868871-af0de0ae72be?w=600&h=900&fit=crop',
-  'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=600&h=900&fit=crop',
-  'https://images.unsplash.com/photo-1600003014755-ba31aa59c4b6?w=600&h=900&fit=crop',
-  'https://images.unsplash.com/photo-1585386959984-a4155224a1ad?w=600&h=900&fit=crop',
-  'https://images.unsplash.com/photo-1606220945770-b5b6c2c55bf1?w=600&h=900&fit=crop',
-  'https://images.unsplash.com/photo-1491933382434-500287f9b54b?w=600&h=900&fit=crop',
-  'https://images.unsplash.com/photo-1628202926206-c63a34b1618f?w=600&h=900&fit=crop',
-  'https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?w=600&h=900&fit=crop',
+const STORIES: TechnologyStory[] = [
+  {
+    id: 'connect',
+    title: 'Khoảng cách chỉ còn một chạm.',
+    description:
+      'Một cuộc gọi ngắn cũng có thể làm ngày trở nên gần gũi hơn. Công nghệ giúp những lời hỏi han, những nụ cười và cảm xúc được chạm tới nhau rõ ràng hơn, dù ở bất cứ đâu.',
+    src: '/images/wave-gallery/story-01-connection-upscaled.png',
+    alt: 'Người dùng gọi video qua điện thoại thông minh',
+  },
+  {
+    id: 'work',
+    title: 'Không gian làm việc đi cùng bạn.',
+    description:
+      'Từ bàn làm việc cố định đến những chuyển động của cuộc sống, công nghệ giữ cho ý tưởng, tài liệu và nhịp làm việc luôn liền mạch, để bạn tập trung vào điều quan trọng nhất.',
+    src: '/images/wave-gallery/story-02-work-upscaled.png',
+    alt: 'Làm việc trên laptop cùng cà phê',
+  },
+  {
+    id: 'create',
+    title: 'Ý tưởng xuất hiện, sáng tạo bắt đầu.',
+    description:
+      'Cảm hứng thường đến rất nhanh và bất ngờ. Công nghệ giúp bạn ghi lại, phát triển và biến những ý tưởng thoáng qua thành điều hữu hình, rõ ràng và giàu cảm xúc hơn.',
+    src: '/images/wave-gallery/story-03-create-upscaled.png',
+    alt: 'Vẽ và sáng tạo nhân vật trên máy tính bảng',
+  },
+  {
+    id: 'companion',
+    title: 'Đồng hành theo nhịp sống riêng.',
+    description:
+      'Không cần quá phô trương, công nghệ tốt là công nghệ hiện diện đúng lúc — âm thầm hỗ trợ sức khỏe, thói quen và những lựa chọn nhỏ mỗi ngày để cuộc sống nhẹ nhàng hơn.',
+    src: '/images/wave-gallery/story-04-lifestyle-upscaled.png',
+    alt: 'Chạy bộ và theo dõi sức khỏe trên đồng hồ thông minh',
+  },
+  {
+    id: 'future',
+    title: 'Điều tiếp theo luôn ở phía trước.',
+    description:
+      'Tương lai không còn là điều xa xôi. Nó bắt đầu từ những thay đổi rất nhỏ trong cách chúng ta kết nối, làm việc, sáng tạo và tận hưởng cuộc sống mỗi ngày.',
+    src: '/images/wave-gallery/story-05-future-upscaled.png',
+    alt: 'Sử dụng điện thoại giữa không gian thành phố về đêm',
+  },
 ];
 
 export function WaveGallery() {
   return (
-    <section className="w-full bg-[#0f4a32] py-16">
-      <div className="max-w-[1200px] mx-auto px-6 md:px-12 mb-10">
-        <h2 className="text-3xl md:text-4xl font-semibold text-white leading-snug tracking-tight">
-          Khám phá bộ sưu tập. <span className="text-emerald-300/70">Trải nghiệm công nghệ đỉnh cao qua từng sản phẩm.</span>
-        </h2>
-      </div>
-      <div className="wave-wrapper">
-        <div className="wave-items">
-          {waveImages.map((url, idx) => (
-            <div
-              key={idx}
-              className="wave-item"
-              tabIndex={0}
-              style={{ backgroundImage: `url(${url})` }}
-            />
-          ))}
+    <section className="wave-gallery" aria-labelledby="wave-gallery-title">
+      <div className="wave-gallery__grid">
+        <div className="wave-gallery__editorial">
+          <p className="wave-gallery__eyebrow">CÔNG NGHỆ & CUỘC SỐNG</p>
+          <h2 id="wave-gallery-title">
+            Công nghệ trong<br />
+            từng khoảnh khắc.
+          </h2>
+          <TextEffect
+            per="word"
+            preset="blur"
+            delay={0.15}
+            className="wave-gallery__description"
+          >
+            Từ một cuộc gọi, một ý tưởng đến những nhịp sống thường ngày — công nghệ hiện diện nhẹ nhàng để mọi kết nối trở nên gần hơn, công việc linh hoạt hơn và từng khoảnh khắc nhỏ trong cuộc sống trở nên đáng nhớ hơn.
+          </TextEffect>
+          <p className="wave-gallery__hint" aria-hidden="true">
+            ↓ CUỘN ĐỂ KHÁM PHÁ
+          </p>
         </div>
+        <ImagesScrollingAnimation stories={STORIES} />
       </div>
     </section>
   );

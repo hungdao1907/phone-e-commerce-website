@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useRef, useCallback, Suspense } from 'react';
+import { useState, useEffect, useRef, useCallback, Suspense } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { useGLTF, OrbitControls, Environment, ContactShadows, Center } from '@react-three/drei';
+import { useGLTF, Environment, ContactShadows } from '@react-three/drei';
 import * as THREE from 'three';
 
 /* ─────────── DATA ─────────── */
@@ -35,7 +35,6 @@ const IPHONE_VARIANTS = [
 ];
 
 const TRANSITION_MS = 650;
-const EASE = 'cubic-bezier(0.4, 0, 0.2, 1)';
 
 const CSS_STYLES = `
 @keyframes blob {
@@ -325,7 +324,6 @@ function Scene({
   onLoaded: () => void;
 }) {
   const { camera, gl } = useThree();
-  const loadedCountRef = useRef(0);
 
   useEffect(() => {
     camera.position.set(0, 1, isMobile ? 7 : 6);
