@@ -5,11 +5,11 @@ import * as THREE from 'three';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { IphoneHero } from '../components/sections/IphoneHero';
-import { HighlightsCarousel } from '../components/sections/HighlightsCarousel';
-import { FrontCameraSection } from '../components/sections/FrontCameraSection';
-import { VideoProSection } from '../components/sections/VideoProSection';
-import { AllInOneSection } from '../components/sections/AllInOneSection';
+import { IphoneHero } from './sections/IphoneHero';
+import { HighlightsCarousel } from './sections/HighlightsCarousel';
+import { FrontCameraSection } from './sections/FrontCameraSection';
+import { VideoProSection } from './sections/VideoProSection';
+import { AllInOneSection } from './sections/AllInOneSection';
 
 gsap.registerPlugin(useGSAP, ScrollTrigger);
 

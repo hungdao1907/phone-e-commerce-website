@@ -8,7 +8,7 @@ import { HomePage } from './pages/home/HomePage';
 import 'lenis/dist/lenis.css';
 
 const IphonePage = lazy(() =>
-  import('./pages/IphonePage').then(({ IphonePage: Page }) => ({ default: Page })),
+  import('./pages/iphone/IphonePage').then(({ IphonePage: Page }) => ({ default: Page })),
 );
 
 const LoginPage = lazy(() =>
