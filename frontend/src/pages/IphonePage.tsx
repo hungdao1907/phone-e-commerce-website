@@ -1,14 +1,24 @@
-import { useState, useEffect, useRef, useCallback, Suspense } from 'react';
+import React, { useState, useEffect, useRef, useCallback, Suspense } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { useGLTF, Environment, ContactShadows } from '@react-three/drei';
+import { useGLTF, OrbitControls, Environment, ContactShadows, Center, Preload } from '@react-three/drei';
 import * as THREE from 'three';
+import gsap from 'gsap';
+import { useGSAP } from '@gsap/react';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { IphoneHero } from '../components/sections/IphoneHero';
+import { HighlightsCarousel } from '../components/sections/HighlightsCarousel';
+import { FrontCameraSection } from '../components/sections/FrontCameraSection';
+import { VideoProSection } from '../components/sections/VideoProSection';
+import { AllInOneSection } from '../components/sections/AllInOneSection';
+
+gsap.registerPlugin(useGSAP, ScrollTrigger);
 
 /* ─────────── DATA ─────────── */
 const IPHONE_VARIANTS = [
   {
     id: 'orange',
     label: 'Desert Titanium',
-    model: '/models/iphone_17_promax_orange.glb',
+    model: '/models/iphone_17_promax_orange-transformed.glb',
     bg: '#C2592A',
     panel: '#D4734A',
     modelScale: 1,      // will be auto-normalized
@@ -17,7 +27,7 @@ const IPHONE_VARIANTS = [
   {
     id: 'deepblue',
     label: 'Deep Blue',
-    model: '/models/iphone17_promax_deepblue_fix.glb',
+    model: '/models/iphone17_promax_deepblue_fix-transformed.glb',
     bg: '#1B3A5C',
     panel: '#2A5280',
     modelScale: 1,
@@ -26,7 +36,7 @@ const IPHONE_VARIANTS = [
   {
     id: 'grey',
     label: 'Natural Titanium',
-    model: '/models/iphone_17_promax_grey.glb',
+    model: '/models/iphone_17_promax_grey-transformed.glb',
     bg: '#4A4A4A',
     panel: '#636363',
     modelScale: 1,
@@ -35,6 +45,7 @@ const IPHONE_VARIANTS = [
 ];
 
 const TRANSITION_MS = 650;
+const EASE = 'cubic-bezier(0.4, 0, 0.2, 1)';
 
 const CSS_STYLES = `
 @keyframes blob {
@@ -72,6 +83,8 @@ const dragState = {
   isDragging: false,
   deltaX: 0,
   deltaY: 0,
+  momentumX: 0,
+  momentumY: 0,
 };
 
 function lerpAngle(start: number, end: number, t: number) {
@@ -80,57 +93,35 @@ function lerpAngle(start: number, end: number, t: number) {
 }
 
 /* ─────────── GRAIN OVERLAY ─────────── */
-const GRAIN_SVG = `data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.2'/%3E%3C/svg%3E`;
+// Đã gỡ bỏ GrainOverlay vì SVG filter feTurbulence gây giật lag (scroll jank) nặng trên một số thiết bị
 
-function GrainOverlay() {
-  return (
-    <div
-      className="absolute inset-0 pointer-events-none mix-blend-overlay overflow-hidden"
-      style={{ zIndex: 50, opacity: 0.6 }}
-    >
-      <div
-        className="w-[120%] h-[120%] grain-animate"
-        style={{
-          backgroundImage: `url("${GRAIN_SVG}")`,
-          backgroundSize: '120px 120px',
-          position: 'absolute',
-          top: '-10%',
-          left: '-10%',
-        }}
-      />
-    </div>
-  );
-}
-
-/* ─────────── BACKGROUND GRADIENT ─────────── */
 function BackgroundGradient({ variant }: { variant: (typeof IPHONE_VARIANTS)[number] }) {
   return (
-    <div className="absolute inset-0 overflow-hidden bg-[#050505] transition-colors duration-1000">
-      <div 
-        className="absolute top-[-10%] left-[-10%] w-[60vw] h-[60vw] min-w-[500px] min-h-[500px] rounded-full animate-blob"
+    <div
+      className="absolute inset-0 overflow-hidden transition-colors duration-1000"
+      style={{
+        // Phủ mờ màu của iPhone (20% opacity) lên trên cùng của gradient nền
+        background: `linear-gradient(to bottom, ${variant.bg}33 0%, #09090b 40%, #000000 100%)`
+      }}
+    >
+      {/* Vệt sáng chìm tạo cảm giác không gian sâu (Apple-style) */}
+      <div
+        className="absolute top-[-10%] left-[0%] w-[70vw] h-[50vw] min-w-[700px] min-h-[500px] rounded-full"
         style={{
-          background: `radial-gradient(circle, ${variant.bg} 0%, transparent 70%)`,
-          filter: 'blur(80px)',
+          background: `radial-gradient(ellipse at center, ${variant.bg} 0%, transparent 70%)`,
           opacity: 0.45,
-          transition: 'background 1s ease',
+          transition: 'background 1.5s ease',
+          transform: 'rotate(-15deg)',
+          filter: 'blur(80px)',
         }}
       />
-      <div 
-        className="absolute bottom-[-20%] right-[-10%] w-[70vw] h-[70vw] min-w-[600px] min-h-[600px] rounded-full animate-blob animation-delay-2000"
+      <div
+        className="absolute bottom-[-20%] right-[-10%] w-[60vw] h-[60vw] min-w-[600px] min-h-[600px] rounded-full"
         style={{
-          background: `radial-gradient(circle, ${variant.panel} 0%, transparent 60%)`,
+          background: `radial-gradient(circle at center, ${variant.panel} 0%, transparent 60%)`,
+          opacity: 0.4,
+          transition: 'background 1.5s ease',
           filter: 'blur(100px)',
-          opacity: 0.35,
-          transition: 'background 1s ease',
-        }}
-      />
-      <div 
-        className="absolute top-[20%] left-[20%] w-[80vw] h-[80vw] min-w-[700px] min-h-[700px] rounded-full animate-blob animation-delay-4000"
-        style={{
-          background: `radial-gradient(circle, ${variant.bg} 0%, transparent 50%)`,
-          filter: 'blur(120px)',
-          opacity: 0.25,
-          transition: 'background 1s ease',
         }}
       />
     </div>
@@ -175,7 +166,7 @@ function IPhoneModel({
   role: 'center' | 'left' | 'right' | 'hidden';
   isMobile: boolean;
 }) {
-  const { scene } = useGLTF(url);
+  const { scene } = useGLTF(url, '/draco-gltf/');
   const groupRef = useRef<THREE.Group>(null);
   const normalizedRef = useRef<THREE.Object3D | null>(null);
   const targetPos = useRef(new THREE.Vector3(0, 0, 0));
@@ -189,6 +180,17 @@ function IPhoneModel({
         groupRef.current.remove(groupRef.current.children[0]);
       }
       const normalized = normalizeModel(scene, 3.5);
+
+      // Xử lý triệt để vệt sáng hắt lên màn hình:
+      // Giảm độ nhạy phản chiếu môi trường của tất cả các vật liệu xuống mức rất thấp.
+      // Điều này giữ lại ánh sáng đánh khối (Lights) nhưng loại bỏ hình ảnh của bóng đèn in lên kính.
+      normalized.traverse((child: any) => {
+        if (child.isMesh && child.material) {
+          child.material.envMapIntensity = 0.15;
+          child.material.needsUpdate = true;
+        }
+      });
+
       groupRef.current.add(normalized);
       normalizedRef.current = normalized;
     }
@@ -215,24 +217,30 @@ function IPhoneModel({
     }
   }, [role, isMobile]);
 
-  useFrame((_, delta) => {
+  useFrame((state, delta) => {
     if (!groupRef.current) return;
-    const speed = 3.5;
+    // Skip all computation for hidden models to save CPU
+    if (role === 'hidden') return;
 
-    // Smooth position
-    groupRef.current.position.lerp(targetPos.current, speed * delta);
+    // Hệ số nội suy mượt mà (frame-rate independent)
+    const speed = 4.5;
+    const dampFactor = 1 - Math.exp(-speed * delta);
 
-    // Smooth scale
+    // Trượt vị trí mượt mà (damp)
+    groupRef.current.position.lerp(targetPos.current, dampFactor);
+
+    // Phóng to thu nhỏ mượt mà
     const s = THREE.MathUtils.lerp(
       groupRef.current.scale.x,
       targetScaleVal.current,
-      speed * delta
+      dampFactor
     );
     groupRef.current.scale.setScalar(s);
 
-    // Rotation logic
+    // Xoay vật thể (Rotation logic)
     if (role === 'center') {
       if (dragState.isDragging) {
+        // Xoay ngay lập tức khi đang giữ chuột kéo
         groupRef.current.rotation.y += dragState.deltaX * 0.01;
         groupRef.current.rotation.x += dragState.deltaY * 0.01;
         groupRef.current.rotation.x = THREE.MathUtils.clamp(
@@ -240,33 +248,53 @@ function IPhoneModel({
           -Math.PI / 6,
           Math.PI / 6
         );
-        // Consume deltas so only the center model uses them
+        // Tiêu thụ delta
         dragState.deltaX = 0;
         dragState.deltaY = 0;
       } else {
-        groupRef.current.rotation.y += 0.004;
-        groupRef.current.rotation.x = THREE.MathUtils.lerp(
-          groupRef.current.rotation.x,
-          0,
-          speed * delta
-        );
+        // Quán tính (Inertia): Khi thả chuột ra, mô hình vẫn trượt tiếp và chậm dần
+        if (Math.abs(dragState.momentumX) > 0.1 || Math.abs(dragState.momentumY) > 0.1) {
+          groupRef.current.rotation.y += dragState.momentumX * 0.008;
+          groupRef.current.rotation.x += dragState.momentumY * 0.008;
+          groupRef.current.rotation.x = THREE.MathUtils.clamp(
+            groupRef.current.rotation.x,
+            -Math.PI / 6,
+            Math.PI / 6
+          );
+          // Giảm dần lực quán tính (Friction)
+          dragState.momentumX *= 0.92;
+          dragState.momentumY *= 0.92;
+        } else {
+          // Xoay tự động khi để yên
+          groupRef.current.rotation.y += 0.01;
+          groupRef.current.rotation.x = THREE.MathUtils.lerp(
+            groupRef.current.rotation.x,
+            0,
+            dampFactor
+          );
+        }
       }
     } else {
-      // If not center, smoothly rotate to show the back (Math.PI)
+      // Các điện thoại ở 2 bên sẽ từ từ xoay lưng lại
       groupRef.current.rotation.y = lerpAngle(
         groupRef.current.rotation.y,
         Math.PI,
-        speed * delta
+        dampFactor
       );
       groupRef.current.rotation.x = THREE.MathUtils.lerp(
         groupRef.current.rotation.x,
         0,
-        speed * delta
+        dampFactor
       );
     }
+
+    // Yêu cầu render frame tiếp theo (demand mode)
+    state.invalidate();
   });
 
-  return <group ref={groupRef} />;
+  return (
+    <group ref={groupRef} visible={role !== 'hidden'} />
+  );
 }
 
 /* ─────────── NAV COLOR BUTTON ─────────── */
@@ -324,6 +352,7 @@ function Scene({
   onLoaded: () => void;
 }) {
   const { camera, gl } = useThree();
+  const loadedCountRef = useRef(0);
 
   useEffect(() => {
     camera.position.set(0, 1, isMobile ? 7 : 6);
@@ -342,8 +371,15 @@ function Scene({
     };
     const onPointerMove = (e: PointerEvent) => {
       if (!dragState.isDragging) return;
-      dragState.deltaX = e.clientX - prevX;
-      dragState.deltaY = e.clientY - prevY;
+      const dx = e.clientX - prevX;
+      const dy = e.clientY - prevY;
+      dragState.deltaX = dx;
+      dragState.deltaY = dy;
+
+      // Nạp lực quán tính
+      dragState.momentumX = dx;
+      dragState.momentumY = dy;
+
       prevX = e.clientX;
       prevY = e.clientY;
     };
@@ -381,25 +417,30 @@ function Scene({
     onLoaded();
   }, [onLoaded]);
 
+  const sceneGroupRef = useRef<THREE.Group>(null);
+
   return (
-    <>
+    <group ref={sceneGroupRef}>
       <ambientLight intensity={0.7} />
-      <directionalLight position={[5, 8, 5]} intensity={1.4} castShadow />
+      <directionalLight position={[5, 8, 5]} intensity={1.4} />
       <directionalLight position={[-5, 5, -5]} intensity={0.5} />
       <spotLight
         position={[0, 10, 0]}
         angle={0.3}
         penumbra={1}
         intensity={0.6}
-        castShadow
       />
-      <Environment preset="studio" />
+
+      {/* Khôi phục lại Environment (Đèn phản chiếu) theo yêu cầu, nhưng xoay 180 độ (Math.PI) về phía sau để mặt kính phía trước không bị dính vệt đèn */}
+      <Environment preset="studio" blur={0.85} environmentRotation={[0, Math.PI, 0]} />
+
       <ContactShadows
         position={[0, -1.2, 0]}
         opacity={0.35}
         scale={14}
         blur={2.5}
         far={5}
+        frames={1} // Tối ưu: Nướng bóng đổ 1 lần duy nhất thay vì render liên tục
       />
 
       {IPHONE_VARIANTS.map((v, idx) => (
@@ -410,7 +451,7 @@ function Scene({
           isMobile={isMobile}
         />
       ))}
-    </>
+    </group>
   );
 }
 
@@ -428,12 +469,56 @@ function LoadingScreen() {
   );
 }
 
+/* ─────────── CANVAS PAUSE HOOK ─────────── */
+// Pause/resume the Canvas when the 3D section enters/leaves the viewport
+function useCanvasVisibility(ref: React.RefObject<HTMLDivElement | null>) {
+  const [isVisible, setIsVisible] = useState(false);
+  useEffect(() => {
+    if (!ref.current) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setIsVisible(entry.isIntersecting),
+      { rootMargin: '200px' } // Pre-activate 200px before entering viewport
+    );
+    observer.observe(ref.current);
+    return () => observer.disconnect();
+  }, [ref]);
+  return isVisible;
+}
+
 /* ─────────── MAIN PAGE ─────────── */
 export function IphonePage() {
   const [activeIndex, setActiveIndex] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [modelsLoaded, setModelsLoaded] = useState(false);
+  const pageRef = useRef<HTMLDivElement>(null);
+  const canvasVisible = useCanvasVisibility(pageRef);
+
+  useGSAP(() => {
+    if (modelsLoaded) {
+      const tl = gsap.timeline({
+        defaults: { ease: "power3.out" },
+        scrollTrigger: {
+          trigger: pageRef.current,
+          start: "top 40%", // Bắt đầu hiệu ứng khi cuộn tới gần phần 3D
+        }
+      });
+
+      tl.from(".ghost-text", {
+        y: 100,
+        opacity: 0,
+        scale: 0.8,
+        duration: 1.8,
+      });
+
+      tl.from(".ui-element", {
+        y: 30,
+        opacity: 0,
+        duration: 1.2,
+        stagger: 0.15,
+      }, "-=1.2");
+    }
+  }, { scope: pageRef, dependencies: [modelsLoaded] });
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 640);
@@ -444,7 +529,7 @@ export function IphonePage() {
 
   // Preload all models
   useEffect(() => {
-    IPHONE_VARIANTS.forEach((v) => useGLTF.preload(v.model));
+    IPHONE_VARIANTS.forEach((v) => useGLTF.preload(v.model, '/draco-gltf/'));
   }, []);
 
   const navigate = useCallback(
@@ -464,25 +549,31 @@ export function IphonePage() {
   const current = IPHONE_VARIANTS[activeIndex];
 
   return (
-    <div
-      className="relative w-full overflow-hidden bg-black"
-      style={{
-        fontFamily: "'Inter', sans-serif",
-      }}
-    >
+    <div className="w-full bg-black overflow-clip">
       <style>{CSS_STYLES}</style>
+
+      {/* 1. MÀN HÌNH ĐẦU: HERO VIDEO */}
+      <IphoneHero />
+
+      {/* 1.5. CÁC ĐIỂM NỔI BẬT — Video Carousel */}
+      <HighlightsCarousel />
+
+      {/* 2. MÀN HÌNH HAI: MÔ HÌNH 3D */}
       <div
+        id="models"
+        ref={pageRef}
         className="relative w-full"
-        style={{ height: '100vh', overflow: 'hidden' }}
+        style={{
+          fontFamily: "'Inter', sans-serif",
+          height: '100vh',
+          overflow: 'hidden'
+        }}
       >
         <BackgroundGradient variant={current} />
 
-        {/* 1. Grain overlay */}
-        <GrainOverlay />
-
         {/* 2. Giant ghost text */}
         <div
-          className="absolute inset-x-0 flex items-center justify-center pointer-events-none select-none"
+          className="ghost-text absolute inset-x-0 flex items-center justify-center pointer-events-none select-none"
           style={{ zIndex: 2, top: '18%' }}
         >
           <span
@@ -504,7 +595,7 @@ export function IphonePage() {
 
         {/* 3. Top-left brand */}
         <div
-          className="absolute top-6 left-4 sm:left-8"
+          className="ui-element absolute top-6 left-4 sm:left-8"
           style={{ zIndex: 60 }}
         >
           <span
@@ -518,9 +609,9 @@ export function IphonePage() {
         {/* 4. 3D Canvas — Carousel */}
         <div className="absolute inset-0" style={{ zIndex: 3 }}>
           <Canvas
-            shadows
-            gl={{ antialias: true, alpha: true }}
-            dpr={[1, 2]}
+            frameloop={canvasVisible ? 'always' : 'never'}
+            gl={{ antialias: false, alpha: true, powerPreference: 'high-performance' }}
+            dpr={[1, 1.5]}
             camera={{ fov: 35, near: 0.1, far: 100 }}
           >
             <Suspense fallback={null}>
@@ -529,6 +620,7 @@ export function IphonePage() {
                 isMobile={isMobile}
                 onLoaded={handleLoaded}
               />
+              <Preload all />
             </Suspense>
           </Canvas>
         </div>
@@ -542,18 +634,17 @@ export function IphonePage() {
           style={{
             zIndex: 60,
             maxWidth: 380,
-            opacity: modelsLoaded ? 1 : 0,
-            transition: 'opacity 500ms ease',
+            visibility: modelsLoaded ? 'visible' : 'hidden', // Wait for GSAP to handle opacity
           }}
         >
           <p
-            className="font-bold uppercase tracking-widest mb-2 sm:mb-3 text-base sm:text-[22px] text-white"
+            className="ui-element font-bold uppercase tracking-widest mb-2 sm:mb-3 text-base sm:text-[22px] text-white"
             style={{ opacity: 0.95, letterSpacing: '0.02em' }}
           >
             iPHONE 17 PRO MAX
           </p>
           <p
-            className="hidden sm:block text-xs sm:text-sm text-white mb-5 sm:mb-6"
+            className="ui-element hidden sm:block text-xs sm:text-sm text-white mb-5 sm:mb-6"
             style={{ opacity: 0.85, lineHeight: 1.7 }}
           >
             Thiết kế titan. Chip A19 Pro mạnh mẽ nhất. Hệ thống camera chuyên
@@ -562,7 +653,7 @@ export function IphonePage() {
           </p>
 
           {/* Color navigation buttons */}
-          <div className="flex items-center gap-5 sm:gap-7">
+          <div className="ui-element flex items-center gap-5 sm:gap-7">
             {IPHONE_VARIANTS.map((v, idx) => (
               <NavColorButton
                 key={v.id}
@@ -576,11 +667,10 @@ export function IphonePage() {
 
         {/* 6. Bottom-right link */}
         <div
-          className="absolute bottom-6 right-4 sm:bottom-16 sm:right-10"
+          className="ui-element absolute bottom-6 right-4 sm:bottom-16 sm:right-10"
           style={{
             zIndex: 60,
-            opacity: modelsLoaded ? 1 : 0,
-            transition: 'opacity 500ms ease',
+            visibility: modelsLoaded ? 'visible' : 'hidden',
           }}
         >
           <a
@@ -616,6 +706,15 @@ export function IphonePage() {
           </a>
         </div>
       </div>
+
+      {/* 3. MÀN HÌNH BA: CAMERA TRƯỚC */}
+      <FrontCameraSection />
+
+      {/* 4. MÀN HÌNH BỐN: VIDEO PRO */}
+      <VideoProSection />
+
+      {/* 5. MÀN HÌNH NĂM: TẤT CẢ TRONG MỘT NHÀ (3 iPHONES) */}
+      <AllInOneSection />
     </div>
   );
 }

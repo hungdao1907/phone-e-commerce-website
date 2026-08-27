@@ -1,5 +1,5 @@
 import { lazy, Suspense, useMemo } from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Outlet } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import ReactLenis from 'lenis/react';
 import { GlobalNav } from './components/layout/GlobalNav';
@@ -11,7 +11,21 @@ const IphonePage = lazy(() =>
   import('./pages/IphonePage').then(({ IphonePage: Page }) => ({ default: Page })),
 );
 
+const LoginPage = lazy(() =>
+  import('./pages/LoginPage').then(({ LoginPage: Page }) => ({ default: Page })),
+);
+
 const queryClient = new QueryClient();
+
+function MainLayout() {
+  return (
+    <div className="min-h-screen bg-[#f5f5f7] text-[#1d1d1f] font-sans antialiased selection:bg-blue-500 selection:text-white">
+      <GlobalNav />
+      <Outlet />
+      <Footer />
+    </div>
+  );
+}
 
 export default function App() {
   const isReducedMotion = useMemo(
@@ -36,24 +50,26 @@ export default function App() {
     <QueryClientProvider client={queryClient}>
       <ReactLenis root options={lenisOptions}>
         <BrowserRouter>
-          <div className="min-h-screen bg-[#f5f5f7] text-[#1d1d1f] font-sans antialiased selection:bg-blue-500 selection:text-white">
-            <GlobalNav />
-            <Suspense
-              fallback={(
-                <div
-                  className="min-h-[calc(100svh-44px)] bg-black"
-                  role="status"
-                  aria-label="Đang tải trang"
-                />
-              )}
-            >
-              <Routes>
+          <Suspense
+            fallback={(
+              <div
+                className="min-h-[100svh] bg-black"
+                role="status"
+                aria-label="Đang tải trang"
+              />
+            )}
+          >
+            <Routes>
+              {/* Main Layout with GlobalNav and Footer */}
+              <Route element={<MainLayout />}>
                 <Route path="/" element={<HomePage />} />
                 <Route path="/iphone" element={<IphonePage />} />
-              </Routes>
-            </Suspense>
-            <Footer />
-          </div>
+              </Route>
+
+              {/* Standalone Login Route */}
+              <Route path="/login" element={<LoginPage />} />
+            </Routes>
+          </Suspense>
         </BrowserRouter>
       </ReactLenis>
     </QueryClientProvider>

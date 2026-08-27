@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Search, ShoppingBag, Menu, X } from 'lucide-react';
+import { Search, ShoppingBag, User, Menu, X } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
 import { Link, useLocation } from 'react-router-dom';
 
@@ -100,6 +100,9 @@ export function GlobalNav() {
           <div className={`flex items-center space-x-5 ${usesDarkHomeTreatment ? 'text-white/75' : 'text-[#1d1d1f]'}`}>
             <Link to="/" className="nav-glow-link hover:text-[#22c55e] transition-colors" aria-label="Tìm kiếm" onClick={handleCloseMenu}>
               <Search className="w-4 h-4" />
+            </Link>
+            <Link to="/login" className="nav-glow-link hover:text-[#22c55e] transition-colors" aria-label="Đăng nhập" onClick={handleCloseMenu}>
+              <User className="w-4 h-4" />
             </Link>
             <Link to="/" className="nav-glow-link hover:text-[#22c55e] transition-colors" aria-label="Giỏ hàng" onClick={handleCloseMenu}>
               <ShoppingBag className="w-4 h-4" />
