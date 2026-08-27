@@ -12,7 +12,7 @@ const IphonePage = lazy(() =>
 );
 
 const LoginPage = lazy(() =>
-  import('./pages/LoginPage').then(({ LoginPage: Page }) => ({ default: Page })),
+  import('./pages/login/LoginPage').then(({ LoginPage: Page }) => ({ default: Page })),
 );
 
 const queryClient = new QueryClient();
