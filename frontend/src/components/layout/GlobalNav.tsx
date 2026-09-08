@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Search, ShoppingBag, User, Menu, X } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
 import { Link, useLocation } from 'react-router-dom';
@@ -23,7 +23,7 @@ const megaMenuData: Record<string, { title: string; links: string[] }[]> = {
   'iPhone': [
     { title: 'Khám Phá iPhone', links: ['Khám phá iPhone', 'iPhone 17 Pro', 'iPhone 17', 'iPhone 16', 'iPhone 15'] },
     { title: 'Mua Sắm iPhone', links: ['Mua iPhone', 'Phụ kiện iPhone', 'Apple Trade In', 'Tài chính hỗ trợ'] },
-    { title: 'Tìm Hiểu Thêm', links: ['Apple Intelligence', 'iOS 18', 'AppleCare+'] }
+    { title: 'Tìm Hiểu Thêm', links: ['Apple Intelligence', 'iOS 18', 'AppleCare+'] },
   ],
   'Smartphone': [
     { title: 'Dòng máy', links: ['iPhone (Apple)', 'Samsung', 'Xiaomi', 'OPPO'] },
@@ -33,9 +33,9 @@ const megaMenuData: Record<string, { title: string; links: string[] }[]> = {
     { title: '\u00A0', links: ['Galaxy Z Fold7 | Z Flip7', 'Galaxy S26 Series', 'Xiaomi Redmi A7 Pro', 'Xiaomi Redmi 15C', 'Xiaomi Redmi 15 5G', 'Xiaomi Redmi Note 15', 'Xiaomi Redmi Note 15 Pro', 'Xiaomi POCO C85'] },
   ],
   'Watch': [
-    { title: 'Watch mới', links: ['Apple Watch Series 11', 'Apple Watch SE 3 2025', 'Apple Watch Ultra 3 2025', 'Apple Watch Series 10'] },
+    { title: 'Watch mới', links: ['Khám phá Apple Watch', 'Apple Watch Series 11', 'Apple Watch SE 3 2025', 'Apple Watch Ultra 3 2025'] },
     { title: 'Mức giá', links: ['Trên 25 triệu', 'Từ 20 đến 25 triệu', 'Từ 15 đến 20 triệu', 'Từ 10 đến 15 triệu', 'Từ 5 đến 10 triệu', 'Dưới 5 triệu'] },
-    { title: 'Sản phẩm hot 🔥', links: ['Apple Watch Series 11 42mm GPS', 'Apple Watch SE 3 2025 40mm GPS', 'Apple Watch Ultra 3 49mm LTE', 'Apple Watch Series 10 42mm GPS', 'Apple Watch Series 10 46mm GPS'] },
+    { title: 'Sản phẩm hot 🔥', links: ['Apple Watch Series 11 42mm GPS', 'Apple Watch SE 3 2025 40mm GPS', 'Apple Watch Ultra 3 49mm LTE'] },
   ],
   'Hỗ trợ': [
     { title: 'Tìm Trợ Giúp', links: ['iPhone', 'Mac', 'iPad', 'Watch', 'AirPods', 'Bảo Hành'] },
@@ -46,11 +46,47 @@ const megaMenuData: Record<string, { title: string; links: string[] }[]> = {
 
 const navItems = ['Cửa hàng', 'Laptop', 'Tablet', 'iPhone', 'Smartphone', 'Watch', 'Hỗ trợ'];
 
+const getNavLinkPath = (link: string): string => {
+  if (link === 'Khám phá iPhone') return '/iphone';
+  if (link === 'Khám phá Apple Watch') return '/watch';
+  if (link.includes('Series 11')) return '/watch/series-11';
+  if (link.includes('SE 3')) return '/watch/se-3';
+  if (link.includes('Ultra 3')) return '/watch/ultra-3';
+  if (link.includes('Watch')) return '/watch';
+  return '/';
+};
+
 export function GlobalNav() {
   const { mobileMenuOpen, toggleMobileMenu } = useAppStore();
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
+  const [isNearTop, setIsNearTop] = useState<boolean>(false);
+  const [isHovered, setIsHovered] = useState<boolean>(false);
   const { pathname } = useLocation();
-  const usesDarkHomeTreatment = pathname === '/' && !activeMenu;
+  const isWatchRoute = pathname.startsWith('/watch');
+  const usesDarkHomeTreatment = (pathname === '/' || isWatchRoute) && !activeMenu;
+
+  const isItemActive = (item: string) => {
+    if (activeMenu === item) return true;
+    if (!activeMenu) {
+      if (item === 'Watch' && isWatchRoute) return true;
+      if (item === 'iPhone' && pathname.startsWith('/iphone')) return true;
+    }
+    return false;
+  };
+
+  // Track mouse proximity to top edge of browser window (e.g. within 65px)
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (e.clientY <= 65) {
+        setIsNearTop(true);
+      } else {
+        setIsNearTop(false);
+      }
+    };
+
+    window.addEventListener('mousemove', handleMouseMove, { passive: true });
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, []);
 
   const handleMouseEnter = (item: string) => {
     setActiveMenu(item);
@@ -60,16 +96,34 @@ export function GlobalNav() {
     setActiveMenu(null);
   };
 
+  // Nav is visible when mouse is near top, user hovers nav, mega menu is open, or on mobile drawer open
+  const isNavVisible = isNearTop || isHovered || activeMenu !== null || mobileMenuOpen;
+
   return (
     <>
+      {/* Top Proximity Hover Sensor Strip */}
+      <div
+        className="fixed top-0 left-0 right-0 h-4 z-[51] pointer-events-auto"
+        onMouseEnter={() => setIsNearTop(true)}
+      />
+
       <nav
-        className={`sticky top-0 z-50 text-xs font-medium transition-colors duration-300 ${activeMenu
-          ? 'bg-white/95 backdrop-blur-md border-b border-neutral-200/60'
-          : pathname === '/'
+        className={`fixed top-0 left-0 right-0 z-50 text-xs font-medium transition-all duration-300 ease-out ${
+          isNavVisible
+            ? 'translate-y-0 opacity-100 pointer-events-auto shadow-md'
+            : '-translate-y-full opacity-0 pointer-events-none'
+        } ${
+          activeMenu
+            ? 'bg-white/95 backdrop-blur-md border-b border-neutral-200/60'
+            : pathname === '/' || isWatchRoute
             ? 'border-b border-white/[0.06] bg-[#050806]/80 text-white backdrop-blur-md'
-            : 'border-b border-transparent bg-transparent text-[#1d1d1f] hover:bg-white/80 hover:backdrop-blur-md'
-          }`}
-        onMouseLeave={handleCloseMenu}
+            : 'border-b border-neutral-200/40 bg-white/80 text-[#1d1d1f] backdrop-blur-md'
+        }`}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => {
+          setIsHovered(false);
+          handleCloseMenu();
+        }}
       >
         <div className="max-w-[1024px] mx-auto px-4 h-[44px] flex items-center justify-between">
           <Link to="/" className="hover:opacity-80 transition-opacity" onClick={handleCloseMenu}>
@@ -82,14 +136,20 @@ export function GlobalNav() {
               <li key={item}>
                 <button
                   onMouseEnter={() => handleMouseEnter(item)}
-                  className={`nav-glow-link relative flex items-center gap-1 pb-1 transition-all duration-300 ${activeMenu === item ? 'text-[#22c55e]' : usesDarkHomeTreatment ? 'text-white/75 hover:text-white' : 'text-[#1d1d1f]'
-                    }`}
+                  className={`nav-glow-link relative flex items-center gap-1 pb-1 transition-all duration-300 ${
+                    activeMenu === item || isItemActive(item)
+                      ? 'text-[#22c55e]'
+                      : usesDarkHomeTreatment
+                      ? 'text-white/75 hover:text-white'
+                      : 'text-[#1d1d1f]'
+                  }`}
                 >
                   {item}
                   {/* Active underline glow */}
                   <span
-                    className={`absolute bottom-0 left-0 h-[2px] bg-[#22c55e] rounded-full transition-all duration-300 shadow-[0_0_8px_#22c55e,0_0_16px_#22c55e40] ${activeMenu === item ? 'w-full opacity-100' : 'w-0 opacity-0'
-                      }`}
+                    className={`absolute bottom-0 left-0 h-[2px] bg-[#22c55e] rounded-full transition-all duration-300 shadow-[0_0_8px_#22c55e,0_0_16px_#22c55e40] ${
+                      isItemActive(item) ? 'w-full opacity-100' : 'w-0 opacity-0'
+                    }`}
                   />
                 </button>
               </li>
@@ -117,10 +177,11 @@ export function GlobalNav() {
           </div>
         </div>
 
-        {/* Mega Menu Dropdown — positioned absolute so it overlays content */}
+        {/* Mega Menu Dropdown */}
         <div
-          className={`hidden md:block absolute left-0 right-0 top-[44px] bg-white/95 backdrop-blur-xl border-b border-neutral-200/60 overflow-hidden transition-all duration-500 ease-in-out ${activeMenu ? 'max-h-[400px] opacity-100 shadow-xl' : 'max-h-0 opacity-0'
-            }`}
+          className={`hidden md:block absolute left-0 right-0 top-[44px] bg-white/95 backdrop-blur-xl border-b border-neutral-200/60 overflow-hidden transition-all duration-500 ease-in-out ${
+            activeMenu ? 'max-h-[400px] opacity-100 shadow-xl' : 'max-h-0 opacity-0'
+          }`}
         >
           {activeMenu && megaMenuData[activeMenu] && (
             <div className="max-w-[1024px] mx-auto px-4 py-10">
@@ -132,12 +193,13 @@ export function GlobalNav() {
                       {col.links.map((link, linkIdx) => (
                         <li key={linkIdx}>
                           <Link
-                            to={link === 'Khám phá iPhone' ? '/iphone' : '/'}
+                            to={getNavLinkPath(link)}
                             onClick={handleCloseMenu}
-                            className={`block transition-colors duration-200 hover:text-[#22c55e] ${linkIdx === 0 && idx === 0
-                              ? 'text-2xl font-semibold text-[#1d1d1f]'
-                              : 'text-sm font-medium text-[#1d1d1f]'
-                              }`}
+                            className={`block transition-colors duration-200 hover:text-[#22c55e] ${
+                              linkIdx === 0 && idx === 0
+                                ? 'text-2xl font-semibold text-[#1d1d1f]'
+                                : 'text-sm font-medium text-[#1d1d1f]'
+                            }`}
                           >
                             {link}
                           </Link>
@@ -154,16 +216,19 @@ export function GlobalNav() {
         {/* Mobile Navigation Drawer */}
         {mobileMenuOpen && (
           <div className="md:hidden bg-[#1d1d1f] border-t border-neutral-800 px-6 py-6 space-y-4 text-sm text-neutral-200">
-            <Link to="/" className="block py-1 hover:text-white">Cửa hàng</Link>
-            <Link to="/" className="block py-1 hover:text-white">Mac</Link>
-            <Link to="/" className="block py-1 hover:text-white">iPad</Link>
-            <Link to="/" className="block py-1 hover:text-white">iPhone</Link>
-            <Link to="/" className="block py-1 hover:text-white">Watch</Link>
-            <Link to="/" className="block py-1 hover:text-white">AirPods</Link>
-            <Link to="/" className="block py-1 hover:text-white">TV & Nhà</Link>
-            <Link to="/" className="block py-1 hover:text-white">Giải Trí</Link>
-            <Link to="/" className="block py-1 hover:text-white">Phụ Kiện</Link>
-            <Link to="/" className="block py-1 hover:text-white">Hỗ trợ</Link>
+            <Link to="/" className="block py-1 hover:text-white" onClick={toggleMobileMenu}>Cửa hàng</Link>
+            <Link to="/" className="block py-1 hover:text-white" onClick={toggleMobileMenu}>Mac</Link>
+            <Link to="/" className="block py-1 hover:text-white" onClick={toggleMobileMenu}>iPad</Link>
+            <Link to="/iphone" className="block py-1 hover:text-white" onClick={toggleMobileMenu}>iPhone</Link>
+            <Link to="/watch" className="block py-1 hover:text-white font-semibold text-white" onClick={toggleMobileMenu}>Khám phá Apple Watch</Link>
+            <Link to="/watch/series-11" className="block py-1 pl-4 text-xs text-neutral-400 hover:text-white" onClick={toggleMobileMenu}>Apple Watch Series 11</Link>
+            <Link to="/watch/se-3" className="block py-1 pl-4 text-xs text-neutral-400 hover:text-white" onClick={toggleMobileMenu}>Apple Watch SE 3</Link>
+            <Link to="/watch/ultra-3" className="block py-1 pl-4 text-xs text-neutral-400 hover:text-white" onClick={toggleMobileMenu}>Apple Watch Ultra 3</Link>
+            <Link to="/" className="block py-1 hover:text-white" onClick={toggleMobileMenu}>AirPods</Link>
+            <Link to="/" className="block py-1 hover:text-white" onClick={toggleMobileMenu}>TV & Nhà</Link>
+            <Link to="/" className="block py-1 hover:text-white" onClick={toggleMobileMenu}>Giải Trí</Link>
+            <Link to="/" className="block py-1 hover:text-white" onClick={toggleMobileMenu}>Phụ Kiện</Link>
+            <Link to="/" className="block py-1 hover:text-white" onClick={toggleMobileMenu}>Hỗ trợ</Link>
           </div>
         )}
       </nav>

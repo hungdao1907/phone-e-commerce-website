@@ -15,6 +15,23 @@ const LoginPage = lazy(() =>
   import('./pages/login/LoginPage').then(({ LoginPage: Page }) => ({ default: Page })),
 );
 
+const WatchPage = lazy(() =>
+  import('./pages/watch/WatchPage').then(({ WatchPage: Page }) => ({ default: Page })),
+);
+
+const WatchSeries11Page = lazy(() =>
+  import('./pages/watch/series-11/WatchSeries11Page').then(({ WatchSeries11Page: Page }) => ({ default: Page })),
+);
+
+const WatchSE3Page = lazy(() =>
+  import('./pages/watch/se-3/WatchSE3Page').then(({ WatchSE3Page: Page }) => ({ default: Page })),
+);
+
+const WatchUltra3Page = lazy(() =>
+  import('./pages/watch/ultra-3/WatchUltra3Page').then(({ WatchUltra3Page: Page }) => ({ default: Page })),
+);
+
+
 const queryClient = new QueryClient();
 
 function MainLayout() {
@@ -64,6 +81,10 @@ export default function App() {
               <Route element={<MainLayout />}>
                 <Route path="/" element={<HomePage />} />
                 <Route path="/iphone" element={<IphonePage />} />
+                <Route path="/watch" element={<WatchPage />} />
+                <Route path="/watch/series-11" element={<WatchSeries11Page />} />
+                <Route path="/watch/se-3" element={<WatchSE3Page />} />
+                <Route path="/watch/ultra-3" element={<WatchUltra3Page />} />
               </Route>
 
               {/* Standalone Login Route */}

@@ -13,6 +13,7 @@
   "dependencies": {
     "@google/genai": "^2.4.0",
     "@gsap/react": "^2.1.2",
+    "@paper-design/shaders": "^0.0.80",
     "@react-three/drei": "^10.7.8",
     "@react-three/fiber": "^9.7.0",
     "@splinetool/react-spline": "^4.1.0",

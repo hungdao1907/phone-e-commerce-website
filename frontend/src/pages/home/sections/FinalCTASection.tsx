@@ -42,7 +42,7 @@ const RECOMMENDATION_MAP: Record<string, { highlight: string; description: strin
     description: 'Chip xử lý đồ họa Ray Tracing phần cứng cùng tần số quét 120Hz ProMotion cho trải nghiệm gaming đỉnh cao.',
   },
   'everyday-battery': {
-    highlight: 'iPhone 16 Plus & Apple Watch Series 10',
+    highlight: 'iPhone 16 Plus & Apple Watch Series 11',
     description: 'Thời lượng pin ấn tượng nhất dòng iPhone, thiết kế mỏng nhẹ bền bỉ và kết nối liền mạch cả ngày.',
   },
   'everyday-display': {
