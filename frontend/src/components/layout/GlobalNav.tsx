@@ -1,31 +1,30 @@
 import { useState, useEffect } from 'react';
 import { Search, ShoppingBag, User, Menu, X } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
+import { useCartStore } from '../../store/useCartStore';
 import { Link, useLocation } from 'react-router-dom';
 
 // Mega menu data for each nav item
 const megaMenuData: Record<string, { title: string; links: string[] }[]> = {
   'Cửa hàng': [
-    { title: 'Mua Hàng', links: ['Mua Sắm Sản Phẩm Mới Nhất', 'Mac', 'iPad', 'iPhone', 'Apple Watch', 'AirPods', 'Phụ Kiện'] },
+    { title: 'Mua Hàng', links: ['Mua Sắm Sản Phẩm Mới Nhất', 'MacBook', 'iPad', 'iPhone', 'Apple Watch', 'AirPods', 'Phụ Kiện'] },
     { title: 'Liên Kết Nhanh', links: ['Tình Trạng Đơn Hàng', 'Apple Trade In', 'Tài Chính', 'Ưu Đãi Sinh Viên'] },
     { title: 'Cửa Hàng Đặc Biệt', links: ['Giáo Dục', 'Doanh Nghiệp'] },
   ],
   'Laptop': [
-    { title: 'Dòng máy', links: ['MacBook Neo', 'Macbook Air', 'Macbook Pro', 'iMac', 'Mac Studio', 'Mac Mini'] },
-    { title: 'Mức giá', links: ['Trên 50 triệu', 'Từ 40 đến 50 triệu', 'Từ 30 đến 40 triệu', 'Từ 20 đến 30 triệu', 'Dưới 20 triệu'] },
-    { title: 'Sản phẩm HOT 🔥', links: ['MacBook Neo A18 Pro', 'Macbook Air M5 2026', 'MacBook Pro M5 2026', 'MacBook Pro M5 2025', 'MacBook Air M4 2025', 'MacBook Air M2 13 inch'] },
+    { title: 'Thương hiệu', links: ['MacBook (Apple)', 'Dell XPS & Alienware', 'ASUS ROG & ZenBook', 'HP Spectre & OMEN'] },
+    { title: 'Dòng máy nổi bật', links: ['MacBook Pro 16 inch', 'MacBook Air 15 inch', 'Dell XPS 16 (2025)', 'ASUS ROG Zephyrus G16', 'HP Spectre x360'] },
+    { title: 'Mức giá', links: ['Trên 50 triệu', 'Từ 40 đến 50 triệu', 'Từ 30 đến 40 triệu', 'Dưới 30 triệu'] },
   ],
   'Tablet': [
-    { title: 'Dòng máy', links: ['iPad (Apple)', 'Samsung Tab', 'Xiaomi'] },
+    { title: 'Dòng máy', links: ['iPad (Apple)', 'Samsung Tab', 'Xiaomi Pad'] },
     { title: 'Mức giá', links: ['Trên 25 triệu', 'Từ 20 đến 25 triệu', 'Từ 15 đến 20 triệu', 'Từ 10 đến 15 triệu', 'Từ 5 đến 10 triệu', 'Dưới 5 triệu'] },
     { title: 'Sản phẩm HOT 🔥', links: ['iPad Air M4', 'iPad Pro M5', 'iPad Air M3', 'iPad A16', 'iPad mini 7'] },
   ],
-  'iPhone': [
+  'Smartphone': [
     { title: 'Khám Phá iPhone', links: ['Khám phá iPhone', 'iPhone 17 Pro', 'iPhone 17', 'iPhone 16', 'iPhone 15'] },
     { title: 'Mua Sắm iPhone', links: ['Mua iPhone', 'Phụ kiện iPhone', 'Apple Trade In', 'Tài chính hỗ trợ'] },
     { title: 'Tìm Hiểu Thêm', links: ['Apple Intelligence', 'iOS 18', 'AppleCare+'] },
-  ],
-  'Smartphone': [
     { title: 'Dòng máy', links: ['iPhone (Apple)', 'Samsung', 'Xiaomi', 'OPPO'] },
     { title: 'Mức giá điện thoại', links: ['Trên 20 triệu', 'Từ 10 đến 20 triệu', 'Dưới 10 triệu'] },
     { title: 'Điện thoại HOT 🔥', links: ['iPhone 17 Pro Max', 'iPhone 17 Pro', 'iPhone 17', 'iPhone Air', 'iPhone 17e', 'iPhone 16 Plus', 'iPhone 16', 'iPhone 15 Plus'] },
@@ -44,49 +43,49 @@ const megaMenuData: Record<string, { title: string; links: string[] }[]> = {
   ],
 };
 
-const navItems = ['Cửa hàng', 'Laptop', 'Tablet', 'iPhone', 'Smartphone', 'Watch', 'Hỗ trợ'];
+const navItems = ['Cửa hàng', 'Laptop', 'Tablet', 'Smartphone', 'Watch', 'Hỗ trợ'];
 
 const getNavLinkPath = (link: string): string => {
-  if (link === 'Khám phá iPhone') return '/iphone';
+  if (link === 'MacBook (Apple)' || link.includes('MacBook') || link === 'Mac') return '/laptop/apple';
+  if (link.includes('Dell')) return '/laptop/dell';
+  if (link.includes('ASUS') || link.includes('ROG') || link.includes('ZenBook')) return '/laptop/asus';
+  if (link.includes('HP') || link.includes('Spectre') || link.includes('OMEN') || link.includes('Envy')) return '/laptop/hp';
+  if (link === 'iPad (Apple)') return '/tablet/apple';
+  if (link === 'Samsung Tab') return '/tablet/samsung';
+  if (link === 'Xiaomi Pad') return '/tablet/xiaomi';
+  if (link.includes('iPhone')) return '/iphone';
+  if (link.includes('Xiaomi')) return '/xiaomi';
+  if (link.includes('OPPO')) return '/oppo';
   if (link === 'Khám phá Apple Watch') return '/watch';
   if (link.includes('Series 11')) return '/watch/series-11';
   if (link.includes('SE 3')) return '/watch/se-3';
   if (link.includes('Ultra 3')) return '/watch/ultra-3';
   if (link.includes('Watch')) return '/watch';
+  if (link === 'Samsung' || link.includes('Galaxy')) return '/samsung';
   return '/';
 };
 
 export function GlobalNav() {
   const { mobileMenuOpen, toggleMobileMenu } = useAppStore();
+  const cartItemCount = useCartStore((state) => state.items.reduce((total, item) => total + item.quantity, 0));
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
-  const [isNearTop, setIsNearTop] = useState<boolean>(false);
-  const [isHovered, setIsHovered] = useState<boolean>(false);
   const { pathname } = useLocation();
   const isWatchRoute = pathname.startsWith('/watch');
-  const usesDarkHomeTreatment = (pathname === '/' || isWatchRoute) && !activeMenu;
+  const isTabletRoute = pathname.startsWith('/tablet');
+  const isLaptopRoute = pathname.startsWith('/laptop');
+  const isSmartphoneRoute = pathname.startsWith('/samsung') || pathname.startsWith('/iphone') || pathname.startsWith('/xiaomi') || pathname.startsWith('/oppo') || pathname.startsWith('/product');
+  const isSamsungDetailRoute = pathname.startsWith('/samsung/') && pathname.split('/').filter(Boolean).length >= 2;
 
   const isItemActive = (item: string) => {
     if (activeMenu === item) return true;
     if (!activeMenu) {
+      if (item === 'Laptop' && isLaptopRoute) return true;
       if (item === 'Watch' && isWatchRoute) return true;
-      if (item === 'iPhone' && pathname.startsWith('/iphone')) return true;
+      if (item === 'Tablet' && isTabletRoute) return true;
+      if (item === 'Smartphone' && isSmartphoneRoute) return true;
     }
     return false;
   };
-
-  // Track mouse proximity to top edge of browser window (e.g. within 65px)
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      if (e.clientY <= 65) {
-        setIsNearTop(true);
-      } else {
-        setIsNearTop(false);
-      }
-    };
-
-    window.addEventListener('mousemove', handleMouseMove, { passive: true });
-    return () => window.removeEventListener('mousemove', handleMouseMove);
-  }, []);
 
   const handleMouseEnter = (item: string) => {
     setActiveMenu(item);
@@ -96,34 +95,20 @@ export function GlobalNav() {
     setActiveMenu(null);
   };
 
-  // Nav is visible when mouse is near top, user hovers nav, mega menu is open, or on mobile drawer open
-  const isNavVisible = isNearTop || isHovered || activeMenu !== null || mobileMenuOpen;
+  // Do not render GlobalNav on Samsung series detail pages
+  if (isSamsungDetailRoute) {
+    return null;
+  }
 
   return (
     <>
-      {/* Top Proximity Hover Sensor Strip */}
-      <div
-        className="fixed top-0 left-0 right-0 h-4 z-[51] pointer-events-auto"
-        onMouseEnter={() => setIsNearTop(true)}
-      />
-
       <nav
-        className={`fixed top-0 left-0 right-0 z-50 text-xs font-medium transition-all duration-300 ease-out ${
-          isNavVisible
-            ? 'translate-y-0 opacity-100 pointer-events-auto shadow-md'
-            : '-translate-y-full opacity-0 pointer-events-none'
-        } ${
+        className={`fixed top-0 left-0 right-0 z-50 text-xs font-medium transition-all duration-300 ease-out translate-y-0 opacity-100 pointer-events-auto shadow-sm ${
           activeMenu
-            ? 'bg-white/95 backdrop-blur-md border-b border-neutral-200/60'
-            : pathname === '/' || isWatchRoute
-            ? 'border-b border-white/[0.06] bg-[#050806]/80 text-white backdrop-blur-md'
-            : 'border-b border-neutral-200/40 bg-white/80 text-[#1d1d1f] backdrop-blur-md'
+            ? 'bg-white/95 backdrop-blur-md border-b border-neutral-200/60 text-black'
+            : 'border-b border-neutral-200/50 bg-white/85 text-black backdrop-blur-md'
         }`}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => {
-          setIsHovered(false);
-          handleCloseMenu();
-        }}
+        onMouseLeave={handleCloseMenu}
       >
         <div className="max-w-[1024px] mx-auto px-4 h-[44px] flex items-center justify-between">
           <Link to="/" className="hover:opacity-80 transition-opacity" onClick={handleCloseMenu}>
@@ -131,7 +116,7 @@ export function GlobalNav() {
           </Link>
 
           {/* Desktop Nav Links */}
-          <ul className={`hidden items-center space-x-7 md:flex ${usesDarkHomeTreatment ? 'text-white/75' : 'text-[#1d1d1f]'}`}>
+          <ul className="hidden items-center space-x-7 md:flex text-black">
             {navItems.map((item) => (
               <li key={item}>
                 <button
@@ -139,9 +124,7 @@ export function GlobalNav() {
                   className={`nav-glow-link relative flex items-center gap-1 pb-1 transition-all duration-300 ${
                     activeMenu === item || isItemActive(item)
                       ? 'text-[#22c55e]'
-                      : usesDarkHomeTreatment
-                      ? 'text-white/75 hover:text-white'
-                      : 'text-[#1d1d1f]'
+                      : 'text-black hover:text-[#22c55e]'
                   }`}
                 >
                   {item}
@@ -157,19 +140,24 @@ export function GlobalNav() {
           </ul>
 
           {/* Icons & Mobile Toggle */}
-          <div className={`flex items-center space-x-5 ${usesDarkHomeTreatment ? 'text-white/75' : 'text-[#1d1d1f]'}`}>
-            <Link to="/" className="nav-glow-link hover:text-[#22c55e] transition-colors" aria-label="Tìm kiếm" onClick={handleCloseMenu}>
+          <div className="flex items-center space-x-5 text-black">
+            <Link to="/" className="nav-glow-link text-black hover:text-[#22c55e] transition-colors" aria-label="Tìm kiếm" onClick={handleCloseMenu}>
               <Search className="w-4 h-4" />
             </Link>
-            <Link to="/login" className="nav-glow-link hover:text-[#22c55e] transition-colors" aria-label="Đăng nhập" onClick={handleCloseMenu}>
+            <Link to="/login" className="nav-glow-link text-black hover:text-[#22c55e] transition-colors" aria-label="Đăng nhập" onClick={handleCloseMenu}>
               <User className="w-4 h-4" />
             </Link>
-            <Link to="/" className="nav-glow-link hover:text-[#22c55e] transition-colors" aria-label="Giỏ hàng" onClick={handleCloseMenu}>
+            <Link to="/cart" className="nav-glow-link relative text-black hover:text-[#22c55e] transition-colors" aria-label={"Giỏ hàng" + (cartItemCount ? " (" + cartItemCount + ")" : "")} onClick={handleCloseMenu}>
               <ShoppingBag className="w-4 h-4" />
+              {cartItemCount > 0 ? (
+                <span className="absolute -right-2.5 -top-2.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-neutral-950 px-1 text-[9px] font-semibold text-white">
+                  {cartItemCount > 9 ? "9+" : cartItemCount}
+                </span>
+              ) : null}
             </Link>
             <button
               onClick={toggleMobileMenu}
-              className="md:hidden hover:text-[#22c55e] transition-colors focus:outline-none"
+              className="md:hidden text-black hover:text-[#22c55e] transition-colors focus:outline-none"
               aria-label="Toggle Navigation"
             >
               {mobileMenuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
@@ -217,18 +205,34 @@ export function GlobalNav() {
         {mobileMenuOpen && (
           <div className="md:hidden bg-[#1d1d1f] border-t border-neutral-800 px-6 py-6 space-y-4 text-sm text-neutral-200">
             <Link to="/" className="block py-1 hover:text-white" onClick={toggleMobileMenu}>Cửa hàng</Link>
-            <Link to="/" className="block py-1 hover:text-white" onClick={toggleMobileMenu}>Mac</Link>
-            <Link to="/" className="block py-1 hover:text-white" onClick={toggleMobileMenu}>iPad</Link>
-            <Link to="/iphone" className="block py-1 hover:text-white" onClick={toggleMobileMenu}>iPhone</Link>
-            <Link to="/watch" className="block py-1 hover:text-white font-semibold text-white" onClick={toggleMobileMenu}>Khám phá Apple Watch</Link>
-            <Link to="/watch/series-11" className="block py-1 pl-4 text-xs text-neutral-400 hover:text-white" onClick={toggleMobileMenu}>Apple Watch Series 11</Link>
-            <Link to="/watch/se-3" className="block py-1 pl-4 text-xs text-neutral-400 hover:text-white" onClick={toggleMobileMenu}>Apple Watch SE 3</Link>
-            <Link to="/watch/ultra-3" className="block py-1 pl-4 text-xs text-neutral-400 hover:text-white" onClick={toggleMobileMenu}>Apple Watch Ultra 3</Link>
-            <Link to="/" className="block py-1 hover:text-white" onClick={toggleMobileMenu}>AirPods</Link>
-            <Link to="/" className="block py-1 hover:text-white" onClick={toggleMobileMenu}>TV & Nhà</Link>
-            <Link to="/" className="block py-1 hover:text-white" onClick={toggleMobileMenu}>Giải Trí</Link>
-            <Link to="/" className="block py-1 hover:text-white" onClick={toggleMobileMenu}>Phụ Kiện</Link>
-            <Link to="/" className="block py-1 hover:text-white" onClick={toggleMobileMenu}>Hỗ trợ</Link>
+
+            <p className="pt-2 text-xs font-semibold uppercase tracking-wider text-neutral-400">Laptop</p>
+            <Link to="/laptop/apple" className="block py-1 pl-3 hover:text-white" onClick={toggleMobileMenu}>MacBook</Link>
+            <Link to="/laptop/dell" className="block py-1 pl-3 hover:text-white" onClick={toggleMobileMenu}>Dell XPS & Alienware</Link>
+            <Link to="/laptop/asus" className="block py-1 pl-3 hover:text-white" onClick={toggleMobileMenu}>ASUS ROG & ZenBook</Link>
+            <Link to="/laptop/hp" className="block py-1 pl-3 hover:text-white" onClick={toggleMobileMenu}>HP Spectre & OMEN</Link>
+
+            <p className="pt-2 text-xs font-semibold uppercase tracking-wider text-neutral-400">Tablet</p>
+            <Link to="/tablet/apple" className="block py-1 pl-3 hover:text-white" onClick={toggleMobileMenu}>iPad</Link>
+            <Link to="/tablet/samsung" className="block py-1 pl-3 hover:text-white" onClick={toggleMobileMenu}>Galaxy Tab</Link>
+            <Link to="/tablet/xiaomi" className="block py-1 pl-3 hover:text-white" onClick={toggleMobileMenu}>Xiaomi Pad</Link>
+
+            <p className="pt-2 text-xs font-semibold uppercase tracking-wider text-neutral-400">Smartphone</p>
+            <Link to="/iphone" className="block py-1 pl-3 hover:text-white" onClick={toggleMobileMenu}>iPhone</Link>
+            <Link to="/samsung" className="block py-1 pl-3 hover:text-white" onClick={toggleMobileMenu}>Samsung Galaxy</Link>
+            <Link to="/xiaomi" className="block py-1 pl-3 hover:text-white" onClick={toggleMobileMenu}>Xiaomi</Link>
+            <Link to="/oppo" className="block py-1 pl-3 hover:text-white" onClick={toggleMobileMenu}>OPPO</Link>
+
+            <p className="pt-2 text-xs font-semibold uppercase tracking-wider text-neutral-400">Watch</p>
+            <Link to="/watch" className="block py-1 pl-3 hover:text-white" onClick={toggleMobileMenu}>Khám phá Apple Watch</Link>
+            <Link to="/watch/series-11" className="block py-1 pl-5 text-xs text-neutral-400 hover:text-white" onClick={toggleMobileMenu}>Apple Watch Series 11</Link>
+            <Link to="/watch/se-3" className="block py-1 pl-5 text-xs text-neutral-400 hover:text-white" onClick={toggleMobileMenu}>Apple Watch SE 3</Link>
+            <Link to="/watch/ultra-3" className="block py-1 pl-5 text-xs text-neutral-400 hover:text-white" onClick={toggleMobileMenu}>Apple Watch Ultra 3</Link>
+
+            <div className="border-t border-neutral-800 pt-3">
+              <Link to="/cart" className="block py-1 hover:text-white" onClick={toggleMobileMenu}>Giỏ hàng</Link>
+              <Link to="/login" className="block py-1 hover:text-white" onClick={toggleMobileMenu}>Tài khoản</Link>
+            </div>
           </div>
         )}
       </nav>

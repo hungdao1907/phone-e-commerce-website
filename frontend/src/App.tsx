@@ -7,10 +7,9 @@ import { Footer } from './components/layout/Footer';
 import { HomePage } from './pages/home/HomePage';
 import 'lenis/dist/lenis.css';
 
-const IphonePage = lazy(() =>
-  import('./pages/iphone/IphonePage').then(({ IphonePage: Page }) => ({ default: Page })),
+const SmartphonePage = lazy(() =>
+  import('./pages/smartphone/SmartphonePage').then(({ SmartphonePage: Page }) => ({ default: Page })),
 );
-
 const LoginPage = lazy(() =>
   import('./pages/login/LoginPage').then(({ LoginPage: Page }) => ({ default: Page })),
 );
@@ -31,6 +30,19 @@ const WatchUltra3Page = lazy(() =>
   import('./pages/watch/ultra-3/WatchUltra3Page').then(({ WatchUltra3Page: Page }) => ({ default: Page })),
 );
 
+const TabletPage = lazy(() =>
+  import('./pages/tablet/TabletPage').then(({ TabletPage: Page }) => ({ default: Page })),
+);
+const LaptopPage = lazy(() =>
+  import('./pages/laptop/LaptopPage').then(({ LaptopPage: Page }) => ({ default: Page })),
+);
+const ProductPurchasePage = lazy(() =>
+  import('./pages/product/ProductPurchasePage').then(({ ProductPurchasePage: Page }) => ({ default: Page })),
+);
+
+const CartPage = lazy(() =>
+  import('./pages/cart/CartPage').then(({ CartPage: Page }) => ({ default: Page })),
+);
 
 const queryClient = new QueryClient();
 
@@ -80,11 +92,23 @@ export default function App() {
               {/* Main Layout with GlobalNav and Footer */}
               <Route element={<MainLayout />}>
                 <Route path="/" element={<HomePage />} />
-                <Route path="/iphone" element={<IphonePage />} />
+                <Route path="/iphone" element={<SmartphonePage brand="iphone" />} />
                 <Route path="/watch" element={<WatchPage />} />
                 <Route path="/watch/series-11" element={<WatchSeries11Page />} />
                 <Route path="/watch/se-3" element={<WatchSE3Page />} />
                 <Route path="/watch/ultra-3" element={<WatchUltra3Page />} />
+                <Route path="/samsung" element={<SmartphonePage brand="samsung" />} />
+                <Route path="/xiaomi" element={<SmartphonePage brand="xiaomi" />} />
+                <Route path="/oppo" element={<SmartphonePage brand="oppo" />} />
+                <Route path="/tablet/apple" element={<TabletPage brand="apple" />} />
+                <Route path="/tablet/samsung" element={<TabletPage brand="samsung" />} />
+                <Route path="/tablet/xiaomi" element={<TabletPage brand="xiaomi" />} />
+                <Route path="/laptop/apple" element={<LaptopPage brand="apple" />} />
+                <Route path="/laptop/dell" element={<LaptopPage brand="dell" />} />
+                <Route path="/laptop/asus" element={<LaptopPage brand="asus" />} />
+                <Route path="/laptop/hp" element={<LaptopPage brand="hp" />} />
+                <Route path="/product/:slug" element={<ProductPurchasePage />} />
+                <Route path="/cart" element={<CartPage />} />
               </Route>
 
               {/* Standalone Login Route */}
