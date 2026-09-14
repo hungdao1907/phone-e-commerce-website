@@ -1,6 +1,8 @@
 import React, { useState, useRef } from 'react';
 import { Search, ShoppingBag, Menu, X, User } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
+import { useAuthStore } from '../../store/authStore';
+import { useCartStore } from '../../store/useCartStore';
 import { Link, useLocation } from 'react-router-dom';
 
 // Mega menu data for each nav item
@@ -53,6 +55,9 @@ export function GlobalNav() {
   
   const location = useLocation();
   const isIphonePage = location.pathname === '/iphone';
+
+  const items = useCartStore((state: any) => state.items);
+  const cartItemCount = items.reduce((total: number, item: any) => total + item.quantity, 0);
 
   if (activeMenu) {
     previousMenuRef.current = activeMenu;
@@ -110,11 +115,56 @@ export function GlobalNav() {
             <Link to="/" className="nav-glow-link hover:text-[#22c55e] transition-colors" aria-label="Tìm kiếm" onClick={handleCloseMenu}>
               <Search className="w-4 h-4" />
             </Link>
-            <Link to="/login" className="nav-glow-link hover:text-[#22c55e] transition-colors" aria-label="Đăng nhập" onClick={handleCloseMenu}>
-              <User className="w-4 h-4" />
-            </Link>
-            <Link to="/" className="nav-glow-link hover:text-[#22c55e] transition-colors" aria-label="Giỏ hàng" onClick={handleCloseMenu}>
+            
+            {/* User Dropdown */}
+            <div className="relative group">
+              <Link 
+                to={useAuthStore.getState().user ? "/profile" : "/login"} 
+                className="nav-glow-link hover:text-[#22c55e] transition-colors" 
+                aria-label="Tài khoản" 
+                onClick={handleCloseMenu}
+              >
+                <User className="w-4 h-4" />
+              </Link>
+              
+              {/* Dropdown Menu on Hover */}
+              {useAuthStore.getState().user && (
+                <div className="absolute right-0 top-full mt-2 w-48 bg-white border border-neutral-200 rounded-xl shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 overflow-hidden z-50">
+                  <div className="px-4 py-3 border-b border-neutral-100 bg-neutral-50/50">
+                    <p className="text-sm font-medium text-neutral-900 truncate">
+                      {useAuthStore.getState().user?.username}
+                    </p>
+                  </div>
+                  <div className="py-1">
+                    <Link to="/profile" className="block px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-50 hover:text-[#22c55e]">
+                      Hồ sơ của tôi
+                    </Link>
+                    {useAuthStore.getState().user?.role !== 'customer' && (
+                      <Link to="/dashboard" className="block px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-50 hover:text-[#22c55e]">
+                        Vào Dashboard
+                      </Link>
+                    )}
+                    <button 
+                      onClick={() => {
+                        useAuthStore.getState().logout();
+                        window.location.href = '/login';
+                      }}
+                      className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                    >
+                      Đăng xuất
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <Link to="/cart" className="nav-glow-link hover:text-[#22c55e] transition-colors relative" aria-label="Giỏ hàng" onClick={handleCloseMenu}>
               <ShoppingBag className="w-4 h-4" />
+              {cartItemCount > 0 && (
+                <span className="absolute top-0 right-0 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                  {cartItemCount}
+                </span>
+              )}
             </Link>
             <button
               onClick={toggleMobileMenu}
