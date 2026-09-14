@@ -4,18 +4,122 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { ProductConfigurator } from '@/components/product/ProductConfigurator';
 import { ProductGallery } from '@/components/product/ProductGallery';
 import { ProductSpecifications } from '@/components/product/ProductSpecifications';
-import { getPurchaseProductBySlug } from './data';
-import type { ProductVariant } from './types';
+import { getPurchaseProductBySlug } from '@/data/mockPurchaseProducts';
+import type { ProductVariant } from '@/types/product/productPurchase';
 import { useCartStore } from '../../store/useCartStore';
 import '@/css/product-purchase.css';
 
-
 export function ProductPurchasePage() {
   const { slug } = useParams<{ slug: string }>();
-  const product = useMemo(() => getPurchaseProductBySlug(slug), [slug]);
+  const [product, setProduct] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  
   const navigate = useNavigate();
   const addCartItem = useCartStore((state) => state.addItem);
-  const initialVariant = product?.variants.find((variant) => variant.stock > 0) ?? product?.variants[0];
+
+  useEffect(() => {
+    if (!slug) return;
+    const fetchProduct = async () => {
+      try {
+        const res = await fetch(`http://localhost:3001/api/products/${slug}`);
+        if (res.ok) {
+          const dbProduct = await res.json();
+          
+          const uniqueColors = new Map();
+          dbProduct.variants?.forEach((v: any) => {
+            const colorName = v.attributes?.['Màu sắc'] || 'Màu mặc định';
+            if (!uniqueColors.has(colorName)) {
+              uniqueColors.set(colorName, {
+                id: `color-${colorName}`,
+                name: colorName,
+                hex: v.colorCode ? (v.colorCode.startsWith('#') ? v.colorCode : `#${v.colorCode}`) : '#CCCCCC',
+                images: v.image ? [v.image] : [dbProduct.image].filter(Boolean)
+              });
+            }
+          });
+          const colors = Array.from(uniqueColors.values());
+          if (colors.length === 0) colors.push({ id: 'default-color', name: 'Mặc định', hex: '#CCCCCC', images: [dbProduct.image].filter(Boolean) });
+
+          const activeCampaign = dbProduct.activeCampaign;
+
+          const calculateDiscount = (originalPrice: number) => {
+            if (!activeCampaign) return originalPrice;
+            if (activeCampaign.discountType === 'percentage') {
+              return Math.max(0, originalPrice - (originalPrice * activeCampaign.discountValue / 100));
+            }
+            return Math.max(0, originalPrice - activeCampaign.discountValue);
+          };
+
+          const uniqueStorages = new Map();
+          dbProduct.variants?.forEach((v: any) => {
+            const storageLabel = v.attributes?.['Dung lượng'] || 'Tiêu chuẩn';
+            if (!uniqueStorages.has(storageLabel)) {
+              const basePrice = v.price || dbProduct.price || 0;
+              uniqueStorages.set(storageLabel, {
+                id: `storage-${storageLabel}`,
+                label: storageLabel,
+                price: calculateDiscount(basePrice),
+                originalPrice: basePrice,
+                stockByColor: colors.map(() => v.stock || 0)
+              });
+            }
+          });
+          let storageOptions = Array.from(uniqueStorages.values());
+          if (storageOptions.length === 0) {
+            const basePrice = dbProduct.price || 0;
+            storageOptions = [{ id: 'default-storage', label: 'Tiêu chuẩn', price: calculateDiscount(basePrice), originalPrice: basePrice, stockByColor: colors.map(() => 0) }];
+          }
+
+          const variants = dbProduct.variants?.map((v: any) => {
+            const colorName = v.attributes?.['Màu sắc'] || 'Màu mặc định';
+            const storageLabel = v.attributes?.['Dung lượng'] || 'Tiêu chuẩn';
+            const basePrice = v.price || dbProduct.price || 0;
+            return {
+              id: v.id,
+              colorId: `color-${colorName}`,
+              storageId: `storage-${storageLabel}`,
+              price: calculateDiscount(basePrice),
+              originalPrice: basePrice,
+              stock: v.stock || 0
+            };
+          }) || [];
+
+          if (variants.length === 0) {
+            const basePrice = dbProduct.price || 0;
+            variants.push({ id: 'default-variant', colorId: colors[0].id, storageId: storageOptions[0].id, price: calculateDiscount(basePrice), originalPrice: basePrice, stock: 0 });
+          }
+
+          const mappedProduct = {
+            id: dbProduct.id,
+            slug: dbProduct.id,
+            brand: dbProduct.category?.name || 'Samsung',
+            name: dbProduct.name,
+            tagline: dbProduct.description || 'Sản phẩm mới nhất',
+            badge: 'Mới',
+            defaultImage: dbProduct.image || 'https://via.placeholder.com/300',
+            galleryImages: [dbProduct.image].filter(Boolean),
+            colors,
+            storageOptions,
+            specifications: [
+              { label: 'Thông tin', value: dbProduct.description || 'Chưa có thông tin chi tiết.' }
+            ],
+            variants
+          };
+          setProduct(mappedProduct);
+        } else {
+          // Fallback to local data
+          setProduct(getPurchaseProductBySlug(slug));
+        }
+      } catch (err) {
+        console.error("API fetch failed, falling back to local data.", err);
+        setProduct(getPurchaseProductBySlug(slug));
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProduct();
+  }, [slug]);
+
   const catalogHref = product?.category === 'tablet'
     ? product.brand === 'iPad'
       ? '/tablet/apple#tablet-all-products'
@@ -30,12 +134,22 @@ export function ProductPurchasePage() {
           ? '/oppo#oppo-all-products'
           : '/samsung#samsung-all-products';
 
-  const [selectedColorId, setSelectedColorId] = useState(initialVariant?.colorId ?? '');
-  const [selectedStorageId, setSelectedStorageId] = useState(initialVariant?.storageId ?? '');
+  const [selectedColorId, setSelectedColorId] = useState('');
+  const [selectedStorageId, setSelectedStorageId] = useState('');
   const [quantity, setQuantity] = useState(1);
 
+  useEffect(() => {
+    if (product) {
+      const initialVariant = product.variants?.find((variant: any) => variant.stock > 0) ?? product.variants?.[0];
+      if (initialVariant) {
+        setSelectedColorId(initialVariant.colorId);
+        setSelectedStorageId(initialVariant.storageId);
+      }
+    }
+  }, [product]);
+
   const selectedVariant = useMemo<ProductVariant | undefined>(() => (
-    product?.variants.find((variant) => (
+    product?.variants?.find((variant: any) => (
       variant.colorId === selectedColorId && variant.storageId === selectedStorageId
     ))
   ), [product, selectedColorId, selectedStorageId]);
@@ -43,23 +157,19 @@ export function ProductPurchasePage() {
   const galleryImages = useMemo(() => {
     if (!product) return [];
 
-    const selectedColor = product.colors.find((color) => color.id === selectedColorId);
+    const selectedColor = product.colors.find((color: any) => color.id === selectedColorId);
     return selectedVariant?.images ?? selectedColor?.images ?? product.galleryImages ?? [product.defaultImage];
   }, [product, selectedColorId, selectedVariant]);
 
   useEffect(() => {
     if (!product) {
-      document.title = 'Sản phẩm không khả dụng';
+      if (!loading) document.title = 'Sản phẩm không khả dụng';
       return;
     }
-
-    const defaultVariant = product.variants.find((variant) => variant.stock > 0) ?? product.variants[0];
-    setSelectedColorId(defaultVariant?.colorId ?? '');
-    setSelectedStorageId(defaultVariant?.storageId ?? '');
     setQuantity(1);
     document.title = product.name + ' | Cửa Hàng Công Nghệ';
     window.scrollTo(0, 0);
-  }, [product]);
+  }, [product, loading]);
 
   useEffect(() => {
     const allowedQuantity = Math.max(1, Math.min(selectedVariant?.stock ?? 1, 5));
@@ -69,8 +179,8 @@ export function ProductPurchasePage() {
   const handlePurchase = (action: 'cart' | 'buy-now') => {
     if (!product || !selectedVariant || selectedVariant.stock === 0) return;
 
-    const selectedColor = product.colors.find((color) => color.id === selectedColorId);
-    const selectedStorage = product.storageOptions.find((storage) => storage.id === selectedStorageId);
+    const selectedColor = product.colors.find((color: any) => color.id === selectedColorId);
+    const selectedStorage = product.storageOptions.find((storage: any) => storage.id === selectedStorageId);
 
     addCartItem({
       productId: product.id,
@@ -90,11 +200,20 @@ export function ProductPurchasePage() {
 
     navigate(action === 'buy-now' ? '/cart?checkout=1' : '/cart');
   };
+
+  if (loading) {
+    return (
+      <main className="product-purchase-page min-h-[100svh] bg-white px-4 pb-20 pt-28 text-neutral-950 flex items-center justify-center">
+        <div className="w-10 h-10 border-4 border-neutral-200 border-t-neutral-900 rounded-full animate-spin"></div>
+      </main>
+    );
+  }
+
   if (!product) {
     return (
       <main className="product-purchase-page min-h-[100svh] bg-white px-4 pb-20 pt-28 text-neutral-950 sm:px-6">
         <section className="mx-auto max-w-xl rounded-3xl border border-neutral-200 bg-[#f6f7f9] p-8 text-center sm:p-12">
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-neutral-500">Samsung</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-neutral-500">Thông báo</p>
           <h1 className="mt-4 text-3xl font-bold tracking-tight">Sản phẩm chưa khả dụng</h1>
           <p className="mt-3 text-neutral-600">
             Sản phẩm này chưa có dữ liệu cấu hình để mua trực tuyến.
@@ -104,7 +223,7 @@ export function ProductPurchasePage() {
             className="mt-7 inline-flex items-center gap-2 rounded-full bg-neutral-950 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-black"
           >
             <ArrowLeft className="h-4 w-4" />
-            Quay lại sản phẩm Samsung
+            Quay lại cửa hàng
           </Link>
         </section>
       </main>
@@ -121,7 +240,7 @@ export function ProductPurchasePage() {
           className="inline-flex items-center gap-2 rounded-full px-1 py-2 text-sm font-medium text-neutral-600 transition-colors hover:text-neutral-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
         >
           <ArrowLeft className="h-4 w-4" />
-          {product.category === 'tablet' ? product.brand : 'Galaxy'}
+          {product.category === 'tablet' ? product.brand : product.brand}
         </Link>
 
         <div className="mt-7 grid items-start gap-12 lg:mt-10 lg:grid-cols-[minmax(0,1.18fr)_minmax(400px,0.82fr)] lg:gap-16 xl:gap-20">

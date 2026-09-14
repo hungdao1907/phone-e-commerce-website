@@ -6,9 +6,8 @@ import {
   BrandAllProductsSection,
   BrandWhySection,
   BrandFinalCTASection,
-} from './sections';
-import type { BrandConfig, BrandModel } from './types';
-import '@/css/smartphone.css';
+} from '@/components/smartphone';
+import type { BrandConfig, BrandModel } from '@/types/smartphone';
 
 interface SmartphoneCatalogPageProps {
   config: BrandConfig;

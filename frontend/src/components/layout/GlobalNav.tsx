@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
-import { Search, ShoppingBag, User, Menu, X } from 'lucide-react';
+import { useState, useRef } from 'react';
+import { Search, ShoppingBag, Menu, X, User } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
+import { useAuthStore } from '../../store/authStore';
 import { useCartStore } from '../../store/useCartStore';
 import { Link, useLocation } from 'react-router-dom';
 
@@ -69,12 +70,14 @@ export function GlobalNav() {
   const { mobileMenuOpen, toggleMobileMenu } = useAppStore();
   const cartItemCount = useCartStore((state) => state.items.reduce((total, item) => total + item.quantity, 0));
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
+  
   const { pathname } = useLocation();
   const isWatchRoute = pathname.startsWith('/watch');
   const isTabletRoute = pathname.startsWith('/tablet');
   const isLaptopRoute = pathname.startsWith('/laptop');
   const isSmartphoneRoute = pathname.startsWith('/samsung') || pathname.startsWith('/iphone') || pathname.startsWith('/xiaomi') || pathname.startsWith('/oppo') || pathname.startsWith('/product');
   const isSamsungDetailRoute = pathname.startsWith('/samsung/') && pathname.split('/').filter(Boolean).length >= 2;
+  const isIphonePage = pathname === '/iphone';
 
   const isItemActive = (item: string) => {
     if (activeMenu === item) return true;
@@ -86,6 +89,12 @@ export function GlobalNav() {
     }
     return false;
   };
+
+  const previousMenuRef = useRef<string | null>(null);
+  if (activeMenu) {
+    previousMenuRef.current = activeMenu;
+  }
+  const displayMenu = activeMenu || previousMenuRef.current;
 
   const handleMouseEnter = (item: string) => {
     setActiveMenu(item);
@@ -106,7 +115,9 @@ export function GlobalNav() {
         className={`fixed top-0 left-0 right-0 z-50 text-xs font-medium transition-all duration-300 ease-out translate-y-0 opacity-100 pointer-events-auto shadow-sm ${
           activeMenu
             ? 'bg-white/95 backdrop-blur-md border-b border-neutral-200/60 text-black'
-            : 'border-b border-neutral-200/50 bg-white/85 text-black backdrop-blur-md'
+            : isIphonePage
+              ? 'bg-transparent border-b border-transparent hover:bg-black/90 text-[#f5f5f7] hover:backdrop-blur-md'
+              : 'border-b border-neutral-200/50 bg-white/85 text-black backdrop-blur-md hover:bg-white/95'
         }`}
         onMouseLeave={handleCloseMenu}
       >
@@ -116,7 +127,7 @@ export function GlobalNav() {
           </Link>
 
           {/* Desktop Nav Links */}
-          <ul className="hidden items-center space-x-7 md:flex text-black">
+          <ul className="hidden items-center space-x-7 md:flex">
             {navItems.map((item) => (
               <li key={item}>
                 <button
@@ -124,7 +135,7 @@ export function GlobalNav() {
                   className={`nav-glow-link relative flex items-center gap-1 pb-1 transition-all duration-300 ${
                     activeMenu === item || isItemActive(item)
                       ? 'text-[#22c55e]'
-                      : 'text-black hover:text-[#22c55e]'
+                      : 'hover:text-[#22c55e]'
                   }`}
                 >
                   {item}
@@ -140,14 +151,54 @@ export function GlobalNav() {
           </ul>
 
           {/* Icons & Mobile Toggle */}
-          <div className="flex items-center space-x-5 text-black">
-            <Link to="/" className="nav-glow-link text-black hover:text-[#22c55e] transition-colors" aria-label="Tìm kiếm" onClick={handleCloseMenu}>
+          <div className="flex items-center space-x-5">
+            <Link to="/" className="nav-glow-link hover:text-[#22c55e] transition-colors" aria-label="Tìm kiếm" onClick={handleCloseMenu}>
               <Search className="w-4 h-4" />
             </Link>
-            <Link to="/login" className="nav-glow-link text-black hover:text-[#22c55e] transition-colors" aria-label="Đăng nhập" onClick={handleCloseMenu}>
-              <User className="w-4 h-4" />
-            </Link>
-            <Link to="/cart" className="nav-glow-link relative text-black hover:text-[#22c55e] transition-colors" aria-label={"Giỏ hàng" + (cartItemCount ? " (" + cartItemCount + ")" : "")} onClick={handleCloseMenu}>
+            
+            {/* User Dropdown */}
+            <div className="relative group">
+              <Link 
+                to={useAuthStore.getState().user ? "/profile" : "/login"} 
+                className="nav-glow-link hover:text-[#22c55e] transition-colors" 
+                aria-label="Tài khoản" 
+                onClick={handleCloseMenu}
+              >
+                <User className="w-4 h-4" />
+              </Link>
+              
+              {/* Dropdown Menu on Hover */}
+              {useAuthStore.getState().user && (
+                <div className="absolute right-0 top-full mt-2 w-48 bg-white border border-neutral-200 rounded-xl shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 overflow-hidden z-50 text-black">
+                  <div className="px-4 py-3 border-b border-neutral-100 bg-neutral-50/50">
+                    <p className="text-sm font-medium text-neutral-900 truncate">
+                      {useAuthStore.getState().user?.username}
+                    </p>
+                  </div>
+                  <div className="py-1">
+                    <Link to="/profile" className="block px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-50 hover:text-[#22c55e]">
+                      Hồ sơ của tôi
+                    </Link>
+                    {useAuthStore.getState().user?.role !== 'customer' && (
+                      <Link to="/dashboard" className="block px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-50 hover:text-[#22c55e]">
+                        Vào Dashboard
+                      </Link>
+                    )}
+                    <button 
+                      onClick={() => {
+                        useAuthStore.getState().logout();
+                        window.location.href = '/login';
+                      }}
+                      className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                    >
+                      Đăng xuất
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <Link to="/cart" className="nav-glow-link relative hover:text-[#22c55e] transition-colors" aria-label={"Giỏ hàng" + (cartItemCount ? " (" + cartItemCount + ")" : "")} onClick={handleCloseMenu}>
               <ShoppingBag className="w-4 h-4" />
               {cartItemCount > 0 ? (
                 <span className="absolute -right-2.5 -top-2.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-neutral-950 px-1 text-[9px] font-semibold text-white">
@@ -157,7 +208,7 @@ export function GlobalNav() {
             </Link>
             <button
               onClick={toggleMobileMenu}
-              className="md:hidden text-black hover:text-[#22c55e] transition-colors focus:outline-none"
+              className="md:hidden hover:text-[#22c55e] transition-colors focus:outline-none"
               aria-label="Toggle Navigation"
             >
               {mobileMenuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
@@ -167,14 +218,18 @@ export function GlobalNav() {
 
         {/* Mega Menu Dropdown */}
         <div
-          className={`hidden md:block absolute left-0 right-0 top-[44px] bg-white/95 backdrop-blur-xl border-b border-neutral-200/60 overflow-hidden transition-all duration-500 ease-in-out ${
-            activeMenu ? 'max-h-[400px] opacity-100 shadow-xl' : 'max-h-0 opacity-0'
+          className={`hidden md:block absolute left-0 right-0 top-[44px] bg-white/95 backdrop-blur-xl overflow-hidden transition-all duration-[400ms] ease-[cubic-bezier(0.4,0,0.2,1)] ${
+            activeMenu ? 'max-h-[450px] border-b border-neutral-200/60 opacity-100 shadow-xl' : 'max-h-0 border-transparent opacity-0'
           }`}
         >
-          {activeMenu && megaMenuData[activeMenu] && (
-            <div className="max-w-[1024px] mx-auto px-4 py-10">
+          <div 
+            className={`max-w-[1024px] mx-auto px-4 py-10 transition-all duration-[400ms] ease-[cubic-bezier(0.4,0,0.2,1)] transform text-black ${
+              activeMenu ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-8'
+            }`}
+          >
+            {displayMenu && megaMenuData[displayMenu] && (
               <div className="flex flex-wrap gap-x-12 gap-y-10">
-                {megaMenuData[activeMenu].map((col, idx) => (
+                {megaMenuData[displayMenu].map((col, idx) => (
                   <div key={idx}>
                     <h4 className="text-[11px] text-neutral-400 uppercase tracking-wider mb-4">{col.title}</h4>
                     <ul className="space-y-2.5">
@@ -197,8 +252,8 @@ export function GlobalNav() {
                   </div>
                 ))}
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
 
         {/* Mobile Navigation Drawer */}

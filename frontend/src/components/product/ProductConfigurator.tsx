@@ -1,7 +1,5 @@
-import { AnimatePresence, motion } from 'framer-motion';
-import { Minus, Plus, ShoppingBag, Zap } from 'lucide-react';
-import { formatPurchasePrice } from '@/pages/product/data';
-import type { ProductVariant, PurchaseProduct } from '@/pages/product/types/productPurchase';
+import { Zap, ShoppingBag, Plus, Minus, Info } from 'lucide-react';
+import type { PurchaseProduct, ProductVariant } from '@/types/product/productPurchase';
 
 interface ProductConfiguratorProps {
   product: PurchaseProduct;
@@ -15,6 +13,10 @@ interface ProductConfiguratorProps {
   onQuantityChange: (quantity: number) => void;
   onPurchase: (action: 'cart' | 'buy-now') => void;
 }
+
+const formatPurchasePrice = (price: number) => {
+  return price.toLocaleString('vi-VN') + 'đ';
+};
 
 export function ProductConfigurator({
   product,
@@ -30,63 +32,34 @@ export function ProductConfigurator({
 }: ProductConfiguratorProps) {
   const selectedColor = product.colors.find((color) => color.id === selectedColorId);
   const isAvailable = Boolean(selectedVariant && selectedVariant.stock > 0);
-  const total = selectedVariant ? selectedVariant.price * quantity : 0;
+  const total = (selectedVariant?.price ?? 0) * quantity;
 
-  const getStorageVariant = (storageId: string) => (
-    product.variants.find((variant) => (
-      variant.colorId === selectedColorId && variant.storageId === storageId
-    ))
-  );
+  const getStorageVariant = (storageId: string) => {
+    return product.variants.find(
+      (v) => v.colorId === selectedColorId && v.storageId === storageId
+    );
+  };
 
   return (
-    <section aria-label="Cấu hình sản phẩm" className="w-full">
-      <header className="border-b border-neutral-200 pb-8">
-        <div className="mb-4 flex flex-wrap items-center gap-2">
-          <span className="text-xs font-semibold uppercase tracking-[0.18em] text-neutral-500">
-            {product.brand}
+    <section className="sticky top-24 min-w-0" aria-label="Tùy chọn cấu hình">
+      <div className="border-b border-neutral-200 pb-8">
+        {product.badge && (
+          <span className="mb-4 inline-block rounded-full bg-orange-100 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-orange-800">
+            {product.badge}
           </span>
-          {product.badge && (
-            <span className="rounded-full border border-blue-100 bg-blue-50 px-2.5 py-1 text-[11px] font-semibold text-blue-700">
-              {product.badge}
-            </span>
-          )}
+        )}
+        <h1 className="text-3xl font-bold tracking-tight text-neutral-950 sm:text-4xl lg:text-5xl">{product.name}</h1>
+        <p className="mt-3 text-lg text-neutral-600">{product.tagline}</p>
+        <div className="mt-6 flex items-center gap-4 text-sm font-medium text-neutral-950">
+          <span className="flex items-center gap-1.5 rounded-md bg-neutral-100 px-2.5 py-1">
+            <Info className="h-4 w-4 text-neutral-500" />
+            Bảo hành {product.brand} chính hãng
+          </span>
         </div>
-        <h1 className="text-4xl font-bold tracking-[-0.035em] text-neutral-950 sm:text-5xl">
-          {product.name}
-        </h1>
-        <p className="mt-3 max-w-lg text-base leading-relaxed text-neutral-600">
-          {product.tagline}
-        </p>
-
-        <div className="mt-7">
-          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-neutral-500">Giá cấu hình</p>
-          <AnimatePresence mode="wait" initial={false}>
-            <motion.div
-              key={selectedVariant?.id ?? 'unavailable'}
-              initial={{ opacity: 0, y: 4 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -4 }}
-              transition={{ duration: 0.2 }}
-              className="mt-2"
-            >
-              <p className="text-3xl font-bold tracking-tight text-neutral-950">
-                {selectedVariant ? formatPurchasePrice(selectedVariant.price) : 'Chưa có cấu hình'}
-              </p>
-              {selectedVariant?.originalPrice && (
-                <p className="mt-1 text-sm text-neutral-400 line-through">
-                  {formatPurchasePrice(selectedVariant.originalPrice)}
-                </p>
-              )}
-            </motion.div>
-          </AnimatePresence>
-          <p className={'mt-2 text-sm font-medium ' + (isAvailable ? 'text-emerald-700' : 'text-rose-700')}>
-            {isAvailable ? 'Còn hàng' : 'Tạm hết hàng'}
-          </p>
-        </div>
-      </header>
+      </div>
 
       <fieldset className="border-b border-neutral-200 py-8">
-        <legend className="flex w-full items-center justify-between text-sm font-semibold text-neutral-950">
+        <legend className="flex w-full items-baseline justify-between text-sm">
           <span>Màu sắc</span>
           <span className="font-medium text-neutral-500">{selectedColor?.name}</span>
         </legend>
@@ -137,7 +110,14 @@ export function ProductConfigurator({
               >
                 <span className="block text-sm font-semibold">{storage.label}</span>
                 <span className={'mt-1 block text-xs ' + (isSelected ? 'text-white/65' : 'text-neutral-500')}>
-                  {storageVariant ? formatPurchasePrice(storageVariant.price) : 'Không khả dụng'}
+                  {storageVariant ? (
+                    <>
+                      {storageVariant.originalPrice && storageVariant.originalPrice > storageVariant.price && (
+                        <span className="line-through opacity-70 mr-2 text-[10px]">{formatPurchasePrice(storageVariant.originalPrice)}</span>
+                      )}
+                      {formatPurchasePrice(storageVariant.price)}
+                    </>
+                  ) : 'Không khả dụng'}
                 </span>
               </button>
             );
@@ -187,9 +167,16 @@ export function ProductConfigurator({
             </p>
             <p className="mt-1 text-sm text-neutral-600">Số lượng: {quantity}</p>
           </div>
-          <p className="shrink-0 text-lg font-bold tracking-tight text-neutral-950">
-            {selectedVariant ? formatPurchasePrice(total) : '—'}
-          </p>
+          <div className="shrink-0 text-right">
+            {selectedVariant && selectedVariant.originalPrice && selectedVariant.originalPrice > selectedVariant.price && (
+              <p className="text-sm line-through text-neutral-400 font-medium">
+                {formatPurchasePrice(selectedVariant.originalPrice * quantity)}
+              </p>
+            )}
+            <p className="text-lg font-bold tracking-tight text-red-600">
+              {selectedVariant ? formatPurchasePrice(total) : '—'}
+            </p>
+          </div>
         </div>
       </section>
 

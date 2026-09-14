@@ -1,4 +1,4 @@
-import type { ProductSpecification } from '@/pages/product/types/productPurchase';
+import type { ProductSpecification } from '@/types/product';
 
 interface ProductSpecificationsProps {
   productName: string;

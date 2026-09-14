@@ -7,11 +7,16 @@ import { Footer } from './components/layout/Footer';
 import { HomePage } from './pages/home/HomePage';
 import 'lenis/dist/lenis.css';
 
+// Admin & Auth imports
+import { DashboardLayout } from './components/admin/layout/DashboardLayout';
+import { CustomerProfile } from './pages/profile/CustomerProfile';
+import { ProtectedRoute } from './components/auth/ProtectedRoute';
+
 const SmartphonePage = lazy(() =>
   import('./pages/smartphone/SmartphonePage').then(({ SmartphonePage: Page }) => ({ default: Page })),
 );
 const LoginPage = lazy(() =>
-  import('./pages/login/LoginPage').then(({ LoginPage: Page }) => ({ default: Page })),
+  import('./pages/auth/LoginPage').then(({ LoginPage: Page }) => ({ default: Page })),
 );
 
 const WatchPage = lazy(() =>
@@ -37,11 +42,11 @@ const LaptopPage = lazy(() =>
   import('./pages/laptop/LaptopPage').then(({ LaptopPage: Page }) => ({ default: Page })),
 );
 const ProductPurchasePage = lazy(() =>
-  import('./pages/product/ProductPurchasePage').then(({ ProductPurchasePage: Page }) => ({ default: Page })),
+  import('./pages/product/ProductPurchasePage').then((mod) => ({ default: mod.default || mod.ProductPurchasePage })),
 );
 
 const CartPage = lazy(() =>
-  import('./pages/cart/CartPage').then(({ CartPage: Page }) => ({ default: Page })),
+  import('./pages/cart/CartPage').then((mod) => ({ default: mod.default || mod.CartPage })),
 );
 
 const queryClient = new QueryClient();
@@ -109,10 +114,20 @@ export default function App() {
                 <Route path="/laptop/hp" element={<LaptopPage brand="hp" />} />
                 <Route path="/product/:slug" element={<ProductPurchasePage />} />
                 <Route path="/cart" element={<CartPage />} />
+                
+                {/* Customer Profile Route (Protected inside MainLayout) */}
+                <Route element={<ProtectedRoute allowedRoles={['customer']} />}>
+                  <Route path="/profile" element={<CustomerProfile />} />
+                </Route>
               </Route>
 
               {/* Standalone Login Route */}
               <Route path="/login" element={<LoginPage />} />
+              
+              {/* Dashboard Route Protected by Authentication (Standalone) */}
+              <Route element={<ProtectedRoute allowedRoles={['superadmin', 'admin', 'manager', 'user']} />}>
+                <Route path="/dashboard" element={<DashboardLayout />} />
+              </Route>
             </Routes>
           </Suspense>
         </BrowserRouter>

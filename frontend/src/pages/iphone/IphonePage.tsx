@@ -5,11 +5,11 @@ import * as THREE from 'three';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { IphoneHero } from './sections/IphoneHero';
-import { HighlightsCarousel } from './sections/HighlightsCarousel';
-import { FrontCameraSection } from './sections/FrontCameraSection';
-import { VideoProSection } from './sections/VideoProSection';
-import { AllInOneSection } from './sections/AllInOneSection';
+import { IphoneHero } from '@/components/iphone/IphoneHero';
+import { HighlightsCarousel } from '@/components/iphone/HighlightsCarousel';
+import { FrontCameraSection } from '@/components/iphone/FrontCameraSection';
+import { VideoProSection } from '@/components/iphone/VideoProSection';
+import { AllInOneSection } from '@/components/iphone/AllInOneSection';
 import '@/css/iphone.css';
 
 gsap.registerPlugin(useGSAP, ScrollTrigger);
@@ -150,7 +150,7 @@ function IPhoneModel({
       }
       const normalized = normalizeModel(scene, 3.5);
 
-      // Xử lý triệt để vệt sáng hắt lên màn hình:
+      // Xử lý triệt để vệt sáng hắt lên màn hình: 
       // Giảm độ nhạy phản chiếu môi trường của tất cả các vật liệu xuống mức rất thấp.
       // Điều này giữ lại ánh sáng đánh khối (Lights) nhưng loại bỏ hình ảnh của bóng đèn in lên kính.
       normalized.traverse((child: any) => {
@@ -465,7 +465,7 @@ export function IphonePage() {
 
   useGSAP(() => {
     if (modelsLoaded) {
-      const tl = gsap.timeline({
+      const tl = gsap.timeline({ 
         defaults: { ease: "power3.out" },
         scrollTrigger: {
           trigger: pageRef.current,

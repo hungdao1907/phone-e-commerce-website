@@ -1,8 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ArrowLeft, Minus, Plus, ShieldCheck, ShoppingBag, Trash2 } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { formatPurchasePrice } from '../product/data';
 import { useCartStore } from '../../store/useCartStore';
+import { useAuthStore } from '../../store/authStore';
+
+const formatPurchasePrice = (price: number) => {
+  return price.toLocaleString('vi-VN') + 'đ';
+};
 
 export function CartPage() {
   const [searchParams] = useSearchParams();
@@ -11,7 +15,21 @@ export function CartPage() {
   const removeItem = useCartStore((state) => state.removeItem);
   const clearCart = useCartStore((state) => state.clearCart);
   const checkoutRequested = searchParams.get('checkout') === '1';
-  const [checkoutNotice, setCheckoutNotice] = useState(false);
+  const [checkoutNotice, setCheckoutNotice] = useState(checkoutRequested);
+
+  const { user, token } = useAuthStore();
+  const [profileData, setProfileData] = useState<{address?: string, phone?: string}>({});
+
+  useEffect(() => {
+    if (checkoutNotice && token) {
+      fetch('http://localhost:3001/api/customers/profile', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      .then(res => res.json())
+      .then(data => setProfileData(data))
+      .catch(console.error);
+    }
+  }, [checkoutNotice, token]);
 
   const itemCount = items.reduce((total, item) => total + item.quantity, 0);
   const subtotal = items.reduce((total, item) => total + item.price * item.quantity, 0);
@@ -37,7 +55,7 @@ export function CartPage() {
             className="mt-8 inline-flex min-h-11 items-center gap-2 rounded-full bg-neutral-950 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-black"
           >
             <ArrowLeft className="h-4 w-4" />
-            Khám phá Samsung
+            Khám phá cửa hàng
           </Link>
         </section>
       </main>
@@ -180,9 +198,67 @@ export function CartPage() {
               Tiếp tục thanh toán
             </button>
             {checkoutNotice ? (
-              <p role="status" className="mt-3 rounded-xl border border-neutral-200 bg-white px-3 py-2.5 text-xs leading-relaxed text-neutral-600">
-                Bước thanh toán sẽ được kết nối khi commerce backend sẵn sàng.
-              </p>
+              <div className="mt-4 p-4 border rounded-xl bg-white space-y-3">
+                <h3 className="font-bold">Thông tin giao hàng</h3>
+                <input 
+                  type="text" 
+                  defaultValue={profileData.address || ''}
+                  placeholder="Địa chỉ giao hàng" 
+                  className="w-full p-2 border rounded-md text-sm text-neutral-900 placeholder:text-neutral-400"
+                  id="checkout-address"
+                />
+                <input 
+                  type="text" 
+                  defaultValue={profileData.phone || ''}
+                  placeholder="Số điện thoại" 
+                  className="w-full p-2 border rounded-md text-sm text-neutral-900 placeholder:text-neutral-400"
+                  id="checkout-phone"
+                />
+                <button 
+                  onClick={async () => {
+                    const address = (document.getElementById('checkout-address') as HTMLInputElement).value;
+                    const phone = (document.getElementById('checkout-phone') as HTMLInputElement).value;
+                    if (!address || !phone) return alert('Vui lòng nhập đủ thông tin');
+                    
+                    if (!token || !user) {
+                      alert('Vui lòng đăng nhập để thanh toán');
+                      window.location.href = '/login';
+                      return;
+                    }
+
+                    const orderPayload = {
+                      customerId: user.id,
+                      items: items.map(i => ({
+                        productId: i.productId || i.id,
+                        variantId: i.variantId || null,
+                        quantity: i.quantity
+                      })),
+                      paymentMethod: 'COD',
+                      shippingAddress: address,
+                      shippingPhone: phone,
+                      shippingFee: 0,
+                      note: 'Đơn hàng từ Storefront',
+                      estimatedDelivery: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString()
+                    };
+
+                    try {
+                      const res = await fetch('http://localhost:3001/api/orders', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                        body: JSON.stringify(orderPayload)
+                      });
+                      if (res.ok) {
+                        alert('Đặt hàng thành công!');
+                        clearCart();
+                        window.location.href = '/profile';
+                      } else {
+                        alert('Lỗi đặt hàng');
+                      }
+                    } catch (e) { console.error(e); }
+                  }}
+                  className="w-full bg-blue-600 text-white p-2 rounded-md font-bold text-sm hover:bg-blue-700"
+                >Xác nhận Đặt Hàng</button>
+              </div>
             ) : null}            <Link
               to="/samsung#samsung-all-products"
               className="mt-3 inline-flex min-h-11 w-full items-center justify-center rounded-full border border-neutral-300 bg-white px-5 py-3 text-sm font-semibold text-neutral-950 transition-colors hover:border-neutral-950"
