@@ -9,7 +9,7 @@ import {
   LaptopWhySection,
 } from './sections';
 import type { LaptopBrandId } from './types';
-import './laptop.css';
+import '@/css/laptop.css';
 
 interface LaptopPageProps {
   brand: LaptopBrandId;

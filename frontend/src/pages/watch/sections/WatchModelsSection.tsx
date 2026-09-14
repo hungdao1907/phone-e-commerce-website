@@ -1,6 +1,6 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { WatchModelCard } from '../components';
+import { WatchModelCard } from '@/components/watch/WatchModelCard';
 import { WATCH_MODELS_DATA } from '../data';
 
 export function WatchModelsSection() {

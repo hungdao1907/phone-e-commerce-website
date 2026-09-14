@@ -1,6 +1,6 @@
 import { Battery, Cpu, HardDrive, Monitor } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import type { TabletModel } from '../types';
+import type { TabletModel } from '@/pages/tablet/types';
 
 interface TabletProductCardProps {
   product: TabletModel;

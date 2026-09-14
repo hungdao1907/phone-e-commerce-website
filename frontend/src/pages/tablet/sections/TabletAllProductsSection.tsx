@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { ArrowDownNarrowWide, ArrowUpNarrowWide, BadgePercent, Sparkles, Star } from 'lucide-react';
-import { TabletProductCard } from '../components/TabletProductCard';
+import { TabletProductCard } from '@/components/product-cards/TabletProductCard';
 import type { TabletBrandConfig, TabletModel } from '../types';
 
 type TabletFilter = 'popular' | 'promotion' | 'price-asc' | 'price-desc';

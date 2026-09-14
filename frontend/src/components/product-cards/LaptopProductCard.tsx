@@ -1,6 +1,6 @@
 import { Battery, Cpu, HardDrive, Monitor, Zap } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import type { LaptopModel } from '../types';
+import type { LaptopModel } from '@/pages/laptop/types';
 
 interface LaptopProductCardProps {
   product: LaptopModel;

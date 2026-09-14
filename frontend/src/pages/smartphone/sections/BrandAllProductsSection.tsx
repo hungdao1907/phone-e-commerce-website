@@ -1,7 +1,7 @@
 import React, { useMemo, useRef, useState } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { ArrowDownNarrowWide, ArrowUpNarrowWide, ArrowUpRight, BadgePercent, Layers, Sparkles, Star } from 'lucide-react';
-import { BrandProductCard } from '../components/BrandProductCard';
+import { BrandProductCard } from '@/components/product-cards/SmartphoneProductCard';
 import type { BrandConfig, BrandModel } from '../types';
 
 type BrandProductFilter = 'popular' | 'promotion' | 'price-asc' | 'price-desc';

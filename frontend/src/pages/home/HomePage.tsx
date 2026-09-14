@@ -5,7 +5,7 @@ import { HeroCinematicTransition } from './sections/HeroCinematicTransition';
 import { WaveGallery } from './sections/WaveGallery';
 import { TrustBenefitsSection } from './sections/TrustBenefitsSection';
 import { FinalCTASection } from './sections/FinalCTASection';
-import './home.css';
+import '@/css/home.css';
 
 export function HomePage() {
   return (

@@ -7,8 +7,8 @@ import {
   SE3BatteryConnectivitySafetySection,
   SE3FinalCTASection,
 } from './sections';
-import { SE3SpecsModal } from './components/SE3SpecsModal';
-import './se3.css';
+import { SE3SpecsModal } from '@/components/watch/SE3SpecsModal';
+import '@/css/watch-se3.css';
 
 export function WatchSE3Page() {
   const [isSpecsOpen, setIsSpecsOpen] = useState<boolean>(false);

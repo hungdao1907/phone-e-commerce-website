@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
-import { CircularTestimonials } from '@/components/ui/circular-testimonials';
+import { CircularTestimonials } from '@/components/ui/CircularTestimonials';
 import { SE3_CIRCULAR_DESIGN_ITEMS, SE3_DESIGN_DATA } from '../data/se3Data';
 
 export function SE3DesignSection() {

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { X, Plus, HeartPulse, Moon, BatteryCharging, ShieldCheck } from 'lucide-react';
-import { cn } from '../../../../shared/lib/utils';
+import { cn } from '@/utils/cn';
 
 interface LayoutGridCard {
   id: number;

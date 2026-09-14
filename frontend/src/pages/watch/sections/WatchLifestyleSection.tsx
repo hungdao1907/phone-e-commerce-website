@@ -1,7 +1,7 @@
 import React, { useRef } from 'react';
 import { motion, useScroll, useTransform, useReducedMotion } from 'framer-motion';
 import { Sun, Briefcase, Moon, ArrowDown } from 'lucide-react';
-import { MotionSplitText } from '@/components/ui/motion-split-text';
+import { MotionSplitText } from '@/components/ui/MotionSplitText';
 
 interface LifestyleStoryData {
   id: string;

@@ -8,7 +8,7 @@ import {
   useSpring,
 } from 'motion/react';
 import { Link } from 'react-router-dom';
-import { HeroBackground } from '../components/tailwind-css-background-snippet';
+import { HeroBackground } from '@/components/ui/HeroBackground';
 
 const cinematicEase: [number, number, number, number] = [0.22, 1, 0.36, 1];
 

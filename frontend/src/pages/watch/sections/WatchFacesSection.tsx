@@ -1,7 +1,7 @@
 import React, { useRef } from 'react';
 import { Sparkles, Orbit, Palette, Compass, Gauge, Clock } from 'lucide-react';
-import { ShimmerText } from '@/components/ui/shimmer-text';
-import '../watch.css';
+import { ShimmerText } from '@/components/ui/ShimmerText';
+import '@/css/watch.css';
 
 interface WatchFaceItem {
   id: string;
@@ -91,7 +91,7 @@ const WATCH_FACES_DATA: WatchFaceItem[] = [
   },
 ];
 
-import { FloatingDotsNavButton } from '@/components/ui/floating-dots-nav-button';
+import { FloatingDotsNavButton } from '@/components/ui/FloatingDotsNavButton';
 
 export function WatchFacesSection() {
   const scrollRef = useRef<HTMLDivElement>(null);

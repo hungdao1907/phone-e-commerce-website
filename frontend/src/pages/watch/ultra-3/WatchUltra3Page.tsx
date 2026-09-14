@@ -7,8 +7,8 @@ import {
   Ultra3HealthSafetyConnectivitySection,
   Ultra3BatteryCTASection,
 } from './sections';
-import { Ultra3SpecsModal } from './components/Ultra3SpecsModal';
-import '../watch.css';
+import { Ultra3SpecsModal } from '@/components/watch/Ultra3SpecsModal';
+import '@/css/watch.css';
 
 export function WatchUltra3Page() {
   const [isSpecsOpen, setIsSpecsOpen] = useState<boolean>(false);

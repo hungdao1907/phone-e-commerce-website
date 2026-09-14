@@ -1,6 +1,6 @@
 import { motion, useReducedMotion } from 'framer-motion';
 import { Sparkles } from 'lucide-react';
-import { TabletProductCard } from '../components/TabletProductCard';
+import { TabletProductCard } from '@/components/product-cards/TabletProductCard';
 import type { TabletBrandConfig, TabletModel } from '../types';
 
 interface TabletFeaturedProductsSectionProps {

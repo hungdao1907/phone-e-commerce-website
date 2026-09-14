@@ -9,7 +9,7 @@ import {
   TabletWhyBrandSection,
 } from './sections';
 import type { TabletBrandId } from './types';
-import './tablet.css';
+import '@/css/tablet.css';
 
 interface TabletPageProps {
   brand: TabletBrandId;

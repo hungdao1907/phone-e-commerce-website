@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
-import { RippleButton } from './ripple-button';
+import { RippleButton } from './RippleButton';
 
 export interface Testimonial {
   quote: string;

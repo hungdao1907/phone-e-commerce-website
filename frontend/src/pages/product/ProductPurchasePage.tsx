@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { ProductConfigurator, ProductGallery, ProductSpecifications } from './components';
+import { ProductConfigurator } from '@/components/product/ProductConfigurator';
+import { ProductGallery } from '@/components/product/ProductGallery';
+import { ProductSpecifications } from '@/components/product/ProductSpecifications';
 import { getPurchaseProductBySlug } from './data';
 import type { ProductVariant } from './types';
 import { useCartStore } from '../../store/useCartStore';
-import './product-purchase.css';
+import '@/css/product-purchase.css';
 
 
 export function ProductPurchasePage() {

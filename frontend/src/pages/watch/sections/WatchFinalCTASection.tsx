@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import type { Variants } from 'framer-motion';
 import { ArrowRight, Truck, RotateCcw, ShieldCheck } from 'lucide-react';
-import { StarButton } from '@/components/ui/star-button';
+import { StarButton } from '@/components/ui/StarButton';
 import { FINAL_WATCH_MODELS } from '../data';
 
 export function WatchFinalCTASection() {

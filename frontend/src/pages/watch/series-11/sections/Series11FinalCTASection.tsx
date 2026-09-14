@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, Sparkles, Info } from 'lucide-react';
 import { motion, useReducedMotion } from 'framer-motion';
-import { StarButton } from '../../../../components/ui/star-button';
-import { Series11SpecsModal } from '../components/Series11SpecsModal';
+import { StarButton } from '@/components/ui/StarButton';
+import { Series11SpecsModal } from '@/components/watch/Series11SpecsModal';
 
 export function Series11FinalCTASection() {
   const shouldReduceMotion = useReducedMotion();

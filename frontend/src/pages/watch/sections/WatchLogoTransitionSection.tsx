@@ -3,7 +3,7 @@ import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { ChevronDown } from 'lucide-react';
-import { ShiningText } from '@/components/ui/shining-text';
+import { ShiningText } from '@/components/ui/ShiningText';
 
 gsap.registerPlugin(useGSAP, ScrollTrigger);
 

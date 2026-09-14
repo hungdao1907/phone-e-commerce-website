@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { Smartphone, Cpu, Camera, Battery } from 'lucide-react';
-import type { BrandModel } from '../types';
+import type { BrandModel } from '@/pages/smartphone/types';
 
 interface BrandProductCardProps {
   product: BrandModel;

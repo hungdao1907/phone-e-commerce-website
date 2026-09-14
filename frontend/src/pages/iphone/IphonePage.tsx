@@ -10,7 +10,7 @@ import { HighlightsCarousel } from './sections/HighlightsCarousel';
 import { FrontCameraSection } from './sections/FrontCameraSection';
 import { VideoProSection } from './sections/VideoProSection';
 import { AllInOneSection } from './sections/AllInOneSection';
-import './iphone.css';
+import '@/css/iphone.css';
 
 gsap.registerPlugin(useGSAP, ScrollTrigger);
 

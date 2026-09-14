@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
-import { ThumbnailSlider } from '@/components/ui/thumbnail-slider';
+import { ThumbnailSlider } from '@/components/ui/ThumbnailSlider';
 import { SE3_HEALTH_DATA, SE3_HEALTH_SLIDER_ITEMS } from '../data/se3Data';
 
 interface SE3HealthSectionProps {

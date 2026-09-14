@@ -1,8 +1,8 @@
 import {
   ImagesScrollingAnimation,
   type TechnologyStory,
-} from '../components/images-scrolling-animation';
-import { TextEffect } from '../components/text-effect';
+} from '@/components/ui/ImagesScrollingAnimation';
+import { TextEffect } from '@/components/ui/TextEffect';
 
 const STORIES: TechnologyStory[] = [
   {

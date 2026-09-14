@@ -1,6 +1,6 @@
 import { motion, useReducedMotion, type Variants } from 'motion/react';
 import { Truck, RotateCcw, ShieldCheck, CreditCard, type LucideIcon } from 'lucide-react';
-import { TrustBenefitVisual, type BenefitVisualType } from '../components/TrustBenefitVisual';
+import { TrustBenefitVisual, type BenefitVisualType } from '@/components/home/TrustBenefitVisual';
 
 const EASING = [0.22, 1, 0.36, 1] as const;
 

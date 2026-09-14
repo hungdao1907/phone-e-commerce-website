@@ -1,6 +1,6 @@
 import { motion, useReducedMotion } from 'framer-motion';
 import { Sparkles } from 'lucide-react';
-import { LaptopProductCard } from '../components/LaptopProductCard';
+import { LaptopProductCard } from '@/components/product-cards/LaptopProductCard';
 import type { LaptopBrandConfig, LaptopModel } from '../types';
 
 interface LaptopFeaturedSectionProps {

@@ -1,7 +1,7 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { Minus, Plus, ShoppingBag, Zap } from 'lucide-react';
-import { formatPurchasePrice } from '../data';
-import type { ProductVariant, PurchaseProduct } from '../types';
+import { formatPurchasePrice } from '@/pages/product/data';
+import type { ProductVariant, PurchaseProduct } from '@/pages/product/types/productPurchase';
 
 interface ProductConfiguratorProps {
   product: PurchaseProduct;

@@ -3,8 +3,8 @@ import { ArrowUpRight } from 'lucide-react';
 import { motion, useReducedMotion } from 'motion/react';
 import type { Variants } from 'motion/react';
 import { Link } from 'react-router-dom';
-import { CardCarousel } from '../components/card-carousel';
-import type { CarouselProduct } from '../components/card-carousel';
+import { CardCarousel } from '@/components/ui/CardCarousel';
+import type { CarouselProduct } from '@/components/ui/CardCarousel';
 
 interface FeaturedProduct extends CarouselProduct {
   brand: string;

@@ -1,10 +1,10 @@
 import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { useScroll, useReducedMotion } from 'framer-motion';
 import { Flame, Timer, PersonStanding } from 'lucide-react';
-import { WatchRingVisual } from '../components/WatchRingVisual';
-import { WatchMetricCard } from '../components/WatchMetricCard';
-import { WorkoutRunningIcon } from '../../../components/ui/workout-running-icon';
-import { MedalAwardIcon } from '../../../components/ui/medal-award-icon';
+import { WatchRingVisual } from '@/components/watch/WatchRingVisual';
+import { WatchMetricCard } from '@/components/watch/WatchMetricCard';
+import { WorkoutRunningIcon } from '@/components/ui/WorkoutRunningIcon';
+import { MedalAwardIcon } from '@/components/ui/MedalAwardIcon';
 
 interface MetricConfig {
   id: 'move' | 'exercise' | 'stand';

@@ -7,7 +7,7 @@ import {
   Series11SafetySection,
   Series11FinalCTASection,
 } from './sections';
-import './series11.css';
+import '@/css/watch-series11.css';
 
 export function WatchSeries11Page() {
   useEffect(() => {

@@ -11,7 +11,7 @@ import {
   WatchFinalCTASection,
 } from './sections';
 import { WatchUltra3Page } from './ultra-3/WatchUltra3Page';
-import './watch.css';
+import '@/css/watch.css';
 
 export function WatchPage() {
   useEffect(() => {

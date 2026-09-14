@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { ArrowDownNarrowWide, ArrowUpNarrowWide, BadgePercent, Sparkles, Star } from 'lucide-react';
-import { LaptopProductCard } from '../components/LaptopProductCard';
+import { LaptopProductCard } from '@/components/product-cards/LaptopProductCard';
 import type { LaptopBrandConfig, LaptopModel } from '../types';
 
 type LaptopFilter = 'popular' | 'promotion' | 'price-asc' | 'price-desc';
