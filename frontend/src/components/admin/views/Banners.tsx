@@ -164,6 +164,7 @@ export function Banners() {
   const [feedback, setFeedback] = useState<Feedback>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [updatingBannerId, setUpdatingBannerId] = useState<string | null>(null);
   const [productSearch, setProductSearch] = useState('');
   const [previewMode, setPreviewMode] = useState<'desktop' | 'mobile'>('desktop');
   const [search, setSearch] = useState('');
@@ -458,40 +459,63 @@ export function Banners() {
     } finally { setIsSubmitting(false); }
   };
 
-  const toggleBanner = async (banner: Banner) => {
-    const previous = banners;
-    const isActive = !banner.isActive;
-    setBanners((current) => current.map((item) => item.id === banner.id ? { ...item, isActive } : item));
+  const handleToggleBanner = async (banner: Banner) => {
+    if (updatingBannerId === banner.id) return;
+
+    const previousBanners = banners;
+    const nextValue = !banner.isActive;
+
+    setUpdatingBannerId(banner.id);
+
+    // Optimistic update
+    setBanners((current) =>
+      current.map((item) =>
+        item.id === banner.id ? { ...item, isActive: nextValue } : item
+      )
+    );
+
     try {
-      const result = await updateBanner(banner.id, { isActive });
-      setBanners((current) => current.map((item) => item.id === banner.id ? result.banner : item));
-      setFeedback({ tone: 'success', message: isActive ? 'Đã bật banner.' : 'Đã tắt banner.' });
+      const response = await fetch(`${API_BASE_URL}/api/banners/${banner.id}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', ...authHeaders },
+        body: JSON.stringify({ isActive: nextValue }),
+      });
+
+      if (!response.ok) {
+        throw new Error(await getErrorMessage(response, 'Không thể cập nhật trạng thái banner.'));
+      }
+
+      const result = (await response.json()) as { banner: Banner; message: string };
+      setBanners((current) =>
+        current.map((item) =>
+          item.id === banner.id ? result.banner : item
+        )
+      );
+      setFeedback({ tone: 'success', message: result.message || (nextValue ? 'Đã bật banner.' : 'Đã tắt banner.') });
     } catch (error) {
-      setBanners(previous);
-      setFeedback({ tone: 'error', message: error instanceof Error ? error.message : 'Không thể cập nhật banner.' });
+      setBanners(previousBanners);
+      setFeedback({ tone: 'error', message: error instanceof Error ? error.message : 'Không thể cập nhật trạng thái banner.' });
+    } finally {
+      setUpdatingBannerId(null);
     }
   };
 
   const moveBanner = async (banner: Banner, direction: 'up' | 'down') => {
-    const group = banners.filter((item) => item.position === banner.position)
-      .sort((first, second) => first.sortOrder - second.sortOrder || first.createdAt.localeCompare(second.createdAt));
-    const currentIndex = group.findIndex((item) => item.id === banner.id);
-    const nextIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
-    if (currentIndex < 0 || nextIndex < 0 || nextIndex >= group.length) return;
-    const reordered = [...group];
-    [reordered[currentIndex], reordered[nextIndex]] = [reordered[nextIndex], reordered[currentIndex]];
-    const normalized = reordered.map((item, index) => ({ ...item, sortOrder: index }));
-    const previous = banners;
-    const byId = new Map(normalized.map((item) => [item.id, item]));
-    setBanners((current) => current.map((item) => byId.get(item.id) ?? item));
+    if (updatingBannerId) return;
+    setUpdatingBannerId(banner.id);
     try {
-      await Promise.all(normalized
-        .filter((item) => previous.find((previousItem) => previousItem.id === item.id)?.sortOrder !== item.sortOrder)
-        .map((item) => updateBanner(item.id, { sortOrder: item.sortOrder })));
+      const response = await fetch(`${API_BASE_URL}/api/banners/${banner.id}/move`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', ...authHeaders },
+        body: JSON.stringify({ direction }),
+      });
+      if (!response.ok) throw new Error(await getErrorMessage(response, 'Không thể đổi thứ tự banner.'));
+      await fetchBanners();
       setFeedback({ tone: 'success', message: 'Đã cập nhật thứ tự banner.' });
     } catch (error) {
-      setBanners(previous);
       setFeedback({ tone: 'error', message: error instanceof Error ? error.message : 'Không thể cập nhật thứ tự.' });
+    } finally {
+      setUpdatingBannerId(null);
     }
   };
 
@@ -584,7 +608,7 @@ export function Banners() {
             const group = banners.filter((item) => item.position === banner.position).sort((first, second) => first.sortOrder - second.sortOrder || first.createdAt.localeCompare(second.createdAt));
             const itemIndex = group.findIndex((item) => item.id === banner.id);
             return <BannerRow key={banner.id} banner={banner} index={index} canMoveUp={itemIndex > 0} canMoveDown={itemIndex < group.length - 1}
-              onPreview={() => setPreviewBanner(banner)} onEdit={() => openEdit(banner)} onToggle={() => void toggleBanner(banner)} onDelete={() => setBannerPendingDelete(banner)} onMove={(direction) => void moveBanner(banner, direction)} />;
+              onPreview={() => setPreviewBanner(banner)} onEdit={() => openEdit(banner)} onToggle={() => void handleToggleBanner(banner)} onDelete={() => setBannerPendingDelete(banner)} onMove={(direction) => void moveBanner(banner, direction)} isUpdating={updatingBannerId === banner.id} />;
           })}</div>}
       </div>
 
@@ -1630,7 +1654,7 @@ function NoMatches({ onReset }: { onReset: () => void }) {
   );
 }
 
-function BannerRow({ banner, index, canMoveUp, canMoveDown, onPreview, onEdit, onToggle, onDelete, onMove }: { banner: Banner; index: number; canMoveUp: boolean; canMoveDown: boolean; onPreview: () => void; onEdit: () => void; onToggle: () => void; onDelete: () => void; onMove: (direction: 'up' | 'down') => void }) {
+function BannerRow({ banner, index, canMoveUp, canMoveDown, onPreview, onEdit, onToggle, onDelete, onMove, isUpdating }: { banner: Banner; index: number; canMoveUp: boolean; canMoveDown: boolean; onPreview: () => void; onEdit: () => void; onToggle: () => void; onDelete: () => void; onMove: (direction: 'up' | 'down') => void; isUpdating?: boolean }) {
   const status = getBannerStatus(banner);
   const statusConfig = STATUS_CONFIG[status];
   return (
@@ -1666,11 +1690,11 @@ function BannerRow({ banner, index, canMoveUp, canMoveDown, onPreview, onEdit, o
       </div>
       <div className="flex flex-wrap items-center gap-2 lg:justify-end">
         <div className="mr-1 flex items-center overflow-hidden rounded-xl border border-white/10 bg-black/30">
-          <button type="button" onClick={() => onMove('up')} disabled={!canMoveUp} aria-label="Đưa banner lên trước" className="p-2 text-white/60 transition-colors hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-25 cursor-pointer">
+          <button type="button" onClick={() => onMove('up')} disabled={!canMoveUp || isUpdating} aria-label="Đưa banner lên trước" className="p-2 text-white/60 transition-colors hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-25 cursor-pointer">
             <ArrowUp className="h-4 w-4" />
           </button>
           <span className="min-w-9 border-x border-white/10 px-2 py-1.5 text-center text-xs font-bold text-white/80">#{banner.sortOrder}</span>
-          <button type="button" onClick={() => onMove('down')} disabled={!canMoveDown} aria-label="Đưa banner xuống sau" className="p-2 text-white/60 transition-colors hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-25 cursor-pointer">
+          <button type="button" onClick={() => onMove('down')} disabled={!canMoveDown || isUpdating} aria-label="Đưa banner xuống sau" className="p-2 text-white/60 transition-colors hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-25 cursor-pointer">
             <ArrowDown className="h-4 w-4" />
           </button>
         </div>
@@ -1683,10 +1707,13 @@ function BannerRow({ banner, index, canMoveUp, canMoveDown, onPreview, onEdit, o
         <button
           type="button"
           onClick={onToggle}
+          disabled={isUpdating}
           role="switch"
           aria-checked={banner.isActive}
           aria-label={`${banner.isActive ? 'Tắt' : 'Bật'} banner ${banner.title}`}
-          className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full p-1 transition-colors duration-200 ease-in-out cursor-pointer focus:outline-none ${
+          className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full p-1 transition-colors duration-200 ease-in-out focus:outline-none ${
+            isUpdating ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'
+          } ${
             banner.isActive ? 'border border-lime-400/80 bg-lime-400' : 'border border-white/20 bg-white/10'
           }`}
         >
@@ -1695,7 +1722,13 @@ function BannerRow({ banner, index, canMoveUp, canMoveDown, onPreview, onEdit, o
             className={`pointer-events-none inline-block h-5 w-5 transform rounded-full shadow-md transition duration-200 ease-in-out ${
               banner.isActive ? 'translate-x-5 bg-black' : 'translate-x-0 bg-white'
             }`}
-          />
+          >
+            {isUpdating && (
+              <span className="absolute inset-0 flex items-center justify-center">
+                <span className="h-3 w-3 animate-spin rounded-full border-2 border-t-transparent border-current opacity-70" />
+              </span>
+            )}
+          </span>
         </button>
         <button type="button" onClick={onDelete} className="icon-action hover:!border-red-400/40 hover:!bg-red-500/20 hover:!text-red-200" aria-label={`Xóa ${banner.title}`}>
           <Trash2 className="h-4 w-4" />

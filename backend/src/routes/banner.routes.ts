@@ -177,8 +177,24 @@ router.get('/', authenticateToken, async (_req, res) => {
 
 router.post('/', authenticateToken, async (req, res) => {
   try {
-    const banner = await prisma.banner.create({
-      data: parseBannerPayload(asBannerPayload(req.body)),
+    const data = parseBannerPayload(asBannerPayload(req.body));
+    const targetPosition = data.position;
+    const requestedOrder = data.sortOrder;
+
+    const banner = await prisma.$transaction(async (tx) => {
+      const count = await tx.banner.count({ where: { position: targetPosition } });
+      const targetOrder = Math.max(0, Math.min(requestedOrder, count));
+
+      if (targetOrder < count) {
+        await tx.banner.updateMany({
+          where: { position: targetPosition, sortOrder: { gte: targetOrder } },
+          data: { sortOrder: { increment: 1 } }
+        });
+      }
+
+      return tx.banner.create({
+        data: { ...data, sortOrder: targetOrder }
+      });
     });
 
     return res.status(201).json({ message: 'Tạo banner thành công.', banner });
@@ -197,9 +213,62 @@ router.put('/:id', authenticateToken, async (req, res) => {
     const existing = await prisma.banner.findUnique({ where: { id } });
     if (!existing) return res.status(404).json({ message: 'Không tìm thấy banner.' });
 
-    const banner = await prisma.banner.update({
-      where: { id },
-      data: parseBannerPayload(asBannerPayload(req.body), existing),
+    const data = parseBannerPayload(asBannerPayload(req.body), existing);
+
+    const banner = await prisma.$transaction(async (tx) => {
+      if (existing.position !== data.position) {
+        // Shift old position up
+        await tx.banner.updateMany({
+          where: { position: existing.position, sortOrder: { gt: existing.sortOrder } },
+          data: { sortOrder: { decrement: 1 } }
+        });
+
+        const count = await tx.banner.count({ where: { position: data.position } });
+        const targetOrder = Math.max(0, Math.min(data.sortOrder, count));
+
+        // Shift new position down
+        if (targetOrder < count) {
+          await tx.banner.updateMany({
+            where: { position: data.position, sortOrder: { gte: targetOrder } },
+            data: { sortOrder: { increment: 1 } }
+          });
+        }
+
+        return tx.banner.update({
+          where: { id },
+          data: { ...data, sortOrder: targetOrder }
+        });
+      } else {
+        if (existing.sortOrder === data.sortOrder) {
+          return tx.banner.update({ where: { id }, data });
+        }
+
+        const count = await tx.banner.count({ where: { position: data.position } });
+        const targetOrder = Math.max(0, Math.min(data.sortOrder, count - 1));
+
+        if (existing.sortOrder < targetOrder) {
+          await tx.banner.updateMany({
+            where: {
+              position: data.position,
+              sortOrder: { gt: existing.sortOrder, lte: targetOrder }
+            },
+            data: { sortOrder: { decrement: 1 } }
+          });
+        } else {
+          await tx.banner.updateMany({
+            where: {
+              position: data.position,
+              sortOrder: { gte: targetOrder, lt: existing.sortOrder }
+            },
+            data: { sortOrder: { increment: 1 } }
+          });
+        }
+
+        return tx.banner.update({
+          where: { id },
+          data: { ...data, sortOrder: targetOrder }
+        });
+      }
     });
 
     return res.json({ message: 'Cập nhật banner thành công.', banner });
@@ -210,12 +279,94 @@ router.put('/:id', authenticateToken, async (req, res) => {
   }
 });
 
+router.patch('/:id/move', authenticateToken, async (req, res) => {
+  try {
+    const id = getRouteParam(req.params.id);
+    if (!id) return res.status(400).json({ message: 'ID banner không hợp lệ.' });
+
+    const { direction } = req.body;
+    if (direction !== 'up' && direction !== 'down') {
+      return res.status(400).json({ message: 'Hướng di chuyển không hợp lệ (up/down).' });
+    }
+
+    const banners = await prisma.$transaction(async (tx) => {
+      const current = await tx.banner.findUnique({ where: { id } });
+      if (!current) throw new Prisma.PrismaClientKnownRequestError('', { code: 'P2025', clientVersion: '' });
+
+      const targetOrder = direction === 'up' ? current.sortOrder - 1 : current.sortOrder + 1;
+      if (targetOrder < 0) return null;
+
+      const adjacent = await tx.banner.findFirst({
+        where: { position: current.position, sortOrder: targetOrder }
+      });
+
+      if (!adjacent) return null;
+
+      // Swap
+      await tx.banner.update({
+        where: { id },
+        data: { sortOrder: targetOrder }
+      });
+
+      await tx.banner.update({
+        where: { id: adjacent.id },
+        data: { sortOrder: current.sortOrder }
+      });
+
+      return tx.banner.findMany({ orderBy: [{ position: 'asc' }, { sortOrder: 'asc' }] });
+    });
+
+    return res.json({ message: 'Đổi thứ tự thành công.', banners });
+  } catch (error) {
+    console.error('Error moving banner:', error);
+    const message = messageFromError(error);
+    return res.status(message === 'Không tìm thấy banner.' ? 404 : 500).json({ message });
+  }
+});
+
+router.patch('/:id/status', authenticateToken, async (req, res) => {
+  try {
+    const id = getRouteParam(req.params.id);
+    if (!id) return res.status(400).json({ message: 'ID banner không hợp lệ.' });
+
+    const { isActive } = req.body;
+    if (typeof isActive !== 'boolean') {
+      return res.status(400).json({ message: 'isActive phải là boolean' });
+    }
+
+    const banner = await prisma.banner.update({
+      where: { id },
+      data: { isActive },
+    });
+
+    return res.json({
+      message: isActive ? 'Đã bật banner' : 'Đã tắt banner',
+      banner,
+    });
+  } catch (error) {
+    console.error('Error updating banner status:', error);
+    const message = messageFromError(error);
+    return res.status(message === 'Không tìm thấy banner.' ? 404 : 500).json({ message });
+  }
+});
+
 router.delete('/:id', authenticateToken, async (req, res) => {
   try {
     const id = getRouteParam(req.params.id);
     if (!id) return res.status(400).json({ message: 'ID banner không hợp lệ.' });
 
-    await prisma.banner.delete({ where: { id } });
+    await prisma.$transaction(async (tx) => {
+      const banner = await tx.banner.findUnique({ where: { id } });
+      if (!banner) throw new Prisma.PrismaClientKnownRequestError('', { code: 'P2025', clientVersion: '' });
+
+      await tx.banner.delete({ where: { id } });
+
+      await tx.banner.updateMany({
+        where: { position: banner.position, sortOrder: { gt: banner.sortOrder } },
+        data: { sortOrder: { decrement: 1 } }
+      });
+    });
+
     return res.json({ message: 'Xóa banner thành công.' });
   } catch (error) {
     console.error('Error deleting banner:', error);
