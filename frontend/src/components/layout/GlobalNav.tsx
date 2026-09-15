@@ -94,6 +94,13 @@ export function GlobalNav() {
     }, 150);
   };
 
+  const getCategoryPrefix = (slug: string) => {
+    if (slug === 'ien-thoai' || slug === 'dien-thoai') return 'phone';
+    if (slug === 'may-tinh-bang' || slug === 'tablet') return 'tablet';
+    if (slug === 'ong-ho-thong-minh' || slug === 'watch') return 'watch';
+    return slug;
+  };
+
   const getMegaMenuGroups = (item: any) => {
     if (!item) return [];
     if (item.isStatic) {
@@ -110,12 +117,19 @@ export function GlobalNav() {
     }
 
     const groups = [];
+    const prefix = getCategoryPrefix(item.slug);
     
-    if (item.name === 'Điện thoại' || item.slug === 'dien-thoai' || item.slug === 'ien-thoai') {
+    if (prefix === 'phone') {
       groups.push({
         title: 'KHÁM PHÁ',
         links: ['iPhone 17 Pro Max'],
-        slugs: ['exploreIphone17promax']
+        slugs: ['phone/exploreIphone17promax']
+      });
+    } else if (prefix === 'watch') {
+      groups.push({
+        title: 'KHÁM PHÁ APPLE WATCH',
+        links: ['Trang chủ Watch', 'Apple Watch Series 11', 'Apple Watch SE 3', 'Apple Watch Ultra 3'],
+        slugs: ['watch/exploreWatch', 'watch/exploreSeries-11', 'watch/exploreSe-3', 'watch/exploreUltra-3']
       });
     }
 
@@ -123,7 +137,12 @@ export function GlobalNav() {
       groups.push({
         title: 'THƯƠNG HIỆU / DÒNG MÁY',
         links: item.children.filter((c: any) => c.isActive).map((c: any) => c.name),
-        slugs: item.children.filter((c: any) => c.isActive).map((c: any) => c.slug)
+        slugs: item.children.filter((c: any) => c.isActive).map((c: any) => {
+          if (prefix === 'watch') {
+            return `${prefix}/explore${c.slug.charAt(0).toUpperCase() + c.slug.slice(1)}`;
+          }
+          return `${prefix}/${c.slug}`;
+        })
       });
     } else {
       // Fallback if no children
@@ -157,8 +176,9 @@ export function GlobalNav() {
       if (item.id === 'support' && location.pathname.includes('/support')) return true;
       return false;
     }
-    return location.pathname.includes(`/category/${item.slug}`) || 
-           location.pathname.includes(`/${item.slug}`) ||
+    const prefix = getCategoryPrefix(item.slug);
+    return location.pathname.includes(`/${prefix}/`) ||
+           location.pathname.includes(`/${prefix}`) ||
            (activeMenu?.id === item.id);
   };
 

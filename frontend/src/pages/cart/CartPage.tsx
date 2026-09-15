@@ -51,7 +51,7 @@ export function CartPage() {
             Hãy chọn cấu hình phù hợp để thêm sản phẩm vào giỏ hàng.
           </p>
           <Link
-            to="/samsung#samsung-all-products"
+            to="/phone/samsung#samsung-all-products"
             className="mt-8 inline-flex min-h-11 items-center gap-2 rounded-full bg-neutral-950 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-black"
           >
             <ArrowLeft className="h-4 w-4" />
@@ -260,7 +260,7 @@ export function CartPage() {
                 >Xác nhận Đặt Hàng</button>
               </div>
             ) : null}            <Link
-              to="/samsung#samsung-all-products"
+              to="/phone/samsung#samsung-all-products"
               className="mt-3 inline-flex min-h-11 w-full items-center justify-center rounded-full border border-neutral-300 bg-white px-5 py-3 text-sm font-semibold text-neutral-950 transition-colors hover:border-neutral-950"
             >
               Tiếp tục mua sắm

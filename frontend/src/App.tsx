@@ -98,18 +98,25 @@ export default function App() {
               {/* Main Layout with GlobalNav and Footer */}
               <Route element={<MainLayout />}>
                 <Route path="/" element={<HomePage />} />
-                <Route path="/iphone" element={<SmartphonePage brand="iphone" />} />
-                <Route path="/exploreIphone17promax" element={<IphonePage />} />
-                <Route path="/watch" element={<WatchPage />} />
-                <Route path="/watch/series-11" element={<WatchSeries11Page />} />
-                <Route path="/watch/se-3" element={<WatchSE3Page />} />
-                <Route path="/watch/ultra-3" element={<WatchUltra3Page />} />
-                <Route path="/samsung" element={<SmartphonePage brand="samsung" />} />
-                <Route path="/xiaomi" element={<SmartphonePage brand="xiaomi" />} />
-                <Route path="/oppo" element={<SmartphonePage brand="oppo" />} />
+                {/* Smartphone Routes */}
+                <Route path="/phone/iphone" element={<SmartphonePage brand="iphone" />} />
+                <Route path="/phone/exploreIphone17promax" element={<IphonePage />} />
+                <Route path="/phone/samsung" element={<SmartphonePage brand="samsung" />} />
+                <Route path="/phone/xiaomi" element={<SmartphonePage brand="xiaomi" />} />
+                <Route path="/phone/oppo" element={<SmartphonePage brand="oppo" />} />
+
+                {/* Watch Routes */}
+                <Route path="/watch/exploreWatch" element={<WatchPage />} />
+                <Route path="/watch/exploreSeries-11" element={<WatchSeries11Page />} />
+                <Route path="/watch/exploreSe-3" element={<WatchSE3Page />} />
+                <Route path="/watch/exploreUltra-3" element={<WatchUltra3Page />} />
+
+                {/* Tablet Routes */}
                 <Route path="/tablet/apple" element={<TabletPage brand="apple" />} />
                 <Route path="/tablet/samsung" element={<TabletPage brand="samsung" />} />
                 <Route path="/tablet/xiaomi" element={<TabletPage brand="xiaomi" />} />
+                
+                {/* Laptop Routes */}
                 <Route path="/laptop/apple" element={<LaptopPage brand="apple" />} />
                 <Route path="/laptop/dell" element={<LaptopPage brand="dell" />} />
                 <Route path="/laptop/asus" element={<LaptopPage brand="asus" />} />
