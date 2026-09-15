@@ -131,7 +131,7 @@ export function BrandHeroSection({ config }: BrandHeroSectionProps) {
   }
 
   return (
-    <section id={`${config.id}-hero`} aria-label={`${config.brand} Hero Showcase`} className="relative flex w-full select-none flex-col items-center justify-start overflow-hidden bg-black pb-0 pt-[44px] text-white">
+    <section id={`${config.id}-hero`} aria-label={`${config.brand} Hero Showcase`} className="relative flex w-full select-none flex-col items-center justify-start overflow-hidden bg-black pb-0 pt-0 text-white">
       <div className="absolute left-1/2 top-1/3 h-[450px] w-full max-w-7xl -translate-x-1/2 -translate-y-1/2 brand-ambient-glow transition-all duration-1000 ease-out sm:h-[700px]" style={{ background: `radial-gradient(ellipse at center, ${config.accent} 0%, rgba(0,0,0,0) 70%)` }} />
 
       <div className="hidden">{banners.map((banner) => <img key={banner.id} src={resolveBannerImage(banner.image)} alt="" />)}</div>
