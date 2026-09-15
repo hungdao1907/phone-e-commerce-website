@@ -107,12 +107,14 @@
 .brand-gradient-iphone {
   background: linear-gradient(135deg, #6b7280 0%, #d1d5db 50%, #9ca3af 100%);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
 .brand-gradient-iphone-ai {
   background: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
@@ -121,6 +123,7 @@
 .samsung-gradient-text {
   background: linear-gradient(135deg, #2563eb 0%, #3b82f6 50%, #60a5fa 100%);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
@@ -128,6 +131,7 @@
 .samsung-gradient-ai {
   background: linear-gradient(135deg, #2563eb 0%, #8b5cf6 50%, #ec4899 100%);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
@@ -135,12 +139,14 @@
 .brand-gradient-xiaomi {
   background: linear-gradient(135deg, #ea580c 0%, #f97316 50%, #fbbf24 100%);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
 .brand-gradient-xiaomi-ai {
   background: linear-gradient(135deg, #f97316 0%, #ef4444 50%, #ec4899 100%);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
@@ -148,12 +154,14 @@
 .brand-gradient-oppo {
   background: linear-gradient(135deg, #059669 0%, #10b981 50%, #34d399 100%);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
 .brand-gradient-oppo-ai {
   background: linear-gradient(135deg, #0d9488 0%, #059669 50%, #10b981 100%);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 

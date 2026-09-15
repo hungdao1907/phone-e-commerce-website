@@ -1,75 +1,5 @@
 import { Sparkles, ShieldCheck, RefreshCw, Headphones } from 'lucide-react';
-import type { BrandConfig, BrandHeroBanner, BrandProductGroupDefinition, BrandPillar } from '../types';
-
-/* ─── Hero Banners ─── */
-const IPHONE_HERO_BANNERS: BrandHeroBanner[] = [
-  {
-    id: 'ip17-pro-max',
-    title: 'iPhone 17 Pro Max',
-    shortTitle: '17 Pro Max',
-    tagline: 'Chip A19 Pro • Camera 48MP Pro',
-    badge: 'PRO MẠNH MẼ NHẤT',
-    description: 'Màn hình lớn 6.9 inch, hệ thống camera chuyên nghiệp 48MP và sức mạnh xử lý vượt trội dành cho mọi khoảnh khắc sáng tạo.',
-    price: 'Từ 37.990.000₫',
-    originalPrice: '39.990.000₫',
-    image: '/images/hero.png',
-    alt: 'iPhone 17 Pro Max Banner',
-    accentColor: '#6b7280',
-    glowColor: 'rgba(107, 114, 128, 0.45)',
-    ctaText: 'Đặt Trước iPhone 17 Pro Max',
-    specs: [
-      { label: 'Màn hình', value: '6.9" Super Retina XDR OLED' },
-      { label: 'Vi xử lý', value: 'Apple A19 Pro (3nm)' },
-      { label: 'Camera', value: '48MP Pro camera system' },
-      { label: 'Pin', value: 'Thời lượng pin cả ngày' },
-    ],
-    highlightChips: ['A19 Pro', 'Camera Pro 48MP', 'Titanium Design', 'Apple Intelligence'],
-  },
-  {
-    id: 'ip17-pro',
-    title: 'iPhone 17 Pro',
-    shortTitle: '17 Pro',
-    tagline: 'Sức Mạnh Pro • Thiết Kế Tinh Gọn',
-    badge: 'CHUYÊN NGHIỆP TINH GỌN',
-    description: 'Trải nghiệm camera Pro, hiệu năng đỉnh cao và màn hình sắc nét trong thiết kế cân bằng hoàn hảo.',
-    price: 'Từ 32.990.000₫',
-    originalPrice: '34.990.000₫',
-    image: '/images/midip.png',
-    alt: 'iPhone 17 Pro Banner',
-    accentColor: '#a855f7',
-    glowColor: 'rgba(168, 85, 247, 0.45)',
-    ctaText: 'Đặt Trước iPhone 17 Pro',
-    specs: [
-      { label: 'Màn hình', value: '6.3" Super Retina XDR' },
-      { label: 'Vi xử lý', value: 'Apple A19 Pro (3nm)' },
-      { label: 'Camera', value: '48MP Pro camera system' },
-      { label: 'Sạc', value: 'Sạc nhanh USB-C' },
-    ],
-    highlightChips: ['A19 Pro', '48MP Pro Camera', 'Titanium', 'USB-C Fast Charge'],
-  },
-  {
-    id: 'ip17',
-    title: 'iPhone 17',
-    shortTitle: '17',
-    tagline: 'Mới Mỗi Ngày • Đầy Sức Mạnh',
-    badge: 'TRẢI NGHIỆM MỚI',
-    description: 'Một chiếc iPhone linh hoạt cho ảnh đẹp, kết nối nhanh và những trải nghiệm quan trọng hằng ngày.',
-    price: 'Từ 24.990.000₫',
-    originalPrice: '26.990.000₫',
-    image: '/images/leftip.png',
-    alt: 'iPhone 17 Banner',
-    accentColor: '#38bdf8',
-    glowColor: 'rgba(56, 189, 248, 0.45)',
-    ctaText: 'Đặt Trước iPhone 17',
-    specs: [
-      { label: 'Màn hình', value: '6.3" Super Retina XDR' },
-      { label: 'Vi xử lý', value: 'Apple A19' },
-      { label: 'Camera', value: '48MP Fusion camera' },
-      { label: 'Pin', value: 'Pin dùng cả ngày' },
-    ],
-    highlightChips: ['A19 Chip', '48MP Fusion', 'Dynamic Island', 'Ceramic Shield'],
-  },
-];
+import type { BrandConfig, BrandProductGroupDefinition, BrandPillar } from '../types';
 
 /* ─── Product Group Definitions ─── */
 const IPHONE_PRODUCT_GROUPS: BrandProductGroupDefinition[] = [
@@ -141,9 +71,6 @@ export const IPHONE_BRAND_CONFIG: BrandConfig = {
 
   gradientText: 'brand-gradient-iphone',
   gradientAI: 'brand-gradient-iphone-ai',
-
-  heroBanners: IPHONE_HERO_BANNERS,
-
   featuredBadgeText: 'iPhone Thế Hệ Mới',
   featuredHeadlinePrefix: 'Khám Phá',
   featuredHeadlineHighlight: 'Trải Nghiệm Mới',

@@ -1,5 +1,6 @@
 import express, { Response } from 'express';
 import { PrismaClient } from '@prisma/client';
+import bcrypt from 'bcryptjs';
 import { authenticateToken, AuthRequest } from '../middleware/auth.middleware';
 
 const router = express.Router();
@@ -54,6 +55,16 @@ router.put('/profile', authenticateToken, async (req: AuthRequest, res: Response
 router.get('/', async (req, res) => {
   try {
     const customers = await prisma.customer.findMany({
+      select: {
+        id: true,
+        fullName: true,
+        email: true,
+        phone: true,
+        address: true,
+        verified: true,
+        createdAt: true,
+        updatedAt: true,
+      },
       orderBy: {
         createdAt: 'desc',
       },
@@ -68,10 +79,10 @@ router.get('/', async (req, res) => {
 // Create a new customer
 router.post('/', async (req, res) => {
   try {
-    const { fullName, email, phone, address } = req.body;
+    const { fullName, email, password, phone, address } = req.body;
 
-    if (!fullName || !email) {
-      return res.status(400).json({ message: 'Tên và Email là bắt buộc' });
+    if (!fullName || !email || !password) {
+      return res.status(400).json({ message: 'Tên, email và mật khẩu là bắt buộc' });
     }
 
     const existingCustomer = await prisma.customer.findUnique({
@@ -82,18 +93,24 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ message: 'Email đã được sử dụng' });
     }
 
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+
+
     const customer = await prisma.customer.create({
       data: {
         fullName,
         email,
+        password: hashedPassword,
         phone,
         address
       }
     });
 
+    const { password: _, otp, otpExpiry, ...safeCustomer } = customer;
     res.status(201).json({
       message: 'Customer created successfully',
-      customer
+      customer: safeCustomer,
     });
   } catch (error) {
     console.error('Error creating customer:', error);

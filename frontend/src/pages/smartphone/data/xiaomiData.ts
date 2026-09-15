@@ -1,75 +1,5 @@
 import { Camera, Zap, RefreshCw, Sparkles } from 'lucide-react';
-import type { BrandConfig, BrandHeroBanner, BrandProductGroupDefinition, BrandPillar } from '../types';
-
-/* ─── Hero Banners ─── */
-const XIAOMI_HERO_BANNERS: BrandHeroBanner[] = [
-  {
-    id: 'x15-ultra',
-    title: 'Xiaomi 15 Ultra',
-    shortTitle: '15 Ultra',
-    tagline: 'Leica Quad Camera • Snapdragon 8 Elite',
-    badge: 'ĐỈNH CAO NHIẾP ẢNH',
-    description: 'Hệ thống 4 camera Leica siêu quang học, cảm biến 1 inch thế hệ mới và vi xử lý Snapdragon 8 Elite định chuẩn nhiếp ảnh di động.',
-    price: 'Từ 29.990.000₫',
-    originalPrice: '31.990.000₫',
-    image: '/images/xiaomi.png',
-    alt: 'Xiaomi 15 Ultra Banner',
-    accentColor: '#f97316',
-    glowColor: 'rgba(249, 115, 22, 0.45)',
-    ctaText: 'Đặt Trước 15 Ultra',
-    specs: [
-      { label: 'Màn hình', value: '6.73" AMOLED 2K 120Hz' },
-      { label: 'Vi xử lý', value: 'Snapdragon 8 Elite (3nm)' },
-      { label: 'Camera', value: 'Leica Quad Camera 50MP' },
-      { label: 'Pin & Sạc', value: '5.410 mAh • 90W HyperCharge' },
-    ],
-    highlightChips: ['Leica Optics', 'Snapdragon 8 Elite', '2K AMOLED 120Hz', '90W HyperCharge'],
-  },
-  {
-    id: 'x15',
-    title: 'Xiaomi 15',
-    shortTitle: '15',
-    tagline: 'Flagship Gọn Gàng • Hiệu Năng Vượt Trội',
-    badge: 'FLAGSHIP NHỎ GỌN',
-    description: 'Thiết kế viền siêu mỏng cân đối 4 cạnh, cụm 3 camera Leica 50MP và hiệu năng flagship hàng đầu trong thân máy 6.36 inch.',
-    price: 'Từ 22.990.000₫',
-    originalPrice: '24.490.000₫',
-    image: '/images/xiaomi.png',
-    alt: 'Xiaomi 15 Banner',
-    accentColor: '#a855f7',
-    glowColor: 'rgba(168, 85, 247, 0.45)',
-    ctaText: 'Đặt Trước Xiaomi 15',
-    specs: [
-      { label: 'Màn hình', value: '6.36" AMOLED 1.5K 120Hz' },
-      { label: 'Vi xử lý', value: 'Snapdragon 8 Elite' },
-      { label: 'Camera', value: 'Leica Triple 50MP' },
-      { label: 'Pin & Sạc', value: '5.240 mAh • 90W HyperCharge' },
-    ],
-    highlightChips: ['Viền Siêu Mỏng', 'Snapdragon 8 Elite', 'Leica Summilux', 'Pin 5.240 mAh'],
-  },
-  {
-    id: 'rn15-pro-plus',
-    title: 'Redmi Note 15 Pro+',
-    shortTitle: 'Note 15 Pro+',
-    tagline: 'Camera 200MP • Sạc Nhanh 120W',
-    badge: 'QUỐC DÂN CAO CẤP',
-    description: 'Trải nghiệm camera 200MP chống rung OIS, sạc siêu tốc 120W đầy pin trong 19 phút cùng chuẩn kháng nước bụi IP68 bền bỉ.',
-    price: 'Từ 11.990.000₫',
-    originalPrice: '12.990.000₫',
-    image: '/images/xiaomi.png',
-    alt: 'Redmi Note 15 Pro+ Banner',
-    accentColor: '#38bdf8',
-    glowColor: 'rgba(56, 189, 248, 0.45)',
-    ctaText: 'Khám Phá Note 15 Pro+',
-    specs: [
-      { label: 'Màn hình', value: '6.67" AMOLED 1.5K 120Hz' },
-      { label: 'Vi xử lý', value: 'Snapdragon 7s Gen 3' },
-      { label: 'Camera', value: '200MP OIS siêu nét' },
-      { label: 'Pin & Sạc', value: '5.110 mAh • 120W HyperCharge' },
-    ],
-    highlightChips: ['200MP Camera', 'HyperCharge 120W', 'AMOLED 120Hz', 'IP68'],
-  },
-];
+import type { BrandConfig, BrandProductGroupDefinition, BrandPillar } from '../types';
 
 /* ─── Product Group Definitions ─── */
 const XIAOMI_PRODUCT_GROUPS: BrandProductGroupDefinition[] = [
@@ -141,9 +71,6 @@ export const XIAOMI_BRAND_CONFIG: BrandConfig = {
 
   gradientText: 'brand-gradient-xiaomi',
   gradientAI: 'brand-gradient-xiaomi-ai',
-
-  heroBanners: XIAOMI_HERO_BANNERS,
-
   featuredBadgeText: 'Xiaomi Flagship Thế Hệ Mới',
   featuredHeadlinePrefix: 'Đột Phá',
   featuredHeadlineHighlight: 'Nhiếp Ảnh Leica',

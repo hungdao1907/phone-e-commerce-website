@@ -2,6 +2,7 @@ import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import path from 'path';
+import fs from 'fs';
 import authRoutes from './routes/auth.routes';
 import userRoutes from './routes/user.routes';
 import customerRoutes from './routes/customer.routes';
@@ -23,8 +24,21 @@ const port = process.env.PORT || 3001;
 app.use(cors());
 app.use(express.json());
 
-// Serve static files from uploads folder
-app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
+// Serve static files from uploads folder (reliably resolves to backend/uploads)
+const uploadsDir = path.resolve(__dirname, '..', 'uploads');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
+const bannersUploadsDir = path.resolve(uploadsDir, 'banners');
+if (!fs.existsSync(bannersUploadsDir)) {
+  fs.mkdirSync(bannersUploadsDir, { recursive: true });
+}
+
+app.use('/uploads', express.static(uploadsDir));
+const cwdUploads = path.resolve(process.cwd(), 'uploads');
+if (cwdUploads !== uploadsDir && fs.existsSync(cwdUploads)) {
+  app.use('/uploads', express.static(cwdUploads));
+}
 
 // Routes
 app.use('/api/auth', authRoutes);

@@ -3,6 +3,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Plus, Edit2, Trash2, X, Package, RefreshCw, ChevronDown, ChevronRight, ArrowLeft, Image as ImageIcon, Zap, Upload } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/store/authStore';
+import { resolveMediaUrl } from '@/utils/media';
+
+const API_BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3001';
 
 // --- TYPES ---
 interface ProductVariant {
@@ -185,12 +188,12 @@ export function ProductList() {
       if (file.size > 5 * 1024 * 1024) throw new Error(`Ảnh vượt quá 5MB`);
       const uploadData = new FormData();
       uploadData.append('image', file);
-      const res = await fetch('http://localhost:3001/api/upload', { method: 'POST', body: uploadData });
+      const res = await fetch(`${API_BASE_URL}/api/upload`, { method: 'POST', body: uploadData });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Lỗi tải ảnh');
       
       const newImages = [...formData.images];
-      newImages[slotIndex] = data.imageUrl;
+      newImages[slotIndex] = data.url || data.imageUrl;
       
       setFormData(prev => ({ 
         ...prev, 
@@ -446,7 +449,7 @@ export function ProductList() {
                       <div className={cn("relative aspect-square rounded-xl border overflow-hidden group flex flex-col items-center justify-center transition-colors", hasImage ? (isMain ? "border-emerald-500/50 bg-black/20" : "border-white/10 bg-black/20") : "border-dashed border-white/20 hover:border-emerald-500/50 bg-black/20 cursor-pointer")}>
                         {hasImage ? (
                           <>
-                            <img src={formData.images[index]} alt={label} className="w-full h-full object-contain p-2" />
+                            <img src={resolveMediaUrl(formData.images[index])} alt={label} className="w-full h-full object-contain p-2" />
                             <button type="button" onClick={() => removeGallerySlot(index)} className="absolute top-2 right-2 bg-black/60 text-white p-1.5 rounded-lg opacity-0 group-hover:opacity-100 hover:bg-red-500 transition-all shadow-md"><X className="w-3 h-3" /></button>
                           </>
                         ) : (
@@ -642,7 +645,7 @@ export function ProductList() {
                 {/* Sản phẩm */}
                 <div className="col-span-4 flex items-center gap-4">
                   <div className="w-12 h-12 rounded-xl bg-white/10 overflow-hidden shrink-0 border border-white/5 flex items-center justify-center p-1">
-                    {product.image ? <img src={product.image} alt={product.name} className="w-full h-full object-contain drop-shadow-md" /> : <div className="text-[10px] text-white/20">No img</div>}
+                    {product.image ? <img src={resolveMediaUrl(product.image)} alt={product.name} className="w-full h-full object-contain drop-shadow-md" /> : <div className="text-[10px] text-white/20">No img</div>}
                   </div>
                   <div className="flex flex-col overflow-hidden">
                     <span className="font-medium text-white truncate flex items-center gap-2">
