@@ -1046,6 +1046,26 @@ function PositionDropdown({
     }
   };
 
+  const allOptions = useMemo(() => POSITION_GROUPS.flatMap((g) => g.options), []);
+
+  const handleTriggerWheel = (e: React.WheelEvent) => {
+    if (isOpen) return;
+    e.stopPropagation();
+    const currentIndex = allOptions.findIndex((opt) => opt.value === value);
+    if (currentIndex === -1) return;
+
+    if (e.deltaY > 0 && currentIndex < allOptions.length - 1) {
+      onChange(allOptions[currentIndex + 1].value);
+    } else if (e.deltaY < 0 && currentIndex > 0) {
+      onChange(allOptions[currentIndex - 1].value);
+    }
+  };
+
+  const handleMenuWheel = (e: React.WheelEvent<HTMLDivElement>) => {
+    e.stopPropagation();
+    e.currentTarget.scrollTop += e.deltaY;
+  };
+
   return (
     <div ref={dropdownRef} className={`relative ${className}`}>
       {/* Trigger Button */}
@@ -1053,6 +1073,8 @@ function PositionDropdown({
         type="button"
         id="banner-position"
         onClick={() => setIsOpen((prev) => !prev)}
+        onWheel={handleTriggerWheel}
+        title="Click để chọn hoặc lăn chuột để thay đổi nhanh vị trí"
         aria-haspopup="listbox"
         aria-expanded={isOpen}
         className={`group flex w-full items-center justify-between gap-3 rounded-xl border px-3.5 py-2.5 text-left text-sm transition-all duration-200 cursor-pointer ${
@@ -1080,6 +1102,7 @@ function PositionDropdown({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 4, scale: 0.98 }}
             transition={{ duration: 0.18, ease: 'easeOut' }}
+            onWheel={handleMenuWheel}
             className="absolute left-0 right-0 top-full z-[80] mt-2 max-h-72 overflow-y-auto rounded-2xl border border-white/15 bg-neutral-900/95 p-2 shadow-[0_25px_60px_rgba(0,0,0,0.9)] backdrop-blur-2xl custom-scrollbar"
             role="listbox"
           >
