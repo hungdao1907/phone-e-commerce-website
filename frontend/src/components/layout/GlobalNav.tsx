@@ -12,7 +12,10 @@ export function GlobalNav() {
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const location = useLocation();
-  const isIphonePage = location.pathname === '/iphone';
+  const isIphonePage =
+    location.pathname === '/iphone' ||
+    location.pathname === '/exploreIphone17promax' ||
+    location.pathname === '/phone/exploreIphone17promax';
 
   const items = useCartStore((state: any) => state.items);
   const cartItemCount = items.reduce((total: number, item: any) => total + item.quantity, 0);
