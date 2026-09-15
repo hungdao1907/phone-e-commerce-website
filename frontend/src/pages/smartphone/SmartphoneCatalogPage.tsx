@@ -9,7 +9,6 @@ import {
 } from '@/components/smartphone';
 import type { BrandConfig, BrandModel } from '@/types/smartphone';
 
-
 interface SmartphoneCatalogPageProps {
   config: BrandConfig;
   products: BrandModel[];

@@ -1,8 +1,7 @@
-"use client";
-
-import type { TargetAndTransition } from "framer-motion";
-import { motion } from "framer-motion";
-import { cn } from "@/lib/utils";
+import type { ComponentProps } from 'react';
+import type { TargetAndTransition } from 'motion/react';
+import { motion } from 'motion/react';
+import { cn } from '@/utils/cn';
 
 const initialProps: TargetAndTransition = {
   pathLength: 0,
@@ -14,7 +13,10 @@ const animateProps: TargetAndTransition = {
   opacity: 1,
 };
 
-type Props = React.ComponentProps<typeof motion.svg> & {
+type AppleHelloEffectProps = Omit<
+  ComponentProps<typeof motion.svg>,
+  'onAnimationComplete'
+> & {
   speed?: number;
   onAnimationComplete?: () => void;
 };
@@ -24,7 +26,7 @@ export function AppleHelloVietnameseEffect({
   speed = 1,
   onAnimationComplete,
   ...props
-}: Props) {
+}: AppleHelloEffectProps) {
   const calc = (x: number) => x * speed;
 
   return (
@@ -191,7 +193,7 @@ export function AppleHelloEnglishEffect({
   speed = 1,
   onAnimationComplete,
   ...props
-}: Props) {
+}: AppleHelloEffectProps) {
   const calc = (x: number) => x * speed;
 
   return (

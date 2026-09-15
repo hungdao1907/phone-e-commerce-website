@@ -98,5 +98,3 @@ export function SmartphonePage({ brand }: SmartphonePageProps) {
 
   return <SmartphoneCatalogPage config={config} products={products} />;
 }
-
-export default SmartphonePage;

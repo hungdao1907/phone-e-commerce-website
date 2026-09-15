@@ -1,9 +1,12 @@
 import { useState, useEffect } from 'react';
 import { ArrowLeft, Minus, Plus, ShieldCheck, ShoppingBag, Trash2 } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { formatPurchasePrice } from '@/data';
 import { useCartStore } from '../../store/useCartStore';
 import { useAuthStore } from '../../store/authStore';
+
+const formatPurchasePrice = (price: number) => {
+  return price.toLocaleString('vi-VN') + 'đ';
+};
 
 export function CartPage() {
   const [searchParams] = useSearchParams();
@@ -12,7 +15,8 @@ export function CartPage() {
   const removeItem = useCartStore((state) => state.removeItem);
   const clearCart = useCartStore((state) => state.clearCart);
   const checkoutRequested = searchParams.get('checkout') === '1';
-  const [checkoutNotice, setCheckoutNotice] = useState(false);
+  const [checkoutNotice, setCheckoutNotice] = useState(checkoutRequested);
+
   const { user, token } = useAuthStore();
   const [profileData, setProfileData] = useState<{address?: string, phone?: string}>({});
 
@@ -51,7 +55,7 @@ export function CartPage() {
             className="mt-8 inline-flex min-h-11 items-center gap-2 rounded-full bg-neutral-950 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-black"
           >
             <ArrowLeft className="h-4 w-4" />
-            Khám phá Samsung
+            Khám phá cửa hàng
           </Link>
         </section>
       </main>

@@ -1,0 +1,458 @@
+/* ===================================================
+   APPLE WATCH SERIES 11 — TYPOGRAPHY & DESIGN SYSTEM
+   Authentic Apple Web Font Family (SF Pro Display & SF Pro Text)
+   =================================================== */
+
+@import url('https://fonts.cdnfonts.com/css/sf-pro-display');
+
+.series11-page {
+  background-color: #000000;
+  color: #ffffff;
+  overflow-x: hidden;
+  font-family: "SF Pro Text", "SF Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Helvetica, Arial, sans-serif;
+  letter-spacing: -0.011em;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Suppress browser video hover controls and PiP overlays */
+.series11-page video::-webkit-media-controls,
+.series11-page video::-webkit-media-controls-enclosure,
+.series11-page video::-webkit-media-controls-panel,
+.series11-page video::-webkit-media-controls-overlay-play-button {
+  display: none !important;
+  -webkit-appearance: none !important;
+  opacity: 0 !important;
+}
+
+/* Authentic Apple Typography Hierarchy */
+.series11-page h1,
+.series11-page h2,
+.series11-page h3,
+.series11-page h4 {
+  font-family: "SF Pro Display", "SF Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Helvetica, Arial, sans-serif;
+  letter-spacing: -0.028em;
+  font-weight: 700;
+  line-height: 1.12;
+  color: inherit;
+}
+
+.series11-page h1 {
+  letter-spacing: -0.035em;
+  font-weight: 800;
+  line-height: 1.08;
+}
+
+.series11-page h2 {
+  letter-spacing: -0.028em;
+  font-weight: 800;
+  line-height: 1.12;
+}
+
+.series11-page h3 {
+  letter-spacing: -0.022em;
+  font-weight: 700;
+  line-height: 1.18;
+}
+
+.series11-page h4 {
+  letter-spacing: -0.018em;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.series11-page p {
+  font-family: "SF Pro Text", "SF Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Helvetica, Arial, sans-serif;
+  letter-spacing: -0.011em;
+  line-height: 1.5;
+}
+
+.series11-page span,
+.series11-page a,
+.series11-page button,
+.series11-page li {
+  font-family: "SF Pro Text", "SF Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Helvetica, Arial, sans-serif;
+  letter-spacing: -0.01em;
+}
+
+/* Number & Metric Typography */
+.series11-page .font-black,
+.series11-page [class*="text-4xl"],
+.series11-page [class*="text-5xl"],
+.series11-page [class*="text-6xl"],
+.series11-page [class*="text-7xl"],
+.series11-page [class*="text-8xl"] {
+  font-family: "SF Pro Display", "SF Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-feature-settings: "tnum" 1;
+}
+
+/* Section Containers & Spacing (Refined & Compact Rhythm) */
+.series11-section {
+  position: relative;
+  width: 100%;
+  padding-top: 4.5rem;
+  padding-bottom: 4.5rem;
+}
+
+@media (min-width: 640px) {
+  .series11-section {
+    padding-top: 5.5rem;
+    padding-bottom: 5.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .series11-section {
+    padding-top: 6.5rem;
+    padding-bottom: 6.5rem;
+  }
+}
+
+/* Standardized Content Container: max-width 1280px */
+.series11-container {
+  width: 100%;
+  max-width: 1280px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+}
+
+@media (min-width: 640px) {
+  .series11-container {
+    padding-left: 2.5rem;
+    padding-right: 2.5rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .series11-container {
+    padding-left: 3rem;
+    padding-right: 3rem;
+  }
+}
+
+/* Apple Industrial Design Pedestal Stage (Minimal & Precise) */
+.series11-design-pedestal {
+  position: relative;
+  width: 100%;
+  border-radius: 2rem;
+  background: radial-gradient(circle at 50% 38%, rgba(255, 255, 255, 0.035) 0%, rgba(255, 255, 255, 0.008) 55%, transparent 75%),
+              linear-gradient(180deg, rgba(255, 255, 255, 0.02) 0%, rgba(0, 0, 0, 0.4) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+@media (min-width: 1024px) {
+  .series11-design-pedestal {
+    border-radius: 2.5rem;
+  }
+}
+
+/* Editorial Stat Divider */
+.series11-stat-divider {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Glass Card Treatment */
+.series11-glass-card {
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 1.75rem;
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  transition: border-color 0.35s ease, background-color 0.35s ease, transform 0.35s ease, box-shadow 0.35s ease;
+}
+
+.series11-glass-card:hover {
+  border-color: rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.045);
+  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.75), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+/* Typography Colors (Clean Solid Apple Appearance) */
+.series11-gradient-silver {
+  color: #ffffff;
+  background: none;
+  -webkit-text-fill-color: initial;
+}
+
+.series11-gradient-blue {
+  color: #2997ff;
+  background: none;
+  -webkit-text-fill-color: initial;
+}
+
+/* Subtle Divider Line */
+.series11-divider-line {
+  height: 1px;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.05) 80%, transparent 100%);
+}
+
+/* Fashion-Forward Sleek Pill Buttons */
+.series11-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  padding: 0.65rem 1.35rem;
+  border-radius: 9999px;
+  white-space: nowrap;
+  font-family: "SF Pro Text", "SF Pro", -apple-system, BlinkMacSystemFont, sans-serif;
+  font-weight: 600;
+  font-size: 0.8125rem;
+  letter-spacing: -0.01em;
+  background-color: #0071e3;
+  color: #ffffff;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 4px 20px rgba(0, 113, 227, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  cursor: pointer;
+}
+
+@media (min-width: 640px) {
+  .series11-btn-primary {
+    padding: 0.7rem 1.6rem;
+    font-size: 0.875rem;
+  }
+}
+
+.series11-btn-primary:hover {
+  background-color: #0077ed;
+  box-shadow: 0 6px 28px rgba(0, 113, 227, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  transform: scale(1.03);
+}
+
+.series11-btn-primary:active {
+  transform: scale(0.97);
+}
+
+/* Secondary Button */
+.series11-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  padding: 0.65rem 1.35rem;
+  border-radius: 9999px;
+  white-space: nowrap;
+  font-family: "SF Pro Text", "SF Pro", -apple-system, BlinkMacSystemFont, sans-serif;
+  font-weight: 500;
+  font-size: 0.8125rem;
+  letter-spacing: -0.01em;
+  background-color: rgba(0, 0, 0, 0.45);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: pointer;
+}
+
+@media (min-width: 640px) {
+  .series11-btn-secondary {
+    padding: 0.7rem 1.6rem;
+    font-size: 0.875rem;
+  }
+}
+
+.series11-btn-secondary:hover {
+  background-color: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.5);
+  transform: scale(1.03);
+}
+
+.series11-btn-secondary:active {
+  transform: scale(0.97);
+}
+
+/* Micro Highlights Pill */
+.series11-micro-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 0.95rem;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: #a1a1aa;
+}
+
+/* Subtle Breathing Pulse */
+@keyframes series11BreathingGlow {
+  0%, 100% {
+    opacity: 0.4;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.05);
+  }
+}
+
+.series11-glow-pulse {
+  animation: series11BreathingGlow 6s ease-in-out infinite;
+}
+
+/* Safety Visual Floating Motion */
+@keyframes series11Float {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-10px) rotate(-0.6deg);
+  }
+}
+
+.series11-safety-float {
+  animation: series11Float 5s ease-in-out infinite;
+}
+
+/* Glass Light Sweep */
+@keyframes series11LightSweep {
+  0% {
+    transform: translateX(-150%) skewX(-25deg);
+    opacity: 0;
+  }
+  30% {
+    opacity: 0.5;
+  }
+  60% {
+    opacity: 0.5;
+  }
+  100% {
+    transform: translateX(250%) skewX(-25deg);
+    opacity: 0;
+  }
+}
+
+.series11-shimmer-sweep {
+  animation: series11LightSweep 4.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  animation-delay: 1s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .series11-glow-pulse,
+  .series11-safety-float,
+  .series11-shimmer-sweep {
+    animation: none !important;
+  }
+  .series11-glass-card {
+    transition: none !important;
+  }
+  .series11-btn-primary,
+  .series11-btn-secondary {
+    transition: none !important;
+    transform: none !important;
+  }
+}
+
+/* 21st.dev StarButton Animation */
+@keyframes star-btn {
+  0% {
+    offset-distance: 0%;
+  }
+  100% {
+    offset-distance: 100%;
+  }
+}
+
+.animate-star-btn {
+  animation: star-btn calc(var(--duration, 3) * 1s) linear infinite;
+}
+
+/* macOS-Style Smooth Scrollbar for White Specs Modal */
+.specs-scroll-container {
+  overflow-y: auto !important;
+  overscroll-behavior: contain !important;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.25) transparent;
+  transition: scrollbar-color 0.25s ease;
+}
+
+.specs-scroll-container:hover {
+  scrollbar-color: rgba(0, 0, 0, 0.5) transparent;
+}
+
+.specs-scroll-container::-webkit-scrollbar {
+  width: 7px;
+}
+
+.specs-scroll-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.specs-scroll-container::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 9999px;
+  transition: background-color 0.2s ease;
+}
+
+.specs-scroll-container:hover::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.45);
+}
+
+.specs-scroll-container::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(0, 0, 0, 0.65);
+}
+
+/* ===================================================
+   AUTHENTIC APPLE WEB TYPOGRAPHY FOR SPECS MODAL
+   SF Pro Display & SF Pro Text Typography Standard
+   =================================================== */
+
+.apple-specs-modal {
+  font-family: "SF Pro Text", "SF Pro Display", "SF Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Helvetica, Arial, sans-serif !important;
+  letter-spacing: -0.012em;
+  -webkit-font-smoothing: antialiased !important;
+  -moz-osx-font-smoothing: grayscale !important;
+  text-rendering: optimizeLegibility;
+}
+
+.apple-specs-modal h1,
+.apple-specs-modal h2,
+.apple-specs-modal h3,
+.apple-specs-modal h4,
+.apple-specs-modal .apple-heading {
+  font-family: "SF Pro Display", "SF Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Helvetica, Arial, sans-serif !important;
+  letter-spacing: -0.028em !important;
+  line-height: 1.15;
+}
+
+.apple-specs-modal .apple-eyebrow {
+  font-family: "SF Pro Display", "SF Pro Text", -apple-system, BlinkMacSystemFont, sans-serif !important;
+  letter-spacing: 0.1em !important;
+}
+
+.apple-specs-modal .apple-spec-category {
+  font-family: "SF Pro Display", "SF Pro", -apple-system, BlinkMacSystemFont, sans-serif !important;
+  letter-spacing: -0.022em !important;
+}
+
+.apple-specs-modal .apple-spec-label {
+  font-family: "SF Pro Text", "SF Pro", -apple-system, BlinkMacSystemFont, sans-serif !important;
+  letter-spacing: 0.05em !important;
+}
+
+.apple-specs-modal .apple-spec-value {
+  font-family: "SF Pro Display", "SF Pro", -apple-system, BlinkMacSystemFont, sans-serif !important;
+  letter-spacing: -0.018em !important;
+  font-feature-settings: "tnum" 1 !important;
+}
+
+.apple-specs-modal .apple-spec-desc {
+  font-family: "SF Pro Text", "SF Pro", -apple-system, BlinkMacSystemFont, sans-serif !important;
+  letter-spacing: -0.011em !important;
+  line-height: 1.48 !important;
+}
+
+.apple-specs-modal .apple-price {
+  font-family: "SF Pro Display", "SF Pro", -apple-system, BlinkMacSystemFont, sans-serif !important;
+  letter-spacing: -0.025em !important;
+  font-feature-settings: "tnum" 1 !important;
+}

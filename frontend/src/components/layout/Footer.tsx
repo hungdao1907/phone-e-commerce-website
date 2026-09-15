@@ -1,10 +1,9 @@
-import React from 'react';
 import { Apple, ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export function Footer() {
   return (
-    <footer className="bg-[#f5f5f7] border-t border-neutral-300 text-xs text-neutral-500 pt-8 pb-12 mt-16">
+    <footer className="app-footer bg-[#f5f5f7] border-t border-neutral-300 text-xs text-neutral-500 pt-10 pb-14">
       <div className="max-w-[1024px] mx-auto px-4 md:px-8 space-y-8">
         {/* Breadcrumb */}
         <div className="flex items-center space-x-2 border-b border-neutral-300 pb-4 text-neutral-600">
@@ -119,7 +118,6 @@ export function Footer() {
             <span className="text-neutral-300">|</span>
             <Link to="/" className="hover:underline">Sơ Đồ Trang Web</Link>
           </div>
-          <Link to="/" className="hover:underline font-medium text-[#1d1d1f]">Việt Nam</Link>
         </div>
       </div>
     </footer>

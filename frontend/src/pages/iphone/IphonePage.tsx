@@ -10,6 +10,7 @@ import { HighlightsCarousel } from '@/components/iphone/HighlightsCarousel';
 import { FrontCameraSection } from '@/components/iphone/FrontCameraSection';
 import { VideoProSection } from '@/components/iphone/VideoProSection';
 import { AllInOneSection } from '@/components/iphone/AllInOneSection';
+import '@/css/iphone.css';
 
 gsap.registerPlugin(useGSAP, ScrollTrigger);
 
@@ -47,38 +48,6 @@ const IPHONE_VARIANTS = [
 const TRANSITION_MS = 650;
 const EASE = 'cubic-bezier(0.4, 0, 0.2, 1)';
 
-const CSS_STYLES = `
-@keyframes blob {
-  0% { transform: translate(0px, 0px) scale(1); }
-  33% { transform: translate(30px, -50px) scale(1.1); }
-  66% { transform: translate(-20px, 20px) scale(0.9); }
-  100% { transform: translate(0px, 0px) scale(1); }
-}
-
-@keyframes noise {
-  0%, 100% { transform: translate(0, 0); }
-  10% { transform: translate(-1%, -1%); }
-  20% { transform: translate(-2%, 1%); }
-  30% { transform: translate(1%, -2%); }
-  40% { transform: translate(-1%, 3%); }
-  50% { transform: translate(-2%, 1%); }
-  60% { transform: translate(2%, 0); }
-  70% { transform: translate(0, 2%); }
-  80% { transform: translate(1%, 3%); }
-  90% { transform: translate(-1%, 1%); }
-}
-
-.animate-blob {
-  animation: blob 15s infinite alternate cubic-bezier(0.4, 0, 0.2, 1);
-}
-.animation-delay-2000 { animation-delay: 2s; }
-.animation-delay-4000 { animation-delay: 4s; }
-
-.grain-animate {
-  animation: noise 0.2s steps(2) infinite;
-}
-`;
-
 const dragState = {
   isDragging: false,
   deltaX: 0,
@@ -97,7 +66,7 @@ function lerpAngle(start: number, end: number, t: number) {
 
 function BackgroundGradient({ variant }: { variant: (typeof IPHONE_VARIANTS)[number] }) {
   return (
-    <div 
+    <div
       className="absolute inset-0 overflow-hidden transition-colors duration-1000"
       style={{
         // Phủ mờ màu của iPhone (20% opacity) lên trên cùng của gradient nền
@@ -549,9 +518,7 @@ export function IphonePage() {
   const current = IPHONE_VARIANTS[activeIndex];
 
   return (
-    <div className="w-full bg-black overflow-clip">
-      <style>{CSS_STYLES}</style>
-
+    <div className="iphone-page w-full bg-black relative">
       {/* 1. MÀN HÌNH ĐẦU: HERO VIDEO */}
       <IphoneHero />
 
@@ -706,7 +673,7 @@ export function IphonePage() {
           </a>
         </div>
       </div>
-      
+
       {/* 3. MÀN HÌNH BA: CAMERA TRƯỚC */}
       <FrontCameraSection />
 

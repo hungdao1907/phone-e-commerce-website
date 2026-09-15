@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 620" role="img" aria-label="ASUS ROG Zephyrus prototype illustration">
+  <defs>
+    <linearGradient id="asus-screen" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0%" stop-color="#18181b"/>
+      <stop offset="50%" stop-color="#7f1d1d"/>
+      <stop offset="100%" stop-color="#ef4444"/>
+    </linearGradient>
+    <linearGradient id="asus-body" x1="0" x2="1" y1="0" y2="0">
+      <stop offset="0%" stop-color="#27272a"/>
+      <stop offset="50%" stop-color="#18181b"/>
+      <stop offset="100%" stop-color="#09090b"/>
+    </linearGradient>
+  </defs>
+  <ellipse cx="440" cy="540" rx="340" ry="40" fill="#ef4444" opacity=".2"/>
+  <!-- Screen Lid -->
+  <rect x="180" y="80" width="520" height="340" rx="12" fill="#18181b" stroke="#3f3f46" stroke-width="5"/>
+  <rect x="190" y="90" width="500" height="320" rx="8" fill="url(#asus-screen)"/>
+  <!-- ROG Slash / Cyberpunk Matrix -->
+  <line x1="240" y1="360" x2="640" y2="120" stroke="#f87171" stroke-width="18" opacity=".9"/>
+  <line x1="280" y1="380" x2="680" y2="140" stroke="#fbbf24" stroke-width="6" opacity=".7"/>
+  <circle cx="440" cy="85" r="4" fill="#52525b"/>
+  <!-- Base Chassis with ErgoLift -->
+  <path d="M110 420 L770 420 L730 464 L150 464 Z" fill="url(#asus-body)" stroke="#3f3f46" stroke-width="4"/>
+  <rect x="360" y="420" width="160" height="8" rx="4" fill="#ef4444" opacity=".8"/>
+</svg>
