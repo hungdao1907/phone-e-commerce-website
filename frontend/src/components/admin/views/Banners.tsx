@@ -525,7 +525,7 @@ export function Banners() {
         </button>
       </header>
 
-      <div className="grid gap-3 rounded-2xl border border-white/10 bg-black/30 p-3 backdrop-blur-md sm:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_220px_180px_180px]">
+      <div className="relative z-30 grid gap-3 rounded-2xl border border-white/10 bg-black/30 p-3 backdrop-blur-md sm:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_220px_180px_180px]">
         <label className="flex h-11 items-center gap-3 rounded-xl border border-white/10 bg-black/40 px-3.5 transition-all focus-within:border-lime-400 focus-within:ring-1 focus-within:ring-lime-400/30">
           <Search className="h-4 w-4 text-white/40 shrink-0" aria-hidden="true" />
           <input
@@ -1351,14 +1351,21 @@ function FilterDropdown({
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') setIsOpen(false);
     };
+    const handleScroll = (event: Event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
 
     if (isOpen) {
       document.addEventListener('mousedown', handleClickOutside);
       document.addEventListener('keydown', handleKeyDown);
+      window.addEventListener('scroll', handleScroll, true);
     }
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
       document.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('scroll', handleScroll, true);
     };
   }, [isOpen]);
 
@@ -1448,7 +1455,11 @@ function FilterDropdown({
   };
 
   return (
-    <div ref={dropdownRef} className={`relative ${className}`} onWheel={handleTriggerWheel}>
+    <div
+      ref={dropdownRef}
+      className={`relative ${isOpen ? 'z-50' : 'z-10'} ${className}`}
+      onWheel={handleTriggerWheel}
+    >
       {/* Trigger Button */}
       <button
         type="button"
@@ -1520,7 +1531,7 @@ function FilterDropdown({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 4, scale: 0.98 }}
             transition={{ duration: 0.16, ease: 'easeOut' }}
-            className={`absolute top-full z-[85] mt-2 ${align === 'right' ? 'right-0' : 'left-0'} ${menuWidth} max-h-72 overflow-y-auto rounded-2xl border border-white/15 bg-neutral-900/98 p-1.5 shadow-[0_24px_60px_rgba(0,0,0,0.92)] backdrop-blur-2xl custom-scrollbar`}
+            className={`absolute top-full z-[100] mt-2 ${align === 'right' ? 'right-0' : 'left-0'} ${menuWidth} max-h-72 overflow-y-auto rounded-2xl border border-white/20 bg-neutral-900 p-1.5 shadow-[0_24px_60px_rgba(0,0,0,0.98)] custom-scrollbar`}
             role="listbox"
           >
             {groupedOptions ? (
