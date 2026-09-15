@@ -3,9 +3,9 @@ import type { ChangeEvent, DragEvent, FormEvent, ReactNode, WheelEvent } from 'r
 import { createPortal } from 'react-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
-  ArrowDown, ArrowUp, CalendarClock, Check, ChevronDown, Edit3, Eye,
-  Image as ImageIcon, LayoutTemplate, Link as LinkIcon, Loader2, Monitor,
-  Plus, Search, Smartphone, Trash2, UploadCloud, X,
+  ArrowDown, ArrowUp, CalendarClock, Check, ChevronDown, Clock, Edit3, Eye,
+  Image as ImageIcon, Layers, LayoutTemplate, Link as LinkIcon, Loader2, Monitor,
+  Plus, Search, SlidersHorizontal, Smartphone, Trash2, UploadCloud, X,
 } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import { resolveMediaUrl } from '@/utils/media';
@@ -253,6 +253,105 @@ export function Banners() {
     return [...options, ...unknown];
   }, [banners]);
 
+  const positionFilterOptions = useMemo<FilterOptionItem[]>(() => {
+    const list: FilterOptionItem[] = [
+      {
+        value: 'all',
+        label: 'Tất cả vị trí',
+        shortLabel: 'Tất cả',
+        icon: <Layers className="h-3.5 w-3.5 text-lime-400" />,
+      },
+    ];
+
+    POSITION_GROUPS.forEach((group) => {
+      group.options.forEach((opt) => {
+        list.push({
+          value: opt.value,
+          label: opt.label,
+          shortLabel: opt.label.replace(/^.*·\s*/, ''),
+          group: group.label,
+        });
+      });
+    });
+
+    const knownValues = new Set(list.map((item) => item.value));
+    banners.forEach((b) => {
+      if (!knownValues.has(b.position)) {
+        knownValues.add(b.position);
+        list.push({
+          value: b.position,
+          label: b.position,
+          shortLabel: b.position,
+          group: 'Khác',
+        });
+      }
+    });
+
+    return list;
+  }, [banners]);
+
+  const statusFilterOptions = useMemo<FilterOptionItem[]>(() => [
+    {
+      value: 'all',
+      label: 'Tất cả trạng thái',
+      shortLabel: 'Tất cả',
+      icon: <SlidersHorizontal className="h-3.5 w-3.5 text-white/50" />,
+      sublabel: 'Xem mọi trạng thái',
+    },
+    {
+      value: 'active',
+      label: 'Đang chạy',
+      dotColor: 'bg-emerald-400 shadow-[0_0_8px_#34d399]',
+      sublabel: 'Đang hiển thị công khai',
+    },
+    {
+      value: 'scheduled',
+      label: 'Sắp chạy',
+      dotColor: 'bg-sky-400 shadow-[0_0_8px_#38bdf8]',
+      sublabel: 'Theo lịch hẹn giờ',
+    },
+    {
+      value: 'expired',
+      label: 'Đã hết hạn',
+      dotColor: 'bg-amber-400 shadow-[0_0_8px_#fbbf24]',
+      sublabel: 'Đã qua ngày kết thúc',
+    },
+    {
+      value: 'disabled',
+      label: 'Đã tắt',
+      dotColor: 'bg-neutral-500',
+      sublabel: 'Tạm ẩn thủ công',
+    },
+  ], []);
+
+  const timeFilterOptions = useMemo<FilterOptionItem[]>(() => [
+    {
+      value: 'all',
+      label: 'Tất cả thời gian',
+      shortLabel: 'Tất cả',
+      icon: <Clock className="h-3.5 w-3.5 text-white/50" />,
+      sublabel: 'Mọi khung thời gian',
+    },
+    {
+      value: 'running',
+      label: 'Đang chạy',
+      dotColor: 'bg-emerald-400 shadow-[0_0_8px_#34d399]',
+      sublabel: 'Trong hạn hiệu lực',
+    },
+    {
+      value: 'upcoming',
+      label: 'Sắp chạy',
+      dotColor: 'bg-sky-400 shadow-[0_0_8px_#38bdf8]',
+      sublabel: 'Chưa đến ngày bắt đầu',
+    },
+    {
+      value: 'expired',
+      label: 'Đã hết hạn',
+      dotColor: 'bg-rose-400 shadow-[0_0_8px_#f43f5e]',
+      sublabel: 'Đã quá hạn hiển thị',
+    },
+  ], []);
+
   const openCreate = () => {
     setEditingBanner(null); setForm(createEmptyForm()); setFormError('');
     setProductSearch(''); setPreviewMode('desktop'); setIsModalOpen(true);
@@ -426,14 +525,54 @@ export function Banners() {
         </button>
       </header>
 
-      <div className="grid gap-3 rounded-2xl border border-white/10 bg-black/30 p-3 backdrop-blur-md lg:grid-cols-[minmax(0,1fr)_180px_170px_170px]">
-        <label className="flex items-center gap-3 rounded-xl border border-white/10 bg-black/30 px-3.5 py-2.5 transition-colors focus-within:border-lime-400">
-          <Search className="h-4 w-4 text-white/40" aria-hidden="true" />
-          <input value={search} onChange={(event) => setSearch(event.target.value)} className="min-w-0 flex-1 bg-transparent text-sm text-white outline-none placeholder:text-white/30" placeholder="Tìm banner, vị trí hoặc đường dẫn..." aria-label="Tìm kiếm banner" />
+      <div className="grid gap-3 rounded-2xl border border-white/10 bg-black/30 p-3 backdrop-blur-md sm:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_220px_180px_180px]">
+        <label className="flex h-11 items-center gap-3 rounded-xl border border-white/10 bg-black/40 px-3.5 transition-all focus-within:border-lime-400 focus-within:ring-1 focus-within:ring-lime-400/30">
+          <Search className="h-4 w-4 text-white/40 shrink-0" aria-hidden="true" />
+          <input
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            className="min-w-0 flex-1 bg-transparent text-sm text-white outline-none placeholder:text-white/30"
+            placeholder="Tìm banner, vị trí hoặc đường dẫn..."
+            aria-label="Tìm kiếm banner"
+          />
+          {search && (
+            <button
+              type="button"
+              onClick={() => setSearch('')}
+              className="p-1 text-white/40 hover:text-white hover:bg-white/10 rounded-md transition-colors cursor-pointer"
+              title="Xóa tìm kiếm"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          )}
         </label>
-        <FilterSelect value={positionFilter} onChange={setPositionFilter} label="Lọc theo vị trí"><option value="all">Vị trí: Tất cả</option>{knownPositions.map((position) => <option key={position.value} value={position.value}>{position.label}</option>)}</FilterSelect>
-        <FilterSelect value={statusFilter} onChange={(value) => setStatusFilter(value as 'all' | BannerStatus)} label="Lọc theo trạng thái"><option value="all">Trạng thái: Tất cả</option>{Object.entries(STATUS_CONFIG).map(([value, status]) => <option key={value} value={value}>{status.label}</option>)}</FilterSelect>
-        <FilterSelect value={timeFilter} onChange={(value) => setTimeFilter(value as typeof timeFilter)} label="Lọc theo thời gian"><option value="all">Thời gian: Tất cả</option><option value="running">Đang chạy</option><option value="upcoming">Sắp chạy</option><option value="expired">Đã hết hạn</option></FilterSelect>
+        <FilterDropdown
+          label="Vị trí"
+          value={positionFilter}
+          onChange={setPositionFilter}
+          options={positionFilterOptions}
+          icon={<Layers className="h-3.5 w-3.5" />}
+          menuWidth="w-72 sm:w-80"
+          align="left"
+        />
+        <FilterDropdown
+          label="Trạng thái"
+          value={statusFilter}
+          onChange={(value) => setStatusFilter(value as 'all' | BannerStatus)}
+          options={statusFilterOptions}
+          icon={<SlidersHorizontal className="h-3.5 w-3.5" />}
+          menuWidth="w-56"
+          align="right"
+        />
+        <FilterDropdown
+          label="Thời gian"
+          value={timeFilter}
+          onChange={(value) => setTimeFilter(value as typeof timeFilter)}
+          options={timeFilterOptions}
+          icon={<Clock className="h-3.5 w-3.5" />}
+          menuWidth="w-60"
+          align="right"
+        />
       </div>
 
       <div ref={mainListRef} onWheel={handleListWheel} className="min-h-0 flex-1 overflow-y-auto pr-1 custom-scrollbar">
@@ -1170,15 +1309,247 @@ function FormSelect({ id, value, onChange, required, children, className = '' }:
   );
 }
 
-function FilterSelect({ value, onChange, label, children }: { value: string; onChange: (value: string) => void; label: string; children: ReactNode }) {
+interface FilterOptionItem {
+  value: string;
+  label: string;
+  shortLabel?: string;
+  group?: string;
+  dotColor?: string;
+  icon?: ReactNode;
+  sublabel?: string;
+  badge?: string;
+}
+
+function FilterDropdown({
+  label,
+  value,
+  onChange,
+  options,
+  icon,
+  className = '',
+  menuWidth = 'w-64',
+  align = 'left',
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  options: FilterOptionItem[];
+  icon?: ReactNode;
+  className?: string;
+  menuWidth?: string;
+  align?: 'left' | 'right';
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setIsOpen(false);
+    };
+
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('keydown', handleKeyDown);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isOpen]);
+
+  const selectedOption = useMemo(() => {
+    return options.find((opt) => opt.value === value) || { value, label: value };
+  }, [options, value]);
+
+  const isFiltered = value !== 'all';
+
+  // Mouse wheel cycling when hovered on the trigger button
+  const handleTriggerWheel = (e: React.WheelEvent) => {
+    if (!isOpen) {
+      e.preventDefault();
+      e.stopPropagation();
+      const currentIndex = options.findIndex((opt) => opt.value === value);
+      if (currentIndex === -1) return;
+      if (e.deltaY > 0) {
+        const nextIndex = (currentIndex + 1) % options.length;
+        onChange(options[nextIndex].value);
+      } else if (e.deltaY < 0) {
+        const prevIndex = (currentIndex - 1 + options.length) % options.length;
+        onChange(options[prevIndex].value);
+      }
+    }
+  };
+
+  // Group options if any option has group
+  const groupedOptions = useMemo(() => {
+    const hasGroups = options.some((opt) => opt.group);
+    if (!hasGroups) return null;
+
+    const map = new Map<string, FilterOptionItem[]>();
+    const ungrouped: FilterOptionItem[] = [];
+
+    options.forEach((opt) => {
+      if (opt.group) {
+        if (!map.has(opt.group)) map.set(opt.group, []);
+        map.get(opt.group)!.push(opt);
+      } else {
+        ungrouped.push(opt);
+      }
+    });
+
+    return { ungrouped, groups: Array.from(map.entries()) };
+  }, [options]);
+
+  const renderOptionItem = (opt: FilterOptionItem) => {
+    const isSelected = opt.value === value;
+    return (
+      <button
+        key={opt.value}
+        type="button"
+        onClick={() => {
+          onChange(opt.value);
+          setIsOpen(false);
+        }}
+        className={`group/opt flex w-full items-center justify-between gap-2 rounded-xl px-2.5 py-2 text-left text-xs sm:text-[13px] transition-all duration-150 cursor-pointer ${
+          isSelected
+            ? 'bg-lime-400/15 text-lime-300 font-bold border border-lime-400/30 shadow-sm'
+            : 'text-white/80 hover:bg-white/10 hover:text-white'
+        }`}
+        role="option"
+        aria-selected={isSelected}
+      >
+        <div className="flex items-center gap-2 min-w-0 flex-1">
+          {opt.dotColor ? (
+            <span className={`h-2 w-2 rounded-full shrink-0 ${opt.dotColor}`} />
+          ) : (
+            opt.icon && (
+              <span className={`shrink-0 ${isSelected ? 'text-lime-400' : 'text-white/40 group-hover/opt:text-white/70'}`}>
+                {opt.icon}
+              </span>
+            )
+          )}
+          <div className="min-w-0 flex-1">
+            <div className="truncate font-medium">{opt.label}</div>
+            {opt.sublabel && (
+              <div className="text-[10px] text-white/40 group-hover/opt:text-white/60 truncate font-normal">
+                {opt.sublabel}
+              </div>
+            )}
+          </div>
+        </div>
+        {isSelected && <Check className="h-3.5 w-3.5 shrink-0 text-lime-400 ml-1" />}
+      </button>
+    );
+  };
+
   return (
-    <label className="relative">
-      <span className="sr-only">{label}</span>
-      <select value={value} onChange={(event) => onChange(event.target.value)} className="w-full appearance-none rounded-xl border border-white/10 bg-black/35 px-3.5 py-2.5 pr-9 text-sm text-white outline-none transition-colors focus:border-lime-400 cursor-pointer">
-        {children}
-      </select>
-      <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/45" aria-hidden="true" />
-    </label>
+    <div ref={dropdownRef} className={`relative ${className}`} onWheel={handleTriggerWheel}>
+      {/* Trigger Button */}
+      <button
+        type="button"
+        onClick={() => setIsOpen((prev) => !prev)}
+        aria-haspopup="listbox"
+        aria-expanded={isOpen}
+        title="Cuộn chuột để đổi lựa chọn nhanh"
+        className={`group relative flex h-11 w-full items-center justify-between gap-2 rounded-xl border px-3 py-2 text-left text-sm transition-all duration-200 cursor-pointer select-none ${
+          isOpen
+            ? 'border-lime-400 bg-neutral-900 shadow-[0_0_20px_rgba(163,230,53,0.18)] ring-1 ring-lime-400/40 text-white'
+            : isFiltered
+              ? 'border-lime-400/60 bg-lime-400/[0.08] hover:border-lime-400/80 hover:bg-lime-400/[0.12] ring-1 ring-lime-400/20'
+              : 'border-white/10 bg-black/40 hover:border-white/25 hover:bg-black/60 text-white/80'
+        }`}
+      >
+        <div className="flex items-center gap-2 min-w-0 flex-1">
+          {selectedOption.dotColor ? (
+            <span className={`h-2 w-2 rounded-full shrink-0 ${selectedOption.dotColor}`} />
+          ) : (
+            icon && (
+              <span className={`shrink-0 transition-colors ${isFiltered ? 'text-lime-400' : 'text-white/40 group-hover:text-white/60'}`}>
+                {icon}
+              </span>
+            )
+          )}
+          <div className="flex items-center gap-1.5 min-w-0 truncate text-xs sm:text-[13px]">
+            <span className="text-white/45 font-medium shrink-0">{label}:</span>
+            <span className={`truncate font-semibold ${isFiltered ? 'text-lime-300' : 'text-white/90'}`}>
+              {selectedOption.shortLabel || selectedOption.label}
+            </span>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-1 shrink-0">
+          {isFiltered && (
+            <span
+              role="button"
+              tabIndex={0}
+              onClick={(e) => {
+                e.stopPropagation();
+                onChange('all');
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.stopPropagation();
+                  onChange('all');
+                }
+              }}
+              className="p-1 rounded-md text-white/40 hover:text-white hover:bg-white/15 transition-colors cursor-pointer"
+              title="Xóa bộ lọc này"
+              aria-label="Xóa bộ lọc"
+            >
+              <X className="h-3 w-3" />
+            </span>
+          )}
+          <ChevronDown
+            className={`h-3.5 w-3.5 transition-transform duration-200 ${
+              isOpen ? 'rotate-180 text-lime-400' : 'text-white/40 group-hover:text-white'
+            }`}
+          />
+        </div>
+      </button>
+
+      {/* Dropdown Menu */}
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: 6, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 4, scale: 0.98 }}
+            transition={{ duration: 0.16, ease: 'easeOut' }}
+            className={`absolute top-full z-[85] mt-2 ${align === 'right' ? 'right-0' : 'left-0'} ${menuWidth} max-h-72 overflow-y-auto rounded-2xl border border-white/15 bg-neutral-900/98 p-1.5 shadow-[0_24px_60px_rgba(0,0,0,0.92)] backdrop-blur-2xl custom-scrollbar`}
+            role="listbox"
+          >
+            {groupedOptions ? (
+              <>
+                {groupedOptions.ungrouped.length > 0 && (
+                  <div className="space-y-0.5 pb-1 border-b border-white/10 mb-1">
+                    {groupedOptions.ungrouped.map((opt) => renderOptionItem(opt))}
+                  </div>
+                )}
+                {groupedOptions.groups.map(([groupName, groupOpts], gIdx) => (
+                  <div key={groupName} className={gIdx > 0 ? 'mt-2 pt-1 border-t border-white/10' : ''}>
+                    <div className="px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wider text-white/40">
+                      {groupName}
+                    </div>
+                    <div className="space-y-0.5 mt-0.5">
+                      {groupOpts.map((opt) => renderOptionItem(opt))}
+                    </div>
+                  </div>
+                ))}
+              </>
+            ) : (
+              <div className="space-y-0.5">
+                {options.map((opt) => renderOptionItem(opt))}
+              </div>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
   );
 }
 
