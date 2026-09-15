@@ -50,7 +50,7 @@ router.get('/:id', async (req, res) => {
     const product = await prisma.product.findUnique({
       where: { id: getRouteParam(req.params.id) },
       include: {
-        category: { include: { attributes: true } },
+        category: { include: { attributes: true, parent: true } },
         variants: { orderBy: { createdAt: 'asc' } }
       }
     });

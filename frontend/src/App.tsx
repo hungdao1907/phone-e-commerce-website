@@ -11,6 +11,7 @@ import 'lenis/dist/lenis.css';
 import { DashboardLayout } from './components/admin/layout/DashboardLayout';
 import { CustomerProfile } from './pages/profile/CustomerProfile';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
+import { IphonePage } from './pages/iphone/IphonePage';
 
 const SmartphonePage = lazy(() =>
   import('./pages/smartphone/SmartphonePage').then(({ SmartphonePage: Page }) => ({ default: Page })),
@@ -98,6 +99,7 @@ export default function App() {
               <Route element={<MainLayout />}>
                 <Route path="/" element={<HomePage />} />
                 <Route path="/iphone" element={<SmartphonePage brand="iphone" />} />
+                <Route path="/exploreIphone17promax" element={<IphonePage />} />
                 <Route path="/watch" element={<WatchPage />} />
                 <Route path="/watch/series-11" element={<WatchSeries11Page />} />
                 <Route path="/watch/se-3" element={<WatchSE3Page />} />
