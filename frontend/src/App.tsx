@@ -34,6 +34,7 @@ export default function App() {
           <Route element={<MainLayout />}>
             <Route path="/" element={<HomePage />} />
             <Route path="/iphone" element={<IphonePage />} />
+            <Route path="/exploreIphone17promax" element={<IphonePage />} />
             <Route path="/samsung" element={<SmartphonePage brand="samsung" />} />
             <Route path="/product/:slug" element={<ProductPurchasePage />} />
             <Route path="/cart" element={<CartPage />} />

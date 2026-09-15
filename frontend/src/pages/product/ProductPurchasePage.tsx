@@ -1,8 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { ProductConfigurator, ProductGallery, ProductSpecifications } from '@/components/product';
-import { getPurchaseProductBySlug } from '@/data/mockPurchaseProducts';
+import { ProductConfigurator, ProductGallery, ProductSpecifications, ProductDescription } from '@/components/product';
 import type { ProductVariant } from '@/types/product';
 import { useCartStore } from '../../store/useCartStore';
 
@@ -39,16 +38,6 @@ export function ProductPurchasePage() {
           const colors = Array.from(uniqueColors.values());
           if (colors.length === 0) colors.push({ id: 'default-color', name: 'Mặc định', hex: '#CCCCCC', images: [dbProduct.image].filter(Boolean) });
 
-          const activeCampaign = dbProduct.activeCampaign;
-
-          const calculateDiscount = (originalPrice: number) => {
-            if (!activeCampaign) return originalPrice;
-            if (activeCampaign.discountType === 'percentage') {
-              return Math.max(0, originalPrice - (originalPrice * activeCampaign.discountValue / 100));
-            }
-            return Math.max(0, originalPrice - activeCampaign.discountValue);
-          };
-
           const uniqueStorages = new Map();
           dbProduct.variants?.forEach((v: any) => {
             const storageLabel = v.attributes?.['Dung lượng'] || 'Tiêu chuẩn';
@@ -57,7 +46,7 @@ export function ProductPurchasePage() {
               uniqueStorages.set(storageLabel, {
                 id: `storage-${storageLabel}`,
                 label: storageLabel,
-                price: calculateDiscount(basePrice),
+                price: basePrice,
                 originalPrice: basePrice,
                 stockByColor: colors.map(() => v.stock || 0)
               });
@@ -66,7 +55,7 @@ export function ProductPurchasePage() {
           let storageOptions = Array.from(uniqueStorages.values());
           if (storageOptions.length === 0) {
             const basePrice = dbProduct.price || 0;
-            storageOptions = [{ id: 'default-storage', label: 'Tiêu chuẩn', price: calculateDiscount(basePrice), originalPrice: basePrice, stockByColor: colors.map(() => 0) }];
+            storageOptions = [{ id: 'default-storage', label: 'Tiêu chuẩn', price: basePrice, originalPrice: basePrice, stockByColor: colors.map(() => 0) }];
           }
 
           const variants = dbProduct.variants?.map((v: any) => {
@@ -75,9 +64,10 @@ export function ProductPurchasePage() {
             const basePrice = v.price || dbProduct.price || 0;
             return {
               id: v.id,
+              sku: v.sku || dbProduct.id,
               colorId: `color-${colorName}`,
               storageId: `storage-${storageLabel}`,
-              price: calculateDiscount(basePrice),
+              price: basePrice,
               originalPrice: basePrice,
               stock: v.stock || 0
             };
@@ -85,23 +75,34 @@ export function ProductPurchasePage() {
 
           if (variants.length === 0) {
             const basePrice = dbProduct.price || 0;
-            variants.push({ id: 'default-variant', colorId: colors[0].id, storageId: storageOptions[0].id, price: calculateDiscount(basePrice), originalPrice: basePrice, stock: 0 });
+            variants.push({ id: 'default-variant', sku: dbProduct.id, colorId: colors[0].id, storageId: storageOptions[0].id, price: basePrice, originalPrice: basePrice, stock: 0 });
+          }
+          
+          let parsedSpecs = [];
+          if (Array.isArray(dbProduct.specifications)) {
+            parsedSpecs = dbProduct.specifications.map((s: any) => ({
+              label: s.name || s.label || 'Thông tin',
+              value: s.value || 'N/A'
+            }));
           }
 
           const mappedProduct = {
             id: dbProduct.id,
             slug: dbProduct.id,
             brand: dbProduct.category?.name || 'Samsung',
+            parentCategoryName: dbProduct.category?.parent?.name,
+            parentCategorySlug: dbProduct.category?.parent?.slug,
+            categoryName: dbProduct.category?.name,
+            categorySlug: dbProduct.category?.slug,
             name: dbProduct.name,
-            tagline: dbProduct.description || 'Sản phẩm mới nhất',
+            tagline: dbProduct.description || 'Sản phẩm chính hãng',
+            description: dbProduct.description,
             badge: 'Mới',
             defaultImage: dbProduct.image || 'https://via.placeholder.com/300',
-            galleryImages: [dbProduct.image].filter(Boolean),
+            galleryImages: [dbProduct.image, ...(dbProduct.images || [])].filter(Boolean),
             colors,
             storageOptions,
-            specifications: [
-              { label: 'Thông tin', value: dbProduct.description || 'Chưa có thông tin chi tiết.' }
-            ],
+            specifications: parsedSpecs.length > 0 ? parsedSpecs : [{ label: 'Đang cập nhật', value: 'Chưa có thông số' }],
             variants
           };
           setProduct(mappedProduct);
@@ -122,7 +123,6 @@ export function ProductPurchasePage() {
   const [selectedStorageId, setSelectedStorageId] = useState('');
   const [quantity, setQuantity] = useState(1);
 
-  // Update selected IDs when product loads
   useEffect(() => {
     if (initialVariant) {
       setSelectedColorId(initialVariant.colorId);
@@ -138,10 +138,8 @@ export function ProductPurchasePage() {
 
   const galleryImages = useMemo(() => {
     if (!product) return [];
-
-    const selectedColor = product.colors.find((color) => color.id === selectedColorId);
-    return selectedVariant?.images ?? selectedColor?.images ?? product.galleryImages ?? [product.defaultImage];
-  }, [product, selectedColorId, selectedVariant]);
+    return product.galleryImages ?? [product.defaultImage];
+  }, [product]);
 
   useEffect(() => {
     if (!product) {
@@ -149,7 +147,7 @@ export function ProductPurchasePage() {
       return;
     }
 
-    const defaultVariant = product.variants.find((variant) => variant.stock > 0) ?? product.variants[0];
+    const defaultVariant = product.variants.find((variant: any) => variant.stock > 0) ?? product.variants[0];
     setSelectedColorId(defaultVariant?.colorId ?? '');
     setSelectedStorageId(defaultVariant?.storageId ?? '');
     setQuantity(1);
@@ -165,8 +163,8 @@ export function ProductPurchasePage() {
   const handlePurchase = (action: 'cart' | 'buy-now') => {
     if (!product || !selectedVariant || selectedVariant.stock === 0) return;
 
-    const selectedColor = product.colors.find((color) => color.id === selectedColorId);
-    const selectedStorage = product.storageOptions.find((storage) => storage.id === selectedStorageId);
+    const selectedColor = product.colors.find((color: any) => color.id === selectedColorId);
+    const selectedStorage = product.storageOptions.find((storage: any) => storage.id === selectedStorageId);
 
     addCartItem({
       productId: product.id,
@@ -186,6 +184,7 @@ export function ProductPurchasePage() {
 
     navigate(action === 'buy-now' ? '/cart?checkout=1' : '/cart');
   };
+
   if (!product) {
     return (
       <main className="product-purchase-page min-h-[100svh] bg-white px-4 pb-20 pt-28 text-neutral-950 sm:px-6">
@@ -200,7 +199,7 @@ export function ProductPurchasePage() {
             className="mt-7 inline-flex items-center gap-2 rounded-full bg-neutral-950 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-black"
           >
             <ArrowLeft className="h-4 w-4" />
-            Quay lại sản phẩm Samsung
+            Quay lại cửa hàng
           </Link>
         </section>
       </main>
@@ -210,41 +209,100 @@ export function ProductPurchasePage() {
   const maxQuantity = Math.max(1, Math.min(selectedVariant?.stock ?? 1, 5));
 
   return (
-    <main className="product-purchase-page min-h-screen bg-white pb-20 pt-20 text-neutral-950 sm:pt-24">
-      <div className="mx-auto w-full max-w-[1480px] px-4 sm:px-6 lg:px-10">
-        <Link
-          to={catalogHref}
-          className="inline-flex items-center gap-2 rounded-full px-1 py-2 text-sm font-medium text-neutral-600 transition-colors hover:text-neutral-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          {product.category === 'tablet' ? product.brand : 'Galaxy'}
-        </Link>
+    <main className="product-purchase-page min-h-screen bg-neutral-50/50 pb-20 pt-6 text-neutral-950 sm:pt-8">
+      <div className="mx-auto w-full max-w-[1300px] px-4 sm:px-6 lg:px-8">
+        
+        {/* Breadcrumb */}
+        <nav className="flex items-center gap-2 text-[13px] text-neutral-500 mb-6 py-2 overflow-x-auto whitespace-nowrap scrollbar-hide font-medium">
+          <Link to="/" className="hover:text-[#22c55e] transition-colors">Trang chủ</Link>
+          {product.parentCategoryName && (
+            <>
+              <span className="text-neutral-300">/</span>
+              <Link to={`/${product.parentCategorySlug}`} className="hover:text-[#22c55e] transition-colors">{product.parentCategoryName}</Link>
+            </>
+          )}
+          {product.categoryName && (
+            <>
+              <span className="text-neutral-300">/</span>
+              <Link to={`/${product.categorySlug}`} className="hover:text-[#22c55e] transition-colors">{product.categoryName}</Link>
+            </>
+          )}
+          <span className="text-neutral-300">/</span>
+          <span className="text-neutral-900 truncate">{product.name}</span>
+        </nav>
 
-        <div className="mt-7 grid items-start gap-12 lg:mt-10 lg:grid-cols-[minmax(0,1.18fr)_minmax(400px,0.82fr)] lg:gap-16 xl:gap-20">
-          <div className="min-w-0">
+        {/* HERO SECTION */}
+        <div className="grid items-start gap-8 lg:grid-cols-[60%_40%] lg:gap-12 mb-12">
+          {/* LEFT COLUMN: Gallery & Details */}
+          <div className="min-w-0 flex flex-col gap-8">
             <ProductGallery
               images={galleryImages}
               productName={product.name}
             />
+            
+            {/* Description */}
+            <ProductDescription description={product.description} />
+            
+            {/* Specifications */}
             <ProductSpecifications
               productName={product.name}
               specifications={product.specifications}
             />
           </div>
 
-          <ProductConfigurator
-            product={product}
-            selectedColorId={selectedColorId}
-            selectedStorageId={selectedStorageId}
-            selectedVariant={selectedVariant}
-            quantity={quantity}
-            maxQuantity={maxQuantity}
-            onColorChange={setSelectedColorId}
-            onStorageChange={setSelectedStorageId}
-            onQuantityChange={setQuantity}
-            onPurchase={handlePurchase}
-          />
+          {/* RIGHT COLUMN: Configurator & Purchase */}
+          <div className="lg:sticky lg:top-24 rounded-3xl border border-neutral-200 bg-white p-6 sm:p-8 shadow-sm">
+            <ProductConfigurator
+              product={product}
+              selectedColorId={selectedColorId}
+              selectedStorageId={selectedStorageId}
+              selectedVariant={selectedVariant}
+              quantity={quantity}
+              maxQuantity={maxQuantity}
+              onColorChange={setSelectedColorId}
+              onStorageChange={setSelectedStorageId}
+              onQuantityChange={setQuantity}
+              onPurchase={handlePurchase}
+            />
+          </div>
         </div>
+        
+        {/* FULL WIDTH SECTIONS */}
+        <div className="flex flex-col gap-8 w-full mx-auto">
+
+          {/* DEMO Sections */}
+          <section className="rounded-3xl border border-neutral-200 bg-white p-6 sm:p-8 lg:p-10 shadow-sm">
+            <h2 className="text-xl font-bold text-neutral-900 mb-4 uppercase">Đánh giá sản phẩm</h2>
+            <div className="text-center py-10 bg-neutral-50 rounded-2xl border border-neutral-100">
+              <p className="text-neutral-500 font-medium">Chưa có đánh giá nào.</p>
+              <button className="mt-4 rounded-full bg-neutral-900 text-white px-6 py-2 text-sm font-medium hover:bg-black">Viết đánh giá</button>
+            </div>
+          </section>
+          
+          <section className="rounded-3xl border border-neutral-200 bg-white p-6 sm:p-8 lg:p-10 shadow-sm">
+            <h2 className="text-xl font-bold text-neutral-900 mb-4 uppercase">Hỏi đáp</h2>
+            <div className="text-center py-10 bg-neutral-50 rounded-2xl border border-neutral-100">
+              <p className="text-neutral-500 font-medium">Hãy là người đầu tiên đặt câu hỏi về sản phẩm này.</p>
+            </div>
+          </section>
+          
+          {/* Related Products Demo */}
+          <section className="rounded-3xl border border-neutral-200 bg-white p-6 sm:p-8 lg:p-10 shadow-sm">
+            <h2 className="text-xl font-bold text-neutral-900 mb-6 uppercase">Sản phẩm liên quan</h2>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              {[1, 2, 3, 4].map(i => (
+                <div key={i} className="border border-neutral-100 rounded-xl p-4 hover:shadow-md transition-shadow cursor-pointer group">
+                  <div className="aspect-square bg-neutral-50 rounded-lg mb-3 flex items-center justify-center p-4">
+                    <img src={galleryImages[0] || 'https://via.placeholder.com/150'} alt="Related" className="object-contain h-full w-full group-hover:scale-105 transition-transform duration-300" />
+                  </div>
+                  <h3 className="font-semibold text-sm line-clamp-2 mb-2">{product.name}</h3>
+                  <p className="text-red-600 font-bold text-sm">20.000.000 ₫</p>
+                </div>
+              ))}
+            </div>
+          </section>
+        </div>
+
       </div>
     </main>
   );
