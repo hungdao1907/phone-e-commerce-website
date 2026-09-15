@@ -509,26 +509,11 @@ export function Banners() {
 
                     <div>
                       <FieldLabel htmlFor="banner-position" label="Vị trí hiển thị trên website" required hint="Khu vực storefront sẽ hiển thị banner này." />
-                      <FormSelect
-                        id="banner-position"
-                        required
+                      <PositionDropdown
                         value={form.position}
-                        onChange={(event) => setForm((current) => ({ ...current, position: event.target.value }))}
+                        onChange={(newPosition) => setForm((current) => ({ ...current, position: newPosition }))}
                         className="mt-1.5"
-                      >
-                        {POSITION_GROUPS.map((group) => (
-                          <optgroup key={group.label} label={group.label}>
-                            {group.options.map((option) => (
-                              <option key={option.value} value={option.value}>
-                                {option.label}
-                              </option>
-                            ))}
-                          </optgroup>
-                        ))}
-                        {!POSITION_GROUPS.some((group) => group.options.some((option) => option.value === form.position)) && (
-                          <option value={form.position}>{form.position}</option>
-                        )}
-                      </FormSelect>
+                      />
                     </div>
                   </div>
 
@@ -974,6 +959,174 @@ function FormSection({ title, description, children }: { title: string; descript
       </div>
       {children}
     </section>
+  );
+}
+
+function PositionDropdown({
+  value,
+  onChange,
+  className = '',
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  className?: string;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setIsOpen(false);
+    };
+
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('keydown', handleKeyDown);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isOpen]);
+
+  const selectedInfo = useMemo(() => {
+    for (const group of POSITION_GROUPS) {
+      const match = group.options.find((opt) => opt.value === value);
+      if (match) {
+        return { label: match.label, group: group.label };
+      }
+    }
+    return { label: value, group: 'Tùy chỉnh' };
+  }, [value]);
+
+  const getGroupBadge = (groupLabel: string) => {
+    switch (groupLabel) {
+      case 'Trang chủ':
+        return (
+          <span className="inline-flex items-center gap-1.5 rounded-md bg-amber-400/10 px-2 py-0.5 text-[10px] font-bold text-amber-300 border border-amber-400/20 shrink-0">
+            <LayoutTemplate className="h-3 w-3" /> Trang chủ
+          </span>
+        );
+      case 'Smartphone':
+        return (
+          <span className="inline-flex items-center gap-1.5 rounded-md bg-lime-400/10 px-2 py-0.5 text-[10px] font-bold text-lime-400 border border-lime-400/20 shrink-0">
+            <Smartphone className="h-3 w-3" /> Smartphone
+          </span>
+        );
+      case 'Danh mục khác':
+        return (
+          <span className="inline-flex items-center gap-1.5 rounded-md bg-sky-400/10 px-2 py-0.5 text-[10px] font-bold text-sky-300 border border-sky-400/20 shrink-0">
+            <Monitor className="h-3 w-3" /> Danh mục
+          </span>
+        );
+      default:
+        return (
+          <span className="inline-flex items-center gap-1.5 rounded-md bg-white/10 px-2 py-0.5 text-[10px] font-bold text-white/60 border border-white/10 shrink-0">
+            <CalendarClock className="h-3 w-3" /> Khác
+          </span>
+        );
+    }
+  };
+
+  const getGroupIcon = (groupLabel: string) => {
+    switch (groupLabel) {
+      case 'Trang chủ':
+        return <LayoutTemplate className="h-3.5 w-3.5 text-amber-400" />;
+      case 'Smartphone':
+        return <Smartphone className="h-3.5 w-3.5 text-lime-400" />;
+      case 'Danh mục khác':
+        return <Monitor className="h-3.5 w-3.5 text-sky-400" />;
+      default:
+        return <CalendarClock className="h-3.5 w-3.5 text-neutral-400" />;
+    }
+  };
+
+  return (
+    <div ref={dropdownRef} className={`relative ${className}`}>
+      {/* Trigger Button */}
+      <button
+        type="button"
+        id="banner-position"
+        onClick={() => setIsOpen((prev) => !prev)}
+        aria-haspopup="listbox"
+        aria-expanded={isOpen}
+        className={`group flex w-full items-center justify-between gap-3 rounded-xl border px-3.5 py-2.5 text-left text-sm transition-all duration-200 cursor-pointer ${
+          isOpen
+            ? 'border-lime-400/90 bg-neutral-900 shadow-[0_0_20px_rgba(163,230,53,0.18)] ring-1 ring-lime-400/40'
+            : 'border-white/15 bg-black/40 hover:border-white/30 hover:bg-black/60'
+        }`}
+      >
+        <div className="flex items-center gap-2.5 min-w-0">
+          {getGroupBadge(selectedInfo.group)}
+          <span className="truncate font-semibold text-white">{selectedInfo.label}</span>
+        </div>
+        <ChevronDown
+          className={`h-4 w-4 shrink-0 transition-transform duration-300 ${
+            isOpen ? 'rotate-180 text-lime-400' : 'text-white/40 group-hover:text-white'
+          }`}
+        />
+      </button>
+
+      {/* Dropdown Menu Modal */}
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: 6, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 4, scale: 0.98 }}
+            transition={{ duration: 0.18, ease: 'easeOut' }}
+            className="absolute left-0 right-0 top-full z-[80] mt-2 max-h-72 overflow-y-auto rounded-2xl border border-white/15 bg-neutral-900/95 p-2 shadow-[0_25px_60px_rgba(0,0,0,0.9)] backdrop-blur-2xl custom-scrollbar"
+            role="listbox"
+          >
+            {POSITION_GROUPS.map((group, groupIdx) => (
+              <div key={group.label} className={groupIdx > 0 ? 'mt-2 pt-2 border-t border-white/10' : ''}>
+                <div className="flex items-center gap-2 px-2.5 py-1.5 text-[11px] font-extrabold uppercase tracking-wider text-white/40">
+                  {getGroupIcon(group.label)}
+                  <span>{group.label}</span>
+                </div>
+                <div className="mt-1 space-y-1">
+                  {group.options.map((opt) => {
+                    const isSelected = opt.value === value;
+                    return (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => {
+                          onChange(opt.value);
+                          setIsOpen(false);
+                        }}
+                        className={`group/opt flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-sm transition-all duration-150 cursor-pointer ${
+                          isSelected
+                            ? 'bg-lime-400/15 text-lime-300 font-bold border border-lime-400/30 shadow-sm'
+                            : 'text-white/80 hover:bg-white/10 hover:text-white'
+                        }`}
+                        role="option"
+                        aria-selected={isSelected}
+                      >
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <span
+                            className={`h-1.5 w-1.5 rounded-full shrink-0 transition-colors ${
+                              isSelected ? 'bg-lime-400 shadow-[0_0_8px_#a3e635]' : 'bg-white/20 group-hover/opt:bg-white/50'
+                            }`}
+                          />
+                          <span className="truncate">{opt.label}</span>
+                        </div>
+                        {isSelected && <Check className="h-4 w-4 shrink-0 text-lime-400 ml-2" />}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
   );
 }
 
