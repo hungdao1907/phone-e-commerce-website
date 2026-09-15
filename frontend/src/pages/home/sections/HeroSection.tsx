@@ -124,7 +124,7 @@ export function HeroSection({ isCovered = false }: HeroSectionProps) {
               </a>
 
               <Link
-                to="/iphone"
+                to="/phone/exploreIphone17promax"
                 className="group inline-flex min-h-11 items-center gap-2 rounded-full px-2 text-sm font-semibold text-white/68 transition-colors duration-300 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
               >
                 Xem iPhone
