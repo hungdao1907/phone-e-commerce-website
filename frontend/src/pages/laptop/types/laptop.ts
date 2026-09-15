@@ -1,4 +1,4 @@
-export type LaptopBrandId = 'apple' | 'dell' | 'asus' | 'hp';
+export type LaptopBrandId = 'macbook' | 'asus' | 'lenovo';
 
 export interface LaptopColor {
   name: string;

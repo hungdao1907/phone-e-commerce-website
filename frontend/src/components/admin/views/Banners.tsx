@@ -68,10 +68,25 @@ const POSITION_GROUPS: readonly PositionGroup[] = [
     ],
   },
   {
-    label: 'Danh mục khác',
+    label: 'Laptop',
     options: [
       { value: 'laptop_hero', label: 'Laptop · Hero Banner' },
-      { value: 'tablet_hero', label: 'Tablet · Hero Banner' },
+      { value: 'laptop_macbook_hero', label: 'Laptop · MacBook Hero' },
+      { value: 'laptop_asus_hero', label: 'Laptop · ASUS Hero' },
+      { value: 'laptop_lenovo_hero', label: 'Laptop · Lenovo Hero' },
+    ],
+  },
+  {
+    label: 'Tablet',
+    options: [
+      { value: 'tablet_ipad_hero', label: 'Tablet · iPad Hero' },
+      { value: 'tablet_samsung_hero', label: 'Tablet · Samsung Hero' },
+      { value: 'tablet_xiaomi_hero', label: 'Tablet · Xiaomi Hero' },
+    ],
+  },
+  {
+    label: 'Danh mục khác',
+    options: [
       { value: 'watch_hero', label: 'Watch · Hero Banner' },
     ],
   },
@@ -81,6 +96,7 @@ const POSITION_GROUPS: readonly PositionGroup[] = [
       { value: 'homepage', label: 'Trang chủ (vị trí cũ)' },
       { value: 'category', label: 'Danh mục (vị trí cũ)' },
       { value: 'popup', label: 'Popup quảng cáo (vị trí cũ)' },
+      { value: 'tablet_hero', label: 'Tablet · Hero Banner (cũ)' },
     ],
   },
 ] as const;
@@ -1181,6 +1197,12 @@ function PositionDropdown({
             <Smartphone className="h-3 w-3" /> Smartphone
           </span>
         );
+      case 'Laptop':
+        return (
+          <span className="inline-flex items-center gap-1.5 rounded-md bg-indigo-400/10 px-2 py-0.5 text-[10px] font-bold text-indigo-400 border border-indigo-400/20 shrink-0">
+            <Monitor className="h-3 w-3" /> Laptop
+          </span>
+        );
       case 'Danh mục khác':
         return (
           <span className="inline-flex items-center gap-1.5 rounded-md bg-sky-400/10 px-2 py-0.5 text-[10px] font-bold text-sky-300 border border-sky-400/20 shrink-0">
@@ -1202,6 +1224,8 @@ function PositionDropdown({
         return <LayoutTemplate className="h-3.5 w-3.5 text-amber-400" />;
       case 'Smartphone':
         return <Smartphone className="h-3.5 w-3.5 text-lime-400" />;
+      case 'Laptop':
+        return <Monitor className="h-3.5 w-3.5 text-indigo-400" />;
       case 'Danh mục khác':
         return <Monitor className="h-3.5 w-3.5 text-sky-400" />;
       default:

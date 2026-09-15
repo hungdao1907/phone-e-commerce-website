@@ -38,7 +38,7 @@ export const LAPTOP_PRODUCTS: LaptopModel[] = [
   // ================= Apple MacBook Products =================
   createLaptop(
     'macbook-pro-16',
-    'apple',
+    'macbook',
     'MacBook Pro',
     'MacBook Pro 16 inch (M4 Max)',
     'Sức mạnh phi thường cho chuyên gia.',
@@ -61,7 +61,7 @@ export const LAPTOP_PRODUCTS: LaptopModel[] = [
   ),
   createLaptop(
     'macbook-pro-14',
-    'apple',
+    'macbook',
     'MacBook Pro',
     'MacBook Pro 14 inch (M4 Pro)',
     'Đỉnh cao di động và sức mạnh sáng tạo.',
@@ -84,7 +84,7 @@ export const LAPTOP_PRODUCTS: LaptopModel[] = [
   ),
   createLaptop(
     'macbook-air-15',
-    'apple',
+    'macbook',
     'MacBook Air',
     'MacBook Air 15 inch (M3)',
     'Màn hình lớn tuyệt đẹp, thân máy siêu mỏng.',
@@ -109,7 +109,7 @@ export const LAPTOP_PRODUCTS: LaptopModel[] = [
   ),
   createLaptop(
     'macbook-air-13',
-    'apple',
+    'macbook',
     'MacBook Air',
     'MacBook Air 13 inch (M3)',
     'Siêu mỏng nhẹ. Tốc độ vượt trội.',
@@ -135,7 +135,7 @@ export const LAPTOP_PRODUCTS: LaptopModel[] = [
   // ================= Dell XPS & Alienware Products =================
   createLaptop(
     'dell-xps-16',
-    'dell',
+    'lenovo',
     'Dell XPS',
     'Dell XPS 16 (2025)',
     'Biểu tượng thiết kế vô cực và hiệu năng AI.',
@@ -158,7 +158,7 @@ export const LAPTOP_PRODUCTS: LaptopModel[] = [
   ),
   createLaptop(
     'dell-xps-14',
-    'dell',
+    'lenovo',
     'Dell XPS',
     'Dell XPS 14 OLED',
     'Sự hòa quyện hoàn mỹ giữa cơ động và đồ họa.',
@@ -181,7 +181,7 @@ export const LAPTOP_PRODUCTS: LaptopModel[] = [
   ),
   createLaptop(
     'dell-alienware-m16',
-    'dell',
+    'lenovo',
     'Alienware',
     'Alienware m16 R2 Gaming',
     'Chiến binh gaming hiệu năng đỉnh cao.',
@@ -274,7 +274,7 @@ export const LAPTOP_PRODUCTS: LaptopModel[] = [
   // ================= HP Spectre & Omen Products =================
   createLaptop(
     'hp-spectre-x360',
-    'hp',
+    'lenovo',
     'Spectre x360',
     'HP Spectre x360 16 2-in-1',
     'Tuyệt tác xoay gập 360 độ cho doanh nhân và sáng tạo.',
@@ -297,7 +297,7 @@ export const LAPTOP_PRODUCTS: LaptopModel[] = [
   ),
   createLaptop(
     'hp-envy-16',
-    'hp',
+    'lenovo',
     'HP Envy',
     'HP Envy 16 Studio Edition',
     'Phòng thu di động cho nhà làm phim và thiết kế.',
@@ -319,7 +319,7 @@ export const LAPTOP_PRODUCTS: LaptopModel[] = [
   ),
   createLaptop(
     'hp-omen-transcend',
-    'hp',
+    'lenovo',
     'HP Omen',
     'HP OMEN Transcend 14 Gaming',
     'Laptop gaming mỏng nhẹ nhất thế giới.',

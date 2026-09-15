@@ -112,15 +112,14 @@ export default function App() {
                 <Route path="/watch/exploreUltra-3" element={<WatchUltra3Page />} />
 
                 {/* Tablet Routes */}
-                <Route path="/tablet/apple" element={<TabletPage brand="apple" />} />
+                <Route path="/tablet/ipad" element={<TabletPage brand="ipad" />} />
                 <Route path="/tablet/samsung" element={<TabletPage brand="samsung" />} />
                 <Route path="/tablet/xiaomi" element={<TabletPage brand="xiaomi" />} />
                 
                 {/* Laptop Routes */}
-                <Route path="/laptop/apple" element={<LaptopPage brand="apple" />} />
-                <Route path="/laptop/dell" element={<LaptopPage brand="dell" />} />
+                <Route path="/laptop/macbook" element={<LaptopPage brand="macbook" />} />
                 <Route path="/laptop/asus" element={<LaptopPage brand="asus" />} />
-                <Route path="/laptop/hp" element={<LaptopPage brand="hp" />} />
+                <Route path="/laptop/lenovo-6xfo" element={<LaptopPage brand="lenovo" />} />
                 <Route path="/product/:slug" element={<ProductPurchasePage />} />
                 <Route path="/cart" element={<CartPage />} />
 
@@ -139,10 +138,12 @@ export default function App() {
                 <Route path="/watch/ultra-3" element={<Navigate to="/watch/exploreUltra-3" replace />} />
                 <Route path="/dong-ho-thong-minh" element={<Navigate to="/watch/exploreWatch" replace />} />
                 <Route path="/ong-ho-thong-minh" element={<Navigate to="/watch/exploreWatch" replace />} />
-                <Route path="/tablet" element={<Navigate to="/tablet/apple" replace />} />
-                <Route path="/may-tinh-bang" element={<Navigate to="/tablet/apple" replace />} />
-                <Route path="/laptop" element={<Navigate to="/laptop/apple" replace />} />
-                
+                <Route path="/tablet" element={<Navigate to="/tablet/ipad" replace />} />
+                <Route path="/tablet/apple" element={<Navigate to="/tablet/ipad" replace />} />
+                <Route path="/may-tinh-bang" element={<Navigate to="/tablet/ipad" replace />} />
+                <Route path="/laptop" element={<Navigate to="/laptop/macbook" replace />} />
+                <Route path="/laptop/apple" element={<Navigate to="/laptop/macbook" replace />} />
+
                 {/* Customer Profile Route (Protected inside MainLayout) */}
                 <Route element={<ProtectedRoute allowedRoles={['customer']} />}>
                   <Route path="/profile" element={<CustomerProfile />} />

@@ -37,7 +37,7 @@ export const TABLET_PRODUCTS: TabletModel[] = [
   // Apple iPad products
   createTablet(
     'ipad-pro',
-    'apple',
+    'ipad',
     'iPad Pro',
     'iPad Pro',
     'Mỏng hơn. Mạnh hơn. Linh hoạt hơn.',
@@ -57,7 +57,7 @@ export const TABLET_PRODUCTS: TabletModel[] = [
   ),
   createTablet(
     'ipad-air',
-    'apple',
+    'ipad',
     'iPad Air',
     'iPad Air',
     'Sẵn sàng cho mọi ý tưởng.',
@@ -78,7 +78,7 @@ export const TABLET_PRODUCTS: TabletModel[] = [
   ),
   createTablet(
     'ipad',
-    'apple',
+    'ipad',
     'iPad',
     'iPad',
     'Dễ dùng. Dễ sáng tạo. Dễ mang theo.',

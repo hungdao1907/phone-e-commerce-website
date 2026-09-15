@@ -137,12 +137,29 @@ export function GlobalNav() {
     }
 
     if (item.children && item.children.length > 0) {
+      let filteredChildren = item.children.filter((c: any) => c.isActive);
+      let title = 'THƯƠNG HIỆU / DÒNG MÁY';
+
+      if (prefix === 'laptop') {
+        title = 'THƯƠNG HIỆU';
+        const allowedLaptopBrands = ['MacBook', 'ASUS', 'Lenovo'];
+        filteredChildren = filteredChildren.filter((c: any) => allowedLaptopBrands.includes(c.name));
+      } else if (prefix === 'tablet') {
+        title = 'THƯƠNG HIỆU';
+        const allowedTabletBrands = ['iPad', 'Samsung Galaxy Tab', 'Xiaomi Pad'];
+        filteredChildren = filteredChildren.filter((c: any) => allowedTabletBrands.includes(c.name));
+      }
+
       groups.push({
-        title: 'THƯƠNG HIỆU / DÒNG MÁY',
-        links: item.children.filter((c: any) => c.isActive).map((c: any) => c.name),
-        slugs: item.children.filter((c: any) => c.isActive).map((c: any) => {
+        title,
+        links: filteredChildren.map((c: any) => c.name),
+        slugs: filteredChildren.map((c: any) => {
           if (prefix === 'watch') {
             return `${prefix}/explore${c.slug.charAt(0).toUpperCase() + c.slug.slice(1)}`;
+          }
+          // Force iPad slug mapping just in case db returns 'apple'
+          if (prefix === 'tablet' && c.slug === 'apple') {
+            return `${prefix}/ipad`;
           }
           return `${prefix}/${c.slug}`;
         })
@@ -337,7 +354,7 @@ export function GlobalNav() {
                 {getMegaMenuGroups(displayMenu).map((group, idx) => (
                   <div key={idx}>
                     <h4 className="text-[11px] font-bold text-neutral-400 uppercase tracking-widest mb-5">{group.title}</h4>
-                    <ul className="space-y-3">
+                    <ul className={`transition-all ${group.title === 'THƯƠNG HIỆU' ? 'space-y-4' : 'space-y-3'}`}>
                       {group.links.map((link: string, linkIdx: number) => {
                          const targetSlug = group.slugs && group.slugs[linkIdx] ? `/${group.slugs[linkIdx]}` : '/';
                          return (

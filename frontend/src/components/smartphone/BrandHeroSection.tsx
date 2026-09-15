@@ -126,8 +126,32 @@ export function BrandHeroSection({ config }: BrandHeroSectionProps) {
     return <section aria-label={`Đang tải banner ${config.brand}`} className="grid min-h-[480px] place-items-center bg-black text-white"><Loader2 className="h-6 w-6 animate-spin text-white/45" /></section>;
   }
 
-  if (!currentBanner) {
-    return <section aria-label={`${config.brand} Hero Showcase`} className="grid min-h-[480px] place-items-center bg-black px-6 text-center text-white"><div><ImageOff className="mx-auto h-8 w-8 text-white/25" /><p className="mt-4 text-sm font-medium text-white/55">{hasLoadError ? 'Không thể tải banner.' : 'Chưa có banner đang chạy cho vị trí này.'}</p></div></section>;
+  if (!currentBanner || bannerCount === 0) {
+    return (
+      <section
+        aria-label={`${config.brand} sắp ra mắt`}
+        className="relative flex min-h-[72svh] items-center justify-center overflow-hidden bg-black text-white sm:min-h-[78svh] lg:min-h-[82svh]"
+      >
+        <div className="text-center px-4">
+          <motion.h1
+            initial={shouldReduceMotion ? false : { opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
+            className="text-4xl font-extrabold tracking-[0.15em] sm:text-5xl md:text-7xl"
+          >
+            COMING SOON
+          </motion.h1>
+          <motion.p
+            initial={shouldReduceMotion ? false : { opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
+            className="mt-6 text-xs sm:text-sm tracking-[0.2em] text-white/50 uppercase"
+          >
+            New experience is on the way
+          </motion.p>
+        </div>
+      </section>
+    );
   }
 
   return (
