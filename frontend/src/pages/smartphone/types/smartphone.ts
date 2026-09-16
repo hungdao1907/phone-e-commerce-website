@@ -3,6 +3,7 @@ export type SmartphoneBrandId = 'iphone' | 'samsung' | 'xiaomi' | 'oppo';
 export interface BrandColor {
   name: string;
   hex: string;
+  image?: string;
 }
 
 export interface BrandModel {

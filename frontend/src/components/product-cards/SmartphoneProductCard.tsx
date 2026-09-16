@@ -12,16 +12,20 @@ interface BrandProductCardProps {
 
 export function BrandProductCard({ product, index = 0, accentColor }: BrandProductCardProps) {
   const navigate = useNavigate();
-  const [selectedColor, setSelectedColor] = useState(product.colors[0]?.name || '');
+  
+  const colors = product?.colors || [];
+  const safeColor = colors[0]?.name || '';
+  const [selectedColor, setSelectedColor] = useState(safeColor);
 
   // Update selected color if the current one is no longer in the list (e.g. after API load)
   useEffect(() => {
-    if (product.colors.length > 0 && !product.colors.find(c => c.name === selectedColor)) {
-      setSelectedColor(product.colors[0].name);
+    if (colors.length > 0 && !colors.find(c => c.name === selectedColor)) {
+      setSelectedColor(colors[0].name);
     }
-  }, [product.colors, selectedColor]);
-  const activeColorObj = product.colors.find(c => c.name === selectedColor);
-  const activeImage = activeColorObj?.image || product.image;
+  }, [colors, selectedColor]);
+  
+  const activeColorObj = colors.find(c => c.name === selectedColor);
+  const activeImage = activeColorObj?.image || product?.image || '';
   console.log(`[Card ${product.name}] selectedColor:`, selectedColor, 'colors:', product.colors, 'activeImage:', activeImage);
 
   return (
@@ -88,26 +92,26 @@ export function BrandProductCard({ product, index = 0, accentColor }: BrandProdu
         <div className="space-y-2.5 py-4 border-y border-neutral-100 mb-4 flex-grow">
           <div className="flex items-center gap-2.5 text-xs text-neutral-600">
             <Smartphone className="w-3.5 h-3.5 text-neutral-400 shrink-0" />
-            <span className="truncate">{product.specs.display}</span>
+            <span className="truncate">{product?.specs?.display}</span>
           </div>
           <div className="flex items-center gap-2.5 text-xs text-neutral-600">
             <Cpu className="w-3.5 h-3.5 text-neutral-400 shrink-0" />
-            <span className="truncate">{product.specs.chipset}</span>
+            <span className="truncate">{product?.specs?.chipset}</span>
           </div>
           <div className="flex items-center gap-2.5 text-xs text-neutral-600">
             <Camera className="w-3.5 h-3.5 text-neutral-400 shrink-0" />
-            <span className="truncate">{product.specs.camera}</span>
+            <span className="truncate">{product?.specs?.camera}</span>
           </div>
           <div className="flex items-center gap-2.5 text-xs text-neutral-600">
             <Battery className="w-3.5 h-3.5 text-neutral-400 shrink-0" />
-            <span className="truncate">{product.specs.battery}</span>
+            <span className="truncate">{product?.specs?.battery}</span>
           </div>
         </div>
 
         {/* Color Swatches */}
         <div className="flex items-center justify-between gap-2 mb-6">
           <div className="flex items-center gap-1.5">
-            {product.colors.map((color) => {
+            {colors.map((color) => {
               const isSelected = selectedColor === color.name;
               return (
                 <button
