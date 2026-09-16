@@ -56,11 +56,16 @@ export function SmartphonePage({ brand }: SmartphonePageProps) {
               const colorMap = new Map();
               ap.variants?.forEach((v: any) => {
                 const cName = v.attributes?.['Màu sắc'];
-                if (cName && !colorMap.has(cName)) {
-                  colorMap.set(cName, {
-                    name: cName,
-                    hex: v.colorCode || (cName.toLowerCase().includes('đen') ? '#000000' : '#FFFFFF')
-                  });
+                if (cName) {
+                  if (!colorMap.has(cName)) {
+                    colorMap.set(cName, {
+                      name: cName,
+                      hex: v.colorCode || (cName.toLowerCase().includes('đen') ? '#000000' : '#FFFFFF'),
+                      image: v.image || undefined
+                    });
+                  } else if (v.image && !colorMap.get(cName).image) {
+                    colorMap.get(cName).image = v.image;
+                  }
                 }
               });
               const colors = Array.from(colorMap.values());
@@ -71,7 +76,7 @@ export function SmartphonePage({ brand }: SmartphonePageProps) {
                 brand: brand,
                 name: ap.name,
                 series: 'Dòng Mới',
-                tagline: 'Sức mạnh từ API',
+                tagline: '',
                 description: ap.description || 'Sản phẩm tuyệt vời.',
                 price: finalPrice.toLocaleString('vi-VN') + 'đ',
                 originalPrice: originalPrice,

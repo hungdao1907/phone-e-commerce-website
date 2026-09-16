@@ -31,27 +31,20 @@ export function ProductSpecifications({
       </div>
 
       <div className={`relative overflow-hidden transition-all duration-500 ease-in-out ${isExpanded ? 'max-h-[5000px]' : 'max-h-[400px]'}`}>
-        <div className="overflow-x-auto rounded-xl border border-neutral-100">
-          <table className="w-full border-collapse text-sm">
-            <tbody>
-              {specifications.map((specification, index) => (
-                <tr
-                  key={specification.label + index}
-                  className={index % 2 === 0 ? 'bg-neutral-50/70' : 'bg-white'}
-                >
-                  <th
-                    scope="row"
-                    className="w-[40%] px-5 py-4 text-left font-medium text-neutral-600 sm:px-6 align-top border-b border-neutral-100"
-                  >
-                    {specification.label}
-                  </th>
-                  <td className="px-5 py-4 text-left font-medium leading-relaxed text-neutral-900 sm:px-6 border-b border-neutral-100">
-                    {specification.value}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4">
+          {specifications.map((specification, index) => (
+            <div 
+              key={specification.label + index}
+              className="flex items-start gap-4 p-4 rounded-2xl bg-neutral-50 border border-neutral-100 hover:border-blue-200 transition-colors"
+            >
+              <div className="w-[120px] shrink-0 font-semibold text-neutral-600 text-sm">
+                {specification.label}
+              </div>
+              <div className="flex-1 font-medium text-neutral-900 text-sm leading-relaxed">
+                {specification.value}
+              </div>
+            </div>
+          ))}
         </div>
         
         {!isExpanded && specifications.length > 5 && (

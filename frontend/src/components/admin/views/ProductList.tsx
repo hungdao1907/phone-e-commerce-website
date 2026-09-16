@@ -104,7 +104,7 @@ export function ProductList() {
   });
 
   const [capacities, setCapacities] = useState<{ name: string, price: string }[]>([]);
-  const [colors, setColors] = useState<{ name: string, hex: string }[]>([]);
+  const [colors, setColors] = useState<{ name: string, hex: string, image?: string }[]>([]);
   const [variantRows, setVariantRows] = useState<VariantFormRow[]>([]);
   const [specifications, setSpecifications] = useState<{ key: string; value: string }[]>([]);
 
@@ -123,10 +123,31 @@ export function ProductList() {
       setIsLoading(true);
       const res = await fetch('http://localhost:3001/api/products');
       if (res.ok) setProducts(await res.json());
-    } catch (error) {
-      console.error('Lỗi tải sản phẩm:', error);
+    } catch (err) {
+      console.error('Error fetching products', err);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleUploadColorImage = async (e: React.ChangeEvent<HTMLInputElement>, colorIndex: number) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setIsUploading(true);
+    try {
+      const uploadData = new FormData();
+      uploadData.append('image', file);
+      const res = await fetch('http://localhost:3001/api/upload', { method: 'POST', body: uploadData });
+      const data = await res.json();
+      if (data.imageUrl) {
+        const newColors = [...colors];
+        newColors[colorIndex].image = data.imageUrl;
+        setColors(newColors);
+      }
+    } catch (err) {
+      console.error('Error uploading color image', err);
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -243,13 +264,17 @@ export function ProductList() {
     setSpecifications(product.specifications ? (product.specifications as any).map((s:any) => ({ key: s.key, value: s.value })) : []);
 
     const existingCaps = new Map<string, string>();
-    const existingCols = new Map<string, string>();
+    const existingCols = new Map<string, { hex: string, image: string }>();
     product.variants.forEach(v => {
       if (v.attributes['Dung lượng']) existingCaps.set(v.attributes['Dung lượng'], v.price.toString());
-      if (v.attributes['Màu sắc']) existingCols.set(v.attributes['Màu sắc'], v.colorCode || '#ffffff');
+      if (v.attributes['Màu sắc']) {
+        if (!existingCols.has(v.attributes['Màu sắc']) || v.image) {
+          existingCols.set(v.attributes['Màu sắc'], { hex: v.colorCode || '#ffffff', image: v.image || '' });
+        }
+      }
     });
     setCapacities(Array.from(existingCaps.entries()).map(([name, price]) => ({ name, price })));
-    setColors(Array.from(existingCols.entries()).map(([name, hex]) => ({ name, hex })));
+    setColors(Array.from(existingCols.entries()).map(([name, data]) => ({ name, hex: data.hex, image: data.image })));
 
     setVariantRows(product.variants.map(v => ({
       sku: v.sku,
@@ -277,7 +302,7 @@ export function ProductList() {
     }
 
     const caps = capacities.length > 0 ? capacities : [{ name: '', price: '0' }];
-    const cols = colors.length > 0 ? colors : [{ name: '', hex: '' }];
+    const cols = colors.length > 0 ? colors : [{ name: '', hex: '', image: '' }];
 
     const newVariants: VariantFormRow[] = [];
     const baseSku = formData.name ? generateSkuPart(formData.name.substring(0, 4)) : 'SKU';
@@ -303,7 +328,7 @@ export function ProductList() {
             ...(col.name ? { 'Màu sắc': col.name } : {})
           },
           colorCode: existing?.colorCode || col.hex || '', 
-          image: existing?.image || ''
+          image: existing?.image || col.image || ''
         });
       });
     });
@@ -498,18 +523,29 @@ export function ProductList() {
                   
                   <div>
                     <label className="block text-xs font-medium text-white/50 mb-1.5">Màu sắc</label>
-                    <div className="flex flex-wrap items-center gap-2">
-                      {colors.map((col, i) => {
-                        return (
-                          <span key={i} className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg text-sm text-white/90">
-                            <span className="w-2.5 h-2.5 rounded-full border border-white/20" style={{ backgroundColor: col.hex }} />
-                            {col.name} <button onClick={() => setColors(colors.filter((_, idx) => idx !== i))} className="text-white/40 hover:text-white"><X className="w-3 h-3"/></button>
-                          </span>
-                        );
-                      })}
-                      <div className="flex items-center gap-2 bg-black/20 border border-white/10 rounded-lg px-2 h-8">
-                        <input type="color" value={colHexInput} onChange={e => setColHexInput(e.target.value)} className="w-5 h-5 rounded cursor-pointer bg-transparent border-0 p-0" />
-                        <input type="text" value={colInput} onChange={e => setColInput(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); if (colInput && !colors.find(c => c.name === colInput)) { setColors([...colors, { name: colInput, hex: colHexInput }]); setColInput(''); } } }} placeholder="Tên màu..." className="w-24 bg-transparent text-xs focus:outline-none placeholder:text-white/30" />
+                    <div className="flex flex-wrap items-start gap-3">
+                      {colors.map((col, i) => (
+                        <div key={i} className="flex flex-col gap-2 p-2.5 bg-white/5 border border-white/10 rounded-xl min-w-[100px]">
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="flex items-center gap-1.5">
+                              <span className="w-3 h-3 rounded-full border border-white/20" style={{ backgroundColor: col.hex }} />
+                              <span className="text-sm font-medium text-white/90">{col.name}</span>
+                            </div>
+                            <button onClick={() => setColors(colors.filter((_, idx) => idx !== i))} className="text-white/40 hover:text-white/90 transition-colors p-0.5 rounded-md hover:bg-white/10"><X className="w-3.5 h-3.5"/></button>
+                          </div>
+                          <label className="flex items-center justify-center gap-1.5 text-[11px] text-white/60 hover:text-emerald-400 cursor-pointer w-full mt-1 border border-dashed border-white/20 hover:border-emerald-500/50 rounded-lg p-1.5 transition-colors bg-black/20">
+                            {col.image ? (
+                              <img src={col.image} className="w-full h-8 object-contain rounded-sm" alt="color variant" />
+                            ) : (
+                              <><Upload className="w-3 h-3" /> Tải ảnh</>
+                            )}
+                            <input type="file" accept="image/*" className="hidden" onChange={e => handleUploadColorImage(e, i)} disabled={isUploading} />
+                          </label>
+                        </div>
+                      ))}
+                      <div className="flex items-center gap-2 bg-black/20 border border-white/10 rounded-xl px-3 py-2 h-[76px]">
+                        <input type="color" value={colHexInput} onChange={e => setColHexInput(e.target.value)} className="w-6 h-6 rounded cursor-pointer bg-transparent border-0 p-0" />
+                        <input type="text" value={colInput} onChange={e => setColInput(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); if (colInput && !colors.find(c => c.name === colInput)) { setColors([...colors, { name: colInput, hex: colHexInput }]); setColInput(''); } } }} placeholder="Tên màu mới..." className="w-24 bg-transparent text-sm focus:outline-none placeholder:text-white/30" />
                       </div>
                     </div>
                     {/* Bảng màu mẫu */}

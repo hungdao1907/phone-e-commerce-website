@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { Smartphone, Cpu, Camera, Battery } from 'lucide-react';
@@ -13,6 +13,16 @@ interface BrandProductCardProps {
 export function BrandProductCard({ product, index = 0, accentColor }: BrandProductCardProps) {
   const navigate = useNavigate();
   const [selectedColor, setSelectedColor] = useState(product.colors[0]?.name || '');
+
+  // Update selected color if the current one is no longer in the list (e.g. after API load)
+  useEffect(() => {
+    if (product.colors.length > 0 && !product.colors.find(c => c.name === selectedColor)) {
+      setSelectedColor(product.colors[0].name);
+    }
+  }, [product.colors, selectedColor]);
+  const activeColorObj = product.colors.find(c => c.name === selectedColor);
+  const activeImage = activeColorObj?.image || product.image;
+  console.log(`[Card ${product.name}] selectedColor:`, selectedColor, 'colors:', product.colors, 'activeImage:', activeImage);
 
   return (
     <motion.div
@@ -45,10 +55,11 @@ export function BrandProductCard({ product, index = 0, accentColor }: BrandProdu
           style={{ background: `radial-gradient(circle at 50% 50%, ${product.accentColor || accentColor || '#6366f1'}, transparent 70%)` }}
         />
         <img
-          src={product.image}
-          alt={product.name}
+          key={activeImage}
+          src={activeImage}
+          alt={product.name + ' ' + selectedColor}
           loading="lazy"
-          className="w-full h-full object-contain max-h-52 mix-blend-multiply group-hover:scale-105 transition-transform duration-500 ease-out"
+          className="w-full h-full object-contain max-h-52 mix-blend-multiply group-hover:scale-105 transition-transform duration-500 ease-out animate-in fade-in zoom-in duration-300"
         />
       </div>
 

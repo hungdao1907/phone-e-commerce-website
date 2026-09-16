@@ -3,6 +3,7 @@ import { motion, useScroll, useTransform } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, Cpu, Battery, Camera, Smartphone } from 'lucide-react';
 import type { BrandConfig, BrandModel } from '@/types/smartphone';
+import { BrandProductCard } from '../product-cards/SmartphoneProductCard';
 
 interface BrandFeaturedSectionProps {
   config: BrandConfig;
@@ -75,88 +76,14 @@ export function BrandFeaturedSection({ config, products }: BrandFeaturedSectionP
         </div>
 
         {/* Products Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 w-full">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8 w-full justify-center">
           {featuredModels.map((model, idx) => (
-            <motion.div
+            <BrandProductCard
               key={model.id}
-              initial={{ opacity: 0, y: 50 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: idx * 0.15 }}
-              className="group relative flex flex-col bg-white border border-neutral-200 hover:border-neutral-300 shadow-xl shadow-neutral-200/50 hover:shadow-2xl hover:shadow-neutral-300/50 rounded-[2rem] overflow-hidden transition-all duration-500"
-            >
-              {/* Card Ambient Glow */}
-              <div
-                className="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-500 pointer-events-none"
-                style={{ background: `radial-gradient(circle at 50% 0%, ${model.accentColor}, transparent 70%)` }}
-              />
-
-              {/* Product Image */}
-              <div className="relative w-full aspect-[16/9] overflow-hidden bg-white flex items-center justify-center p-4">
-                <img
-                  src={model.image}
-                  alt={model.name}
-                  className="w-full h-full object-contain mix-blend-multiply group-hover:scale-105 transition-transform duration-700 ease-out"
-                />
-              </div>
-
-              {/* Product Info */}
-              <div className="flex flex-col flex-grow p-6 lg:p-8 relative z-10">
-                <div className="mb-4">
-                  <h3 className="text-2xl font-bold text-neutral-900 mb-1">{model.name}</h3>
-                  <p className="text-sm font-medium" style={{ color: model.accentColor }}>{model.tagline}</p>
-                </div>
-
-                <p className="text-neutral-600 text-sm mb-6 flex-grow">{model.description}</p>
-
-                {/* Specs */}
-                <div className="space-y-3 mb-6">
-                  <div className="flex items-center gap-3 text-sm text-neutral-700">
-                    <Smartphone className="w-4 h-4 text-neutral-500" />
-                    <span>{model.specs.display}</span>
-                  </div>
-                  <div className="flex items-center gap-3 text-sm text-neutral-700">
-                    <Cpu className="w-4 h-4 text-neutral-500" />
-                    <span>{model.specs.chipset}</span>
-                  </div>
-                  <div className="flex items-center gap-3 text-sm text-neutral-700">
-                    <Camera className="w-4 h-4 text-neutral-500" />
-                    <span>{model.specs.camera}</span>
-                  </div>
-                  <div className="flex items-center gap-3 text-sm text-neutral-700">
-                    <Battery className="w-4 h-4 text-neutral-500" />
-                    <span>{model.specs.battery}</span>
-                  </div>
-                </div>
-
-                {/* Colors */}
-                <div className="flex items-center gap-2 mb-8">
-                  {model.colors.map((color) => (
-                    <div
-                      key={color.name}
-                      title={color.name}
-                      className="w-5 h-5 rounded-full border border-black/10 shadow-inner"
-                      style={{ backgroundColor: color.hex }}
-                    />
-                  ))}
-                </div>
-
-                {/* Price & CTA */}
-                <div className="mt-auto flex items-end justify-between">
-                  <div>
-                    <p className="text-xs text-neutral-500 mb-1">Giá từ</p>
-                    <p className="text-xl font-bold">{model.price}</p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => navigate('/product/' + (model.slug ?? model.id))}
-                    className="inline-flex items-center px-6 py-2.5 text-sm font-semibold rounded-full bg-neutral-900 text-white hover:bg-black transition-colors duration-200 cursor-pointer"
-                  >
-                    Khám Phá
-                  </button>
-                </div>
-              </div>
-            </motion.div>
+              product={model}
+              index={idx}
+              accentColor={config.accent}
+            />
           ))}
         </div>
 
