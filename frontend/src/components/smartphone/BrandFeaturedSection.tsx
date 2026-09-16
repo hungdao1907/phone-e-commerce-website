@@ -97,7 +97,7 @@ export function BrandFeaturedSection({ config, products }: BrandFeaturedSectionP
           </p>
         </div>
 
-<<<<<<< HEAD
+
         {/* Products Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8 w-full justify-center">
           {featuredModels.map((model, idx) => (
