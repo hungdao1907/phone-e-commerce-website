@@ -1,4 +1,5 @@
-import 'dotenv/config';
+import dotenv from 'dotenv';
+dotenv.config({ override: true });
 import express from 'express';
 import cors from 'cors';
 import path from 'path';
@@ -14,8 +15,10 @@ import reviewRoutes from './routes/review.routes';
 import disputeRoutes from './routes/dispute.routes';
 import invoiceRoutes from './routes/invoice.routes';
 import campaignRoutes from './routes/campaign.routes';
+import promoCodeRoutes from './routes/promoCode.routes';
 import bannerRoutes from './routes/banner.routes';
 import uploadRoutes from './routes/upload.routes';
+import rewardRoutes from './routes/reward.routes';
 
 const app = express();
 const port = process.env.PORT || 3001;
@@ -52,8 +55,10 @@ app.use('/api/reviews', reviewRoutes);
 app.use('/api/disputes', disputeRoutes);
 app.use('/api/invoices', invoiceRoutes);
 app.use('/api/campaigns', campaignRoutes);
+app.use('/api/promo-codes', promoCodeRoutes);
 app.use('/api/banners', bannerRoutes);
 app.use('/api/upload', uploadRoutes);
+app.use('/api/rewards', rewardRoutes);
 
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'ok' });

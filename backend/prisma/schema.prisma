@@ -8,6 +8,19 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
+enum PaymentMethod {
+  COD
+  BANK_TRANSFER
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  EXPIRED
+  REFUNDED
+}
+
 model Plan {
   id            String   @id @default(uuid())
   title         String
@@ -117,13 +130,15 @@ model Order {
   orderCode         String      @unique
   customerId        String
   customer          Customer    @relation(fields: [customerId], references: [id])
-  status            String      @default("pending") // pending, confirmed, shipping, delivered, completed, cancelled, returned
-  paymentMethod     String      @default("cod") // cod, bank_transfer, momo
-  paymentStatus     String      @default("unpaid") // unpaid, paid, refunded
+  status            String      @default("pending") // pending, pending_payment, confirmed, shipping, delivered, completed, cancelled, returned
+  paymentMethod     String      @default("COD") // COD, BANK_TRANSFER
+  paymentStatus     String      @default("PENDING") // PENDING, PAID, REFUNDED
   shippingAddress   String
   shippingPhone     String
   shippingFee       Int         @default(0)
   totalAmount       Int
+  discountAmount    Int         @default(0)
+  promoCodeId       String?
   note              String?
   estimatedDelivery DateTime?
   items             OrderItem[]
@@ -132,6 +147,7 @@ model Order {
   Review            Review[]
   Dispute           Dispute[]
   Invoice           Invoice?
+  Payment           Payment[]
 }
 
 model OrderItem {
@@ -192,6 +208,22 @@ model Invoice {
   updatedAt   DateTime @updatedAt
 }
 
+model Payment {
+  id              String         @id @default(uuid())
+  orderId         String
+  order           Order          @relation(fields: [orderId], references: [id])
+  method          PaymentMethod
+  amount          Int
+  status          PaymentStatus  @default(PENDING)
+  transactionCode String?
+  transferContent String?
+  qrData          String?
+  expiresAt       DateTime?
+  paidAt          DateTime?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+}
+
 // ========== MARKETING & BANNER ==========
 
 model Campaign {
@@ -210,6 +242,21 @@ model Campaign {
   updatedAt     DateTime @updatedAt
 }
 
+model PromoCode {
+  id            String   @id @default(uuid())
+  code          String   @unique
+  discountType  String   // percentage, fixed
+  discountValue Int
+  startDate     DateTime
+  endDate       DateTime
+  isActive      Boolean  @default(true)
+  usageLimit    Int      @default(0)
+  usedCount     Int      @default(0)
+  minOrderValue Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
 model Banner {
   id          String    @id @default(uuid())
   title       String
@@ -222,4 +269,17 @@ model Banner {
   endDate     DateTime?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+}
+
+// ========== GIỎ HÀNG & PHẦN THƯỞNG ==========
+
+model RewardMilestone {
+  id        String   @id @default(uuid())
+  amount    Int      
+  label     String   
+  type      String   
+  discount  Int?     
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

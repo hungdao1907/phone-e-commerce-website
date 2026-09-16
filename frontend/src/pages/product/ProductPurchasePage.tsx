@@ -6,8 +6,8 @@ import { CrossSellSection } from '@/components/product/CrossSellSection';
 import { ProductReviews } from '@/components/product/ProductReviews';
 import type { ProductVariant } from '@/types/product';
 import { useCartStore } from '../../store/useCartStore';
-
-
+import { useAppStore } from '../../store/useAppStore';
+import { SMARTPHONE_PRODUCTS } from '../smartphone/data/mockSmartphoneProducts';
 
 export function ProductPurchasePage() {
   const { slug } = useParams<{ slug: string }>();
@@ -16,14 +16,38 @@ export function ProductPurchasePage() {
   
   const navigate = useNavigate();
   const addCartItem = useCartStore((state) => state.addItem);
+  const { setCartDrawerOpen } = useAppStore();
 
   useEffect(() => {
     if (!slug) return;
     const fetchProduct = async () => {
       try {
-        const res = await fetch(`http://localhost:3001/api/products/${slug}`);
-        if (res.ok) {
-          const dbProduct = await res.json();
+        let dbProduct = null;
+        
+        // Check if slug is a UUID
+        const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slug);
+        
+        if (isUUID) {
+          const res = await fetch(`http://localhost:3001/api/products/${slug}`);
+          if (res.ok) dbProduct = await res.json();
+        } else {
+          // It's a mock product slug!
+          const mockProduct = SMARTPHONE_PRODUCTS.find(p => p.slug === slug || p.id === slug);
+          if (mockProduct) {
+            const res = await fetch(`http://localhost:3001/api/products/sync-mock`, {
+               method: 'POST',
+               headers: { 'Content-Type': 'application/json' },
+               body: JSON.stringify(mockProduct)
+            });
+            if (res.ok) dbProduct = await res.json();
+          } else {
+            // Try fetching by ID anyway just in case
+            const res = await fetch(`http://localhost:3001/api/products/${slug}`);
+            if (res.ok) dbProduct = await res.json();
+          }
+        }
+
+        if (dbProduct) {
           
           const uniqueColors = new Map();
           dbProduct.variants?.forEach((v: any) => {
@@ -184,7 +208,11 @@ export function ProductPurchasePage() {
       quantity,
     });
 
-    navigate(action === 'buy-now' ? '/cart?checkout=1' : '/cart');
+    if (action === 'buy-now') {
+      navigate('/checkout');
+    } else {
+      setCartDrawerOpen(true);
+    }
   };
 
   if (loading) {

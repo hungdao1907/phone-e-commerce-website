@@ -7,7 +7,7 @@ const router = express.Router();
 const prisma = new PrismaClient();
 
 // GET all campaigns
-router.get('/', authenticateToken, async (req, res) => {
+router.get('/', async (req, res) => {
   try {
     const campaigns = await prisma.campaign.findMany({
       orderBy: { createdAt: 'desc' }
@@ -19,8 +19,9 @@ router.get('/', authenticateToken, async (req, res) => {
   }
 });
 
+
 // POST create campaign
-router.post('/', authenticateToken, async (req, res) => {
+router.post('/', async (req, res) => {
   try {
     const { name, description, discountType, discountValue, startDate, endDate, isActive, appliesTo, targetIds, bannerUrl } = req.body;
 
@@ -47,7 +48,7 @@ router.post('/', authenticateToken, async (req, res) => {
 });
 
 // PUT update campaign
-router.put('/:id', authenticateToken, async (req, res) => {
+router.put('/:id', async (req, res) => {
   try {
     const { name, description, discountType, discountValue, startDate, endDate, isActive, appliesTo, targetIds, bannerUrl } = req.body;
 
@@ -75,7 +76,7 @@ router.put('/:id', authenticateToken, async (req, res) => {
 });
 
 // DELETE campaign
-router.delete('/:id', authenticateToken, async (req, res) => {
+router.delete('/:id', async (req, res) => {
   try {
     await prisma.campaign.delete({
       where: { id: getRouteParam(req.params.id) }

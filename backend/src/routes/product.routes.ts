@@ -6,6 +6,73 @@ import { getRouteParam } from '../utils/route-param';
 const router = express.Router();
 const prisma = new PrismaClient();
 
+// POST /sync-mock (Create or find mock product for storefront cart)
+router.post('/sync-mock', async (req, res) => {
+  try {
+    const p = req.body;
+    let product = await prisma.product.findFirst({
+      where: { name: p.name },
+      include: { variants: true, category: { include: { parent: true } } }
+    });
+
+    if (!product) {
+      const numericPrice = typeof p.price === 'string' ? parseInt(p.price.replace(/\D/g, '')) : (p.price || 0);
+      const numericOriginalPrice = typeof p.originalPrice === 'string' ? parseInt(p.originalPrice.replace(/\D/g, '')) : null;
+      
+      let variantsData = [];
+      if (p.colors && p.colors.length > 0) {
+        variantsData = p.colors.map((c: any, i: number) => ({
+          sku: `${p.slug || p.id}-var-${i}`,
+          price: numericPrice,
+          salePrice: numericOriginalPrice ? numericPrice : null,
+          stock: 10,
+          attributes: {
+            "Màu sắc": c.name,
+            "Dung lượng": "Tiêu chuẩn"
+          },
+          colorCode: c.hex,
+          image: c.image || p.image || null
+        }));
+      } else {
+        variantsData = [{
+          sku: `${p.slug || p.id}-var-default`,
+          price: numericPrice,
+          salePrice: numericOriginalPrice ? numericPrice : null,
+          stock: 10,
+          attributes: { "Màu sắc": "Mặc định", "Dung lượng": "Tiêu chuẩn" },
+          image: p.image || null
+        }];
+      }
+
+      product = await prisma.product.create({
+        data: {
+          name: p.name,
+          brand: p.brand || 'Khác',
+          description: p.description || p.tagline || '',
+          image: p.image || null,
+          images: p.image ? [p.image] : [],
+          status: 'active',
+          specifications: p.specs ? [
+            { key: 'Màn hình', value: p.specs.display || '' },
+            { key: 'Chip', value: p.specs.chipset || '' },
+            { key: 'Camera', value: p.specs.camera || '' },
+            { key: 'Pin', value: p.specs.battery || '' },
+          ] : [],
+          variants: {
+            create: variantsData
+          }
+        },
+        include: { variants: true, category: { include: { parent: true } } }
+      });
+    }
+
+    res.json(product);
+  } catch (error) {
+    console.error('Error syncing mock product:', error);
+    res.status(500).json({ message: 'Lỗi server' });
+  }
+});
+
 // GET all products with variants and active campaigns
 router.get('/', async (req, res) => {
   try {

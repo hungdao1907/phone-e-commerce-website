@@ -277,7 +277,6 @@ export function GlobalNav() {
               <Search className="w-[18px] h-[18px]" />
             </button>
             
-            {/* User Dropdown */}
             <div className="relative group">
               <Link 
                 to={useAuthStore.getState().user ? "/profile" : "/login"} 
@@ -319,14 +318,6 @@ export function GlobalNav() {
               )}
             </div>
 
-            <Link to="/cart" className="nav-glow-link hover:text-[#22c55e] transition-colors relative" aria-label="Giỏ hàng">
-              <ShoppingBag className="w-[18px] h-[18px]" />
-              {cartItemCount > 0 && (
-                <span className="absolute -top-1 -right-1.5 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center shadow-sm">
-                  {cartItemCount}
-                </span>
-              )}
-            </Link>
             <button
               onClick={toggleMobileMenu}
               className="md:hidden hover:text-[#22c55e] transition-colors focus:outline-none"
