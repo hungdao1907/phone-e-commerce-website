@@ -1,6 +1,7 @@
 import express from 'express';
 import { PrismaClient } from '@prisma/client';
 import { authenticateToken } from '../middleware/auth.middleware';
+import { getRouteParam } from '../utils/route-param';
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -30,7 +31,7 @@ router.get('/', authenticateToken, async (req, res) => {
 router.get('/:id', authenticateToken, async (req, res) => {
   try {
     const invoice = await prisma.invoice.findUnique({
-      where: { id: req.params.id },
+      where: { id: getRouteParam(req.params.id) },
       include: {
         order: {
           include: {

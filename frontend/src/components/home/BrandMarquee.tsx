@@ -1,6 +1,11 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { categories } from '../../data/mockData';
+const categories = [
+  { name: 'Apple', image: '/images/brands/apple.png' },
+  { name: 'Samsung', image: '/images/brands/samsung.png' },
+  { name: 'Xiaomi', image: '/images/brands/xiaomi.png' },
+  { name: 'OPPO', image: '/images/brands/oppo.png' },
+];
 
 export function BrandMarquee() {
   return (

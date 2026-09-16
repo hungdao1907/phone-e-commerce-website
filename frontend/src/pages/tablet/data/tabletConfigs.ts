@@ -5,8 +5,8 @@ const samsungImage = '/images/tablet/galaxy-tab-prototype.svg';
 const xiaomiImage = '/images/tablet/xiaomi-pad-prototype.svg';
 
 export const TABLET_BRAND_CONFIGS: Record<TabletBrandId, TabletBrandConfig> = {
-  apple: {
-    id: 'apple',
+  ipad: {
+    id: 'ipad',
     label: 'iPad',
     eyebrow: 'IPAD',
     heroTitle: 'Mỏng hơn. Mạnh hơn. Linh hoạt hơn.',

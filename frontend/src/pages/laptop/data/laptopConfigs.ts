@@ -1,18 +1,17 @@
 import type { LaptopBrandConfig, LaptopBrandId } from '../types/laptop';
 
-const appleImage = '/images/laptop/macbook-prototype.svg';
-const dellImage = '/images/laptop/dell-xps-prototype.svg';
+const macbookImage = '/images/laptop/macbook-prototype.svg';
+const lenovoImage = '/images/laptop/dell-xps-prototype.svg'; // Reuse image temporarily or until proper asset is available
 const asusImage = '/images/laptop/asus-rog-prototype.svg';
-const hpImage = '/images/laptop/hp-spectre-prototype.svg';
 
 export const LAPTOP_BRAND_CONFIGS: Record<LaptopBrandId, LaptopBrandConfig> = {
-  apple: {
-    id: 'apple',
+  macbook: {
+    id: 'macbook',
     label: 'MacBook',
     eyebrow: 'MACBOOK PRO & AIR',
     heroTitle: 'Sức mạnh vượt bậc. Thiết kế dẫn đầu.',
     heroSubtitle: 'Trải nghiệm đỉnh cao với Apple Silicon thế hệ mới, màn hình Liquid Retina XDR và thời lượng pin cả ngày.',
-    heroImage: appleImage,
+    heroImage: macbookImage,
     accent: '#2563EB',
     accentSoft: '#DBEAFE',
     dark: '#0B132B',
@@ -33,31 +32,31 @@ export const LAPTOP_BRAND_CONFIGS: Record<LaptopBrandId, LaptopBrandConfig> = {
     finalCopy: 'Sẵn sàng chinh phục mọi ý tưởng với hiệu năng đột phá và thiết kế chuẩn mực.',
   },
 
-  dell: {
-    id: 'dell',
-    label: 'Dell XPS & Alienware',
-    eyebrow: 'DELL PRECISION & XPS',
-    heroTitle: 'Đỉnh cao chế tác. Tối ưu năng suất AI.',
-    heroSubtitle: 'Khung nhôm CNC nguyên khối tinh xảo, màn hình OLED InfinityEdge và sức mạnh xử lý thông minh cùng Intel Core Ultra.',
-    heroImage: dellImage,
+  lenovo: {
+    id: 'lenovo',
+    label: 'Lenovo ThinkPad & Legion',
+    eyebrow: 'LENOVO BUSINESS & GAMING',
+    heroTitle: 'Đỉnh cao chế tác. Tối ưu năng suất.',
+    heroSubtitle: 'Sự kết hợp hoàn hảo giữa độ bền bỉ doanh nghiệp và sức mạnh vượt trội cho mọi nhu cầu.',
+    heroImage: lenovoImage,
     accent: '#0284C7',
     accentSoft: '#E0F2FE',
     dark: '#081326',
-    allProductsDescription: 'Tuyển tập dòng máy tính xách tay cao cấp Dell XPS và chiến binh Alienware đỉnh cao công nghệ.',
+    allProductsDescription: 'Tuyển tập dòng máy tính xách tay cao cấp Lenovo ThinkPad và chiến binh Legion đỉnh cao công nghệ.',
     experience: {
       eyebrow: 'PREMIUM CRAFTSMANSHIP',
-      title: 'Chế tác cơ khí chính xác đến từng micromet.',
-      copy: 'Từng chi tiết được cắt gọt từ nhôm nguyên khối, chiếu nghỉ tay kính Gorilla Glass và bàn phím cảm ứng hiện đại.',
-      detail: 'Hệ thống tản nhiệt buồng hơi tiên tiến giúp máy luôn duy trì hiệu suất ổn định trong nhiều giờ render và gaming.',
+      title: 'Thiết kế bền bỉ, bàn phím trứ danh.',
+      copy: 'Trải nghiệm gõ phím tốt nhất thế giới trên ThinkPad cùng hệ thống tản nhiệt tiên tiến trên dòng Legion.',
+      detail: 'Hoàn hảo cho mọi nhu cầu từ làm việc văn phòng chuyên nghiệp đến gaming cấu hình cao.',
     },
-    whyTitle: 'Vì sao chọn Dell Laptop',
+    whyTitle: 'Vì sao chọn Lenovo Laptop',
     whyPillars: [
-      { title: 'Màn hình InfinityEdge', copy: 'Viền màn hình siêu mỏng 4 cạnh, tỷ lệ hiển thị 16:10 và chuẩn màu sắc đồ họa chuẩn mực.' },
-      { title: 'Thiết kế Vị lai', copy: 'Hàng phím chức năng cảm ứng điện dung và touchpad tàng hình đem lại cảm giác tối giản đẳng cấp.' },
-      { title: 'Độ tin cậy Doanh nghiệp', copy: 'Độ bền tiêu chuẩn công nghiệp và chính sách bảo hành Dell ProSupport tận nơi tiện lợi.' },
+      { title: 'Độ bền tiêu chuẩn', copy: 'Vượt qua hàng loạt bài kiểm tra độ bền quân sự MIL-STD đảm bảo hoạt động ổn định trong mọi điều kiện.' },
+      { title: 'Bàn phím hoàn hảo', copy: 'Hành trình phím sâu, độ nảy tốt và TrackPoint đặc trưng mang lại trải nghiệm nhập liệu tuyệt vời.' },
+      { title: 'Đa dạng tùy chọn', copy: 'Từ mỏng nhẹ di động, màn hình gập đột phá đến cấu hình gaming mạnh mẽ.' },
     ],
-    finalTitle: 'Nâng tầm công việc cùng Dell.',
-    finalCopy: 'Chọn mẫu laptop Dell phù hợp với định hướng công việc và phong cách của bạn.',
+    finalTitle: 'Nâng tầm công việc cùng Lenovo.',
+    finalCopy: 'Chọn mẫu laptop Lenovo phù hợp với định hướng công việc và phong cách của bạn.',
   },
 
   asus: {
@@ -85,32 +84,5 @@ export const LAPTOP_BRAND_CONFIGS: Record<LaptopBrandId, LaptopBrandConfig> = {
     ],
     finalTitle: 'Sở hữu cỗ máy ASUS mạnh mẽ nhất.',
     finalCopy: 'Sẵn sàng bứt phá hiệu năng và tận hưởng thế giới giải trí đỉnh cao.',
-  },
-
-  hp: {
-    id: 'hp',
-    label: 'HP Spectre & OMEN',
-    eyebrow: 'HP ELEGANCE & PERFORMANCE',
-    heroTitle: 'Vẻ đẹp thanh lịch. Sức mạnh vượt trội.',
-    heroSubtitle: 'Kiến trúc xoay gập 360 độ linh hoạt, camera AI thông minh và âm thanh sống động được tinh chỉnh bởi Bang & Olufsen.',
-    heroImage: hpImage,
-    accent: '#0D9488',
-    accentSoft: '#CCFBF1',
-    dark: '#081919',
-    allProductsDescription: 'Trải nghiệm dòng máy tính doanh nhân HP Spectre x360 đẳng cấp và HP Omen Gaming chuyên nghiệp.',
-    experience: {
-      eyebrow: 'INTELLIGENT AI COLLABORATION',
-      title: 'Trợ lý AI tích hợp sẵn sàng nâng tầm công việc.',
-      copy: 'Camera AI tự động theo dõi khuôn mặt, khử nhiễu micro bằng AI hai chiều và tính năng tự động khóa máy khi bạn rời đi.',
-      detail: 'Bút cảm ứng stylus độ nhạy cao đi kèm biến chiếc laptop thành bảng vẽ nghệ thuật bất cứ khi nào bạn muốn.',
-    },
-    whyTitle: 'Vì sao chọn HP Laptop',
-    whyPillars: [
-      { title: 'Thiết kế Vát cạnh Đá quý', copy: 'Khung nhôm nguyên khối cắt gọt tỉ mỉ mang đến diện mạo độc bản và vô cùng sang trọng.' },
-      { title: 'Âm thanh Bang & Olufsen', copy: 'Hệ thống 4 loa đa hướng tái tạo âm trường chi tiết và sống động cho mọi thước phim.' },
-      { title: 'Bảo mật HP Wolf Security', copy: 'Bảo vệ dữ liệu toàn diện từ cấp độ phần cứng BIOS đến hệ điều hành ngăn chặn mọi mối đe dọa.' },
-    ],
-    finalTitle: 'Chọn chiếc laptop HP ưng ý ngay hôm nay.',
-    finalCopy: 'Tự tin tỏa sáng trong mọi cuộc họp và tận hưởng hiệu suất làm việc linh hoạt.',
   },
 };

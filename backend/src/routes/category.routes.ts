@@ -1,6 +1,7 @@
 import express from 'express';
 import { PrismaClient } from '@prisma/client';
 import { authenticateToken } from '../middleware/auth.middleware';
+import { getRouteParam } from '../utils/route-param';
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -48,7 +49,7 @@ router.get('/', async (req, res) => {
 router.get('/:id', async (req, res) => {
   try {
     const category = await prisma.category.findUnique({
-      where: { id: req.params.id },
+      where: { id: getRouteParam(req.params.id) },
       include: {
         attributes: { orderBy: { sortOrder: 'asc' } },
         children: { include: { attributes: true }, orderBy: { sortOrder: 'asc' } },
@@ -87,7 +88,7 @@ router.post('/', authenticateToken, async (req, res) => {
         icon: icon || null,
         parentId: parentId || null,
         isActive: isActive !== false,
-        sortOrder: (maxOrder._max.sortOrder || 0) + 1
+        sortOrder: (maxOrder._max?.sortOrder || 0) + 1
       },
       include: { attributes: true, children: true }
     });
@@ -112,7 +113,7 @@ router.put('/:id', authenticateToken, async (req, res) => {
     if (sortOrder !== undefined) data.sortOrder = sortOrder;
 
     const updated = await prisma.category.update({
-      where: { id: req.params.id },
+      where: { id: getRouteParam(req.params.id) },
       data,
       include: { attributes: true, children: true }
     });
@@ -126,7 +127,7 @@ router.put('/:id', authenticateToken, async (req, res) => {
 // DELETE category
 router.delete('/:id', authenticateToken, async (req, res) => {
   try {
-    await prisma.category.delete({ where: { id: req.params.id } });
+    await prisma.category.delete({ where: { id: getRouteParam(req.params.id) } });
     res.json({ message: 'Xóa danh mục thành công' });
   } catch (error) {
     console.error('Error deleting category:', error);
@@ -142,7 +143,7 @@ router.post('/:id/attributes', authenticateToken, async (req, res) => {
     const { name, values, colorCodes } = req.body;
     const maxOrder = await prisma.categoryAttribute.aggregate({
       _max: { sortOrder: true },
-      where: { categoryId: req.params.id }
+      where: { categoryId: getRouteParam(req.params.id) }
     });
 
     const attr = await prisma.categoryAttribute.create({
@@ -150,8 +151,8 @@ router.post('/:id/attributes', authenticateToken, async (req, res) => {
         name,
         values: values || [],
         colorCodes: colorCodes || [],
-        categoryId: req.params.id,
-        sortOrder: (maxOrder._max.sortOrder || 0) + 1
+        categoryId: getRouteParam(req.params.id),
+        sortOrder: (maxOrder._max?.sortOrder || 0) + 1
       }
     });
     res.status(201).json({ message: 'Thêm thuộc tính thành công', attribute: attr });
@@ -171,7 +172,7 @@ router.put('/attributes/:attrId', authenticateToken, async (req, res) => {
     if (colorCodes !== undefined) data.colorCodes = colorCodes;
 
     const updated = await prisma.categoryAttribute.update({
-      where: { id: req.params.attrId },
+      where: { id: getRouteParam(req.params.attrId) },
       data
     });
     res.json({ message: 'Cập nhật thuộc tính thành công', attribute: updated });
@@ -184,7 +185,7 @@ router.put('/attributes/:attrId', authenticateToken, async (req, res) => {
 // DELETE attribute
 router.delete('/attributes/:attrId', authenticateToken, async (req, res) => {
   try {
-    await prisma.categoryAttribute.delete({ where: { id: req.params.attrId } });
+    await prisma.categoryAttribute.delete({ where: { id: getRouteParam(req.params.attrId) } });
     res.json({ message: 'Xóa thuộc tính thành công' });
   } catch (error) {
     console.error('Error deleting attribute:', error);

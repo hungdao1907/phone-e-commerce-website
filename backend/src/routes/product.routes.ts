@@ -1,6 +1,7 @@
 import express from 'express';
 import { PrismaClient } from '@prisma/client';
 import { authenticateToken } from '../middleware/auth.middleware';
+import { getRouteParam } from '../utils/route-param';
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -47,7 +48,7 @@ router.get('/', async (req, res) => {
 router.get('/:id', async (req, res) => {
   try {
     const product = await prisma.product.findUnique({
-      where: { id: req.params.id },
+      where: { id: getRouteParam(req.params.id) },
       include: {
         category: { include: { attributes: true, parent: true } },
         variants: { orderBy: { createdAt: 'asc' } }
@@ -129,7 +130,7 @@ router.post('/', authenticateToken, async (req, res) => {
 // PUT update product (basic info + upsert variants)
 router.put('/:id', authenticateToken, async (req, res) => {
   try {
-    const { id } = req.params;
+    const id = getRouteParam(req.params.id);
     const { name, description, brand, image, images, categoryId, status, variants, specifications } = req.body;
 
     // Update product basic info
@@ -188,7 +189,7 @@ router.patch('/variants/:variantId', authenticateToken, async (req, res) => {
   try {
     const { stock } = req.body;
     const updated = await prisma.productVariant.update({
-      where: { id: req.params.variantId },
+      where: { id: getRouteParam(req.params.variantId) },
       data: { stock: Number(stock) }
     });
     res.json({ message: 'Cập nhật tồn kho thành công', variant: updated });
@@ -201,7 +202,7 @@ router.patch('/variants/:variantId', authenticateToken, async (req, res) => {
 // DELETE product (cascades to variants)
 router.delete('/:id', authenticateToken, async (req, res) => {
   try {
-    await prisma.product.delete({ where: { id: req.params.id } });
+    await prisma.product.delete({ where: { id: getRouteParam(req.params.id) } });
     res.json({ message: 'Xóa sản phẩm thành công' });
   } catch (error) {
     console.error('Error deleting product:', error);

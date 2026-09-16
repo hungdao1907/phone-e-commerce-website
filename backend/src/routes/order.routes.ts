@@ -1,10 +1,19 @@
 import express from 'express';
 import { PrismaClient } from '@prisma/client';
 import { authenticateToken } from '../middleware/auth.middleware';
+import { getRouteParam } from '../utils/route-param';
 import { sendOrderReceivedEmail, sendOrderConfirmedEmail } from '../services/email.service';
 
 const router = express.Router();
 const prisma = new PrismaClient();
+
+type PreparedOrderItem = {
+  variantId: string;
+  productName: string;
+  variantInfo: string;
+  quantity: number;
+  unitPrice: number;
+};
 
 // GET all orders
 router.get('/', authenticateToken, async (req, res) => {
@@ -33,7 +42,7 @@ router.get('/', authenticateToken, async (req, res) => {
 router.get('/:id', authenticateToken, async (req, res) => {
   try {
     const order = await prisma.order.findUnique({
-      where: { id: req.params.id },
+      where: { id: getRouteParam(req.params.id) },
       include: {
         customer: {
           select: { fullName: true, email: true, phone: true }
@@ -54,7 +63,7 @@ router.post('/', authenticateToken, async (req, res) => {
   try {
     const { customerId, items, paymentMethod, shippingAddress, shippingPhone, shippingFee, note, estimatedDelivery } = req.body;
 
-    if (!customerId || !items || items.length === 0) {
+    if (!customerId || !Array.isArray(items) || items.length === 0) {
       return res.status(400).json({ message: 'Thiếu thông tin khách hàng hoặc sản phẩm' });
     }
 
@@ -70,10 +79,10 @@ router.post('/', authenticateToken, async (req, res) => {
     const orderCode = `ORD-${dateStr}-${(count + 1).toString().padStart(3, '0')}`;
 
     let totalAmount = 0;
-    const orderItemsData = [];
+    const orderItemsData: PreparedOrderItem[] = [];
 
     // Process items and validate stock
-    for (const item of items) {
+    for (const item of items as Array<{ variantId: string; quantity: number }>) {
       const variant = await prisma.productVariant.findUnique({
         where: { id: item.variantId },
         include: { product: true }
@@ -158,7 +167,7 @@ router.put('/:id/status', authenticateToken, async (req, res) => {
     if (status) dataToUpdate.status = status;
     if (paymentStatus) dataToUpdate.paymentStatus = paymentStatus;
 
-    const orderId = req.params.id;
+    const orderId = getRouteParam(req.params.id);
 
     // Execute in transaction if status is becoming completed
     let updatedOrder;
@@ -167,11 +176,11 @@ router.put('/:id/status', authenticateToken, async (req, res) => {
         const order = await tx.order.update({
           where: { id: orderId },
           data: dataToUpdate,
-          include: { invoice: true, customer: true }
+          include: { Invoice: true, customer: true }
         });
 
         // Create invoice if not exists
-        if (!order.invoice) {
+        if (!order.Invoice) {
           const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
           const count = await tx.invoice.count({
             where: {
@@ -225,7 +234,7 @@ router.delete('/:id', authenticateToken, async (req, res) => {
   try {
     // Find order to restore stock
     const order = await prisma.order.findUnique({
-      where: { id: req.params.id },
+      where: { id: getRouteParam(req.params.id) },
       include: { items: true }
     });
 
@@ -248,7 +257,7 @@ router.delete('/:id', authenticateToken, async (req, res) => {
 
       // Delete order
       await tx.order.delete({
-        where: { id: req.params.id }
+        where: { id: getRouteParam(req.params.id) }
       });
     });
 

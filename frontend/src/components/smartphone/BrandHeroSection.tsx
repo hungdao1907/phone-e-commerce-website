@@ -1,231 +1,183 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { motion, AnimatePresence, useReducedMotion, type Variants } from 'framer-motion';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
+import { AnimatePresence, motion, useReducedMotion, type Variants } from 'framer-motion';
+import { ChevronLeft, ChevronRight, ImageOff, Loader2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import type { BrandConfig } from '@/types/smartphone';
+import { fetchActiveBanners, resolveBannerImage, type StorefrontBanner } from '@/lib/storefrontBanners';
 
 interface BrandHeroSectionProps {
   config: BrandConfig;
 }
 
+const DURATION = 5500;
+const STEP_MS = 50;
+
 export function BrandHeroSection({ config }: BrandHeroSectionProps) {
+  const navigate = useNavigate();
   const shouldReduceMotion = useReducedMotion();
   const [[page, direction], setPage] = useState<[number, number]>([0, 0]);
-  const [isPaused, setIsPaused] = useState<boolean>(false);
-  const [isHovered, setIsHovered] = useState<boolean>(false);
-  const [progress, setProgress] = useState<number>(0);
+  const [isPaused, setIsPaused] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [banners, setBanners] = useState<StorefrontBanner[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [hasLoadError, setHasLoadError] = useState(false);
 
-  const banners = config.heroBanners;
+  const position = `${config.id}_hero`;
   const bannerCount = banners.length;
-  const slideIndex = ((page % bannerCount) + bannerCount) % bannerCount;
-  const currentBanner = banners[slideIndex];
+  const slideIndex = bannerCount ? ((page % bannerCount) + bannerCount) % bannerCount : 0;
+  const currentBanner = banners[slideIndex] ?? null;
 
-  const DURATION = 5000;
-  const STEP_MS = 50;
+  useEffect(() => {
+    const controller = new AbortController();
+    setPage([0, 0]);
+    setProgress(0);
+    setIsLoading(true);
+    setHasLoadError(false);
 
-  const paginate = useCallback(
-    (newDirection: number) => {
-      setPage(([prevPage]) => [prevPage + newDirection, newDirection]);
-      setProgress(0);
-    },
-    []
-  );
-
-  const jumpToSlide = useCallback(
-    (targetIndex: number) => {
-      setPage(([prevPage]) => {
-        const currentNormalized = ((prevPage % bannerCount) + bannerCount) % bannerCount;
-        if (targetIndex === currentNormalized) return [prevPage, 0];
-        let diff = targetIndex - currentNormalized;
-        if (diff === -(bannerCount - 1)) diff = 1;
-        if (diff === bannerCount - 1) diff = -1;
-        return [prevPage + diff, diff > 0 ? 1 : -1];
+    void fetchActiveBanners(position, controller.signal)
+      .then((activeBanners) => setBanners(activeBanners))
+      .catch((error: unknown) => {
+        if (error instanceof DOMException && error.name === 'AbortError') return;
+        setBanners([]);
+        setHasLoadError(true);
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setIsLoading(false);
       });
-      setProgress(0);
-    },
-    [bannerCount]
-  );
 
-  // Auto-play timer
-  useEffect(() => {
-    if (isPaused || isHovered) return;
-    const timer = setInterval(() => {
-      setProgress((prev) => prev + (STEP_MS / DURATION) * 100);
-    }, STEP_MS);
-    return () => clearInterval(timer);
-  }, [isPaused, isHovered]);
+    return () => controller.abort();
+  }, [position]);
 
-  // Auto-advance
-  useEffect(() => {
-    if (progress >= 100) {
-      paginate(1);
-    }
-  }, [progress, paginate]);
+  const paginate = useCallback((newDirection: number) => {
+    if (bannerCount < 2) return;
+    setPage(([previousPage]) => [previousPage + newDirection, newDirection]);
+    setProgress(0);
+  }, [bannerCount]);
 
-  // Keyboard navigation
+  const jumpToSlide = useCallback((targetIndex: number) => {
+    if (bannerCount < 2) return;
+    setPage(([previousPage]) => {
+      const currentNormalized = ((previousPage % bannerCount) + bannerCount) % bannerCount;
+      if (targetIndex === currentNormalized) return [previousPage, 0];
+      let difference = targetIndex - currentNormalized;
+      if (difference === -(bannerCount - 1)) difference = 1;
+      if (difference === bannerCount - 1) difference = -1;
+      return [previousPage + difference, difference > 0 ? 1 : -1];
+    });
+    setProgress(0);
+  }, [bannerCount]);
+
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'ArrowLeft') paginate(-1);
-      if (e.key === 'ArrowRight') paginate(1);
-      if (e.key === ' ') {
-        e.preventDefault();
-        setIsPaused((p) => !p);
+    if (isPaused || isHovered || bannerCount < 2) return undefined;
+    const timer = window.setInterval(() => setProgress((value) => value + (STEP_MS / DURATION) * 100), STEP_MS);
+    return () => window.clearInterval(timer);
+  }, [bannerCount, isHovered, isPaused]);
+
+  useEffect(() => {
+    if (progress >= 100) paginate(1);
+  }, [paginate, progress]);
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'ArrowLeft') paginate(-1);
+      if (event.key === 'ArrowRight') paginate(1);
+      if (event.key === ' ' && bannerCount > 1) {
+        event.preventDefault();
+        setIsPaused((value) => !value);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [paginate]);
+  }, [bannerCount, paginate]);
 
-  // Framer Motion slide variants
   const slideVariants: Variants = {
-    enter: (dir: number) => ({
-      x: dir > 0 ? '100%' : '-100%',
-      opacity: 0,
-      scale: 0.98,
-    }),
+    enter: (nextDirection: number) => ({ x: nextDirection > 0 ? '100%' : '-100%', opacity: 0, scale: 0.98 }),
     center: {
-      zIndex: 1,
-      x: 0,
-      opacity: 1,
-      scale: 1,
-      transition: {
-        x: { type: 'spring' as const, stiffness: 300, damping: 32 },
-        opacity: { duration: 0.45 },
-        scale: { duration: 0.45 },
-      },
+      zIndex: 1, x: 0, opacity: 1, scale: 1,
+      transition: { x: { type: 'spring', stiffness: 300, damping: 32 }, opacity: { duration: 0.4 }, scale: { duration: 0.45 } },
     },
-    exit: (dir: number) => ({
-      zIndex: 0,
-      x: dir < 0 ? '100%' : '-100%',
-      opacity: 0,
-      scale: 0.98,
-      transition: {
-        x: { type: 'spring' as const, stiffness: 300, damping: 32 },
-        opacity: { duration: 0.35 },
-      },
+    exit: (nextDirection: number) => ({
+      zIndex: 0, x: nextDirection < 0 ? '100%' : '-100%', opacity: 0, scale: 0.98,
+      transition: { x: { type: 'spring', stiffness: 300, damping: 32 }, opacity: { duration: 0.35 } },
     }),
   };
 
-  // Touch swipe support
-  const swipeConfidenceThreshold = 8000;
   const swipePower = (offset: number, velocity: number) => Math.abs(offset) * velocity;
-
   const handleDragEnd = (
-    _e: MouseEvent | TouchEvent | PointerEvent,
-    { offset, velocity }: { offset: { x: number; y: number }; velocity: { x: number; y: number } }
+    _event: MouseEvent | TouchEvent | PointerEvent,
+    info: { offset: { x: number; y: number }; velocity: { x: number; y: number } },
   ) => {
-    const swipe = swipePower(offset.x, velocity.x);
-    if (swipe < -swipeConfidenceThreshold || offset.x < -80) {
-      paginate(1);
-    } else if (swipe > swipeConfidenceThreshold || offset.x > 80) {
-      paginate(-1);
-    }
+    const swipe = swipePower(info.offset.x, info.velocity.x);
+    if (swipe < -8000 || info.offset.x < -80) paginate(1);
+    if (swipe > 8000 || info.offset.x > 80) paginate(-1);
   };
+
+  const handleBannerClick = () => {
+    if (!currentBanner?.link) return;
+    if (/^https?:\/\//i.test(currentBanner.link)) {
+      window.location.assign(currentBanner.link);
+      return;
+    }
+    navigate(currentBanner.link);
+  };
+
+  if (isLoading) {
+    return <section aria-label={`Đang tải banner ${config.brand}`} className="grid min-h-[480px] place-items-center bg-black text-white"><Loader2 className="h-6 w-6 animate-spin text-white/45" /></section>;
+  }
+
+  if (!currentBanner || bannerCount === 0) {
+    return (
+      <section
+        aria-label={`${config.brand} sắp ra mắt`}
+        className="relative flex min-h-[72svh] items-center justify-center overflow-hidden bg-black text-white sm:min-h-[78svh] lg:min-h-[82svh]"
+      >
+        <div className="text-center px-4">
+          <motion.h1
+            initial={shouldReduceMotion ? false : { opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
+            className="text-4xl font-extrabold tracking-[0.15em] sm:text-5xl md:text-7xl"
+          >
+            COMING SOON
+          </motion.h1>
+          <motion.p
+            initial={shouldReduceMotion ? false : { opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
+            className="mt-6 text-xs sm:text-sm tracking-[0.2em] text-white/50 uppercase"
+          >
+            New experience is on the way
+          </motion.p>
+        </div>
+      </section>
+    );
+  }
 
   return (
-    <section
-      id={`${config.id}-hero`}
-      aria-label={`${config.brand} Hero Showcase`}
-      className="relative w-full bg-black text-white pt-[44px] pb-0 flex flex-col items-center justify-start overflow-hidden select-none"
-    >
-      {/* Dynamic Ambient Backlight */}
-      <div
-        className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-7xl h-[400px] sm:h-[600px] brand-ambient-glow transition-all duration-1000 ease-out"
-        style={{
-          background: `radial-gradient(ellipse at center, ${currentBanner.glowColor} 0%, rgba(0,0,0,0) 70%)`,
-        }}
-      />
+    <section id={`${config.id}-hero`} aria-label={`${config.brand} Hero Showcase`} className="relative flex w-full select-none flex-col items-center justify-start overflow-hidden bg-black pb-0 pt-0 text-white">
+      <div className="absolute left-1/2 top-1/3 h-[450px] w-full max-w-7xl -translate-x-1/2 -translate-y-1/2 brand-ambient-glow transition-all duration-1000 ease-out sm:h-[700px]" style={{ background: `radial-gradient(ellipse at center, ${config.accent} 0%, rgba(0,0,0,0) 70%)` }} />
 
-      {/* Preload images */}
-      <div className="hidden">
-        {banners.map((banner) => (
-          <img key={banner.id} src={banner.image} alt={banner.alt} />
-        ))}
-      </div>
+      <div className="hidden">{banners.map((banner) => <img key={banner.id} src={resolveBannerImage(banner.image)} alt="" />)}</div>
 
-      {/* Full-Bleed Carousel Viewport */}
       <div className="relative z-10 w-full overflow-hidden border-b border-white/10 bg-neutral-950">
-        <div
-          className="relative w-full aspect-[16/9] max-h-[85vh] overflow-hidden group cursor-grab active:cursor-grabbing"
-          onMouseEnter={() => setIsHovered(true)}
-          onMouseLeave={() => setIsHovered(false)}
-        >
-          {/* Animated Slide Transition */}
+        <div className="group relative min-h-[360px] w-full cursor-grab overflow-hidden active:cursor-grabbing sm:min-h-[480px] sm:aspect-[21/9] md:min-h-[580px] md:aspect-[24/10]" onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)}>
           <AnimatePresence initial={false} custom={direction} mode="popLayout">
-            <motion.div
-              key={page}
-              custom={direction}
-              variants={slideVariants}
-              initial={shouldReduceMotion ? false : 'enter'}
-              animate="center"
-              exit={shouldReduceMotion ? undefined : 'exit'}
-              drag="x"
-              dragConstraints={{ left: 0, right: 0 }}
-              dragElastic={0.2}
-              onDragEnd={handleDragEnd}
-              className="absolute inset-0 w-full h-full flex items-center justify-center"
-            >
-              <img
-                src={currentBanner.image}
-                alt={currentBanner.alt}
-                className="w-full h-full object-cover object-center select-none pointer-events-none filter drop-shadow-[0_10px_25px_rgba(0,0,0,0.6)]"
-                loading="eager"
-                draggable={false}
-              />
-              {/* Cinematic Edge Overlays */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/30 pointer-events-none" />
-              <div className="absolute inset-0 bg-gradient-to-r from-black/30 via-transparent to-black/30 pointer-events-none" />
+            <motion.div key={currentBanner.id} custom={direction} variants={slideVariants} initial={shouldReduceMotion ? false : 'enter'} animate="center" exit={shouldReduceMotion ? undefined : 'exit'} drag={bannerCount > 1 ? 'x' : false} dragConstraints={{ left: 0, right: 0 }} dragElastic={0.2} onDragEnd={handleDragEnd} onClick={handleBannerClick} className={`absolute inset-0 flex h-full w-full items-center justify-center ${currentBanner.link ? 'cursor-pointer' : 'cursor-default'}`}>
+              <img src={resolveBannerImage(currentBanner.image)} alt={currentBanner.title} className="pointer-events-none h-full w-full select-none object-cover object-center" loading="eager" draggable={false} />
             </motion.div>
           </AnimatePresence>
 
-          {/* Previous Arrow */}
-          <button
-            type="button"
-            onClick={(e) => { e.stopPropagation(); paginate(-1); }}
-            aria-label="Slide trước"
-            className="absolute left-4 sm:left-8 lg:left-12 top-1/2 -translate-y-1/2 z-20 w-11 h-11 sm:w-14 sm:h-14 rounded-full bg-black/55 hover:bg-black/90 backdrop-blur-2xl border border-white/25 hover:border-white/60 text-white flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-95 shadow-[0_4px_30px_rgba(0,0,0,0.8)] cursor-pointer opacity-90 sm:opacity-0 sm:group-hover:opacity-100"
-          >
-            <ChevronLeft className="w-5 h-5 sm:w-7 sm:h-7" />
-          </button>
-
-          {/* Next Arrow */}
-          <button
-            type="button"
-            onClick={(e) => { e.stopPropagation(); paginate(1); }}
-            aria-label="Slide kế tiếp"
-            className="absolute right-4 sm:right-8 lg:right-12 top-1/2 -translate-y-1/2 z-20 w-11 h-11 sm:w-14 sm:h-14 rounded-full bg-black/55 hover:bg-black/90 backdrop-blur-2xl border border-white/25 hover:border-white/60 text-white flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-95 shadow-[0_4px_30px_rgba(0,0,0,0.8)] cursor-pointer opacity-90 sm:opacity-0 sm:group-hover:opacity-100"
-          >
-            <ChevronRight className="w-5 h-5 sm:w-7 sm:h-7" />
-          </button>
-
-          {/* Progress Bars */}
-          <div className="absolute bottom-5 sm:bottom-7 left-1/2 -translate-x-1/2 z-20 w-64 sm:w-80 md:w-96 max-w-[85vw] pointer-events-auto flex gap-3">
-            {banners.map((banner, idx) => {
-              let fillPercentage = 0;
-              if (idx < slideIndex) fillPercentage = 100;
-              else if (idx === slideIndex) fillPercentage = progress;
-
-              return (
-                <button
-                  key={banner.id}
-                  type="button"
-                  onClick={(e) => { e.stopPropagation(); jumpToSlide(idx); }}
-                  aria-label={`Chuyển đến ${banner.title}`}
-                  className="relative flex-1 h-[4px] rounded-full bg-white/20 cursor-pointer group"
-                >
-                  <div className="absolute inset-0 -top-4 -bottom-4 bg-transparent" />
-                  <div
-                    className="absolute top-0 left-0 h-full rounded-full transition-all duration-100 ease-linear"
-                    style={{
-                      width: `${fillPercentage}%`,
-                      backgroundColor: currentBanner.accentColor,
-                      boxShadow: `0 0 10px ${currentBanner.accentColor}`,
-                    }}
-                  />
-                  <div className="absolute top-0 left-0 w-full h-full rounded-full bg-white/0 group-hover:bg-white/20 transition-colors pointer-events-none" />
-                </button>
-              );
-            })}
-          </div>
+          {bannerCount > 1 && <>
+            <button type="button" onClick={(event) => { event.stopPropagation(); paginate(-1); }} aria-label="Banner trước" className="absolute left-3 top-1/2 z-20 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/25 bg-black/55 text-white shadow-[0_4px_30px_rgba(0,0,0,0.8)] backdrop-blur-2xl transition-all duration-300 hover:scale-110 hover:border-white/60 hover:bg-black/90 active:scale-95 sm:left-6 sm:h-14 sm:w-14 sm:opacity-0 sm:group-hover:opacity-100"><ChevronLeft className="h-5 w-5 sm:h-7 sm:w-7" /></button>
+            <button type="button" onClick={(event) => { event.stopPropagation(); paginate(1); }} aria-label="Banner kế tiếp" className="absolute right-3 top-1/2 z-20 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/25 bg-black/55 text-white shadow-[0_4px_30px_rgba(0,0,0,0.8)] backdrop-blur-2xl transition-all duration-300 hover:scale-110 hover:border-white/60 hover:bg-black/90 active:scale-95 sm:right-6 sm:h-14 sm:w-14 sm:opacity-0 sm:group-hover:opacity-100"><ChevronRight className="h-5 w-5 sm:h-7 sm:w-7" /></button>
+            <div className="pointer-events-auto absolute bottom-5 left-1/2 z-20 flex w-64 max-w-[85vw] -translate-x-1/2 gap-3 sm:bottom-7 sm:w-80 md:w-96">
+              {banners.map((banner, index) => {
+                const percentage = index < slideIndex ? 100 : index === slideIndex ? progress : 0;
+                return <button key={banner.id} type="button" onClick={(event) => { event.stopPropagation(); jumpToSlide(index); }} aria-label={`Chuyển đến ${banner.title}`} className="group relative h-1 flex-1 cursor-pointer rounded-full bg-white/25"><span className="absolute inset-x-0 -top-3 -bottom-3" /><span className="absolute left-0 top-0 h-full rounded-full transition-all duration-100 ease-linear" style={{ width: `${percentage}%`, backgroundColor: config.accent, boxShadow: `0 0 10px ${config.accent}` }} /></button>;
+              })}
+            </div>
+          </>}
         </div>
       </div>
     </section>

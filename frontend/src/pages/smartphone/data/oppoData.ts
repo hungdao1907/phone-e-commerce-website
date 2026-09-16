@@ -1,75 +1,5 @@
 import { Camera, Sparkles, RefreshCw, ShieldCheck } from 'lucide-react';
-import type { BrandConfig, BrandHeroBanner, BrandProductGroupDefinition, BrandPillar } from '../types';
-
-/* ─── Hero Banners ─── */
-const OPPO_HERO_BANNERS: BrandHeroBanner[] = [
-  {
-    id: 'find-x8-ultra',
-    title: 'OPPO Find X8 Ultra',
-    shortTitle: 'Find X8 Ultra',
-    tagline: 'Hasselblad Quad Tele • Snapdragon 8 Elite',
-    badge: 'ĐỈNH CAO FLAGSHIP',
-    description: 'Tuyệt tác nhiếp ảnh với hệ thống 4 camera Hasselblad cảm biến lớn, màn hình phẳng siêu sáng và vi xử lý Snapdragon 8 Elite mạnh mẽ.',
-    price: 'Từ 28.990.000₫',
-    originalPrice: '30.990.000₫',
-    image: '/images/samsung.png',
-    alt: 'OPPO Find X8 Ultra Banner',
-    accentColor: '#10b981',
-    glowColor: 'rgba(16, 185, 129, 0.45)',
-    ctaText: 'Đặt Trước Find X8 Ultra',
-    specs: [
-      { label: 'Màn hình', value: '6.82" AMOLED 2K 120Hz' },
-      { label: 'Vi xử lý', value: 'Snapdragon 8 Elite (3nm)' },
-      { label: 'Camera', value: 'Hasselblad Quad 50MP' },
-      { label: 'Pin & Sạc', value: '6.100 mAh • 80W SUPERVOOC' },
-    ],
-    highlightChips: ['Hasselblad Optics', 'Snapdragon 8 Elite', 'Dual Periscope', 'Pin 6.100 mAh'],
-  },
-  {
-    id: 'find-x8-pro',
-    title: 'OPPO Find X8 Pro',
-    shortTitle: 'Find X8 Pro',
-    tagline: 'Camera Tele Kép • Thiết Kế Mỏng Nhẹ',
-    badge: 'CHÂN DUNG ĐẲNG CẤP',
-    description: 'Hệ thống camera tele tiềm vọng kép Hasselblad, thiết kế mặt lưng cong vô cực và phím chụp nhanh chuyên dụng Quick Button.',
-    price: 'Từ 22.990.000₫',
-    originalPrice: '24.990.000₫',
-    image: '/images/samsung.png',
-    alt: 'OPPO Find X8 Pro Banner',
-    accentColor: '#059669',
-    glowColor: 'rgba(5, 150, 105, 0.45)',
-    ctaText: 'Đặt Trước Find X8 Pro',
-    specs: [
-      { label: 'Màn hình', value: '6.78" AMOLED 1.5K 120Hz' },
-      { label: 'Vi xử lý', value: 'MediaTek Dimensity 9400' },
-      { label: 'Camera', value: 'Dual Periscope Tele 50MP' },
-      { label: 'Pin & Sạc', value: '5.910 mAh • 80W SUPERVOOC' },
-    ],
-    highlightChips: ['Dual Tele Periscope', 'Dimensity 9400', 'Quick Button', 'Pin Glacier 5.910 mAh'],
-  },
-  {
-    id: 'reno-14-pro',
-    title: 'OPPO Reno14 Pro',
-    shortTitle: 'Reno14 Pro',
-    tagline: 'Chuyên Gia Chân Dung AI • Thiết Kế Sang Trọng',
-    badge: 'CHUYÊN GIA CHÂN DUNG',
-    description: 'Bắt trọn thần thái tự nhiên với thuật toán chân dung AI thế hệ mới, mặt lưng kính vân nước độc bản và độ bền đạt chuẩn IP69.',
-    price: 'Từ 14.990.000₫',
-    originalPrice: '15.990.000₫',
-    image: '/images/samsung.png',
-    alt: 'OPPO Reno14 Pro Banner',
-    accentColor: '#34d399',
-    glowColor: 'rgba(52, 211, 153, 0.45)',
-    ctaText: 'Khám Phá Reno14 Pro',
-    specs: [
-      { label: 'Màn hình', value: '6.83" AMOLED 1.5K 120Hz' },
-      { label: 'Vi xử lý', value: 'Dimensity 8350' },
-      { label: 'Camera', value: '50MP AI Portrait Camera' },
-      { label: 'Pin & Sạc', value: '6.200 mAh • 80W SUPERVOOC' },
-    ],
-    highlightChips: ['Portrait AI', 'SUPERVOOC 80W', 'AMOLED 120Hz', 'ColorOS 15'],
-  },
-];
+import type { BrandConfig, BrandProductGroupDefinition, BrandPillar } from '../types';
 
 /* ─── Product Group Definitions ─── */
 const OPPO_PRODUCT_GROUPS: BrandProductGroupDefinition[] = [
@@ -141,9 +71,6 @@ export const OPPO_BRAND_CONFIG: BrandConfig = {
 
   gradientText: 'brand-gradient-oppo',
   gradientAI: 'brand-gradient-oppo-ai',
-
-  heroBanners: OPPO_HERO_BANNERS,
-
   featuredBadgeText: 'OPPO Flagship Mới Nhất',
   featuredHeadlinePrefix: 'Khám Phá',
   featuredHeadlineHighlight: 'Đỉnh Cao Hasselblad',

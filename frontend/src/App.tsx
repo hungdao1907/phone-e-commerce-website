@@ -1,5 +1,5 @@
 import { lazy, Suspense, useMemo } from 'react';
-import { BrowserRouter, Routes, Route, Outlet } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Outlet, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import ReactLenis from 'lenis/react';
 import { GlobalNav } from './components/layout/GlobalNav';
@@ -112,18 +112,38 @@ export default function App() {
                 <Route path="/watch/exploreUltra-3" element={<WatchUltra3Page />} />
 
                 {/* Tablet Routes */}
-                <Route path="/tablet/apple" element={<TabletPage brand="apple" />} />
+                <Route path="/tablet/ipad" element={<TabletPage brand="ipad" />} />
                 <Route path="/tablet/samsung" element={<TabletPage brand="samsung" />} />
                 <Route path="/tablet/xiaomi" element={<TabletPage brand="xiaomi" />} />
                 
                 {/* Laptop Routes */}
-                <Route path="/laptop/apple" element={<LaptopPage brand="apple" />} />
-                <Route path="/laptop/dell" element={<LaptopPage brand="dell" />} />
+                <Route path="/laptop/macbook" element={<LaptopPage brand="macbook" />} />
                 <Route path="/laptop/asus" element={<LaptopPage brand="asus" />} />
-                <Route path="/laptop/hp" element={<LaptopPage brand="hp" />} />
+                <Route path="/laptop/lenovo-6xfo" element={<LaptopPage brand="lenovo" />} />
                 <Route path="/product/:slug" element={<ProductPurchasePage />} />
                 <Route path="/cart" element={<CartPage />} />
-                
+
+                {/* Legacy / Category Aliases & Redirects */}
+                <Route path="/iphone" element={<Navigate to="/phone/iphone" replace />} />
+                <Route path="/exploreIphone17promax" element={<Navigate to="/phone/exploreIphone17promax" replace />} />
+                <Route path="/samsung" element={<Navigate to="/phone/samsung" replace />} />
+                <Route path="/xiaomi" element={<Navigate to="/phone/xiaomi" replace />} />
+                <Route path="/oppo" element={<Navigate to="/phone/oppo" replace />} />
+                <Route path="/phone" element={<Navigate to="/phone/iphone" replace />} />
+                <Route path="/dien-thoai" element={<Navigate to="/phone/iphone" replace />} />
+                <Route path="/ien-thoai" element={<Navigate to="/phone/iphone" replace />} />
+                <Route path="/watch" element={<Navigate to="/watch/exploreWatch" replace />} />
+                <Route path="/watch/series-11" element={<Navigate to="/watch/exploreSeries-11" replace />} />
+                <Route path="/watch/se-3" element={<Navigate to="/watch/exploreSe-3" replace />} />
+                <Route path="/watch/ultra-3" element={<Navigate to="/watch/exploreUltra-3" replace />} />
+                <Route path="/dong-ho-thong-minh" element={<Navigate to="/watch/exploreWatch" replace />} />
+                <Route path="/ong-ho-thong-minh" element={<Navigate to="/watch/exploreWatch" replace />} />
+                <Route path="/tablet" element={<Navigate to="/tablet/ipad" replace />} />
+                <Route path="/tablet/apple" element={<Navigate to="/tablet/ipad" replace />} />
+                <Route path="/may-tinh-bang" element={<Navigate to="/tablet/ipad" replace />} />
+                <Route path="/laptop" element={<Navigate to="/laptop/macbook" replace />} />
+                <Route path="/laptop/apple" element={<Navigate to="/laptop/macbook" replace />} />
+
                 {/* Customer Profile Route (Protected inside MainLayout) */}
                 <Route element={<ProtectedRoute allowedRoles={['customer']} />}>
                   <Route path="/profile" element={<CustomerProfile />} />

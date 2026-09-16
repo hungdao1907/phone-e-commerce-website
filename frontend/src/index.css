@@ -880,3 +880,70 @@ textarea {
     overflow-x: clip;
   }
 }
+/* ===== ADMIN BANNER MANAGEMENT ===== */
+.form-input {
+  width: 100%;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 0.875rem;
+  background: rgba(10, 12, 10, 0.85);
+  padding: 0.6875rem 0.875rem;
+  color: #fff;
+  font-size: 0.875rem;
+  outline: none;
+  transition: border-color 180ms ease, background-color 180ms ease, box-shadow 180ms ease;
+}
+
+.form-input:focus {
+  border-color: #a3e635;
+  background: rgba(15, 18, 15, 0.95);
+  box-shadow: 0 0 0 3px rgba(163, 230, 53, 0.15);
+}
+
+.form-input option,
+.form-input optgroup {
+  background: #121512;
+  color: #fff;
+  padding: 6px 8px;
+}
+
+.icon-action {
+  display: inline-flex;
+  height: 2.25rem;
+  width: 2.25rem;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 0.75rem;
+  background: rgba(0, 0, 0, 0.35);
+  color: rgba(255, 255, 255, 0.7);
+  transition: color 160ms ease, background-color 160ms ease, border-color 160ms ease, transform 160ms ease;
+  cursor: pointer;
+}
+
+.icon-action:hover {
+  border-color: rgba(163, 230, 53, 0.4);
+  background: rgba(163, 230, 53, 0.12);
+  color: #bef264;
+  transform: scale(1.05);
+}
+
+/* Custom Scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: 9999px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.22);
+  border-radius: 9999px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(163, 230, 53, 0.7);
+}
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.22) rgba(0, 0, 0, 0.25);
+}

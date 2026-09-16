@@ -1,4 +1,4 @@
-export type TabletBrandId = 'apple' | 'samsung' | 'xiaomi';
+export type TabletBrandId = 'ipad' | 'samsung' | 'xiaomi';
 
 export interface TabletColor {
   name: string;

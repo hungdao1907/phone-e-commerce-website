@@ -31,24 +31,6 @@ export interface BrandModel {
 
 export type SmartphoneModel = BrandModel;
 
-export interface BrandHeroBanner {
-  id: string;
-  title: string;
-  shortTitle: string;
-  tagline: string;
-  badge: string;
-  description: string;
-  price: string;
-  originalPrice?: string;
-  image: string;
-  alt: string;
-  accentColor: string;
-  glowColor: string;
-  ctaText: string;
-  specs: { label: string; value: string }[];
-  highlightChips: string[];
-}
-
 export interface BrandPillar {
   num: string;
   icon: React.ComponentType<{ className?: string; style?: React.CSSProperties; strokeWidth?: number }>;
@@ -93,9 +75,6 @@ export interface BrandConfig {
   /* ─── Gradient Text Classes ─── */
   gradientText: string;
   gradientAI: string;
-
-  /* ─── Hero Section ─── */
-  heroBanners: BrandHeroBanner[];
 
   /* ─── Featured Products (presentation metadata) ─── */
   featuredBadgeText: string;

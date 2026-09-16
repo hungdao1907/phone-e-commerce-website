@@ -1,6 +1,7 @@
 import express from 'express';
 import { PrismaClient } from '@prisma/client';
 import { authenticateToken } from '../middleware/auth.middleware';
+import { getRouteParam } from '../utils/route-param';
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -54,7 +55,7 @@ router.put('/:id', authenticateToken, async (req, res) => {
     const { status, resolution } = req.body;
 
     const dispute = await prisma.dispute.update({
-      where: { id: req.params.id },
+      where: { id: getRouteParam(req.params.id) },
       data: { status, resolution }
     });
 

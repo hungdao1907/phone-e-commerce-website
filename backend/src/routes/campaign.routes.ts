@@ -1,6 +1,7 @@
 import express from 'express';
 import { PrismaClient } from '@prisma/client';
 import { authenticateToken } from '../middleware/auth.middleware';
+import { getRouteParam } from '../utils/route-param';
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -51,7 +52,7 @@ router.put('/:id', authenticateToken, async (req, res) => {
     const { name, description, discountType, discountValue, startDate, endDate, isActive, appliesTo, targetIds, bannerUrl } = req.body;
 
     const campaign = await prisma.campaign.update({
-      where: { id: req.params.id },
+      where: { id: getRouteParam(req.params.id) },
       data: {
         name,
         description,
@@ -77,7 +78,7 @@ router.put('/:id', authenticateToken, async (req, res) => {
 router.delete('/:id', authenticateToken, async (req, res) => {
   try {
     await prisma.campaign.delete({
-      where: { id: req.params.id }
+      where: { id: getRouteParam(req.params.id) }
     });
     res.json({ message: 'Xóa chiến dịch thành công' });
   } catch (error) {
