@@ -140,7 +140,10 @@ export function GlobalNav() {
       let filteredChildren = item.children.filter((c: any) => c.isActive);
       let title = 'THƯƠNG HIỆU / DÒNG MÁY';
 
-      if (prefix === 'laptop') {
+      if (prefix === 'phone') {
+        const excludedPhoneBrands = ['vivo', 'realme'];
+        filteredChildren = filteredChildren.filter((c: any) => !excludedPhoneBrands.includes(c.name.toLowerCase()));
+      } else if (prefix === 'laptop') {
         title = 'THƯƠNG HIỆU';
         const allowedLaptopBrands = ['MacBook', 'ASUS', 'Lenovo'];
         filteredChildren = filteredChildren.filter((c: any) => allowedLaptopBrands.includes(c.name));
