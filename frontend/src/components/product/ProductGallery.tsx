@@ -1,114 +1,119 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { Heart, Star, Scale, Settings, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useWishlistStore } from '../../store/useWishlistStore';
+import CardFanCarousel from '../ui/CardFanCarousel';
 
 interface ProductGalleryProps {
+  productId?: string;
   images: string[];
   productName: string;
 }
 
-export function ProductGallery({ images, productName }: ProductGalleryProps) {
+export function ProductGallery({ productId, images = [], productName }: ProductGalleryProps) {
   const shouldReduceMotion = useReducedMotion();
   const [selectedIndex, setSelectedIndex] = useState(0);
+
+  const { items: wishlistItems, toggleItem: toggleWishlist } = useWishlistStore();
+  const isFavorite = productId ? wishlistItems.includes(productId) : false;
 
   useEffect(() => {
     setSelectedIndex(0);
   }, [images]);
 
-  const selectedImage = images[selectedIndex] ?? images[0];
+  const displayImages = useMemo(() => {
+    return images.length > 0 && images.length < 5
+      ? Array(5).fill(images).flat().slice(0, Math.max(5, images.length * 2))
+      : images;
+  }, [images]);
+
+  const selectedImage = displayImages[selectedIndex] ?? displayImages[0];
 
   const handleNext = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setSelectedIndex((prev) => (prev + 1) % images.length);
+    setSelectedIndex((prev) => (prev + 1) % displayImages.length);
   };
 
   const handlePrev = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setSelectedIndex((prev) => (prev - 1 + images.length) % images.length);
+    setSelectedIndex((prev) => (prev - 1 + displayImages.length) % displayImages.length);
+  };
+
+  const scrollToSection = (id: string) => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
   };
 
   return (
     <section aria-label={'Hình ảnh ' + productName} className="w-full">
-      <div className="relative overflow-hidden rounded-[2rem] border border-neutral-200/80 bg-white shadow-sm flex items-center justify-center">
-        <div className="aspect-square w-full sm:aspect-[1.1/1] relative">
-          <AnimatePresence initial={false} mode="wait">
-            <motion.img
-              key={selectedImage}
-              src={selectedImage}
-              alt={productName + ' - góc nhìn ' + (selectedIndex + 1)}
-              className="h-full w-full object-contain p-6 sm:p-10"
-              initial={
-                shouldReduceMotion
-                  ? { opacity: 0 }
-                  : { opacity: 0, scale: 1.025 }
-              }
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: shouldReduceMotion ? 0.15 : 0.28 }}
-            />
-          </AnimatePresence>
+      <div className="relative pt-[64px] w-full">
 
-          {/* Navigation Arrows */}
-          {images.length > 1 && (
-            <>
-              <button
-                onClick={handlePrev}
-                className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/80 backdrop-blur border border-neutral-200 text-neutral-600 flex items-center justify-center hover:bg-white hover:text-black transition-colors shadow-sm focus-visible:outline-none"
-                aria-label="Ảnh trước"
-              >
-                <ChevronLeft className="w-5 h-5" />
-              </button>
-              <button
-                onClick={handleNext}
-                className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/80 backdrop-blur border border-neutral-200 text-neutral-600 flex items-center justify-center hover:bg-white hover:text-black transition-colors shadow-sm focus-visible:outline-none"
-                aria-label="Ảnh sau"
-              >
-                <ChevronRight className="w-5 h-5" />
-              </button>
-            </>
-          )}
+        {/* The Folder Tab */}
+        <div className="absolute top-0 right-0 w-[45%] h-[65px] bg-white border border-neutral-200 border-b-0 rounded-t-[1.5rem] z-10 pointer-events-none">
 
-          {/* Image Counter Badge */}
-          {images.length > 1 && (
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full bg-black/60 backdrop-blur px-3 py-1 text-xs font-medium text-white shadow-sm pointer-events-none">
-              {selectedIndex + 1} / {images.length}
+          {/* Concave Corner CSS for seamless connection */}
+          <div className="absolute bottom-0 -left-[24px] w-[24px] h-[24px] overflow-hidden pointer-events-none">
+            <div className="absolute -top-[24px] -left-[24px] w-[48px] h-[48px] rounded-full border border-neutral-200 shadow-[0_0_0_24px_white] bg-transparent"></div>
+          </div>
+        </div>
+
+        {/* Action Bar (Top Left) */}
+        <div className="absolute top-[20px] left-6 flex flex-wrap items-center justify-start gap-4 text-[13px] font-semibold text-neutral-600 z-20">
+          <button
+            onClick={() => productId && toggleWishlist(productId)}
+            className={`flex items-center gap-1.5 transition-colors ${isFavorite ? 'text-red-500' : 'hover:text-red-500'}`}
+          >
+            <Heart className={`w-4 h-4 ${isFavorite ? 'fill-current' : ''}`} />
+            Yêu thích
+          </button>
+          <div className="w-[1px] h-4 bg-neutral-200"></div>
+          <button className="flex items-center gap-1.5 hover:text-[#22c55e] transition-colors">
+            <Scale className="w-4 h-4" />
+            So sánh
+          </button>
+          <div className="w-[1px] h-4 bg-neutral-200 hidden sm:block"></div>
+          <button onClick={() => scrollToSection('product-specifications-title')} className="hidden sm:flex items-center gap-1.5 hover:text-[#22c55e] transition-colors">
+            <Settings className="w-4 h-4" />
+            Thông số kỹ thuật
+          </button>
+        </div>
+
+        {/* Main Box */}
+        <div className="border border-neutral-200 bg-white rounded-b-[2rem] rounded-tl-[2rem] rounded-tr-none p-6 sm:p-8 relative z-0">
+
+          {/* Main Image */}
+          <div className="relative overflow-hidden flex items-center justify-center pt-2 pb-2">
+            <div className="w-full max-w-[400px] sm:max-w-[400px] aspect-square relative mx-auto">
+              <AnimatePresence initial={false}>
+                <motion.img
+                  key={selectedImage}
+                  src={selectedImage}
+                  alt={productName + ' - góc nhìn ' + (selectedIndex + 1)}
+                  className="h-full w-full object-contain absolute inset-0"
+                  style={{ willChange: 'transform, opacity' }}
+                  fetchpriority="high"
+                  decoding="async"
+                  initial={
+                    shouldReduceMotion
+                      ? { opacity: 0 }
+                      : { opacity: 0, scale: 0.98 }
+                  }
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 1.02 }}
+                  transition={{ duration: 0.2, ease: "easeOut" }}
+                />
+              </AnimatePresence>
             </div>
-          )}
+          </div>
+
+          {/* Fan Carousel Navigation */}
+          <div className="w-full relative z-10 pt-4 mt-4 border-t border-neutral-100/50">
+            <CardFanCarousel images={displayImages} onIndexChange={(index) => setSelectedIndex(index)} />
+          </div>
         </div>
       </div>
-
-      {images.length > 1 ? (
-        <div
-          className="mt-4 flex items-center gap-3 overflow-x-auto pb-2 scrollbar-hide"
-          aria-label="Chọn ảnh sản phẩm"
-        >
-          {images.map((image, index) => {
-            const isSelected = index === selectedIndex;
-
-            return (
-              <button
-                key={image + index}
-                type="button"
-                aria-label={'Xem ảnh ' + (index + 1) + ' của ' + productName}
-                aria-pressed={isSelected}
-                onClick={() => setSelectedIndex(index)}
-                className={
-                  'relative h-16 w-16 shrink-0 overflow-hidden rounded-xl border bg-white p-1 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 ' +
-                  (isSelected
-                    ? 'border-blue-500 shadow-md ring-1 ring-blue-500'
-                    : 'border-neutral-200 hover:border-blue-300 opacity-70 hover:opacity-100')
-                }
-              >
-                <img
-                  src={image}
-                  alt=""
-                  className="h-full w-full object-contain"
-                />
-              </button>
-            );
-          })}
-        </div>
-      ) : null}
     </section>
   );
 }

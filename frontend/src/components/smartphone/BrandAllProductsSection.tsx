@@ -13,7 +13,7 @@ import {
   PhoneCall,
   RefreshCw,
 } from 'lucide-react';
-import { BrandProductCard } from '@/components/smartphone/BrandProductCard';
+import { BrandProductCard } from '@/components/product-cards/SmartphoneProductCard';
 import type { BrandConfig, BrandModel } from '@/types/smartphone';
 
 type BrandProductFilter = 'popular' | 'promotion' | 'price-asc' | 'price-desc';

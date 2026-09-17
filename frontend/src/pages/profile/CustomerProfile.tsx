@@ -1,14 +1,24 @@
 import React, { useEffect, useState } from 'react';
 import { useAuthStore } from '@/store/authStore';
+import { Heart, Ticket, Star, ShieldCheck } from 'lucide-react';
+import { AccountSidebar, TabId } from '@/components/profile/AccountSidebar';
+import { OverviewTab } from '@/components/profile/OverviewTab';
+import { InfoTab } from '@/components/profile/InfoTab';
+import { AddressTab } from '@/components/profile/AddressTab';
+import { OrdersTab } from '@/components/profile/OrdersTab';
+import { EmptyState } from '@/components/profile/EmptyState';
 
 export const CustomerProfile = () => {
   const { user, token } = useAuthStore();
+  const [activeTab, setActiveTab] = useState<TabId>('overview');
+  
+  // Profile state
   const [fullName, setFullName] = useState(user?.username || '');
   const [phone, setPhone] = useState('');
   const [address, setAddress] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [message, setMessage] = useState({ text: '', type: '' });
   const [isFetching, setIsFetching] = useState(true);
+  
+  // Orders state
   const [orders, setOrders] = useState<any[]>([]);
 
   const fetchOrders = async () => {
@@ -49,33 +59,31 @@ export const CustomerProfile = () => {
     }
   }, [token]);
 
-  const handleUpdate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setMessage({ text: '', type: '' });
+  const handleUpdateProfile = async (dataToUpdate: { fullName?: string; phone?: string; address?: string }) => {
+    const payload = {
+      fullName: dataToUpdate.fullName !== undefined ? dataToUpdate.fullName : fullName,
+      phone: dataToUpdate.phone !== undefined ? dataToUpdate.phone : phone,
+      address: dataToUpdate.address !== undefined ? dataToUpdate.address : address,
+    };
 
-    try {
-      const response = await fetch('http://localhost:3001/api/customers/profile', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ fullName, phone, address })
-      });
+    const response = await fetch('http://localhost:3001/api/customers/profile', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify(payload)
+    });
 
-      const data = await response.json();
+    const data = await response.json();
 
-      if (!response.ok) {
-        throw new Error(data.message || 'Cập nhật thất bại');
-      }
-
-      setMessage({ text: 'Cập nhật thông tin thành công!', type: 'success' });
-    } catch (error: any) {
-      setMessage({ text: error.message, type: 'error' });
-    } finally {
-      setIsLoading(false);
+    if (!response.ok) {
+      throw new Error(data.message || 'Cập nhật thất bại');
     }
+
+    if (dataToUpdate.fullName !== undefined) setFullName(dataToUpdate.fullName);
+    if (dataToUpdate.phone !== undefined) setPhone(dataToUpdate.phone);
+    if (dataToUpdate.address !== undefined) setAddress(dataToUpdate.address);
   };
 
   const handleCompleteOrder = async (id: string) => {
@@ -125,123 +133,112 @@ export const CustomerProfile = () => {
 
   if (isFetching) {
     return (
-      <div className="min-h-[70vh] flex items-center justify-center">
+      <div className="min-h-[70vh] flex items-center justify-center bg-neutral-50/50">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-[70vh] py-12 px-4 sm:px-6 lg:px-8 bg-neutral-50/50">
-      <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
-        
-        {/* Profile Form */}
-        <div className="md:col-span-1 bg-white p-8 rounded-2xl shadow-sm border border-neutral-200/60 h-fit">
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold tracking-tight text-neutral-900">Hồ Sơ</h1>
-            <p className="text-neutral-500 mt-2 text-sm">Cập nhật thông tin giao hàng.</p>
-          </div>
-
-          {message.text && (
-            <div className={`mb-6 p-4 rounded-xl text-sm ${message.type === 'success' ? 'bg-[#99e300]/10 text-[#5a8500] border border-[#99e300]/30' : 'bg-red-50 text-red-600 border border-red-100'}`}>
-              {message.text}
-            </div>
-          )}
-
-          <form onSubmit={handleUpdate} className="space-y-6">
-            <div>
-              <label className="block text-sm font-medium text-neutral-700 mb-2">Email</label>
-              <input type="text" disabled value={user?.username || ''} className="w-full h-11 px-4 bg-neutral-100 border border-neutral-200 rounded-xl text-sm text-neutral-500 cursor-not-allowed" />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-neutral-700 mb-2">Họ và tên</label>
-              <input type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} required className="w-full h-11 px-4 bg-white border border-neutral-200 rounded-xl text-sm text-neutral-900" />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-neutral-700 mb-2">Số điện thoại</label>
-              <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} className="w-full h-11 px-4 bg-white border border-neutral-200 rounded-xl text-sm text-neutral-900" />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-neutral-700 mb-2">Địa chỉ giao hàng</label>
-              <textarea value={address} onChange={(e) => setAddress(e.target.value)} rows={3} className="w-full p-4 bg-white border border-neutral-200 rounded-xl text-sm text-neutral-900 resize-none" />
-            </div>
-
-            <button type="submit" disabled={isLoading} className="w-full h-12 bg-black hover:bg-neutral-800 text-white font-medium rounded-xl text-sm transition-all shadow-md active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed">
-              {isLoading ? 'Đang lưu...' : 'Lưu Thay Đổi'}
-            </button>
-          </form>
+    <div className="min-h-screen bg-[#f8f9fc] py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-[1200px] mx-auto">
+        {/* Breadcrumb / Page Header */}
+        <div className="mb-8">
+          <nav className="flex text-sm text-neutral-500 mb-2">
+            <a href="/" className="hover:text-black">Trang chủ</a>
+            <span className="mx-2">/</span>
+            <span className="text-neutral-900 font-medium">Tài khoản</span>
+          </nav>
+          <h1 className="text-3xl font-bold tracking-tight text-neutral-900">Tài khoản của tôi</h1>
         </div>
 
-        {/* Order History */}
-        <div className="md:col-span-2 bg-white p-8 rounded-2xl shadow-sm border border-neutral-200/60">
-          <div className="mb-6 flex justify-between items-center border-b border-neutral-100 pb-4">
-            <h2 className="text-2xl font-bold tracking-tight text-neutral-900">Lịch sử đơn hàng</h2>
-            <span className="bg-neutral-100 text-neutral-600 px-3 py-1 rounded-full text-sm font-medium">{orders.length} đơn</span>
-          </div>
+        {/* Layout */}
+        <div className="flex flex-col md:flex-row gap-8">
+          {/* Sidebar */}
+          <AccountSidebar activeTab={activeTab} onChangeTab={setActiveTab} />
 
-          <div className="space-y-4">
-            {orders.length === 0 ? (
-              <p className="text-neutral-500 text-center py-10">Bạn chưa có đơn hàng nào.</p>
-            ) : (
-              orders.map((order) => (
-                <div key={order.id} className="border border-neutral-200 rounded-xl p-5 hover:border-neutral-300 transition-colors">
-                  <div className="flex justify-between items-start mb-4">
-                    <div>
-                      <span className="text-xs font-mono bg-neutral-100 text-neutral-600 px-2 py-1 rounded">{order.orderCode}</span>
-                      <p className="text-sm text-neutral-500 mt-2">Ngày đặt: {new Date(order.createdAt).toLocaleDateString('vi-VN')}</p>
-                    </div>
-                    <div className="text-right">
-                      <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider
-                        ${order.status === 'pending' ? 'bg-amber-100 text-amber-700' : 
-                          order.status === 'shipping' ? 'bg-blue-100 text-blue-700' : 
-                          order.status === 'delivered' ? 'bg-emerald-100 text-emerald-700' :
-                          order.status === 'completed' ? 'bg-green-100 text-green-700' : 'bg-neutral-100 text-neutral-700'}`}
-                      >
-                        {order.status === 'pending' ? 'Chờ xác nhận' : 
-                         order.status === 'shipping' ? 'Đang giao' : 
-                         order.status === 'delivered' ? 'Chờ nhận hàng' :
-                         order.status === 'completed' ? 'Hoàn thành' : order.status}
-                      </span>
-                      <p className="font-bold text-lg text-neutral-900 mt-2">{order.totalAmount.toLocaleString('vi-VN')}đ</p>
-                    </div>
-                  </div>
+          {/* Content Area */}
+          <div className="flex-1 min-w-0">
+            {activeTab === 'overview' && (
+              <OverviewTab orders={orders} onChangeTab={setActiveTab} />
+            )}
+            
+            {activeTab === 'info' && (
+              <InfoTab 
+                initialFullName={fullName} 
+                initialPhone={phone} 
+                onUpdate={handleUpdateProfile} 
+              />
+            )}
 
-                  <div className="space-y-2 border-t border-neutral-100 pt-4">
-                    {order.items.map((item: any) => (
-                      <div key={item.id} className="flex justify-between text-sm items-center">
-                        <span className="text-neutral-800 font-medium">{item.productName} <span className="text-neutral-500 font-normal">x{item.quantity}</span></span>
-                        <div className="flex items-center gap-3">
-                          <span className="text-neutral-600">{item.unitPrice.toLocaleString('vi-VN')}đ</span>
-                          {(order.status === 'completed' || order.status === 'delivered') && (
-                            <button onClick={() => handleReview(order.id, item.productId)} className="text-xs text-blue-600 hover:text-blue-800 bg-blue-50 px-2 py-1 rounded">Đánh giá</button>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+            {activeTab === 'address' && (
+              <AddressTab 
+                initialFullName={fullName} 
+                initialPhone={phone} 
+                initialAddress={address} 
+                onUpdate={handleUpdateProfile} 
+              />
+            )}
 
-                  {/* Actions */}
-                  <div className="mt-5 pt-4 flex justify-end gap-3 border-t border-neutral-100">
-                    <button onClick={() => handleDispute(order.id)} className="px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg transition-colors border border-red-200">
-                      Khiếu nại
-                    </button>
-                    {order.status === 'delivered' && (
-                      <button onClick={() => handleCompleteOrder(order.id)} className="px-4 py-2 text-sm font-bold bg-black text-white hover:bg-neutral-800 rounded-lg transition-colors">
-                        Đã nhận được hàng
-                      </button>
-                    )}
-                  </div>
-                </div>
-              ))
+            {activeTab === 'orders' && (
+              <OrdersTab 
+                orders={orders} 
+                onReview={handleReview} 
+                onDispute={handleDispute} 
+                onComplete={handleCompleteOrder} 
+              />
+            )}
+
+            {activeTab === 'wishlist' && (
+              <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <h2 className="text-xl font-bold text-neutral-900 mb-6">Sản phẩm yêu thích</h2>
+                <EmptyState 
+                  icon={Heart} 
+                  title="Chưa có sản phẩm yêu thích" 
+                  description="Bạn chưa lưu sản phẩm nào vào danh sách yêu thích. Khám phá ngay các sản phẩm nổi bật."
+                  actionLabel="Khám phá sản phẩm"
+                  onAction={() => window.location.href = '/'}
+                />
+              </div>
+            )}
+
+            {activeTab === 'voucher' && (
+              <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <h2 className="text-xl font-bold text-neutral-900 mb-6">Voucher của tôi</h2>
+                <EmptyState 
+                  icon={Ticket} 
+                  title="Chưa có voucher nào" 
+                  description="Bạn hiện không có mã giảm giá nào. Hãy thường xuyên kiểm tra để nhận các ưu đãi mới nhất."
+                />
+              </div>
+            )}
+
+            {activeTab === 'points' && (
+              <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <h2 className="text-xl font-bold text-neutral-900 mb-6">Điểm thưởng</h2>
+                <EmptyState 
+                  icon={Star} 
+                  title="Tính năng đang cập nhật" 
+                  description="Chương trình điểm thưởng khách hàng thân thiết đang được chúng tôi xây dựng và sẽ sớm ra mắt."
+                />
+              </div>
+            )}
+
+            {activeTab === 'security' && (
+              <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <h2 className="text-xl font-bold text-neutral-900 mb-6">Bảo mật</h2>
+                <EmptyState 
+                  icon={ShieldCheck} 
+                  title="Đổi mật khẩu" 
+                  description="Tính năng đổi mật khẩu nâng cao đang được bảo trì."
+                />
+              </div>
             )}
           </div>
         </div>
-
       </div>
     </div>
   );
 };
+
 

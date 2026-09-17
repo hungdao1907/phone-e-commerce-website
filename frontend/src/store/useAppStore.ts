@@ -4,10 +4,14 @@ interface AppState {
   mobileMenuOpen: boolean;
   setMobileMenuOpen: (open: boolean) => void;
   toggleMobileMenu: () => void;
+  cartDrawerOpen: boolean;
+  setCartDrawerOpen: (open: boolean) => void;
 }
 
 export const useAppStore = create<AppState>((set) => ({
   mobileMenuOpen: false,
   setMobileMenuOpen: (open) => set({ mobileMenuOpen: open }),
   toggleMobileMenu: () => set((state) => ({ mobileMenuOpen: !state.mobileMenuOpen })),
+  cartDrawerOpen: false,
+  setCartDrawerOpen: (open) => set({ cartDrawerOpen: open }),
 }));

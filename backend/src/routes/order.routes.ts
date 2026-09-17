@@ -61,7 +61,7 @@ router.get('/:id', authenticateToken, async (req, res) => {
 // POST create order
 router.post('/', authenticateToken, async (req, res) => {
   try {
-    const { customerId, items, paymentMethod, shippingAddress, shippingPhone, shippingFee, note, estimatedDelivery } = req.body;
+    const { customerId, items, paymentMethod, shippingAddress, shippingPhone, note, estimatedDelivery, promoCode } = req.body;
 
     if (!customerId || !Array.isArray(items) || items.length === 0) {
       return res.status(400).json({ message: 'Thiếu thông tin khách hàng hoặc sản phẩm' });
@@ -76,7 +76,7 @@ router.post('/', authenticateToken, async (req, res) => {
         }
       }
     });
-    const orderCode = `ORD-${dateStr}-${(count + 1).toString().padStart(3, '0')}`;
+    const orderCode = `DH${dateStr}${(count + 1).toString().padStart(3, '0')}`;
 
     let totalAmount = 0;
     const orderItemsData: PreparedOrderItem[] = [];
@@ -112,25 +112,89 @@ router.post('/', authenticateToken, async (req, res) => {
       });
     }
 
-    // Use transaction to create order and reduce stock
+    // Fetch reward milestones to calculate progress discount
+    const milestones = await prisma.rewardMilestone.findMany({ where: { isActive: true } });
+    const achievedMilestones = milestones.filter(m => totalAmount >= m.amount);
+    
+    // Reward discount (Voucher type)
+    const rewardDiscount = achievedMilestones
+      .filter(m => m.type === 'voucher' && m.discount)
+      .reduce((max, m) => Math.max(max, m.discount || 0), 0);
+
+    // Promo code discount
+    let promoDiscount = 0;
+    let promoCodeId = null;
+    if (promoCode) {
+      const promo = await prisma.promoCode.findUnique({ where: { code: promoCode } });
+      if (promo && promo.isActive && new Date() >= promo.startDate && new Date() <= promo.endDate && promo.usedCount < promo.usageLimit && totalAmount >= promo.minOrderValue) {
+        promoDiscount = promo.discountValue;
+        promoCodeId = promo.id;
+      }
+    }
+
+    const totalDiscountAmount = rewardDiscount + promoDiscount;
+    
+    // Shipping fee calculation
+    const isFreeShipping = achievedMilestones.some(m => m.type === 'shipping') || totalAmount >= 25000000;
+    const shippingFee = isFreeShipping || shippingAddress.includes('Nhận tại cửa hàng') ? 0 : 50000;
+
+    const finalTotal = Math.max(0, totalAmount - totalDiscountAmount) + shippingFee;
+    
+    const dbPaymentMethod = paymentMethod === 'BANK' || paymentMethod === 'BANK_TRANSFER' ? 'BANK_TRANSFER' : 'COD';
+    const initialStatus = dbPaymentMethod === 'BANK_TRANSFER' ? 'pending_payment' : 'confirmed';
+
+    // Use transaction to create order, payment (if bank), reduce stock, and update promo count
     const newOrder = await prisma.$transaction(async (tx) => {
       const order = await tx.order.create({
         data: {
           orderCode,
           customerId,
-          paymentMethod,
+          paymentMethod: dbPaymentMethod,
+          status: initialStatus,
           shippingAddress,
           shippingPhone,
-          shippingFee: shippingFee || 0,
-          totalAmount,
+          shippingFee,
+          totalAmount: finalTotal,
+          discountAmount: totalDiscountAmount,
+          promoCodeId: promoCodeId,
           note,
           estimatedDelivery: estimatedDelivery ? new Date(estimatedDelivery) : null,
           items: {
             create: orderItemsData
           }
         },
-        include: { items: true, customer: true }
+        include: { items: true, customer: true, Payment: true }
       });
+
+      // Create Payment and QR Data if BANK_TRANSFER
+      if (dbPaymentMethod === 'BANK_TRANSFER') {
+        const bankId = process.env.VIETQR_BANK_ID || 'MB';
+        const accountNo = process.env.VIETQR_ACCOUNT_NO || '0123456789';
+        const accountName = process.env.VIETQR_ACCOUNT_NAME || 'APPLEWEB';
+        const transferContent = `THANHTOAN ${orderCode}`;
+        
+        // Use VietQR Quick Link API
+        const qrUrl = `https://img.vietqr.io/image/${bankId}-${accountNo}-compact.png?amount=${finalTotal}&addInfo=${encodeURIComponent(transferContent)}&accountName=${encodeURIComponent(accountName)}`;
+
+        await tx.payment.create({
+          data: {
+            orderId: order.id,
+            method: 'BANK_TRANSFER',
+            amount: finalTotal,
+            status: 'PENDING',
+            transferContent,
+            qrData: qrUrl,
+            expiresAt: new Date(Date.now() + 15 * 60 * 1000) // 15 mins expiry
+          }
+        });
+        
+        // Re-fetch order with payment to return properly
+        const updatedOrder = await tx.order.findUnique({
+          where: { id: order.id },
+          include: { items: true, customer: true, Payment: true }
+        });
+        Object.assign(order, updatedOrder);
+      }
 
       // Reduce stock
       for (const item of orderItemsData) {
@@ -144,6 +208,14 @@ router.post('/', authenticateToken, async (req, res) => {
         });
       }
 
+      // Increment promo code used count
+      if (promoCodeId) {
+        await tx.promoCode.update({
+          where: { id: promoCodeId },
+          data: { usedCount: { increment: 1 } }
+        });
+      }
+
       return order;
     });
 
@@ -152,7 +224,14 @@ router.post('/', authenticateToken, async (req, res) => {
       sendOrderReceivedEmail(newOrder.customer.email, newOrder.customer.fullName, newOrder.orderCode).catch(console.error);
     }
 
-    res.status(201).json({ message: 'Tạo đơn hàng thành công', order: newOrder });
+    // Attach current VietQR config so frontend can display it
+    const paymentConfig = {
+      bankId: process.env.VIETQR_BANK_ID || 'MB',
+      accountNo: process.env.VIETQR_ACCOUNT_NO || '0123456789',
+      accountName: process.env.VIETQR_ACCOUNT_NAME || 'APPLEWEB'
+    };
+
+    res.status(201).json({ message: 'Tạo đơn hàng thành công', order: newOrder, paymentConfig });
   } catch (error) {
     console.error('Error creating order:', error);
     res.status(500).json({ message: 'Lỗi server' });

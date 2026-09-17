@@ -8,6 +8,19 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
+enum PaymentMethod {
+  COD
+  BANK_TRANSFER
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  EXPIRED
+  REFUNDED
+}
+
 model Plan {
   id            String   @id @default(uuid())
   title         String
@@ -107,28 +120,29 @@ model ProductVariant {
 }
 
 model Order {
-  id                String      @id @default(uuid())
-  orderCode         String      @unique
+  id                String    @id @default(uuid())
+  orderCode         String    @unique
   customerId        String
-  status            String      @default("pending")
-  paymentMethod     String      @default("COD")
-  paymentStatus     String      @default("PENDING")
+  customer          Customer  @relation(fields: [customerId], references: [id])
+  status            String    @default("pending") // pending, pending_payment, confirmed, shipping, delivered, completed, cancelled, returned
+  paymentMethod     String    @default("COD") // COD, BANK_TRANSFER
+  paymentStatus     String    @default("PENDING") // PENDING, PAID, REFUNDED
   shippingAddress   String
   shippingPhone     String
-  shippingFee       Int         @default(0)
+  shippingFee       Int       @default(0)
   totalAmount       Int
+  discountAmount    Int       @default(0)
+  promoCodeId       String?
   note              String?
   estimatedDelivery DateTime?
-  createdAt         DateTime    @default(now())
-  updatedAt         DateTime    @updatedAt
-  discountAmount    Int         @default(0)
-  promoCodeId       String?
-  Dispute           Dispute[]
-  Invoice           Invoice?
-  customer          Customer    @relation(fields: [customerId], references: [id])
-  items             OrderItem[]
-  Payment           Payment[]
-  Review            Review[]
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  Dispute Dispute[]
+  Invoice Invoice?
+  items   OrderItem[]
+  Payment Payment[]
+  Review  Review[]
 }
 
 model OrderItem {
@@ -187,6 +201,23 @@ model Invoice {
   order       Order    @relation(fields: [orderId], references: [id])
 }
 
+model Payment {
+  id              String        @id @default(uuid())
+  orderId         String
+  order           Order         @relation(fields: [orderId], references: [id])
+  method          PaymentMethod
+  amount          Int
+  status          PaymentStatus @default(PENDING)
+  transactionCode String?
+  transferContent String?
+  qrData          String?
+  expiresAt       DateTime?
+  paidAt          DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+}
+
+// ========== MARKETING & BANNER ==========
 model Campaign {
   id            String   @id @default(uuid())
   name          String
@@ -201,6 +232,21 @@ model Campaign {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
   bannerUrl     String?
+}
+
+model PromoCode {
+  id            String   @id @default(uuid())
+  code          String   @unique
+  discountType  String // percentage, fixed
+  discountValue Int
+  startDate     DateTime
+  endDate       DateTime
+  isActive      Boolean  @default(true)
+  usageLimit    Int      @default(0)
+  usedCount     Int      @default(0)
+  minOrderValue Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 }
 
 model Banner {
@@ -242,61 +288,6 @@ model LeadInteraction {
   Lead      Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
 }
 
-model Payment {
-  id              String        @id
-  orderId         String
-  method          PaymentMethod
-  amount          Int
-  status          PaymentStatus @default(PENDING)
-  transactionCode String?
-  transferContent String?
-  qrData          String?
-  expiresAt       DateTime?
-  paidAt          DateTime?
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime
-  Order           Order         @relation(fields: [orderId], references: [id])
-}
-
-model PromoCode {
-  id            String   @id
-  code          String   @unique
-  discountType  String
-  discountValue Int
-  startDate     DateTime
-  endDate       DateTime
-  isActive      Boolean  @default(true)
-  usageLimit    Int      @default(0)
-  usedCount     Int      @default(0)
-  minOrderValue Int      @default(0)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime
-}
-
-model RewardMilestone {
-  id        String   @id
-  amount    Int
-  label     String
-  type      String
-  discount  Int?
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime
-}
-
-enum PaymentMethod {
-  COD
-  BANK_TRANSFER
-}
-
-enum PaymentStatus {
-  PENDING
-  PAID
-  FAILED
-  EXPIRED
-  REFUNDED
-}
-
 model FooterSection {
   id            String  @id @default(uuid())
   type          String
@@ -327,4 +318,17 @@ model FooterLink {
   updatedAt DateTime @updatedAt
 
   @@index([sectionId, sortOrder])
+}
+
+// ========== GIỎ HÀNG & PHẦN THƯỞNG ==========
+
+model RewardMilestone {
+  id        String   @id @default(uuid())
+  amount    Int
+  label     String
+  type      String
+  discount  Int?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

@@ -21,6 +21,7 @@ import { CustomerManager } from '@/components/admin/views/CustomerManager';
 import { Search } from 'lucide-react';
 import notificationAnimation from '@/data/notification.json';
 import settingAnimation from '@/data/setting.json';
+import { SettingsManager } from '@/components/admin/views/SettingsManager';
 
 // Map view IDs to readable titles
 const VIEW_LABELS: Record<string, string> = {
@@ -114,7 +115,10 @@ export function DashboardLayout() {
             {/* Right Icons */}
             <div className="flex items-center gap-4">
               {/* Setting Icon */}
-              <button className="w-10 h-10 flex items-center justify-center rounded-2xl hover:bg-white/10 transition-colors">
+              <button 
+                onClick={() => setActiveView('settings')}
+                className="w-10 h-10 flex items-center justify-center rounded-2xl hover:bg-white/10 transition-colors"
+              >
                 <div className="w-7 h-7">
                   <LottieIcon animationData={settingAnimation} />
                 </div>
@@ -150,7 +154,7 @@ export function DashboardLayout() {
           </header>
 
           {/* Main Content Area */}
-          <main className="flex-1 bg-black/40 backdrop-blur-md border border-white/10 rounded-3xl shadow-lg overflow-hidden p-8 custom-scrollbar transform-gpu will-change-transform">
+          <main className="flex-1 bg-black/40 backdrop-blur-md border border-white/10 rounded-3xl shadow-lg overflow-y-auto p-8 custom-scrollbar transform-gpu will-change-transform">
             {activeView === 'dashboard' ? (
               <MainDashboardView />
             ) : activeView === 'user-staff' ? (
@@ -179,6 +183,8 @@ export function DashboardLayout() {
               <Disputes />
             ) : activeView === 'orders-invoices' ? (
               <Invoices />
+            ) : activeView === 'settings' ? (
+              <SettingsManager />
             ) : (
               <div className="flex flex-col gap-2">
                 <p className="text-white/40 text-sm">Đang xem</p>

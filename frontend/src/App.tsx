@@ -19,6 +19,10 @@ const SmartphonePage = lazy(() =>
 const LoginPage = lazy(() =>
   import('./pages/auth/LoginPage').then(({ LoginPage: Page }) => ({ default: Page })),
 );
+import { CheckoutPage } from './pages/checkout/CheckoutPage';
+import { PaymentPage } from './pages/checkout/PaymentPage';
+import { OrderSuccessPage } from './pages/checkout/OrderSuccessPage';
+import { OrderDetailPage } from './pages/order/OrderDetailPage';
 
 const WatchPage = lazy(() =>
   import('./pages/watch/WatchPage').then(({ WatchPage: Page }) => ({ default: Page })),
@@ -46,23 +50,13 @@ const ProductPurchasePage = lazy(() =>
   import('./pages/product/ProductPurchasePage').then((mod) => ({ default: mod.default || mod.ProductPurchasePage })),
 );
 
-const CartPage = lazy(() =>
-  import('./pages/cart/CartPage').then((mod) => ({ default: mod.default || mod.CartPage })),
-);
 
 const queryClient = new QueryClient();
 
-function MainLayout() {
-  return (
-    <div className="min-h-screen bg-[#f5f5f7] text-[#1d1d1f] font-sans antialiased selection:bg-blue-500 selection:text-white">
-      <GlobalNav />
-      <Outlet />
-      <Footer />
-    </div>
-  );
-}
+import { CartDrawer } from './components/cart/CartDrawer';
+import { FloatingCartButton } from './components/cart/FloatingCartButton';
 
-export default function App() {
+function MainLayout() {
   const isReducedMotion = useMemo(
     () => typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches,
     [],
@@ -82,9 +76,22 @@ export default function App() {
   );
 
   return (
+    <ReactLenis root options={lenisOptions}>
+      <div className="min-h-screen bg-[#f5f5f7] text-[#1d1d1f] font-sans antialiased selection:bg-blue-500 selection:text-white relative">
+        <GlobalNav />
+        <CartDrawer />
+        <FloatingCartButton />
+        <Outlet />
+        <Footer />
+      </div>
+    </ReactLenis>
+  );
+}
+
+export default function App() {
+  return (
     <QueryClientProvider client={queryClient}>
-      <ReactLenis root options={lenisOptions}>
-        <BrowserRouter>
+      <BrowserRouter>
           <Suspense
             fallback={(
               <div
@@ -121,7 +128,9 @@ export default function App() {
                 <Route path="/laptop/asus" element={<LaptopPage brand="asus" />} />
                 <Route path="/laptop/lenovo-6xfo" element={<LaptopPage brand="lenovo" />} />
                 <Route path="/product/:slug" element={<ProductPurchasePage />} />
-                <Route path="/cart" element={<CartPage />} />
+                <Route path="/checkout" element={<CheckoutPage />} />
+                <Route path="/checkout/payment" element={<PaymentPage />} />
+                <Route path="/order-success" element={<OrderSuccessPage />} />
 
                 {/* Legacy / Category Aliases & Redirects */}
                 <Route path="/iphone" element={<Navigate to="/phone/iphone" replace />} />
@@ -147,6 +156,7 @@ export default function App() {
                 {/* Customer Profile Route (Protected inside MainLayout) */}
                 <Route element={<ProtectedRoute allowedRoles={['customer']} />}>
                   <Route path="/profile" element={<CustomerProfile />} />
+                  <Route path="/profile/orders/:orderId" element={<OrderDetailPage />} />
                 </Route>
               </Route>
 
@@ -161,7 +171,6 @@ export default function App() {
             </Routes>
           </Suspense>
         </BrowserRouter>
-      </ReactLenis>
     </QueryClientProvider>
   );
 }

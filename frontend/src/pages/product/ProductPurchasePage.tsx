@@ -2,10 +2,12 @@ import { useEffect, useMemo, useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { ProductConfigurator, ProductGallery, ProductSpecifications, ProductDescription } from '@/components/product';
+import { CrossSellSection } from '@/components/product/CrossSellSection';
+import { ProductReviews } from '@/components/product/ProductReviews';
 import type { ProductVariant } from '@/types/product';
 import { useCartStore } from '../../store/useCartStore';
-
-
+import { useAppStore } from '../../store/useAppStore';
+import { SMARTPHONE_PRODUCTS } from '../smartphone/data/mockSmartphoneProducts';
 
 export function ProductPurchasePage() {
   const { slug } = useParams<{ slug: string }>();
@@ -14,14 +16,38 @@ export function ProductPurchasePage() {
   
   const navigate = useNavigate();
   const addCartItem = useCartStore((state) => state.addItem);
+  const { setCartDrawerOpen } = useAppStore();
 
   useEffect(() => {
     if (!slug) return;
     const fetchProduct = async () => {
       try {
-        const res = await fetch(`http://localhost:3001/api/products/${slug}`);
-        if (res.ok) {
-          const dbProduct = await res.json();
+        let dbProduct = null;
+        
+        // Check if slug is a UUID
+        const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slug);
+        
+        if (isUUID) {
+          const res = await fetch(`http://localhost:3001/api/products/${slug}`);
+          if (res.ok) dbProduct = await res.json();
+        } else {
+          // It's a mock product slug!
+          const mockProduct = SMARTPHONE_PRODUCTS.find(p => p.slug === slug || p.id === slug);
+          if (mockProduct) {
+            const res = await fetch(`http://localhost:3001/api/products/sync-mock`, {
+               method: 'POST',
+               headers: { 'Content-Type': 'application/json' },
+               body: JSON.stringify(mockProduct)
+            });
+            if (res.ok) dbProduct = await res.json();
+          } else {
+            // Try fetching by ID anyway just in case
+            const res = await fetch(`http://localhost:3001/api/products/${slug}`);
+            if (res.ok) dbProduct = await res.json();
+          }
+        }
+
+        if (dbProduct) {
           
           const uniqueColors = new Map();
           dbProduct.variants?.forEach((v: any) => {
@@ -182,20 +208,32 @@ export function ProductPurchasePage() {
       quantity,
     });
 
-    navigate(action === 'buy-now' ? '/cart?checkout=1' : '/cart');
+    if (action === 'buy-now') {
+      navigate('/checkout');
+    } else {
+      setCartDrawerOpen(true);
+    }
   };
+
+  if (loading) {
+    return (
+      <main className="min-h-screen bg-white flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-neutral-200 border-t-[#22c55e] rounded-full animate-spin"></div>
+      </main>
+    );
+  }
 
   if (!product) {
     return (
       <main className="product-purchase-page min-h-[100svh] bg-white px-4 pb-20 pt-28 text-neutral-950 sm:px-6">
         <section className="mx-auto max-w-xl rounded-3xl border border-neutral-200 bg-[#f6f7f9] p-8 text-center sm:p-12">
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-neutral-500">Samsung</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-neutral-500">AppleWeb</p>
           <h1 className="mt-4 text-3xl font-bold tracking-tight">Sản phẩm chưa khả dụng</h1>
           <p className="mt-3 text-neutral-600">
             Sản phẩm này chưa có dữ liệu cấu hình để mua trực tuyến.
           </p>
           <Link
-            to={catalogHref}
+            to="/"
             className="mt-7 inline-flex items-center gap-2 rounded-full bg-neutral-950 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-black"
           >
             <ArrowLeft className="h-4 w-4" />
@@ -208,6 +246,20 @@ export function ProductPurchasePage() {
 
   const maxQuantity = Math.max(1, Math.min(selectedVariant?.stock ?? 1, 5));
 
+  // Helper to map DB slugs to frontend routes
+  const getMappedSlug = (slug?: string) => {
+    if (!slug) return '';
+    const normalized = slug.toLowerCase();
+    if (normalized === 'dien-thoai' || normalized === 'ien-thoai') return 'phone';
+    if (normalized === 'may-tinh-bang') return 'tablet';
+    if (normalized === 'dong-ho') return 'watch';
+    if (normalized === 'macbook' || normalized === 'mac') return 'laptop';
+    return normalized;
+  };
+
+  const parentSlug = getMappedSlug(product.parentCategorySlug);
+  const childSlug = getMappedSlug(product.categorySlug);
+
   return (
     <main className="product-purchase-page min-h-screen bg-neutral-50/50 pb-20 pt-6 text-neutral-950 sm:pt-8">
       <div className="mx-auto w-full max-w-[1300px] px-4 sm:px-6 lg:px-8">
@@ -218,13 +270,18 @@ export function ProductPurchasePage() {
           {product.parentCategoryName && (
             <>
               <span className="text-neutral-300">/</span>
-              <Link to={`/${product.parentCategorySlug}`} className="hover:text-[#22c55e] transition-colors">{product.parentCategoryName}</Link>
+              {/* No generic parent category page, so we just show it as text */}
+              <span className="text-neutral-500">{product.parentCategoryName}</span>
             </>
           )}
           {product.categoryName && (
             <>
               <span className="text-neutral-300">/</span>
-              <Link to={`/${product.categorySlug}`} className="hover:text-[#22c55e] transition-colors">{product.categoryName}</Link>
+              {parentSlug ? (
+                <Link to={`/${parentSlug}/${childSlug}`} className="hover:text-[#22c55e] transition-colors">{product.categoryName}</Link>
+              ) : (
+                <span className="text-neutral-500">{product.categoryName}</span>
+              )}
             </>
           )}
           <span className="text-neutral-300">/</span>
@@ -236,6 +293,7 @@ export function ProductPurchasePage() {
           {/* LEFT COLUMN: Gallery & Details */}
           <div className="min-w-0 flex flex-col gap-8">
             <ProductGallery
+              productId={product.id}
               images={galleryImages}
               productName={product.name}
             />
@@ -268,23 +326,10 @@ export function ProductPurchasePage() {
         </div>
         
         {/* FULL WIDTH SECTIONS */}
-        <div className="flex flex-col gap-8 w-full mx-auto">
-
-          {/* DEMO Sections */}
-          <section className="rounded-3xl border border-neutral-200 bg-white p-6 sm:p-8 lg:p-10 shadow-sm">
-            <h2 className="text-xl font-bold text-neutral-900 mb-4 uppercase">Đánh giá sản phẩm</h2>
-            <div className="text-center py-10 bg-neutral-50 rounded-2xl border border-neutral-100">
-              <p className="text-neutral-500 font-medium">Chưa có đánh giá nào.</p>
-              <button className="mt-4 rounded-full bg-neutral-900 text-white px-6 py-2 text-sm font-medium hover:bg-black">Viết đánh giá</button>
-            </div>
-          </section>
+        <div className="flex flex-col gap-8 w-full mx-auto mt-4">
           
-          <section className="rounded-3xl border border-neutral-200 bg-white p-6 sm:p-8 lg:p-10 shadow-sm">
-            <h2 className="text-xl font-bold text-neutral-900 mb-4 uppercase">Hỏi đáp</h2>
-            <div className="text-center py-10 bg-neutral-50 rounded-2xl border border-neutral-100">
-              <p className="text-neutral-500 font-medium">Hãy là người đầu tiên đặt câu hỏi về sản phẩm này.</p>
-            </div>
-          </section>
+          {/* Reviews Section */}
+          <ProductReviews />
           
           {/* Related Products Demo */}
           <section className="rounded-3xl border border-neutral-200 bg-white p-6 sm:p-8 lg:p-10 shadow-sm">

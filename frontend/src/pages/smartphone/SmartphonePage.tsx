@@ -57,12 +57,17 @@ export function SmartphonePage({ brand }: SmartphonePageProps) {
               // 3. Deduplicate colors
               const colorMap = new Map();
               ap.variants?.forEach((v: any) => {
-                const cName = v.attributes?.['Màu sắc'] || v.color;
-                if (cName && !colorMap.has(cName)) {
-                  colorMap.set(cName, {
-                    name: cName,
-                    hex: v.colorCode || (cName.toLowerCase().includes('đen') || cName.toLowerCase().includes('black') ? '#1c1c1e' : '#e5e7eb'),
-                  });
+                const cName = v.attributes?.['Màu sắc'];
+                if (cName) {
+                  if (!colorMap.has(cName)) {
+                    colorMap.set(cName, {
+                      name: cName,
+                      hex: v.colorCode || (cName.toLowerCase().includes('đen') || cName.toLowerCase().includes('black') ? '#000000' : '#FFFFFF'),
+                      image: v.image || undefined
+                    });
+                  } else if (v.image && !colorMap.get(cName).image) {
+                    colorMap.get(cName).image = v.image;
+                  }
                 }
               });
               const colors = Array.from(colorMap.values());
@@ -92,7 +97,7 @@ export function SmartphonePage({ brand }: SmartphonePageProps) {
                 brand: brand,
                 name: ap.name,
                 series: series,
-                tagline: ap.tagline || (nameLower.includes('pro') || nameLower.includes('ultra') ? 'Siêu phẩm flagship đỉnh cao' : 'Trải nghiệm mượt mà mỗi ngày'),
+                tagline: '',
                 description: ap.description || 'Sản phẩm chính hãng với công nghệ tiên tiến nhất.',
                 price: finalPrice.toLocaleString('vi-VN') + '₫',
                 originalPrice: originalPrice,
