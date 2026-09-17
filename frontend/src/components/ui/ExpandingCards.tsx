@@ -14,6 +14,7 @@ export interface CategoryCardItem {
   imageClassName?: string;
   accent?: string;
   glow?: string;
+  renderLogo?: (isActive: boolean) => ReactNode;
   renderVisual?: (isActive: boolean) => ReactNode;
 }
 
@@ -39,9 +40,9 @@ export function ExpandingCards({
 
   return (
     <div
-      className={`expanding-cards-container flex flex-col md:flex-row gap-3 sm:gap-3.5 lg:gap-4 w-full md:h-[540px] lg:h-[600px] xl:h-[640px] select-none ${className}`}
+      className={`expanding-cards-container flex flex-col md:flex-row gap-3 sm:gap-3.5 lg:gap-4 w-full md:h-[520px] lg:h-[560px] xl:h-[590px] select-none ${className}`}
       role="tablist"
-      aria-label="Danh mục sản phẩm công nghệ"
+      aria-label="Danh mục công nghệ"
     >
       {items.map((item, index) => {
         const isActive = activeIndex === index;
@@ -69,47 +70,24 @@ export function ExpandingCards({
               aria-hidden="true"
             />
 
-            {/* ═══ LAYER 2: Category Tint (radial, very subtle) ═══ */}
+            {/* ═══ LAYER 2: Category Tint (radial, subtle) ═══ */}
             <div
               className="category-liquid-tint absolute inset-0 rounded-[inherit] pointer-events-none"
               style={{
                 background: item.accent
-                  ? `radial-gradient(ellipse 92% 68% at 46% 18%, ${item.accent}14 0%, transparent 66%)`
-                  : 'radial-gradient(ellipse 92% 68% at 46% 18%, rgba(255,255,255,0.025) 0%, transparent 66%)',
+                  ? `radial-gradient(ellipse 90% 70% at 30% 25%, ${item.accent}1c 0%, transparent 68%)`
+                  : 'radial-gradient(ellipse 90% 70% at 30% 25%, rgba(255,255,255,0.03) 0%, transparent 68%)',
               }}
               aria-hidden="true"
             />
 
-            {/* ═══ LAYER 3: Visual Container ═══ */}
-            <div
-              className="absolute inset-0 flex items-center justify-center p-6 sm:p-8 lg:p-10 pointer-events-none overflow-hidden"
-              aria-hidden="true"
-            >
-              {item.imageSrc ? (
-                <img
-                  src={item.imageSrc}
-                  alt=""
-                  loading={index === 0 ? 'eager' : 'lazy'}
-                  decoding="async"
-                  draggable={false}
-                  className={`w-full h-full object-contain transition-all duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] ${item.imageClassName || ''} ${
-                    isActive
-                      ? 'scale-100 sm:scale-105 -translate-y-4 opacity-100 filter-none'
-                      : 'scale-90 translate-y-0 opacity-60 grayscale-[30%]'
-                  }`}
-                />
-              ) : item.renderVisual ? (
-                item.renderVisual(isActive)
-              ) : null}
-            </div>
-
-            {/* ═══ LAYER 4: Specular Highlight (top-left oval) ═══ */}
+            {/* ═══ LAYER 3: Specular Highlight ═══ */}
             <div
               className="category-liquid-specular absolute inset-0 pointer-events-none rounded-[inherit]"
               aria-hidden="true"
             />
 
-            {/* ═══ LAYER 5: Restrained surface glint ═══ */}
+            {/* ═══ LAYER 4: Restrained surface glint ═══ */}
             <div
               className="category-liquid-surface-glint absolute inset-0 pointer-events-none rounded-[inherit] overflow-hidden"
               aria-hidden="true"
@@ -117,82 +95,119 @@ export function ExpandingCards({
               <span className="category-liquid-surface-glint__line" />
             </div>
 
-            {/* ═══ LAYER 6: Content Scrim (localized bottom gradient for readability) ═══ */}
+            {/* ═══ LAYER 5: Content Scrim ═══ */}
             <div
               className="category-liquid-content-scrim absolute inset-0 pointer-events-none rounded-[inherit]"
               aria-hidden="true"
             />
 
-            {/* ═══ LAYER 7: Edge Refraction (::before + ::after via CSS) ═══ */}
-            {/* Handled in CSS .category-liquid-card::before and ::after */}
+            {/* ═══ LAYER 6: Brand Logo (Stays in Center and Scales Up when Active) ═══ */}
+            <div
+              className={`absolute z-20 pointer-events-none transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+                isActive
+                  ? 'top-[34%] sm:top-[36%] lg:top-[38%] left-1/2 -translate-x-1/2 -translate-y-1/2 scale-[1.7] sm:scale-[2.0] lg:scale-[2.2] origin-center'
+                  : 'top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 scale-100 origin-center'
+              }`}
+              aria-hidden="true"
+            >
+              {item.renderLogo ? (
+                item.renderLogo(isActive)
+              ) : item.imageSrc ? (
+                <img
+                  src={item.imageSrc}
+                  alt=""
+                  loading={index === 0 ? 'eager' : 'lazy'}
+                  decoding="async"
+                  draggable={false}
+                  className={`transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] object-contain ${
+                    item.imageClassName || 'h-8 sm:h-9 max-w-[120px]'
+                  } ${
+                    isActive
+                      ? 'opacity-100 filter-none'
+                      : 'opacity-70 grayscale-[20%]'
+                  }`}
+                />
+              ) : null}
+            </div>
 
-            {/* ═══ LAYER 8: Content Overlay ═══ */}
-            <div className="relative z-10 w-full h-full p-4 sm:p-5 lg:p-6 flex flex-col justify-between pointer-events-none">
-              {/* Top Bar: Eyebrow */}
-              <div className="flex items-center justify-end w-full">
+            {/* ═══ LAYER 7: Inactive Card Label (Centered at bottom of collapsed card) ═══ */}
+            <div
+              className={`absolute bottom-4 sm:bottom-5 inset-x-0 text-center px-2 pointer-events-none transition-all duration-400 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+                isActive
+                  ? 'opacity-0 translate-y-2 pointer-events-none'
+                  : 'opacity-90 translate-y-0'
+              }`}
+              aria-hidden={isActive}
+            >
+              <span className="category-card-luminous-subtext text-xs sm:text-[13px] font-medium tracking-wide truncate block max-w-full">
+                {item.title}
+              </span>
+            </div>
+
+            {/* ═══ LAYER 8: Active Editorial Content (Eyebrow -> Title -> Description -> CTA) ═══ */}
+            <div
+              id={`category-panel-${item.id}`}
+              className={`relative z-10 w-full h-full p-5 sm:p-6 lg:p-7 flex flex-col justify-end pointer-events-none transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+                isActive
+                  ? 'opacity-100 translate-y-0'
+                  : 'opacity-0 translate-y-3 pointer-events-none'
+              }`}
+            >
+              <div className="max-w-[480px]">
+                {/* Eyebrow */}
                 {item.eyebrow && (
                   <span
-                    className={`text-[0.62rem] sm:text-[0.68rem] tracking-[0.18em] font-medium transition-opacity duration-500 uppercase ${
-                      isActive ? 'opacity-75 text-white/70' : 'opacity-0 md:opacity-0'
+                    className={`category-card-luminous-eyebrow inline-block text-[10px] sm:text-[11px] font-semibold tracking-[0.2em] uppercase mb-1.5 transition-all duration-500 delay-75 ${
+                      isActive ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'
                     }`}
                   >
                     {item.eyebrow}
                   </span>
                 )}
-              </div>
 
-              {/* Bottom Editorial Content */}
-              <div className="w-full">
+                {/* Title */}
                 <h3
-                  className={`font-semibold text-white tracking-[-0.02em] transition-all duration-500 whitespace-nowrap ${
-                    isActive
-                      ? 'text-xl sm:text-2xl lg:text-3xl'
-                      : 'text-base sm:text-lg lg:text-xl text-white/80'
+                  className={`category-card-luminous-title font-bold tracking-[-0.02em] text-xl sm:text-2xl lg:text-3xl mb-2 sm:mb-2.5 transition-all duration-500 delay-100 ${
+                    isActive ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'
                   }`}
                 >
                   {item.title}
                 </h3>
 
-                {/* Expanded Description */}
-                <div
-                  className={`overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${
-                    isActive
-                      ? 'max-h-24 opacity-100 mt-2 sm:mt-2.5'
-                      : 'max-h-0 opacity-0 mt-0'
+                {/* Story Description (2-4 lines) */}
+                <p
+                  className={`category-card-luminous-subtext text-xs sm:text-sm lg:text-[14.5px] font-normal leading-relaxed mb-3.5 sm:mb-4 transition-all duration-500 delay-150 ${
+                    isActive ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'
                   }`}
                 >
-                  <p className="text-xs sm:text-sm lg:text-base text-[#a1a1a6] leading-relaxed max-w-[380px]">
-                    {item.description}
-                  </p>
-                </div>
+                  {item.description}
+                </p>
 
-                {/* Expanded CTA */}
+                {/* CTA Link / Button */}
                 <div
-                  className={`overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${
-                    isActive
-                      ? 'max-h-16 opacity-100 mt-3.5 sm:mt-4 pointer-events-auto'
-                      : 'max-h-0 opacity-0 mt-0 pointer-events-none'
+                  className={`transition-all duration-500 delay-200 ${
+                    isActive ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 translate-y-2 pointer-events-none'
                   }`}
                 >
                   {item.href ? (
                     <Link
                       to={item.href}
-                      className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-medium text-white hover:text-blue-400 transition-colors group/cta py-1"
+                      className="category-card-luminous-cta inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold transition-all group/cta py-1 focus-visible:outline-none focus-visible:underline"
                       onClick={(e) => e.stopPropagation()}
                       aria-label={`${item.ctaText || 'Khám phá'} ${item.title}`}
                     >
                       <span>{item.ctaText || 'Khám phá'}</span>
                       <ArrowRight
-                        size={15}
+                        size={14}
                         className="transition-transform duration-300 group-hover/cta:translate-x-1"
                         aria-hidden="true"
                       />
                     </Link>
                   ) : (
-                    <span className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-medium text-white/90 group/cta py-1">
+                    <span className="category-card-luminous-cta inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold group/cta py-1">
                       <span>{item.ctaText || 'Khám phá'}</span>
                       <ArrowRight
-                        size={15}
+                        size={14}
                         className="transition-transform duration-300 group-hover/cta:translate-x-1"
                         aria-hidden="true"
                       />

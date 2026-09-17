@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { useReducedMotion } from 'motion/react';
+import { useReducedMotion, useScroll } from 'motion/react';
 import { CinematicVideoSection } from './CinematicVideoSection';
 import { HeroSection } from './HeroSection';
 
@@ -14,7 +14,7 @@ import { HeroSection } from './HeroSection';
  *   1. Hello reveal — ~46% scroll progress (one-shot SVG trigger)
  *
  * Hero is ALWAYS rendered naturally in the background — zero JS visibility toggles,
- * eliminating all black flashes / observer latency during high-speed scrolling.
+ * eliminating all flashes / observer latency during high-speed scrolling.
  */
 
 export function HeroCinematicTransition() {
@@ -22,6 +22,12 @@ export function HeroCinematicTransition() {
   const helloSentinelRef = useRef<HTMLDivElement>(null);
   const [helloReady, setHelloReady] = useState(false);
   const shouldReduceMotion = useReducedMotion() === true;
+
+  // Track scroll progress along the 200svh transition container
+  const { scrollYProgress } = useScroll({
+    target: transitionRef,
+    offset: ['start start', 'end end'],
+  });
 
   // Immediate check for reduced motion or already-scrolled state
   useEffect(() => {
@@ -52,7 +58,7 @@ export function HeroCinematicTransition() {
   return (
     <section
       ref={transitionRef}
-      className="hero-cinematic-transition relative -mt-[44px] h-[200svh] bg-black"
+      className="hero-cinematic-transition relative -mt-[44px] h-[200svh] bg-[#F7F7F5]"
       aria-label="Chuyển cảnh từ giới thiệu sang phim thương hiệu"
     >
       {/* Sentinel: Hello reveal — positioned at ~46% of the 200svh track */}
@@ -62,18 +68,18 @@ export function HeroCinematicTransition() {
         aria-hidden="true"
       />
 
-      {/* 1. HERO STAGE — Stable Sticky Background Layer (always active & rendered, zero observer latency) */}
+      {/* 1. HERO STAGE — Stable Sticky Background Layer (Floating Product Gallery Hero) */}
       <div
-        className="hero-cinematic-transition__hero-stage sticky top-0 z-0 h-[100svh] overflow-hidden bg-black"
+        className="hero-cinematic-transition__hero-stage sticky top-0 z-0 h-[100svh] overflow-hidden bg-[#F7F7F5]"
       >
         <div className="absolute inset-0 pt-[44px]">
-          <HeroSection />
+          <HeroSection scrollYProgress={scrollYProgress} />
         </div>
       </div>
 
       {/* 2. CINEMATIC STAGE — Foreground Curtain Layer that naturally covers the Hero */}
       <div
-        className="hero-cinematic-transition__cinematic-stage relative z-20 min-h-[100svh] overflow-hidden rounded-t-[24px] sm:rounded-t-[32px] lg:rounded-t-[40px] bg-[#0b0f12]"
+        className="hero-cinematic-transition__cinematic-stage relative z-20 min-h-[100svh] overflow-hidden rounded-t-[28px] sm:rounded-t-[36px] lg:rounded-t-[44px] bg-[#0b0f12] shadow-[0_-24px_50px_-10px_rgba(0,0,0,0.35)]"
       >
         <CinematicVideoSection
           id="home-experience"
