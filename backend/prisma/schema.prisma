@@ -33,156 +33,150 @@ model Customer {
   id        String    @id @default(uuid())
   fullName  String
   email     String    @unique
-  password  String
   phone     String?
   address   String?
-  verified  Boolean   @default(false)
-  otp       String?
-  otpExpiry DateTime?
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
+  otp       String?
+  otpExpiry DateTime?
+  password  String
+  verified  Boolean   @default(false)
+  Dispute   Dispute[]
   Order     Order[]
   Review    Review[]
-  Dispute   Dispute[]
 }
-
-// ========== DANH MỤC & THUỘC TÍNH ==========
 
 model Category {
   id         String              @id @default(uuid())
   name       String
   slug       String              @unique
-  icon       String? // icon type: smartphone, tablet, headphones, etc.
+  icon       String?
   parentId   String?
-  parent     Category?           @relation("CategoryTree", fields: [parentId], references: [id])
-  children   Category[]          @relation("CategoryTree")
   isActive   Boolean             @default(true)
   sortOrder  Int                 @default(0)
-  attributes CategoryAttribute[]
-  products   Product[]
   createdAt  DateTime            @default(now())
   updatedAt  DateTime            @updatedAt
+  parent     Category?           @relation("CategoryTree", fields: [parentId], references: [id])
+  children   Category[]          @relation("CategoryTree")
+  attributes CategoryAttribute[]
+  products   Product[]
 }
 
 model CategoryAttribute {
   id         String   @id @default(uuid())
-  name       String // e.g. "Màu sắc", "Dung lượng"
-  values     String[] // e.g. ["Đen Titan", "Trắng Titan", "256GB", "512GB"]
-  colorCodes String[] // hex codes parallel to values, e.g. ["#1f1f1f", "#f5f5f0"]
+  name       String
+  values     String[]
+  colorCodes String[]
   categoryId String
-  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   sortOrder  Int      @default(0)
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
 }
-
-// ========== SẢN PHẨM & BIẾN THỂ ==========
 
 model Product {
   id             String           @id @default(uuid())
   name           String
-  description    String?
-  brand          String?          // Thương hiệu (Apple, Samsung...)
-  image          String?          // ảnh đại diện chính (cover)
-  images         String[]         // thư viện ảnh phụ (gallery)
-  categoryId     String?
-  category       Category?        @relation(fields: [categoryId], references: [id])
-  status         String           @default("active") // draft, active, inactive, discontinued
-  specifications Json?            // Thông số kỹ thuật (RAM, Pin, Màn hình...)
-  variants       ProductVariant[]
+  status         String           @default("active")
+  image          String?
   createdAt      DateTime         @default(now())
   updatedAt      DateTime         @updatedAt
+  categoryId     String?
+  description    String?
+  specifications Json?
+  brand          String?
+  images         String[]
+  category       Category?        @relation(fields: [categoryId], references: [id])
+  variants       ProductVariant[]
 }
 
 model ProductVariant {
   id         String      @id @default(uuid())
   sku        String      @unique
   price      Int
-  salePrice  Int?        // giá sau khi giảm
   stock      Int         @default(0)
-  attributes Json // e.g. {"Màu sắc": "Đen Titan", "Dung lượng": "256GB"}
-  colorCode  String? // hex color for UI display, e.g. "#1f1f1f"
-  image      String? // ảnh riêng cho biến thể
+  attributes Json
+  colorCode  String?
+  image      String?
   productId  String
-  product    Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
   createdAt  DateTime    @default(now())
   updatedAt  DateTime    @updatedAt
+  salePrice  Int?
   OrderItem  OrderItem[]
+  product    Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
 }
-
-// ========== ĐƠN HÀNG ==========
 
 model Order {
   id                String      @id @default(uuid())
   orderCode         String      @unique
   customerId        String
-  customer          Customer    @relation(fields: [customerId], references: [id])
-  status            String      @default("pending") // pending, confirmed, shipping, delivered, completed, cancelled, returned
-  paymentMethod     String      @default("cod") // cod, bank_transfer, momo
-  paymentStatus     String      @default("unpaid") // unpaid, paid, refunded
+  status            String      @default("pending")
+  paymentMethod     String      @default("COD")
+  paymentStatus     String      @default("PENDING")
   shippingAddress   String
   shippingPhone     String
   shippingFee       Int         @default(0)
   totalAmount       Int
   note              String?
   estimatedDelivery DateTime?
-  items             OrderItem[]
   createdAt         DateTime    @default(now())
   updatedAt         DateTime    @updatedAt
-  Review            Review[]
+  discountAmount    Int         @default(0)
+  promoCodeId       String?
   Dispute           Dispute[]
   Invoice           Invoice?
+  customer          Customer    @relation(fields: [customerId], references: [id])
+  items             OrderItem[]
+  Payment           Payment[]
+  Review            Review[]
 }
 
 model OrderItem {
   id          String         @id @default(uuid())
   orderId     String
-  order       Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
   variantId   String
-  variant     ProductVariant @relation(fields: [variantId], references: [id])
   productName String
   variantInfo String
   quantity    Int
   unitPrice   Int
   createdAt   DateTime       @default(now())
   updatedAt   DateTime       @updatedAt
+  order       Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  variant     ProductVariant @relation(fields: [variantId], references: [id])
 }
-
-// ========== ĐÁNH GIÁ, KHIẾU NẠI & HÓA ĐƠN ==========
 
 model Review {
   id         String   @id @default(uuid())
   orderId    String
-  order      Order    @relation(fields: [orderId], references: [id])
   customerId String
-  customer   Customer @relation(fields: [customerId], references: [id])
   rating     Int
   comment    String?
   images     String[]
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
+  customer   Customer @relation(fields: [customerId], references: [id])
+  order      Order    @relation(fields: [orderId], references: [id])
 }
 
 model Dispute {
   id          String   @id @default(uuid())
   orderId     String
-  order       Order    @relation(fields: [orderId], references: [id])
   customerId  String
-  customer    Customer @relation(fields: [customerId], references: [id])
   reason      String
   description String
   images      String[]
-  status      String   @default("open") // open, processing, resolved, rejected
+  status      String   @default("open")
   resolution  String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  customer    Customer @relation(fields: [customerId], references: [id])
+  order       Order    @relation(fields: [orderId], references: [id])
 }
 
 model Invoice {
   id          String   @id @default(uuid())
   invoiceCode String   @unique
   orderId     String   @unique
-  order       Order    @relation(fields: [orderId], references: [id])
   subtotal    Int
   shippingFee Int
   tax         Int      @default(0)
@@ -190,36 +184,147 @@ model Invoice {
   issuedAt    DateTime @default(now())
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  order       Order    @relation(fields: [orderId], references: [id])
 }
-
-// ========== MARKETING & BANNER ==========
 
 model Campaign {
   id            String   @id @default(uuid())
   name          String
   description   String?
-  discountType  String   // percentage, fixed
+  discountType  String
   discountValue Int
   startDate     DateTime
   endDate       DateTime
   isActive      Boolean  @default(true)
-  appliesTo     String   // all, category, product
-  targetIds     String[] // list of category or product ids
-  bannerUrl     String?  // URL of the campaign banner image
+  appliesTo     String
+  targetIds     String[]
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+  bannerUrl     String?
 }
 
 model Banner {
-  id          String    @id @default(uuid())
-  title       String
-  image       String
-  link        String?
-  position    String    // homepage, category, popup
-  sortOrder   Int       @default(0)
-  isActive    Boolean   @default(true)
-  startDate   DateTime?
-  endDate     DateTime?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id        String    @id @default(uuid())
+  title     String
+  image     String
+  link      String?
+  position  String
+  sortOrder Int       @default(0)
+  isActive  Boolean   @default(true)
+  startDate DateTime?
+  endDate   DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Lead {
+  id              String            @id
+  fullName        String
+  email           String?
+  phone           String?
+  source          String            @default("Website")
+  status          String            @default("new")
+  leadScore       Int               @default(0)
+  interestedIn    String?
+  assignedTo      String?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime
+  LeadInteraction LeadInteraction[]
+}
+
+model LeadInteraction {
+  id        String   @id
+  leadId    String
+  type      String
+  content   String
+  createdBy String?
+  createdAt DateTime @default(now())
+  Lead      Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+}
+
+model Payment {
+  id              String        @id
+  orderId         String
+  method          PaymentMethod
+  amount          Int
+  status          PaymentStatus @default(PENDING)
+  transactionCode String?
+  transferContent String?
+  qrData          String?
+  expiresAt       DateTime?
+  paidAt          DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime
+  Order           Order         @relation(fields: [orderId], references: [id])
+}
+
+model PromoCode {
+  id            String   @id
+  code          String   @unique
+  discountType  String
+  discountValue Int
+  startDate     DateTime
+  endDate       DateTime
+  isActive      Boolean  @default(true)
+  usageLimit    Int      @default(0)
+  usedCount     Int      @default(0)
+  minOrderValue Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime
+}
+
+model RewardMilestone {
+  id        String   @id
+  amount    Int
+  label     String
+  type      String
+  discount  Int?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime
+}
+
+enum PaymentMethod {
+  COD
+  BANK_TRANSFER
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  EXPIRED
+  REFUNDED
+}
+
+model FooterSection {
+  id            String  @id @default(uuid())
+  type          String
+  title         String?
+  copyrightText String?
+  sortOrder     Int     @default(0)
+  isActive      Boolean @default(true)
+
+  links FooterLink[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([type, sortOrder])
+}
+
+model FooterLink {
+  id        String  @id @default(uuid())
+  sectionId String
+  label     String
+  url       String
+  sortOrder Int     @default(0)
+  isActive  Boolean @default(true)
+
+  section FooterSection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([sectionId, sortOrder])
 }

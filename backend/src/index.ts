@@ -16,6 +16,7 @@ import invoiceRoutes from './routes/invoice.routes';
 import campaignRoutes from './routes/campaign.routes';
 import bannerRoutes from './routes/banner.routes';
 import uploadRoutes from './routes/upload.routes';
+import footerRoutes from './routes/footer.routes';
 
 const app = express();
 const port = process.env.PORT || 3001;
@@ -54,6 +55,7 @@ app.use('/api/invoices', invoiceRoutes);
 app.use('/api/campaigns', campaignRoutes);
 app.use('/api/banners', bannerRoutes);
 app.use('/api/upload', uploadRoutes);
+app.use('/api/footer', footerRoutes);
 
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'ok' });

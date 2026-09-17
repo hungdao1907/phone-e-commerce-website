@@ -156,6 +156,7 @@ export default function App() {
               {/* Dashboard Route Protected by Authentication (Standalone) */}
               <Route element={<ProtectedRoute allowedRoles={['superadmin', 'admin', 'manager', 'user']} />}>
                 <Route path="/dashboard" element={<DashboardLayout />} />
+                <Route path="/dashboard/:view" element={<DashboardLayout />} />
               </Route>
             </Routes>
           </Suspense>

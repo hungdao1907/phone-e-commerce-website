@@ -1,7 +1,77 @@
+import React from 'react';
 import { Apple, ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+
+const API_BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3001';
+
+export interface PublicFooterLink {
+  id: string;
+  label: string;
+  url: string;
+  sortOrder: number;
+}
+
+export interface PublicFooterColumn {
+  id: string;
+  type: 'column';
+  title: string;
+  sortOrder: number;
+  links: PublicFooterLink[];
+}
+
+export interface PublicFooterBottom {
+  id: string;
+  type: 'bottom';
+  copyrightText: string;
+  links: PublicFooterLink[];
+}
+
+export interface PublicFooterResponse {
+  columns: PublicFooterColumn[];
+  bottom: PublicFooterBottom | null;
+}
+
+const fetchActiveFooter = async (): Promise<PublicFooterResponse> => {
+  const res = await fetch(`${API_BASE_URL}/api/footer/active`);
+  if (!res.ok) {
+    throw new Error('Failed to fetch footer');
+  }
+  return res.json();
+};
 
 export function Footer() {
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ['footer-active'],
+    queryFn: fetchActiveFooter,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    retry: 1,
+  });
+
+  const isExternal = (url: string) => {
+    return url.startsWith('http://') || url.startsWith('https://');
+  };
+
+  const renderLink = (link: PublicFooterLink) => {
+    if (isExternal(link.url)) {
+      return (
+        <a
+          href={link.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="hover:underline transition-colors"
+        >
+          {link.label}
+        </a>
+      );
+    }
+    return (
+      <Link to={link.url} className="hover:underline transition-colors">
+        {link.label}
+      </Link>
+    );
+  };
+
   return (
     <footer className="app-footer bg-[#f5f5f7] border-t border-neutral-300 text-xs text-neutral-500 pt-10 pb-14">
       <div className="max-w-[1024px] mx-auto px-4 md:px-8 space-y-8">
@@ -12,113 +82,68 @@ export function Footer() {
           <span>Cửa Hàng Trực Tuyến của Apple</span>
         </div>
 
-        {/* Footer Navigation Columns */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-8 leading-relaxed">
-          <div className="space-y-2">
-            <h4 className="font-semibold text-[#1d1d1f]">Mua Sắm và Tìm Hiểu</h4>
-            <ul className="space-y-1.5">
-              <li><Link to="/" className="hover:underline">Cửa Hàng</Link></li>
-              <li><Link to="/" className="hover:underline">Mac</Link></li>
-              <li><Link to="/" className="hover:underline">iPad</Link></li>
-              <li><Link to="/" className="hover:underline">iPhone</Link></li>
-              <li><Link to="/" className="hover:underline">Watch</Link></li>
-              <li><Link to="/" className="hover:underline">AirPods</Link></li>
-              <li><Link to="/" className="hover:underline">TV & Nhà</Link></li>
-              <li><Link to="/" className="hover:underline">AirTag</Link></li>
-              <li><Link to="/" className="hover:underline">Phụ Kiện</Link></li>
-              <li><Link to="/" className="hover:underline">Thẻ Quà Tặng</Link></li>
-            </ul>
+        {isLoading ? (
+          <div className="animate-pulse space-y-8">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-8">
+              {[...Array(5)].map((_, i) => (
+                <div key={i} className="space-y-4">
+                  <div className="h-4 bg-neutral-200 rounded w-24"></div>
+                  <div className="space-y-2">
+                    {[...Array(4)].map((_, j) => (
+                      <div key={j} className="h-3 bg-neutral-200 rounded w-20"></div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="h-10 bg-neutral-200 rounded w-full"></div>
           </div>
+        ) : isError ? (
+          <div className="text-center py-8 text-neutral-400">
+            {/* Fail silently for user but maintain layout structure */}
+          </div>
+        ) : (
+          <>
+            {/* Footer Navigation Columns */}
+            {data?.columns && data.columns.length > 0 && (
+              <div
+                className="grid gap-8 leading-relaxed grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"
+              >
+                {data.columns.map((col) => (
+                  <div key={col.id} className="space-y-2 break-inside-avoid">
+                    <h4 className="font-semibold text-[#1d1d1f]">{col.title}</h4>
+                    {col.links && col.links.length > 0 && (
+                      <ul className="space-y-1.5 flex flex-col items-start">
+                        {col.links.map((link) => (
+                          <li key={link.id}>{renderLink(link)}</li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
 
-          <div className="space-y-6">
-            <div className="space-y-2">
-              <h4 className="font-semibold text-[#1d1d1f]">Tài Khoản</h4>
-              <ul className="space-y-1.5">
-                <li><Link to="/" className="hover:underline">Quản Lý Tài Khoản Apple Của Bạn</Link></li>
-                <li><Link to="/" className="hover:underline">Tài Khoản Apple Store</Link></li>
-                <li><Link to="/" className="hover:underline">iCloud.com</Link></li>
-              </ul>
-            </div>
-            <div className="space-y-2">
-              <h4 className="font-semibold text-[#1d1d1f]">Giải trí</h4>
-              <ul className="space-y-1.5">
-                <li><Link to="/" className="hover:underline">Apple One</Link></li>
-                <li><Link to="/" className="hover:underline">Apple TV+</Link></li>
-                <li><Link to="/" className="hover:underline">Apple Music</Link></li>
-                <li><Link to="/" className="hover:underline">Apple Arcade</Link></li>
-                <li><Link to="/" className="hover:underline">Apple Podcasts</Link></li>
-                <li><Link to="/" className="hover:underline">Apple Books</Link></li>
-              </ul>
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <h4 className="font-semibold text-[#1d1d1f]">Apple Store</h4>
-            <ul className="space-y-1.5">
-              <li><Link to="/" className="hover:underline">Ứng Dụng Apple Store</Link></li>
-              <li><Link to="/" className="hover:underline">Tài Chính</Link></li>
-              <li><Link to="/" className="hover:underline">Apple Trade In</Link></li>
-              <li><Link to="/" className="hover:underline">Trạng Thái Đơn Hàng</Link></li>
-              <li><Link to="/" className="hover:underline">Hỗ Trợ Mua Hàng</Link></li>
-            </ul>
-          </div>
-
-          <div className="space-y-6">
-            <div className="space-y-2">
-              <h4 className="font-semibold text-[#1d1d1f]">Dành Cho Doanh Nghiệp</h4>
-              <ul className="space-y-1.5">
-                <li><Link to="/" className="hover:underline">Apple và Doanh Nghiệp</Link></li>
-                <li><Link to="/" className="hover:underline">Mua Sắm Cho Doanh Nghiệp</Link></li>
-              </ul>
-            </div>
-            <div className="space-y-2">
-              <h4 className="font-semibold text-[#1d1d1f]">Cho Giáo Dục</h4>
-              <ul className="space-y-1.5">
-                <li><Link to="/" className="hover:underline">Apple và Giáo Dục</Link></li>
-                <li><Link to="/" className="hover:underline">Mua Hàng Cho Bậc Đại Học</Link></li>
-              </ul>
-            </div>
-          </div>
-
-          <div className="space-y-6">
-            <div className="space-y-2">
-              <h4 className="font-semibold text-[#1d1d1f]">Giá Trị Cốt Lõi Của Apple</h4>
-              <ul className="space-y-1.5">
-                <li><Link to="/" className="hover:underline">Trợ Năng</Link></li>
-                <li><Link to="/" className="hover:underline">Môi Trường</Link></li>
-                <li><Link to="/" className="hover:underline">Quyền Riêng Tư</Link></li>
-                <li><Link to="/" className="hover:underline">Chuỗi Cung Ứng</Link></li>
-              </ul>
-            </div>
-            <div className="space-y-2">
-              <h4 className="font-semibold text-[#1d1d1f]">Về Apple</h4>
-              <ul className="space-y-1.5">
-                <li><Link to="/" className="hover:underline">Newsroom</Link></li>
-                <li><Link to="/" className="hover:underline">Lãnh Đạo Của Apple</Link></li>
-                <li><Link to="/" className="hover:underline">Nhà Đầu Tư</Link></li>
-                <li><Link to="/" className="hover:underline">Đạo Đức & Quy Tắc</Link></li>
-                <li><Link to="/" className="hover:underline">Sự Kiện</Link></li>
-                <li><Link to="/" className="hover:underline">Liên Hệ Apple</Link></li>
-              </ul>
-            </div>
-          </div>
-        </div>
-
-        {/* Bottom Copyright & Legal Links */}
-        <div className="pt-6 border-t border-neutral-300 flex flex-col md:flex-row items-center justify-between gap-4 text-[#6e6e73]">
-          <p>Copyright © 2024 Apple Inc. Bảo lưu mọi quyền.</p>
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-            <Link to="/" className="hover:underline">Chính Sách Quyền Riêng Tư</Link>
-            <span className="text-neutral-300">|</span>
-            <Link to="/" className="hover:underline">Điều Khoản Sử Dụng</Link>
-            <span className="text-neutral-300">|</span>
-            <Link to="/" className="hover:underline">Bán Hàng và Hoàn Tiền</Link>
-            <span className="text-neutral-300">|</span>
-            <Link to="/" className="hover:underline">Pháp Lý</Link>
-            <span className="text-neutral-300">|</span>
-            <Link to="/" className="hover:underline">Sơ Đồ Trang Web</Link>
-          </div>
-        </div>
+            {/* Bottom Copyright & Legal Links */}
+            {data?.bottom && (
+              <div className="pt-6 border-t border-neutral-300 flex flex-col md:flex-row items-center justify-between gap-4 text-[#6e6e73]">
+                <p>{data.bottom.copyrightText}</p>
+                {data.bottom.links && data.bottom.links.length > 0 && (
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+                    {data.bottom.links.map((link, index) => (
+                      <React.Fragment key={link.id}>
+                        {renderLink(link)}
+                        {index < data.bottom.links.length - 1 && (
+                          <span className="text-neutral-300">|</span>
+                        )}
+                      </React.Fragment>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </>
+        )}
       </div>
     </footer>
   );
