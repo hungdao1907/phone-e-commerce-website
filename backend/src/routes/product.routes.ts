@@ -189,7 +189,7 @@ router.post('/', authenticateToken, async (req, res) => {
 
     res.status(201).json({ message: 'Thêm sản phẩm thành công', product: newProduct });
   } catch (error) {
-    console.error('Error creating product:', error); res.status(500).json({ message: 'Lỗi server: ' + (error.message || '') }); return;
+    console.error('Error creating product:', error); res.status(500).json({ message: 'Lỗi server: ' + ((error as any).message || '') }); return;
     res.status(500).json({ message: 'Lỗi server' });
   }
 });
