@@ -87,7 +87,7 @@ export function Orders() {
   const fetchOrders = async () => {
     try {
       setIsLoading(true);
-      const res = await fetch('http://localhost:3001/api/orders', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/orders`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.ok) setOrders(await res.json());
@@ -106,7 +106,7 @@ export function Orders() {
       const dataToUpdate: any = { status: newStatus };
       if (newPaymentStatus) dataToUpdate.paymentStatus = newPaymentStatus;
 
-      const res = await fetch(`http://localhost:3001/api/orders/${orderId}/status`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/orders/${orderId}/status`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify(dataToUpdate)

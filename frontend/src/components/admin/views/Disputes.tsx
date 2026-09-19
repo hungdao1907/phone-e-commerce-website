@@ -20,14 +20,14 @@ export function Disputes() {
 
   const fetchReviews = async () => {
     try {
-      const res = await fetch('http://localhost:3001/api/reviews', { headers: { 'Authorization': `Bearer ${token}` } });
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/reviews`, { headers: { 'Authorization': `Bearer ${token}` } });
       if (res.ok) setReviews(await res.json());
     } catch (error) { console.error(error); }
   };
 
   const fetchDisputes = async () => {
     try {
-      const res = await fetch('http://localhost:3001/api/disputes', { headers: { 'Authorization': `Bearer ${token}` } });
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/disputes`, { headers: { 'Authorization': `Bearer ${token}` } });
       if (res.ok) setDisputes(await res.json());
     } catch (error) { console.error(error); }
   };
@@ -43,7 +43,7 @@ export function Disputes() {
 
   const handleUpdateDispute = async (id: string, status: string, resolution?: string) => {
     try {
-      const res = await fetch(`http://localhost:3001/api/disputes/${id}`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/disputes/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ status, resolution })

@@ -68,7 +68,7 @@ export function CartDrawer() {
   const finalTotal = Math.max(0, subtotal - totalDiscount);
 
   const handleApplyPromo = async (code: string) => {
-    const res = await fetch('http://localhost:3001/api/promo-codes/validate', {
+    const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/promo-codes/validate`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ code, subtotal })

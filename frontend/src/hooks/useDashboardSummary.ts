@@ -24,7 +24,7 @@ export function useDashboardSummary() {
   return useQuery<DashboardSummary, Error>({
     queryKey: ['dashboardSummary'],
     queryFn: async () => {
-      const res = await fetch('http://localhost:3001/api/dashboard/summary', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/dashboard/summary`, {
         headers: {
           'Content-Type': 'application/json',
           ...(token && { Authorization: `Bearer ${token}` }),

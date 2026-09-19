@@ -236,7 +236,7 @@ export const SearchButton = ({ onNavigate }: SearchButtonProps) => {
       return;
     }
     setIsLoadingApi(true);
-    fetch(`http://localhost:3001${currentNode.apiEndpoint}`)
+    fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}${currentNode.apiEndpoint}`)
       .then(r => r.json())
       .then(data => {
         if (Array.isArray(data)) setApiData(data);

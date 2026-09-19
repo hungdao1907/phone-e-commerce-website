@@ -30,7 +30,7 @@ export function CheckoutPage() {
     }
     
     // Fetch user profile for default address
-    fetch('http://localhost:3001/api/customers/profile', {
+    fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/customers/profile`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
     .then(res => res.json())

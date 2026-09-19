@@ -26,7 +26,7 @@ export function CartItemCard({ item }: CartItemCardProps) {
     const fetchVariants = async () => {
       setIsLoadingVariants(true);
       try {
-        const res = await fetch(`http://localhost:3001/api/products/${item.productId}`);
+        const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/products/${item.productId}`);
         if (res.ok) {
           const product = await res.json();
           if (product.variants) {

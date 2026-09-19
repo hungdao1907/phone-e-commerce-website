@@ -28,13 +28,13 @@ export function ProductPurchasePage() {
         const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slug);
         
         if (isUUID) {
-          const res = await fetch(`http://localhost:3001/api/products/${slug}`);
+          const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/products/${slug}`);
           if (res.ok) dbProduct = await res.json();
         } else {
           // It's a mock product slug!
           const mockProduct = SMARTPHONE_PRODUCTS.find(p => p.slug === slug || p.id === slug);
           if (mockProduct) {
-            const res = await fetch(`http://localhost:3001/api/products/sync-mock`, {
+            const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/products/sync-mock`, {
                method: 'POST',
                headers: { 'Content-Type': 'application/json' },
                body: JSON.stringify(mockProduct)
@@ -42,7 +42,7 @@ export function ProductPurchasePage() {
             if (res.ok) dbProduct = await res.json();
           } else {
             // Try fetching by ID anyway just in case
-            const res = await fetch(`http://localhost:3001/api/products/${slug}`);
+            const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/products/${slug}`);
             if (res.ok) dbProduct = await res.json();
           }
         }
@@ -57,12 +57,12 @@ export function ProductPurchasePage() {
                 id: `color-${colorName}`,
                 name: colorName,
                 hex: v.colorCode ? (v.colorCode.startsWith('#') ? v.colorCode : `#${v.colorCode}`) : '#CCCCCC',
-                images: (v.image ? [v.image] : [dbProduct.image]).filter(Boolean).map((img: string) => img.startsWith('/uploads') ? `http://localhost:3001${img}` : img)
+                images: (v.image ? [v.image] : [dbProduct.image]).filter(Boolean).map((img: string) => img.startsWith('/uploads') ? `${import.meta.env.VITE_API_URL || 'http://localhost:3001'}${img}` : img)
               });
             }
           });
           const colors = Array.from(uniqueColors.values());
-          if (colors.length === 0) colors.push({ id: 'default-color', name: 'Mặc định', hex: '#CCCCCC', images: [dbProduct.image].filter(Boolean).map((img: string) => img.startsWith('/uploads') ? `http://localhost:3001${img}` : img) });
+          if (colors.length === 0) colors.push({ id: 'default-color', name: 'Mặc định', hex: '#CCCCCC', images: [dbProduct.image].filter(Boolean).map((img: string) => img.startsWith('/uploads') ? `${import.meta.env.VITE_API_URL || 'http://localhost:3001'}${img}` : img) });
 
           const uniqueStorages = new Map();
           dbProduct.variants?.forEach((v: any) => {
@@ -114,7 +114,7 @@ export function ProductPurchasePage() {
 
           const resolveImageUrl = (url: string) => {
             if (!url) return undefined;
-            if (url.startsWith('/uploads')) return `http://localhost:3001${url}`;
+            if (url.startsWith('/uploads')) return `${import.meta.env.VITE_API_URL || 'http://localhost:3001'}${url}`;
             return url;
           };
 

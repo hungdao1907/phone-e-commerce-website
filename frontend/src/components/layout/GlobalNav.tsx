@@ -23,7 +23,7 @@ export function GlobalNav() {
   // Fetch Categories from Database
   const [categories, setCategories] = useState<any[]>([]);
   useEffect(() => {
-    fetch('http://localhost:3001/api/categories')
+    fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/categories`)
       .then(res => res.json())
       .then(data => {
          if (Array.isArray(data)) setCategories(data);

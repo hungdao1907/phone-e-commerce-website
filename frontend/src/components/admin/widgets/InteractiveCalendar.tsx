@@ -144,7 +144,7 @@ const MeetingActions = ({ mIndex, day, meeting, fetchPlans, onEdit }: { mIndex: 
               <button
                 onClick={async () => {
                   try {
-                    await fetch(`http://localhost:3001/api/plans/${meeting.id}`, { method: 'DELETE' });
+                    await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/plans/${meeting.id}`, { method: 'DELETE' });
                     fetchPlans();
                   } catch (e) { console.error(e); }
                 }}
@@ -233,7 +233,7 @@ const InteractiveCalendar = React.forwardRef((
 
   const fetchPlans = async () => {
     try {
-      const res = await fetch('http://localhost:3001/api/plans');
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/plans`);
       const data = await res.json();
       setFetchedPlans(data);
     } catch (err) { console.error(err); }
@@ -288,7 +288,7 @@ const InteractiveCalendar = React.forwardRef((
 
   const handleSubmitPlan = async () => {
     try {
-      await fetch('http://localhost:3001/api/plans', {
+      await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/plans`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -323,7 +323,7 @@ const InteractiveCalendar = React.forwardRef((
 
   const handleUpdatePlan = async () => {
     try {
-      await fetch(`http://localhost:3001/api/plans/${editingPlanId}`, {
+      await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/plans/${editingPlanId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

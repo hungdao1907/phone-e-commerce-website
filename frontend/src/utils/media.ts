@@ -6,7 +6,7 @@
 export function resolveMediaUrl(src?: string | null): string {
   if (!src) return '';
 
-  const apiUrl = (import.meta.env.VITE_API_URL || 'http://localhost:3001').replace(/\/$/, '');
+  const apiUrl = (import.meta.env.VITE_API_URL || `${import.meta.env.VITE_API_URL || 'http://localhost:3001'}`).replace(/\/$/, '');
 
   if (/^https?:\/\//i.test(src)) {
     // If it's a legacy localhost URL pointing to /uploads/, rewrite to current API base URL

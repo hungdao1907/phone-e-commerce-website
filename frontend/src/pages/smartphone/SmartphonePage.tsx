@@ -20,7 +20,7 @@ export function SmartphonePage({ brand }: SmartphonePageProps) {
     // Fetch products from API and merge or override
     const fetchProducts = async () => {
       try {
-        const res = await fetch('http://localhost:3001/api/products');
+        const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/products`);
         if (res.ok) {
           const data = await res.json();
           // Filter by brand (category name contains brand or product name contains brand)
@@ -63,10 +63,10 @@ export function SmartphonePage({ brand }: SmartphonePageProps) {
                     colorMap.set(cName, {
                       name: cName,
                       hex: v.colorCode || (cName.toLowerCase().includes('đen') || cName.toLowerCase().includes('black') ? '#000000' : '#FFFFFF'),
-                      image: v.image && v.image.startsWith('/uploads') ? `http://localhost:3001${v.image}` : v.image
+                      image: v.image && v.image.startsWith('/uploads') ? `${import.meta.env.VITE_API_URL || 'http://localhost:3001'}${v.image}` : v.image
                     });
                   } else if (v.image && !colorMap.get(cName).image) {
-                    colorMap.get(cName).image = v.image.startsWith('/uploads') ? `http://localhost:3001${v.image}` : v.image;
+                    colorMap.get(cName).image = v.image.startsWith('/uploads') ? `${import.meta.env.VITE_API_URL || 'http://localhost:3001'}${v.image}` : v.image;
                   }
                 }
               });
@@ -93,7 +93,7 @@ export function SmartphonePage({ brand }: SmartphonePageProps) {
 
               const resolveImageUrl = (url: string) => {
                 if (!url) return undefined;
-                if (url.startsWith('/uploads')) return `http://localhost:3001${url}`;
+                if (url.startsWith('/uploads')) return `${import.meta.env.VITE_API_URL || 'http://localhost:3001'}${url}`;
                 return url;
               };
 

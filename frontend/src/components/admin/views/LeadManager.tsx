@@ -7,7 +7,7 @@ export function LeadManager() {
 
   const fetchLeads = async () => {
     try {
-      const res = await fetch('http://localhost:3001/api/leads');
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/leads`);
       if (res.ok) {
         const data = await res.json();
         setLeads(data);
@@ -26,7 +26,7 @@ export function LeadManager() {
   const handleConvert = async (leadId: string) => {
     // Basic converting just updates status for now, since user said no need to auto-create auth account.
     try {
-      const res = await fetch(`http://localhost:3001/api/leads/${leadId}`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/leads/${leadId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: 'converted' })
@@ -45,7 +45,7 @@ export function LeadManager() {
   const handleDelete = async (leadId: string) => {
     if (!confirm('Xóa Lead này?')) return;
     try {
-      const res = await fetch(`http://localhost:3001/api/leads/${leadId}`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/leads/${leadId}`, {
         method: 'DELETE'
       });
       if (res.ok) {

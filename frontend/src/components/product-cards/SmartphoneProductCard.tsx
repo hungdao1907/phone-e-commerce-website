@@ -53,7 +53,7 @@ export function BrandProductCard({ product, index = 0, accentColor }: BrandProdu
       const slug = product.slug || product.id;
       
       // Use the sync-mock endpoint to find or dynamically create the real DB product
-      const res = await fetch(`http://localhost:3001/api/products/sync-mock`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/products/sync-mock`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(product),

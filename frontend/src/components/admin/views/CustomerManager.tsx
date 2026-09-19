@@ -31,7 +31,7 @@ export function CustomerManager() {
 
   const fetchCustomers = async () => {
     try {
-      const res = await fetch('http://localhost:3001/api/customers');
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/customers`);
       if (!res.ok) throw new Error('Failed to fetch customers');
       const data = await res.json();
       setCustomers(data);
@@ -52,7 +52,7 @@ export function CustomerManager() {
     setIsSubmitting(true);
 
     try {
-      const res = await fetch('http://localhost:3001/api/customers', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/customers`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
@@ -222,7 +222,7 @@ export function CustomerManager() {
                         onClick={async () => {
                           if (!confirm(`Bạn có chắc muốn xóa khách hàng ${c.fullName}?`)) return;
                           try {
-                            const res = await fetch(`http://localhost:3001/api/customers/${c.id}`, {
+                            const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/customers/${c.id}`, {
                               method: 'DELETE'
                             });
                             if (res.ok) fetchCustomers();

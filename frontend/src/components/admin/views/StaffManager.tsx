@@ -25,7 +25,7 @@ export function StaffManager() {
 
   const fetchUsers = async () => {
     try {
-      const res = await fetch('http://localhost:3001/api/users');
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/users`);
       if (!res.ok) throw new Error('Failed to fetch users');
       const data = await res.json();
       setUsers(data);
@@ -46,7 +46,7 @@ export function StaffManager() {
     setIsSubmitting(true);
 
     try {
-      const res = await fetch('http://localhost:3001/api/auth/register', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username: newUsername, password: newPassword })

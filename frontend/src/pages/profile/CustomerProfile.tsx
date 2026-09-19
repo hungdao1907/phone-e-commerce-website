@@ -23,7 +23,7 @@ export const CustomerProfile = () => {
 
   const fetchOrders = async () => {
     try {
-      const res = await fetch('http://localhost:3001/api/orders', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/orders`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.ok) setOrders(await res.json());
@@ -33,7 +33,7 @@ export const CustomerProfile = () => {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const response = await fetch('http://localhost:3001/api/customers/profile', {
+        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/customers/profile`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -66,7 +66,7 @@ export const CustomerProfile = () => {
       address: dataToUpdate.address !== undefined ? dataToUpdate.address : address,
     };
 
-    const response = await fetch('http://localhost:3001/api/customers/profile', {
+    const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/customers/profile`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -89,7 +89,7 @@ export const CustomerProfile = () => {
   const handleCompleteOrder = async (id: string) => {
     if(!confirm('Xác nhận đã nhận hàng thành công?')) return;
     try {
-      const res = await fetch(`http://localhost:3001/api/orders/${id}/status`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/orders/${id}/status`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ status: 'completed' })
@@ -107,7 +107,7 @@ export const CustomerProfile = () => {
     const ratingStr = prompt('Cho điểm (1-5):');
     const rating = parseInt(ratingStr || '5', 10);
     try {
-      const res = await fetch('http://localhost:3001/api/reviews', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/reviews`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ orderId, customerId: user?.id, rating, comment })
@@ -121,7 +121,7 @@ export const CustomerProfile = () => {
     const reason = prompt('Nhập lý do khiếu nại:');
     if(!reason) return;
     try {
-      const res = await fetch('http://localhost:3001/api/disputes', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/disputes`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ orderId, customerId: user?.id, reason, description: reason })

@@ -13,7 +13,7 @@ export function useDashboardRevenue() {
   return useQuery<CategoryRevenue[], Error>({
     queryKey: ['dashboardRevenue'],
     queryFn: async () => {
-      const res = await fetch('http://localhost:3001/api/dashboard/revenue-by-category', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/dashboard/revenue-by-category`, {
         headers: {
           'Content-Type': 'application/json',
           ...(token && { Authorization: `Bearer ${token}` }),

@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/store/authStore';
 import { resolveMediaUrl } from '@/utils/media';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3001';
+const API_BASE_URL = import.meta.env.VITE_API_URL ?? `${import.meta.env.VITE_API_URL || 'http://localhost:3001'}`;
 
 // --- TYPES ---
 interface ProductVariant {
@@ -160,7 +160,7 @@ export function ProductList() {
   const fetchProducts = async () => {
     try {
       setIsLoading(true);
-      const res = await fetch('http://localhost:3001/api/products');
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/products`);
       if (res.ok) setProducts(await res.json());
     } catch (err) {
       console.error('Error fetching products', err);
@@ -171,7 +171,7 @@ export function ProductList() {
 
   const fetchCategories = async () => {
     try {
-      const res = await fetch('http://localhost:3001/api/categories');
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/categories`);
       if (res.ok) setCategories(await res.json());
     } catch (error) {
       console.error('Lỗi tải danh mục:', error);
@@ -230,7 +230,7 @@ export function ProductList() {
     try {
       const uploadData = new FormData();
       uploadData.append('image', file);
-      const res = await fetch('http://localhost:3001/api/upload', { method: 'POST', body: uploadData });
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/upload`, { method: 'POST', body: uploadData });
       const data = await res.json();
       if (data.imageUrl) {
         setVariantOptions(prev => {
@@ -442,7 +442,7 @@ export function ProductList() {
         image: v.image || null
       }));
 
-      const url = editingProduct ? `http://localhost:3001/api/products/${editingProduct.id}` : 'http://localhost:3001/api/products';
+      const url = editingProduct ? `${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/products/${editingProduct.id}` : `${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/products`;
       const method = editingProduct ? 'PUT' : 'POST';
 
       const res = await fetch(url, {
@@ -465,7 +465,7 @@ export function ProductList() {
   const handleDelete = async (id: string, name: string) => {
     if (!window.confirm(`Xóa sản phẩm "${name}" và toàn bộ biến thể?`)) return;
     try {
-      await fetch(`http://localhost:3001/api/products/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
+      await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/products/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
       setProducts(products.filter(p => p.id !== id));
     } catch { alert('Lỗi khi xóa'); }
   };

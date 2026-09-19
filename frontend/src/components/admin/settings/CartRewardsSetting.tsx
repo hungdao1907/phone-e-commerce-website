@@ -22,7 +22,7 @@ export function CartRewardsSetting() {
     
     try {
       if (editingId !== null) {
-        const response = await fetch(`http://localhost:3001/api/rewards/${editingId}`, {
+        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/rewards/${editingId}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -36,7 +36,7 @@ export function CartRewardsSetting() {
           fetchMilestones();
         }
       } else {
-        const response = await fetch('http://localhost:3001/api/rewards', {
+        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/rewards`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -83,7 +83,7 @@ export function CartRewardsSetting() {
 
   const toggleActive = async (id: string, currentStatus: boolean) => {
     try {
-      const response = await fetch(`http://localhost:3001/api/rewards/${id}`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/rewards/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ isActive: !currentStatus })
@@ -99,7 +99,7 @@ export function CartRewardsSetting() {
   const deleteMilestone = async (id: string) => {
     if(confirm('Bạn có chắc chắn muốn xóa mốc thưởng này?')) {
       try {
-        const response = await fetch(`http://localhost:3001/api/rewards/${id}`, {
+        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/rewards/${id}`, {
           method: 'DELETE'
         });
         if (response.ok) {

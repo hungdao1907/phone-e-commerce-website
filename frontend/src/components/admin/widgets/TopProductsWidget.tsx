@@ -15,7 +15,7 @@ export function TopProductsWidget() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    fetch('http://localhost:3001/api/dashboard/top-products')
+    fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/dashboard/top-products`)
       .then(res => res.json())
       .then(data => {
         if (Array.isArray(data)) {

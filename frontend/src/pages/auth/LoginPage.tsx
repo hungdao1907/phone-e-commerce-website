@@ -98,7 +98,7 @@ const SignInForm = () => {
     setIsLoading(true);
 
     try {
-      const response = await fetch('http://localhost:3001/api/auth/login', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password })
@@ -182,7 +182,7 @@ const SignUpForm = () => {
     setMessage({ text: '', type: '' });
 
     try {
-      const response = await fetch('http://localhost:3001/api/auth/customer/register', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/auth/customer/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ fullName, email, password })
@@ -209,7 +209,7 @@ const SignUpForm = () => {
     setMessage({ text: '', type: '' });
 
     try {
-      const response = await fetch('http://localhost:3001/api/auth/customer/verify-otp', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/auth/customer/verify-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, otp })

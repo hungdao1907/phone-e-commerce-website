@@ -17,7 +17,7 @@ export function CrossSellSection({ currentProductId, brand, categoryId }: CrossS
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const res = await fetch('http://localhost:3001/api/products');
+        const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/products`);
         if (res.ok) {
           const data = await res.json();
           // Filter by brand or category, excluding current product

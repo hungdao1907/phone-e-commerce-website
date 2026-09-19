@@ -17,7 +17,7 @@ export function PlanScheduleWidget() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    fetch('http://localhost:3001/api/plans')
+    fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/plans`)
       .then(res => res.json())
       .then(data => {
         if (Array.isArray(data)) {

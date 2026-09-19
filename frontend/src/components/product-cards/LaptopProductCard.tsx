@@ -52,7 +52,7 @@ export function LaptopProductCard({ product, priority = false, index = 0 }: Lapt
     const card = button.closest('.group');
 
     try {
-      const res = await fetch(`http://localhost:3001/api/products/sync-mock`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/products/sync-mock`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(product),
