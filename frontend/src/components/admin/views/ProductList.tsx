@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Plus, Edit2, Trash2, X, Package, RefreshCw, ChevronDown, ChevronRight, ArrowLeft, Image as ImageIcon, Zap, Upload } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -50,20 +50,12 @@ interface VariantFormRow {
   image: string;
 }
 
+type VariantOption = { name: string; price?: string; hex?: string; image?: string };
+
 const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
 };
 
-const PREDEFINED_CAPACITIES = ['128GB', '256GB', '512GB', '1TB'];
-const PREDEFINED_COLORS = [
-  { name: 'Đen', hex: '#1c1c1e' },
-  { name: 'Trắng', hex: '#f5f5f0' },
-  { name: 'Xanh', hex: '#20283e' },
-  { name: 'Đỏ', hex: '#c82333' },
-  { name: 'Vàng', hex: '#e3c6a4' },
-  { name: 'Hồng', hex: '#e8d1cf' },
-  { name: 'Titan', hex: '#878681' }
-];
 const IMAGE_SLOTS = [
   'Ảnh chính',
   'Ảnh mặt trước',
@@ -71,14 +63,59 @@ const IMAGE_SLOTS = [
   'Ảnh mặt phải',
   'Ảnh mặt trái'
 ];
-const DEFAULT_SPECS = [
-  { key: 'Màn hình', value: '' },
-  { key: 'Chip', value: '' },
-  { key: 'RAM', value: '' },
-  { key: 'Camera', value: '' },
-  { key: 'Pin', value: '' },
-  { key: 'Hệ điều hành', value: '' }
+
+const CATEGORY_CONFIGS: Record<string, { variants: string[], specifications: string[] }> = {
+  phone: {
+    variants: ["Dung lượng", "Màu sắc"],
+    specifications: ["Màn hình", "Chip", "RAM", "Camera Trước", "Camera Sau", "Pin", "Hệ điều hành", "SIM", "Kết nối"]
+  },
+  laptop: {
+    variants: ["Phiên bản", "Màu sắc"],
+    specifications: ["Màn hình", "CPU", "GPU", "RAM", "SSD", "Pin", "Hệ điều hành", "Kích thước", "Trọng lượng", "Cổng kết nối"]
+  },
+  tablet: {
+    variants: ["Dung lượng", "Màu sắc", "Kết nối"],
+    specifications: ["Màn hình", "Chip", "RAM", "Lưu trữ", "Camera", "Pin", "Hệ điều hành", "Kết nối"]
+  },
+  pc: {
+    variants: ["Phiên bản", "Màu sắc"],
+    specifications: ["CPU", "Mainboard", "RAM", "Ổ cứng", "VGA", "Nguồn", "Tản nhiệt", "Vỏ Case"]
+  },
+  watch: {
+    variants: ["Kích thước", "Màu sắc", "Dây đeo"],
+    specifications: ["Màn hình", "Chất liệu", "Đường kính mặt", "Pin", "Kết nối", "Kháng nước"]
+  },
+  accessories: {
+    variants: ["Loại", "Màu sắc"],
+    specifications: ["Thương hiệu", "Màu sắc", "Tương thích", "Tính năng"]
+  },
+  default: {
+    variants: ["Phiên bản", "Màu sắc"],
+    specifications: ["Thông số 1", "Thông số 2", "Thông số 3", "Thông số 4"]
+  }
+};
+
+const PREDEFINED_COLORS = [
+  { name: 'Đen', hex: '#1c1c1e' },
+  { name: 'Trắng', hex: '#f5f5f0' },
+  { name: 'Xanh', hex: '#20283e' },
+  { name: 'Đỏ', hex: '#c82333' },
+  { name: 'Vàng', hex: '#e3c6a4' },
+  { name: 'Hồng', hex: '#e8d1cf' },
+  { name: 'Titan', hex: '#878681' },
+  { name: 'Bạc', hex: '#e3e4e5' },
 ];
+
+const PREDEFINED_OPTIONS: Record<string, string[]> = {
+  "Dung lượng": ["64GB", "128GB", "256GB", "512GB", "1TB", "2TB"],
+  "Phiên bản": ["M3 - 8GB - 256GB", "M3 - 16GB - 512GB", "M3 Pro - 18GB - 512GB", "M3 Max - 36GB - 1TB", "M4 - 16GB - 256GB", "M4 Pro - 24GB - 512GB"],
+  "RAM": ["4GB", "8GB", "16GB", "32GB", "64GB"],
+  "SSD": ["128GB", "256GB", "512GB", "1TB", "2TB"],
+  "CPU": ["Core i3", "Core i5", "Core i7", "Core i9", "M1", "M2", "M3", "M4"],
+  "VGA": ["RTX 3060", "RTX 4060", "RTX 4070", "RTX 4080", "RTX 4090"],
+  "Kết nối": ["Wi-Fi", "Wi-Fi + 5G", "Wi-Fi + Cellular", "Bluetooth"],
+  "Kích thước": ["40mm", "41mm", "44mm", "45mm", "49mm"]
+};
 
 export function ProductList() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -106,15 +143,14 @@ export function ProductList() {
     status: 'active'
   });
 
-  const [capacities, setCapacities] = useState<{ name: string, price: string }[]>([]);
-  const [colors, setColors] = useState<{ name: string, hex: string, image?: string }[]>([]);
+  // Dynamic Variant Options state
+  const [variantOptions, setVariantOptions] = useState<Record<string, VariantOption[]>>({});
   const [variantRows, setVariantRows] = useState<VariantFormRow[]>([]);
   const [specifications, setSpecifications] = useState<{ key: string; value: string }[]>([]);
 
   // Input states for variant tags
-  const [capInput, setCapInput] = useState('');
-  const [colInput, setColInput] = useState('');
-  const [colHexInput, setColHexInput] = useState('#ffffff');
+  const [attrInputs, setAttrInputs] = useState<Record<string, string>>({});
+  const [colorHexInput, setColorHexInput] = useState('#ffffff');
 
   // Dropdown search
   const [catSearch, setCatSearch] = useState('');
@@ -130,27 +166,6 @@ export function ProductList() {
       console.error('Error fetching products', err);
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const handleUploadColorImage = async (e: React.ChangeEvent<HTMLInputElement>, colorIndex: number) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setIsUploading(true);
-    try {
-      const uploadData = new FormData();
-      uploadData.append('image', file);
-      const res = await fetch('http://localhost:3001/api/upload', { method: 'POST', body: uploadData });
-      const data = await res.json();
-      if (data.imageUrl) {
-        const newColors = [...colors];
-        newColors[colorIndex].image = data.imageUrl;
-        setColors(newColors);
-      }
-    } catch (err) {
-      console.error('Error uploading color image', err);
-    } finally {
-      setIsUploading(false);
     }
   };
 
@@ -179,25 +194,63 @@ export function ProductList() {
   const flatCats = flattenCategories(categories);
   const filteredCats = flatCats.filter(c => c.name.toLowerCase().includes(catSearch.toLowerCase()));
 
-  // Pre-fill Specifications based on Category
-  useEffect(() => {
-    if (view === 'form' && formData.categoryId && specifications.length === 0 && !editingProduct) {
-      const catName = flatCats.find(c => c.id === formData.categoryId)?.name.toLowerCase() || '';
-      if (catName.includes('điện thoại') || catName.includes('iphone') || catName.includes('samsung')) {
-        setSpecifications([
-          { key: 'Màn hình', value: '' }, { key: 'Chip', value: '' }, { key: 'RAM', value: '' },
-          { key: 'Bộ nhớ', value: '' }, { key: 'Camera', value: '' }, { key: 'Pin', value: '' }, { key: 'Hệ điều hành', value: '' }
-        ]);
-      } else if (catName.includes('laptop') || catName.includes('macbook')) {
-        setSpecifications([
-          { key: 'CPU', value: '' }, { key: 'GPU', value: '' }, { key: 'RAM', value: '' },
-          { key: 'SSD', value: '' }, { key: 'Màn hình', value: '' }, { key: 'Pin', value: '' }, { key: 'Trọng lượng', value: '' }
-        ]);
-      }
-    }
-  }, [formData.categoryId]);
+  // Category Configuration logic
+  const currentCategoryConfigKey = useMemo(() => {
+    if (!formData.categoryId) return 'default';
+    const catName = flatCats.find(c => c.id === formData.categoryId)?.name.toLowerCase() || '';
+    if (catName.includes('điện thoại') || catName.includes('iphone') || catName.includes('samsung')) return 'phone';
+    if (catName.includes('laptop') || catName.includes('macbook')) return 'laptop';
+    if (catName.includes('ipad') || catName.includes('máy tính bảng') || catName.includes('tablet')) return 'tablet';
+    if (catName.includes('pc') || catName.includes('máy tính để bàn')) return 'pc';
+    if (catName.includes('đồng hồ') || catName.includes('watch')) return 'watch';
+    if (catName.includes('phụ kiện') || catName.includes('tai nghe')) return 'accessories';
+    return 'default';
+  }, [formData.categoryId, flatCats]);
 
-  // Upload Images
+  const currentConfig = CATEGORY_CONFIGS[currentCategoryConfigKey];
+
+  // Pre-fill Specifications & Reset Variants based on Category
+  useEffect(() => {
+    if (view === 'form' && formData.categoryId && !editingProduct) {
+      setSpecifications(currentConfig.specifications.map(key => ({ key, value: '' })));
+      // Initialize variantOptions with empty arrays for current config
+      const initialOpts: Record<string, VariantOption[]> = {};
+      currentConfig.variants.forEach(v => {
+        initialOpts[v] = variantOptions[v] || []; // preserve if already exist
+      });
+      setVariantOptions(initialOpts);
+    }
+  }, [formData.categoryId, currentConfig]);
+
+
+  const handleUploadColorImage = async (e: React.ChangeEvent<HTMLInputElement>, attrKey: string, optIndex: number) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setIsUploading(true);
+    try {
+      const uploadData = new FormData();
+      uploadData.append('image', file);
+      const res = await fetch('http://localhost:3001/api/upload', { method: 'POST', body: uploadData });
+      const data = await res.json();
+      if (data.imageUrl) {
+        setVariantOptions(prev => {
+          const newOpts = { ...prev };
+          const attrArr = [...(newOpts[attrKey] || [])];
+          if (attrArr[optIndex]) {
+            attrArr[optIndex] = { ...attrArr[optIndex], image: data.imageUrl };
+          }
+          newOpts[attrKey] = attrArr;
+          return newOpts;
+        });
+      }
+    } catch (err) {
+      console.error('Error uploading color image', err);
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  // Upload Main Images
   const handleUploadGallerySlot = async (e: React.ChangeEvent<HTMLInputElement>, slotIndex: number) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -243,10 +296,9 @@ export function ProductList() {
   const handleOpenCreate = () => {
     setEditingProduct(null);
     setFormData({ name: '', description: '', brand: '', image: '', images: ['', '', '', '', ''], categoryId: '', status: 'active' });
-    setCapacities([]);
-    setColors([]);
+    setVariantOptions({});
     setVariantRows([]);
-    setSpecifications(DEFAULT_SPECS.map(s => ({ ...s })));
+    setSpecifications([]);
     setErrorMsg('');
     setView('form');
   };
@@ -266,18 +318,29 @@ export function ProductList() {
 
     setSpecifications(product.specifications ? (product.specifications as any).map((s:any) => ({ key: s.key, value: s.value })) : []);
 
-    const existingCaps = new Map<string, string>();
-    const existingCols = new Map<string, { hex: string, image: string }>();
+    const existingOptions: Record<string, Map<string, VariantOption>> = {};
+    
     product.variants.forEach(v => {
-      if (v.attributes['Dung lượng']) existingCaps.set(v.attributes['Dung lượng'], v.price.toString());
-      if (v.attributes['Màu sắc']) {
-        if (!existingCols.has(v.attributes['Màu sắc']) || v.image) {
-          existingCols.set(v.attributes['Màu sắc'], { hex: v.colorCode || '#ffffff', image: v.image || '' });
+      Object.entries(v.attributes).forEach(([attrKey, attrValue]) => {
+        if (!existingOptions[attrKey]) {
+          existingOptions[attrKey] = new Map();
         }
-      }
+        if (!existingOptions[attrKey].has(attrValue) || (attrKey === 'Màu sắc' && v.image)) {
+           existingOptions[attrKey].set(attrValue, {
+             name: attrValue,
+             price: attrKey === 'Dung lượng' ? v.price.toString() : undefined, // Keep price mapping for Dung lượng for backwards compatibility if needed
+             hex: attrKey === 'Màu sắc' ? (v.colorCode || '#ffffff') : undefined,
+             image: attrKey === 'Màu sắc' ? (v.image || '') : undefined
+           });
+        }
+      });
     });
-    setCapacities(Array.from(existingCaps.entries()).map(([name, price]) => ({ name, price })));
-    setColors(Array.from(existingCols.entries()).map(([name, data]) => ({ name, hex: data.hex, image: data.image })));
+
+    const newVariantOptions: Record<string, VariantOption[]> = {};
+    Object.keys(existingOptions).forEach(key => {
+      newVariantOptions[key] = Array.from(existingOptions[key].values());
+    });
+    setVariantOptions(newVariantOptions);
 
     setVariantRows(product.variants.map(v => ({
       sku: v.sku,
@@ -293,48 +356,67 @@ export function ProductList() {
     setView('form');
   };
 
-  // Auto Generate Variants
+  // Auto Generate Variants (Cartesian Product)
   const generateSkuPart = (text: string) => {
     return text.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
   };
 
   const handleGenerateVariants = () => {
-    if (capacities.length === 0 && colors.length === 0) {
+    const keys = currentConfig.variants;
+    const baseSku = formData.name ? generateSkuPart(formData.name.substring(0, 4)) : 'SKU';
+    
+    // Check if any variant options exist
+    const hasAnyOption = keys.some(key => variantOptions[key] && variantOptions[key].length > 0);
+    
+    if (!hasAnyOption) {
       setVariantRows([{ sku: formData.name ? generateSkuPart(formData.name.substring(0, 8)) : 'DEFAULT', price: '0', salePrice: '', stock: '0', attributes: {}, colorCode: '', image: '' }]);
       return;
     }
 
-    const caps = capacities.length > 0 ? capacities : [{ name: '', price: '0' }];
-    const cols = colors.length > 0 ? colors : [{ name: '', hex: '', image: '' }];
+    const generateCombinations = (
+      keysList: string[], 
+      currentAttr: Record<string, string>, 
+      currentColor: VariantOption | null, 
+      currentPriceMap: number
+    ): VariantFormRow[] => {
+      if (keysList.length === 0) {
+        const existing = variantRows.find(v => {
+          for (const k in currentAttr) {
+            if (v.attributes[k] !== currentAttr[k]) return false;
+          }
+          return true;
+        });
 
-    const newVariants: VariantFormRow[] = [];
-    const baseSku = formData.name ? generateSkuPart(formData.name.substring(0, 4)) : 'SKU';
+        const skuParts = [baseSku, ...Object.values(currentAttr).map(generateSkuPart)];
 
-    caps.forEach(cap => {
-      cols.forEach(col => {
-        const existing = variantRows.find(v => 
-          (cap.name === '' || v.attributes['Dung lượng'] === cap.name) &&
-          (col.name === '' || v.attributes['Màu sắc'] === col.name)
-        );
-
-        const skuParts = [baseSku];
-        if (cap.name) skuParts.push(generateSkuPart(cap.name));
-        if (col.name) skuParts.push(generateSkuPart(col.name));
-
-        newVariants.push({
+        return [{
           sku: existing?.sku || skuParts.join('-'),
-          price: existing?.price || cap.price || '0',
+          price: existing?.price || currentPriceMap.toString() || '0',
           salePrice: existing?.salePrice || '',
           stock: existing?.stock || '0',
-          attributes: {
-            ...(cap.name ? { 'Dung lượng': cap.name } : {}),
-            ...(col.name ? { 'Màu sắc': col.name } : {})
-          },
-          colorCode: existing?.colorCode || col.hex || '', 
-          image: existing?.image || col.image || ''
-        });
-      });
-    });
+          attributes: currentAttr,
+          colorCode: existing?.colorCode || currentColor?.hex || '',
+          image: existing?.image || currentColor?.image || ''
+        }];
+      }
+
+      const key = keysList[0];
+      const options = variantOptions[key] || [];
+      
+      if (options.length === 0) {
+        return generateCombinations(keysList.slice(1), currentAttr, currentColor, currentPriceMap);
+      }
+
+      let combos: VariantFormRow[] = [];
+      for (const opt of options) {
+        const nextColor = key === 'Màu sắc' ? opt : currentColor;
+        const nextPrice = (key !== 'Màu sắc') && opt.price ? Number(opt.price) : currentPriceMap;
+        combos = combos.concat(generateCombinations(keysList.slice(1), { ...currentAttr, [key]: opt.name }, nextColor, nextPrice));
+      }
+      return combos;
+    };
+
+    const newVariants = generateCombinations(keys, {}, null, 0);
     setVariantRows(newVariants);
   };
 
@@ -500,78 +582,118 @@ export function ProductList() {
             <div className="bg-[#1c1c1e] border border-white/10 rounded-2xl p-6">
               <h3 className="text-sm font-semibold text-white/50 uppercase tracking-wider mb-4">BIẾN THỂ</h3>
               
-              <div className="space-y-4">
-                {/* Variant tags */}
-                <div className="space-y-3">
-                  <div>
-                    <label className="block text-xs font-medium text-white/50 mb-1.5">Dung lượng</label>
-                    <div className="flex flex-wrap items-center gap-2">
-                      {capacities.map((cap, i) => (
-                        <div key={i} className="inline-flex items-center gap-2 px-2 py-1.5 bg-white/5 border border-white/10 rounded-lg text-sm text-white/90">
-                          <span className="font-medium">{cap.name}</span>
-                          <span className="text-white/20">|</span>
-                          <input type="number" placeholder="Giá..." value={cap.price} onChange={e => { const c = [...capacities]; c[i].price = e.target.value; setCapacities(c); }} className="w-20 bg-transparent text-xs outline-none text-emerald-400 placeholder:text-white/30" />
-                          <button onClick={() => setCapacities(capacities.filter((_, idx) => idx !== i))} className="text-white/40 hover:text-white ml-1"><X className="w-3 h-3"/></button>
-                        </div>
-                      ))}
-                      <input type="text" value={capInput} onChange={e => setCapInput(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); if (capInput && !capacities.find(c => c.name === capInput)) { setCapacities([...capacities, { name: capInput, price: '' }]); setCapInput(''); } } }} placeholder="Nhập & Enter..." className="w-32 h-8 bg-black/20 border border-white/10 rounded-lg px-3 text-xs focus:outline-none focus:border-emerald-500" />
-                    </div>
-                    {/* Bản mẫu Dung lượng */}
-                    <div className="flex flex-wrap gap-1.5 mt-2">
-                      {PREDEFINED_CAPACITIES.map(cap => (
-                        <button key={cap} type="button" onClick={() => !capacities.find(c => c.name === cap) && setCapacities([...capacities, { name: cap, price: '' }])} className="text-[10px] px-2 py-1 rounded bg-white/5 hover:bg-emerald-500/20 hover:text-emerald-400 text-white/50 transition-colors border border-transparent hover:border-emerald-500/30">+{cap}</button>
-                      ))}
-                    </div>
-                  </div>
+              <div className="space-y-6">
+                {/* Dynamic Variant tags based on Category */}
+                {currentConfig.variants.map(attrKey => {
+                  const opts = variantOptions[attrKey] || [];
+                  const isColor = attrKey === 'Màu sắc';
                   
-                  <div>
-                    <label className="block text-xs font-medium text-white/50 mb-1.5">Màu sắc</label>
-                    <div className="flex flex-wrap items-start gap-3">
-                      {colors.map((col, i) => (
-                        <div key={i} className="flex flex-col gap-2 p-2.5 bg-white/5 border border-white/10 rounded-xl min-w-[100px]">
-                          <div className="flex items-center justify-between gap-2">
-                            <div className="flex items-center gap-1.5">
-                              <span className="w-3 h-3 rounded-full border border-white/20" style={{ backgroundColor: col.hex }} />
-                              <span className="text-sm font-medium text-white/90">{col.name}</span>
+                  return (
+                    <div key={attrKey} className="pb-4 border-b border-white/5 last:border-0 last:pb-0">
+                      <label className="block text-xs font-medium text-emerald-400 mb-2">{attrKey}</label>
+                      <div className="flex flex-wrap items-start gap-3">
+                        {opts.map((opt, i) => (
+                          <div key={i} className={cn("flex flex-col gap-2 p-2.5 bg-white/5 border border-white/10 rounded-xl", isColor ? "min-w-[100px]" : "")}>
+                            <div className="flex items-center justify-between gap-3">
+                              <div className="flex items-center gap-1.5">
+                                {isColor && <span className="w-3 h-3 rounded-full border border-white/20" style={{ backgroundColor: opt.hex }} />}
+                                <span className="text-sm font-medium text-white/90">{opt.name}</span>
+                              </div>
+                              <button onClick={() => {
+                                const newOpts = { ...variantOptions };
+                                newOpts[attrKey] = opts.filter((_, idx) => idx !== i);
+                                setVariantOptions(newOpts);
+                              }} className="text-white/40 hover:text-white/90 transition-colors p-0.5 rounded-md hover:bg-white/10"><X className="w-3.5 h-3.5"/></button>
                             </div>
-                            <button onClick={() => setColors(colors.filter((_, idx) => idx !== i))} className="text-white/40 hover:text-white/90 transition-colors p-0.5 rounded-md hover:bg-white/10"><X className="w-3.5 h-3.5"/></button>
-                          </div>
-                          <label className="flex items-center justify-center gap-1.5 text-[11px] text-white/60 hover:text-emerald-400 cursor-pointer w-full mt-1 border border-dashed border-white/20 hover:border-emerald-500/50 rounded-lg p-1.5 transition-colors bg-black/20">
-                            {col.image ? (
-                              <img src={col.image} className="w-full h-8 object-contain rounded-sm" alt="color variant" />
-                            ) : (
-                              <><Upload className="w-3 h-3" /> Tải ảnh</>
+                            
+                            {!isColor && (
+                              <input type="number" placeholder="Giá..." value={opt.price || ''} onChange={e => { 
+                                const newOpts = { ...variantOptions };
+                                newOpts[attrKey][i].price = e.target.value;
+                                setVariantOptions(newOpts);
+                              }} className="w-full bg-transparent text-xs outline-none text-emerald-400 placeholder:text-white/30 border-b border-white/10 focus:border-emerald-400 pb-1" />
                             )}
-                            <input type="file" accept="image/*" className="hidden" onChange={e => handleUploadColorImage(e, i)} disabled={isUploading} />
-                          </label>
+
+                            {isColor && (
+                              <label className="flex items-center justify-center gap-1.5 text-[11px] text-white/60 hover:text-emerald-400 cursor-pointer w-full mt-1 border border-dashed border-white/20 hover:border-emerald-500/50 rounded-lg p-1.5 transition-colors bg-black/20">
+                                {opt.image ? (
+                                  <img src={resolveMediaUrl(opt.image)} className="w-full h-8 object-contain rounded-sm" alt="color variant" />
+                                ) : (
+                                  <><Upload className="w-3 h-3" /> Tải ảnh</>
+                                )}
+                                <input type="file" accept="image/*" className="hidden" onChange={e => handleUploadColorImage(e, attrKey, i)} disabled={isUploading} />
+                              </label>
+                            )}
+                          </div>
+                        ))}
+                        
+                        <div className="flex items-center gap-2 bg-black/20 border border-white/10 rounded-xl px-3 py-2 h-auto">
+                          {isColor && (
+                            <input type="color" value={colorHexInput} onChange={e => setColorHexInput(e.target.value)} className="w-6 h-6 rounded cursor-pointer bg-transparent border-0 p-0 shrink-0" />
+                          )}
+                          <input type="text" value={attrInputs[attrKey] || ''} onChange={e => setAttrInputs({...attrInputs, [attrKey]: e.target.value})} 
+                            onKeyDown={e => { 
+                              if (e.key === 'Enter') { 
+                                e.preventDefault(); 
+                                const val = attrInputs[attrKey];
+                                if (val && !opts.find(o => o.name === val)) { 
+                                  const newOpts = { ...variantOptions };
+                                  newOpts[attrKey] = [...opts, { name: val, hex: isColor ? colorHexInput : undefined }];
+                                  setVariantOptions(newOpts);
+                                  setAttrInputs({...attrInputs, [attrKey]: ''}); 
+                                } 
+                              } 
+                            }} 
+                            placeholder={`Thêm ${attrKey}...`} className="w-28 bg-transparent text-sm focus:outline-none placeholder:text-white/30" />
                         </div>
-                      ))}
-                      <div className="flex items-center gap-2 bg-black/20 border border-white/10 rounded-xl px-3 py-2 h-[76px]">
-                        <input type="color" value={colHexInput} onChange={e => setColHexInput(e.target.value)} className="w-6 h-6 rounded cursor-pointer bg-transparent border-0 p-0" />
-                        <input type="text" value={colInput} onChange={e => setColInput(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); if (colInput && !colors.find(c => c.name === colInput)) { setColors([...colors, { name: colInput, hex: colHexInput }]); setColInput(''); } } }} placeholder="Tên màu mới..." className="w-24 bg-transparent text-sm focus:outline-none placeholder:text-white/30" />
                       </div>
+                      
+                      {/* Predefined options */}
+                      {isColor ? (
+                        <div className="flex flex-wrap gap-2 mt-3">
+                          {PREDEFINED_COLORS.map(col => (
+                            <button key={col.name} type="button" onClick={() => {
+                              if (!opts.find(c => c.name === col.name)) {
+                                const newOpts = { ...variantOptions };
+                                newOpts[attrKey] = [...opts, col];
+                                setVariantOptions(newOpts);
+                              }
+                            }} className="flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-lg bg-white/5 hover:bg-emerald-500/20 hover:text-emerald-400 text-white/70 transition-colors border border-transparent hover:border-emerald-500/30">
+                              <span className="w-3 h-3 rounded-full border border-white/20" style={{ backgroundColor: col.hex }} />
+                              {col.name}
+                            </button>
+                          ))}
+                        </div>
+                      ) : PREDEFINED_OPTIONS[attrKey] ? (
+                        <div className="flex flex-wrap gap-2 mt-3">
+                          {PREDEFINED_OPTIONS[attrKey].map(optName => (
+                            <button key={optName} type="button" onClick={() => {
+                              if (!opts.find(c => c.name === optName)) {
+                                const newOpts = { ...variantOptions };
+                                newOpts[attrKey] = [...opts, { name: optName }];
+                                setVariantOptions(newOpts);
+                              }
+                            }} className="text-[11px] px-2.5 py-1.5 rounded-lg bg-white/5 hover:bg-emerald-500/20 hover:text-emerald-400 text-white/70 transition-colors border border-transparent hover:border-emerald-500/30">
+                              + {optName}
+                            </button>
+                          ))}
+                        </div>
+                      ) : null}
                     </div>
-                    {/* Bảng màu mẫu */}
-                    <div className="flex flex-wrap gap-2 mt-2">
-                      {PREDEFINED_COLORS.map(col => (
-                        <button key={col.name} type="button" onClick={() => !colors.find(c => c.name === col.name) && setColors([...colors, col])} className="flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-lg bg-white/5 hover:bg-emerald-500/20 hover:text-emerald-400 text-white/70 transition-colors border border-transparent hover:border-emerald-500/30">
-                          <span className="w-3 h-3 rounded-full border border-white/20" style={{ backgroundColor: col.hex }} />
-                          {col.name}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </div>
+                  );
+                })}
 
                 {/* Generate Button */}
-                <button type="button" onClick={handleGenerateVariants} className="h-10 px-4 rounded-xl font-medium bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 transition-colors flex items-center gap-2 border border-emerald-500/20 text-sm">
-                  <Zap className="w-4 h-4 fill-emerald-400" /> Sinh biến thể tự động
-                </button>
+                <div className="pt-2">
+                  <button type="button" onClick={handleGenerateVariants} className="h-10 px-4 rounded-xl font-medium bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 transition-colors flex items-center gap-2 border border-emerald-500/20 text-sm w-full justify-center shadow-sm">
+                    <Zap className="w-4 h-4 fill-emerald-400" /> Sinh biến thể tự động
+                  </button>
+                </div>
 
                 {/* Variant Table */}
                 {variantRows.length > 0 && (
-                  <div className="mt-4 border border-white/10 rounded-xl overflow-hidden bg-black/20">
-                    <table className="w-full text-sm text-left">
+                  <div className="mt-4 border border-white/10 rounded-xl overflow-x-auto bg-black/20">
+                    <table className="w-full text-sm text-left whitespace-nowrap">
                       <thead className="bg-white/5 text-xs text-white/50 uppercase border-b border-white/10">
                         <tr>
                           <th className="px-4 py-3 font-medium">Variant</th>
@@ -583,7 +705,7 @@ export function ProductList() {
                       </thead>
                       <tbody className="divide-y divide-white/5">
                         {variantRows.map((row, idx) => {
-                          const variantName = [row.attributes['Dung lượng'], row.attributes['Màu sắc']].filter(Boolean).join(' / ') || 'Mặc định';
+                          const variantName = Object.values(row.attributes).filter(Boolean).join(' / ') || 'Mặc định';
                           return (
                             <tr key={idx} className="hover:bg-white/5 transition-colors">
                               <td className="px-4 py-3 font-medium text-white/90">{variantName}</td>
@@ -605,18 +727,19 @@ export function ProductList() {
           {/* RIGHT COLUMN */}
           <div className="lg:col-span-4 space-y-6 sticky top-4 self-start">
             {/* THÔNG SỐ KỸ THUẬT */}
-            <div className="bg-[#1c1c1e] border border-white/10 rounded-2xl p-6">
+            <div className="bg-[#1c1c1e] border border-white/10 rounded-2xl p-6 shadow-xl">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-sm font-semibold text-white/50 uppercase tracking-wider">THÔNG SỐ KỸ THUẬT</h3>
                 <button type="button" onClick={() => setSpecifications([...specifications, { key: '', value: '' }])} className="text-xs text-emerald-400 hover:text-emerald-300 font-medium bg-emerald-500/10 px-2 py-1 rounded-lg flex items-center gap-1"><Plus className="w-3 h-3"/> Thêm</button>
               </div>
               <div className="grid grid-cols-1 gap-3">
                 {specifications.map((spec, i) => (
-                  <div key={i} className="flex items-center gap-2 bg-black/20 p-1.5 rounded-lg border border-white/10 group">
-                    <input type="text" placeholder="Tên (RAM)" value={spec.key} onChange={e => { const newS = [...specifications]; newS[i].key = e.target.value; setSpecifications(newS); }} className="w-full h-8 bg-transparent px-2 text-xs font-semibold text-white/70 focus:text-white focus:outline-none focus:bg-white/5 rounded transition-colors" />
-                    <span className="text-white/20">|</span>
-                    <input type="text" placeholder="Giá trị..." value={spec.value} onChange={e => { const newS = [...specifications]; newS[i].value = e.target.value; setSpecifications(newS); }} className="flex-1 h-8 bg-transparent px-2 text-xs text-white focus:outline-none focus:bg-white/5 rounded transition-colors" />
-                    <button type="button" onClick={() => setSpecifications(specifications.filter((_, idx) => idx !== i))} className="p-1.5 text-white/30 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"><X className="w-3 h-3" /></button>
+                  <div key={i} className="flex flex-col gap-1.5 bg-black/20 p-2 rounded-xl border border-white/10 group">
+                    <div className="flex items-center justify-between">
+                      <input type="text" placeholder="Tên thông số..." value={spec.key} onChange={e => { const newS = [...specifications]; newS[i].key = e.target.value; setSpecifications(newS); }} className="w-full bg-transparent text-xs font-semibold text-emerald-400 focus:outline-none transition-colors" />
+                      <button type="button" onClick={() => setSpecifications(specifications.filter((_, idx) => idx !== i))} className="p-1 text-white/30 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"><X className="w-3 h-3" /></button>
+                    </div>
+                    <input type="text" placeholder="Giá trị..." value={spec.value} onChange={e => { const newS = [...specifications]; newS[i].value = e.target.value; setSpecifications(newS); }} className="w-full h-8 bg-white/5 px-2 text-xs text-white focus:outline-none focus:bg-white/10 border border-transparent focus:border-emerald-500/30 rounded-lg transition-colors" />
                   </div>
                 ))}
               </div>
@@ -650,7 +773,7 @@ export function ProductList() {
       </div>
 
       {/* TABLE */}
-      <div className="flex-1 overflow-hidden flex flex-col bg-white/5 border border-white/10 rounded-2xl">
+      <div className="flex-1 overflow-hidden flex flex-col bg-white/5 border border-white/10 rounded-2xl shadow-xl">
         <div className="grid grid-cols-12 gap-4 p-4 border-b border-white/10 text-xs font-semibold text-white/50 uppercase tracking-wider shrink-0">
           <div className="col-span-4 pl-2">Sản phẩm</div>
           <div className="col-span-2">Danh mục</div>
@@ -661,7 +784,7 @@ export function ProductList() {
 
         <div className="flex-1 overflow-y-auto custom-scrollbar p-2 flex flex-col gap-1">
           {isLoading ? (
-            <div className="flex items-center justify-center h-40"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white" /></div>
+            <div className="flex items-center justify-center h-40"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500" /></div>
           ) : listFilteredProducts.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-40 text-white/40">
               <Package className="w-10 h-10 text-white/15 mb-3" />
@@ -729,8 +852,8 @@ export function ProductList() {
                     </div>
                   </div>
                   <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button onClick={e => { e.stopPropagation(); handleOpenEdit(product); }} className="p-1.5 hover:bg-white/10 rounded-lg text-white/50 hover:text-white transition-colors"><Edit2 className="w-4 h-4" /></button>
-                    <button onClick={e => { e.stopPropagation(); handleDelete(product.id, product.name); }} className="p-1.5 hover:bg-red-500/20 rounded-lg text-white/50 hover:text-red-400 transition-colors"><Trash2 className="w-4 h-4" /></button>
+                    <button onClick={e => { e.stopPropagation(); handleOpenEdit(product); }} className="p-1.5 hover:bg-white/10 rounded-lg text-emerald-400/50 hover:text-emerald-400 transition-colors"><Edit2 className="w-4 h-4" /></button>
+                    <button onClick={e => { e.stopPropagation(); handleDelete(product.id, product.name); }} className="p-1.5 hover:bg-red-500/20 rounded-lg text-red-400/50 hover:text-red-400 transition-colors"><Trash2 className="w-4 h-4" /></button>
                   </div>
                 </div>
               </motion.div>

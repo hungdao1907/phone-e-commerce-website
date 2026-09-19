@@ -2,13 +2,14 @@ import React, { useEffect, useRef } from 'react';
 import lottie from 'lottie-web';
 
 interface LottieIconProps {
-  animationData: any;
+  animationData?: any;
+  path?: string;
   className?: string;
   loop?: boolean;
   autoplay?: boolean;
 }
 
-export function LottieIcon({ animationData, className = "w-full h-full", loop = true, autoplay = true, playing }: LottieIconProps & { playing?: boolean }) {
+export function LottieIcon({ animationData, path, className = "w-full h-full", loop = true, autoplay = false, playing }: LottieIconProps & { playing?: boolean }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const animRef = useRef<any>(null);
 
@@ -19,14 +20,14 @@ export function LottieIcon({ animationData, className = "w-full h-full", loop = 
       renderer: 'svg',
       loop,
       autoplay: playing !== undefined ? playing : autoplay,
-      animationData: animationData,
+      ...(path ? { path } : { animationData }),
     });
     animRef.current = anim;
     return () => {
       anim.destroy();
       animRef.current = null;
     };
-  }, [animationData, loop, autoplay]); // Intentionally omitting playing from deps to not recreate animation
+  }, [animationData, loop, autoplay]); 
 
   useEffect(() => {
     if (animRef.current) {
@@ -35,5 +36,17 @@ export function LottieIcon({ animationData, className = "w-full h-full", loop = 
     }
   }, [playing]);
 
-  return <div ref={containerRef} className={className} />;
+  const handleMouseEnter = () => {
+    if (playing === undefined && animRef.current) {
+      animRef.current.play();
+    }
+  };
+
+  const handleMouseLeave = () => {
+    if (playing === undefined && animRef.current) {
+      animRef.current.stop();
+    }
+  };
+
+  return <div ref={containerRef} className={className} onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave} />;
 }

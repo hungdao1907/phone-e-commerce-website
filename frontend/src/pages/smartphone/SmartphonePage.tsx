@@ -63,10 +63,10 @@ export function SmartphonePage({ brand }: SmartphonePageProps) {
                     colorMap.set(cName, {
                       name: cName,
                       hex: v.colorCode || (cName.toLowerCase().includes('đen') || cName.toLowerCase().includes('black') ? '#000000' : '#FFFFFF'),
-                      image: v.image || undefined
+                      image: v.image && v.image.startsWith('/uploads') ? `http://localhost:3001${v.image}` : v.image
                     });
                   } else if (v.image && !colorMap.get(cName).image) {
-                    colorMap.get(cName).image = v.image;
+                    colorMap.get(cName).image = v.image.startsWith('/uploads') ? `http://localhost:3001${v.image}` : v.image;
                   }
                 }
               });
@@ -91,6 +91,12 @@ export function SmartphonePage({ brand }: SmartphonePageProps) {
                 else series = 'Oppo Series';
               }
 
+              const resolveImageUrl = (url: string) => {
+                if (!url) return undefined;
+                if (url.startsWith('/uploads')) return `http://localhost:3001${url}`;
+                return url;
+              };
+
               return {
                 id: ap.id,
                 slug: ap.slug || ap.id,
@@ -102,7 +108,7 @@ export function SmartphonePage({ brand }: SmartphonePageProps) {
                 price: finalPrice.toLocaleString('vi-VN') + '₫',
                 originalPrice: originalPrice,
                 badge: idx === 0 ? 'MỚI RA MẮT' : (ap.badge || undefined),
-                image: ap.image || (ap.images && ap.images[0]) || '/images/hero.png',
+                image: resolveImageUrl(ap.image) || resolveImageUrl(ap.images?.[0]) || '/images/hero.png',
                 accentColor: config.accent,
                 featured: idx < 3,
                 specs: {

@@ -189,7 +189,7 @@ router.post('/', authenticateToken, async (req, res) => {
 
     res.status(201).json({ message: 'Thêm sản phẩm thành công', product: newProduct });
   } catch (error) {
-    console.error('Error creating product:', error);
+    console.error('Error creating product:', error); res.status(500).json({ message: 'Lỗi server: ' + (error.message || '') }); return;
     res.status(500).json({ message: 'Lỗi server' });
   }
 });
@@ -217,23 +217,54 @@ router.put('/:id', authenticateToken, async (req, res) => {
       include: { category: true, variants: true }
     });
 
-    // If variants provided, delete old ones and recreate
+    // If variants provided, update existing by SKU and create new ones
     if (variants && Array.isArray(variants)) {
-      await prisma.productVariant.deleteMany({ where: { productId: id } });
+      const incomingSkus = variants.map((v: any) => v.sku);
       
+      const existingVariants = await prisma.productVariant.findMany({ where: { productId: id } });
+      const skusToDelete = existingVariants.filter(ev => !incomingSkus.includes(ev.sku)).map(ev => ev.sku);
+      
+      if (skusToDelete.length > 0) {
+        try {
+          await prisma.productVariant.deleteMany({ where: { sku: { in: skusToDelete } } });
+        } catch (e) {
+          return res.status(400).json({ message: 'Không thể xoá biến thể vì đã phát sinh đơn hàng liên quan.' });
+        }
+      }
+
       for (const v of variants) {
-        await prisma.productVariant.create({
-          data: {
-            sku: v.sku,
-            price: Number(v.price),
-            salePrice: v.salePrice ? Number(v.salePrice) : null,
-            stock: Number(v.stock || 0),
-            attributes: v.attributes || {},
-            colorCode: v.colorCode || null,
-            image: v.image || null,
-            productId: id
+        const existing = existingVariants.find(ev => ev.sku === v.sku);
+        if (existing) {
+          await prisma.productVariant.update({
+            where: { id: existing.id },
+            data: {
+              price: Number(v.price),
+              salePrice: v.salePrice ? Number(v.salePrice) : null,
+              stock: Number(v.stock || 0),
+              attributes: v.attributes || {},
+              colorCode: v.colorCode || null,
+              image: v.image || null
+            }
+          });
+        } else {
+          // Check SKU globally
+          const conflict = await prisma.productVariant.findUnique({ where: { sku: v.sku } });
+          if (conflict) {
+            return res.status(400).json({ message: `Mã SKU "${v.sku}" đã tồn tại ở sản phẩm khác.` });
           }
-        });
+          await prisma.productVariant.create({
+            data: {
+              sku: v.sku,
+              price: Number(v.price),
+              salePrice: v.salePrice ? Number(v.salePrice) : null,
+              stock: Number(v.stock || 0),
+              attributes: v.attributes || {},
+              colorCode: v.colorCode || null,
+              image: v.image || null,
+              productId: id
+            }
+          });
+        }
       }
 
       // Refetch with new variants

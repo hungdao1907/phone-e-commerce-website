@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import React, { useRef } from 'react';
 import { motion, useReducedMotion, useScroll, useTransform, type MotionValue } from 'motion/react';
 
 export interface TechnologyStory {
@@ -12,6 +12,7 @@ export interface TechnologyStory {
 }
 
 interface StickyStoryCardProps {
+  key?: React.Key;
   index: number;
   story: TechnologyStory;
   progress: MotionValue<number>;

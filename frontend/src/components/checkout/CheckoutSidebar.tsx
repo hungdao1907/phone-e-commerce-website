@@ -20,13 +20,20 @@ export function CheckoutSidebar({ buttonText, isSubmitting = false, onNext, ship
   const activeMilestones = milestones?.filter(m => m.isActive) || [];
   const achievedMilestones = activeMilestones.filter(m => subtotal >= m.amount);
   
-  // Highest discount from milestones
-  const rewardDiscount = achievedMilestones
+  // Highest discount percentage from milestones
+  const highestMilestonePercent = achievedMilestones
     .filter(m => m.type === 'voucher' && m.discount)
     .reduce((max, m) => Math.max(max, m.discount || 0), 0);
+    
+  const rewardDiscount = highestMilestonePercent > 0 ? Math.floor(subtotal * (highestMilestonePercent / 100)) : 0;
 
   // Promo code discount
-  const promoDiscountValue = appliedPromo?.discountValue || 0;
+  let promoDiscountValue = 0;
+  if (appliedPromo && subtotal >= (appliedPromo.minOrderValue || 0)) {
+    promoDiscountValue = appliedPromo.discountType === 'percentage'
+      ? Math.floor(subtotal * (appliedPromo.discountValue / 100))
+      : appliedPromo.discountValue;
+  }
 
   // Free shipping logic
   const isFreeShipping = achievedMilestones.some(m => m.type === 'shipping') || subtotal >= 25000000;

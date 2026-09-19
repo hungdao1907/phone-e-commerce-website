@@ -8,6 +8,11 @@ interface Customer {
   phone: string | null;
   address: string | null;
   createdAt: string;
+  Order?: {
+    id: string;
+    totalAmount: number;
+    status: string;
+  }[];
 }
 
 export function CustomerManager() {
@@ -84,8 +89,8 @@ export function CustomerManager() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Danh Sách Khách Hàng</h1>
-          <p className="text-white/40 text-sm mt-1">Quản lý thông tin và dữ liệu người dùng hệ thống</p>
+          <h1 className="text-2xl font-bold">Danh Sách Khách Hàng (Customers)</h1>
+          <p className="text-white/40 text-sm mt-1">Dữ liệu người dùng hệ thống và lịch sử mua sắm</p>
         </div>
         <button 
           onClick={() => setIsAdding(!isAdding)}
@@ -193,7 +198,8 @@ export function CustomerManager() {
                   <th className="p-4 text-sm font-medium text-white/60">Họ và Tên</th>
                   <th className="p-4 text-sm font-medium text-white/60">Email</th>
                   <th className="p-4 text-sm font-medium text-white/60">Số điện thoại</th>
-                  <th className="p-4 text-sm font-medium text-white/60">Địa chỉ</th>
+                  <th className="p-4 text-sm font-medium text-white/60">Số đơn</th>
+                  <th className="p-4 text-sm font-medium text-white/60">Tổng chi tiêu</th>
                   <th className="p-4 text-sm font-medium text-white/60">Ngày tham gia</th>
                   <th className="p-4 text-sm font-medium text-white/60 text-right">Thao Tác</th>
                 </tr>
@@ -204,7 +210,10 @@ export function CustomerManager() {
                     <td className="p-4 font-medium text-white">{c.fullName}</td>
                     <td className="p-4 text-sm text-white/80">{c.email}</td>
                     <td className="p-4 text-sm text-white/80">{c.phone || <span className="text-white/20">Trống</span>}</td>
-                    <td className="p-4 text-sm text-white/80 max-w-[200px] truncate">{c.address || <span className="text-white/20">Trống</span>}</td>
+                    <td className="p-4 text-sm text-white/80 font-bold">{c.Order?.length || 0}</td>
+                    <td className="p-4 text-sm text-[#99e300] font-bold">
+                      {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(c.Order?.reduce((sum, o) => sum + o.totalAmount, 0) || 0)}
+                    </td>
                     <td className="p-4 text-sm text-white/60">
                       {new Date(c.createdAt).toLocaleDateString('vi-VN')}
                     </td>

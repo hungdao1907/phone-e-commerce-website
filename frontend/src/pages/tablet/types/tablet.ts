@@ -3,6 +3,7 @@ export type TabletBrandId = 'ipad' | 'samsung' | 'xiaomi';
 export interface TabletColor {
   name: string;
   hex: string;
+  image?: string;
 }
 
 export interface TabletModel {

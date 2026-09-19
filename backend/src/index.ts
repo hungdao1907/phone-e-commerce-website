@@ -19,6 +19,8 @@ import promoCodeRoutes from './routes/promoCode.routes';
 import bannerRoutes from './routes/banner.routes';
 import uploadRoutes from './routes/upload.routes';
 import rewardRoutes from './routes/reward.routes';
+import leadRoutes from './routes/lead.routes';
+import dashboardRoutes from './routes/dashboard.routes';
 
 const app = express();
 const port = process.env.PORT || 3001;
@@ -59,6 +61,8 @@ app.use('/api/promo-codes', promoCodeRoutes);
 app.use('/api/banners', bannerRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/rewards', rewardRoutes);
+app.use('/api/leads', leadRoutes);
+app.use('/api/dashboard', dashboardRoutes);
 
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'ok' });

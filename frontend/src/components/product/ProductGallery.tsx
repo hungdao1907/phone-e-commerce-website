@@ -110,7 +110,7 @@ export function ProductGallery({ productId, images = [], productName }: ProductG
 
           {/* Fan Carousel Navigation */}
           <div className="w-full relative z-10 pt-4 mt-4 border-t border-neutral-100/50">
-            <CardFanCarousel images={displayImages} onIndexChange={(index) => setSelectedIndex(index)} />
+            <CardFanCarousel images={displayImages} selectedIndex={selectedIndex} onIndexChange={(index) => setSelectedIndex(index)} />
           </div>
         </div>
       </div>

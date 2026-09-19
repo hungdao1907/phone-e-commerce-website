@@ -3,8 +3,6 @@ import { motion, AnimatePresence, HTMLMotionProps } from 'framer-motion';
 import { Columns3, Grid, X, MapPin, Clock, Users, CalendarDays, MoreHorizontal } from 'lucide-react';
 import MotionButton from '@/components/ui/MotionButton';
 import { LottieIcon } from '@/components/ui/LottieIcon';
-import editAnimation from '@/data/edit.json';
-import deleteAnimation from '@/data/delete.json';
 
 export type DayType = {
   day: string;
@@ -140,7 +138,7 @@ const MeetingActions = ({ mIndex, day, meeting, fetchPlans, onEdit }: { mIndex: 
                 onMouseEnter={() => setIsHoveringEdit(true)}
                 onMouseLeave={() => setIsHoveringEdit(false)}
               >
-                <div className="w-3.5 h-3.5 opacity-80"><LottieIcon animationData={editAnimation} playing={isHoveringEdit} /></div>
+                <div className="w-3.5 h-3.5 opacity-80"><LottieIcon path="/lottie/edit.json" playing={isHoveringEdit} /></div>
                 <span className="text-xs font-medium">Sửa</span>
               </button>
               <button
@@ -154,7 +152,7 @@ const MeetingActions = ({ mIndex, day, meeting, fetchPlans, onEdit }: { mIndex: 
                 onMouseEnter={() => setIsHoveringDelete(true)}
                 onMouseLeave={() => setIsHoveringDelete(false)}
               >
-                <div className="w-3.5 h-3.5 opacity-80 text-red-400"><LottieIcon animationData={deleteAnimation} playing={isHoveringDelete} /></div>
+                <div className="w-3.5 h-3.5 opacity-80 text-red-400"><LottieIcon path="/lottie/delete.json" playing={isHoveringDelete} /></div>
                 <span className="text-xs font-medium">Xoá</span>
               </button>
               <button

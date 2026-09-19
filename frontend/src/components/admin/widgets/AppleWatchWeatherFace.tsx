@@ -198,40 +198,40 @@ export function AppleWatchWeatherFace() {
       <div className="absolute inset-0 flex items-center justify-center" style={{ top: '4%' }}>
         {/* Outer Ring Background (for numbers) */}
         <div
-          className="absolute rounded-full"
-          style={{
-            width: '75%', // tightened to wrap numbers exactly
-            aspectRatio: '1',
-            background: 'rgba(0, 0, 0, 0.04)', // subtle base circle
-          }}
-        />
-        {/* Middle Ring Background (for icons) */}
-        <div
-          className="absolute rounded-full"
-          style={{
-            width: '64%',
-            aspectRatio: '1',
-            background: 'rgba(0, 0, 0, 0.08)', // slightly darker than sky
-          }}
-        />
-        {/* Inner Circle Background (for temp) */}
-        <div
-          className="absolute rounded-full"
-          style={{
-            width: '45%',
-            aspectRatio: '1',
-            background: 'rgba(255, 255, 255, 0.04)', // Làm sáng lên để tiệp màu với vòng ngoài cùng (vòng số giờ) và trong suốt nhẹ
-          }}
-        />
-      </div>
+              className="absolute rounded-full"
+              style={{
+                width: '75%', // tightened to wrap numbers exactly
+                aspectRatio: '1',
+                background: 'rgba(0, 0, 0, 0.04)', // subtle base circle
+              }}
+            />
+            {/* Middle Ring Background (for icons) */}
+            <div
+              className="absolute rounded-full"
+              style={{
+                width: '64%',
+                aspectRatio: '1',
+                background: 'rgba(0, 0, 0, 0.08)', // slightly darker than sky
+              }}
+            />
+            {/* Inner Circle Background (for temp) */}
+            <div
+              className="absolute rounded-full"
+              style={{
+                width: '45%',
+                aspectRatio: '1',
+                background: 'rgba(255, 255, 255, 0.04)', // Làm sáng lên để tiệp màu với vòng ngoài cùng (vòng số giờ) và trong suốt nhẹ
+              }}
+            />
+          </div>
 
-      {/* ── Top Bar: Menu | Time | Weather Icon ── */}
-      <div
-        className="absolute z-30 flex justify-between items-center"
-        style={{ top: '7%', left: '8%', right: '3%' }}
-      >
-        {/* Empty spacer to keep time centered after removing menu icon */}
-        <div style={{ width: 11 }} />
+          {/* ── Top Bar: Menu | Time | Weather Icon ── */}
+          <div
+            className="absolute z-30 flex justify-between items-center"
+            style={{ top: '7%', left: '8%', right: '3%' }}
+          >
+            {/* Empty spacer to keep time centered after removing menu icon */}
+            <div style={{ width: 11 }} />
 
         {/* Current time */}
         <span className="text-white font-semibold tracking-wide" style={{ fontSize: 20 }}>
@@ -334,15 +334,12 @@ export function AppleWatchWeatherFace() {
         </span>
       </div>
 
-      {/* ── Bottom Text (Weather Description) ── */}
-      <div
-        className="absolute w-full text-center"
-        style={{ bottom: '6%' }}
-      >
-        <span className="text-white font-medium tracking-wide" style={{ fontSize: 13, opacity: 0.75 }}>
-          {weatherDescription}
-        </span>
-      </div>
+          {/* Bottom Text (Condition) */}
+          <div className="absolute bottom-3 left-0 right-0 flex justify-center">
+            <span className="text-white font-medium text-[11px] px-3 py-1 bg-black/10 rounded-full backdrop-blur-md">
+              {weatherDescription}
+            </span>
+          </div>
     </div>
   );
 }

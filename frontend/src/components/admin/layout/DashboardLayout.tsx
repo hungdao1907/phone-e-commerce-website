@@ -1,24 +1,22 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { motion } from 'framer-motion';
 import { VerticalDock } from './VerticalDock';
-import { LottieIcon } from '@/components/ui/LottieIcon';
 import InteractiveCalendar from '@/components/admin/widgets/InteractiveCalendar';
 import { SearchButton } from '@/components/admin/layout/SearchButton';
+import { NotificationDropdown } from '@/components/admin/layout/NotificationDropdown';
+import { LottieIcon } from '@/components/ui/LottieIcon';
 import { ProductList } from '@/components/admin/views/ProductList';
 import { Inventory } from '@/components/admin/views/Inventory';
 import { Categories } from '@/components/admin/views/Categories';
 import { Marketing } from '@/components/admin/views/Marketing';
 import { Banners } from '@/components/admin/views/Banners';
-import { Delivery } from '@/components/admin/views/Delivery';
 import { Orders } from '@/components/admin/views/Orders';
 import { Disputes } from '@/components/admin/views/Disputes';
 import { Invoices } from '@/components/admin/views/Invoices';
 import { MainDashboardView } from '@/components/admin/views/MainDashboardView';
-import { NotificationDropdown } from '@/components/admin/layout/NotificationDropdown';
 import { StaffManager } from '@/components/admin/views/StaffManager';
 import { CustomerManager } from '@/components/admin/views/CustomerManager';
-import { Search } from 'lucide-react';
-import notificationAnimation from '@/data/notification.json';
-import settingAnimation from '@/data/setting.json';
+import { LeadManager } from '@/components/admin/views/LeadManager';
 import { SettingsManager } from '@/components/admin/views/SettingsManager';
 
 // Map view IDs to readable titles
@@ -27,31 +25,23 @@ const VIEW_LABELS: Record<string, string> = {
   calendar: 'Lịch',
   planned: 'Lịch kế hoạch',
   marketing: 'Chiến dịch marketing',
-  delivery: 'Lịch giao hàng',
+  banners: 'Quản lý Banner',
   product: 'Sản phẩm',
   orders: 'Đơn hàng',
-  user: 'Khách hàng',
+  crm: 'CRM',
+  'crm-leads': 'Khách hàng tiềm năng',
+  'crm-customers': 'Khách hàng',
+  user: 'Nhân sự',
   'user-staff': 'Quản lý Nhân sự',
-  performance: 'Hiệu suất',
+  'marketing-module': 'Marketing',
 };
 
 export function DashboardLayout() {
   const [activeView, setActiveView] = useState('dashboard');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isNotifOpen, setIsNotifOpen] = useState(false);
+  const [isNotifHovered, setIsNotifHovered] = useState(false);
   const notifRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const handleOutsideClick = (e: MouseEvent) => {
-      if (notifRef.current && !notifRef.current.contains(e.target as Node)) {
-        setIsNotifOpen(false);
-      }
-    };
-    if (isNotifOpen) {
-      document.addEventListener('mousedown', handleOutsideClick);
-    }
-    return () => document.removeEventListener('mousedown', handleOutsideClick);
-  }, [isNotifOpen]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -60,23 +50,22 @@ export function DashboardLayout() {
         setIsSearchOpen(true);
       }
     };
+    const handleOutsideClick = (e: MouseEvent) => {
+      if (notifRef.current && !notifRef.current.contains(e.target as Node)) {
+        setIsNotifOpen(false);
+      }
+    };
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    document.addEventListener('mousedown', handleOutsideClick);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('mousedown', handleOutsideClick);
+    };
   }, []);
 
   return (
-    <div className="relative min-h-screen w-full overflow-hidden bg-black text-white font-sans">
-      
-      {/* Video Background */}
-      <video
-        autoPlay
-        loop
-        muted
-        playsInline
-        className="absolute inset-0 w-full h-full object-cover z-0 pointer-events-none opacity-80"
-      >
-        <source src="/videos/dbbg.mp4" type="video/mp4" />
-      </video>
+    <div className="relative min-h-screen w-full overflow-hidden bg-gradient-to-br from-[#183D61] via-[#ACD99C] to-[#E0CD39] text-white font-sans">
+
 
       {/* Main Content Area */}
       <div className="relative z-10 flex h-screen p-4 pl-24">
@@ -84,64 +73,55 @@ export function DashboardLayout() {
         <VerticalDock activeView={activeView} onNavigate={setActiveView} />
 
         {/* Right Area (Navbar + Main Workspace) */}
-        <div className="flex-1 flex flex-col gap-5 h-full">
+        <div className="flex-1 flex flex-col h-full bg-[#0D1F16]/70 backdrop-blur-md border border-white/10 rounded-3xl shadow-lg overflow-hidden">
           {/* Top Navbar */}
-          <header className="relative z-50 h-[64px] shrink-0 bg-black/40 backdrop-blur-md border border-white/10 rounded-3xl shadow-lg flex items-center justify-between px-6">
-            
-            {/* Left Search */}
-            <div className="w-[320px] z-[100]">
-              <SearchButton />
+          <header className="relative z-50 h-[80px] shrink-0 flex items-center px-8">
+
+            {/* Left Spacer */}
+            <div className="flex-1"></div>
+
+            {/* Center Search */}
+            <div className="w-[320px] z-[100] flex justify-center">
+              <SearchButton onNavigate={setActiveView} />
             </div>
 
             {/* Right Icons */}
-            <div className="flex items-center gap-4">
-              {/* Setting Icon */}
+            <div className="flex flex-1 items-center justify-end gap-4 relative" ref={notifRef}>
               <button 
-                onClick={() => setActiveView('settings')}
-                className="w-10 h-10 flex items-center justify-center rounded-2xl hover:bg-white/10 transition-colors"
+                onClick={() => setIsNotifOpen(!isNotifOpen)}
+                onMouseEnter={() => setIsNotifHovered(true)}
+                onMouseLeave={() => setIsNotifHovered(false)}
+                className="relative group outline-none flex items-center justify-center w-12 h-12 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors"
               >
-                <div className="w-7 h-7">
-                  <LottieIcon animationData={settingAnimation} />
-                </div>
-              </button>
-
-              {/* Notification Icon & Dropdown */}
-              <div className="relative" ref={notifRef}>
-                <button 
-                  onClick={() => setIsNotifOpen(!isNotifOpen)}
-                  className="relative w-10 h-10 flex items-center justify-center rounded-2xl hover:bg-white/10 transition-colors"
+                <motion.div 
+                  animate={{ scale: isNotifHovered ? 1.2 : 1 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                  className="w-8 h-8 flex items-center justify-center relative"
                 >
-                  <div className="w-7 h-7">
-                    <LottieIcon animationData={notificationAnimation} />
-                  </div>
-                  <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full shadow-[0_0_8px_rgba(239,68,68,0.8)]"></span>
-                </button>
-                <NotificationDropdown isOpen={isNotifOpen} onClose={() => setIsNotifOpen(false)} />
-              </div>
-
-              {/* Separator */}
-              <div className="w-px h-6 bg-white/10 mx-2"></div>
-
-              {/* User Avatar */}
-              <button className="w-10 h-10 rounded-2xl overflow-hidden border border-white/10 hover:border-white/30 transition-colors shadow-lg">
-                <img 
-                  src="https://ui-avatars.com/api/?name=Admin&background=random&color=fff" 
-                  alt="User Avatar" 
-                  className="w-full h-full object-cover"
-                />
+                  <LottieIcon path="/lottie/notification.json" playing={isNotifHovered} />
+                  <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full shadow-[0_0_8px_rgba(239,68,68,0.8)]"></span>
+                </motion.div>
               </button>
+
+              {isNotifOpen && (
+                <div className="absolute top-[3.5rem] right-0 z-[100] w-[320px]">
+                  <NotificationDropdown isOpen={isNotifOpen} onClose={() => setIsNotifOpen(false)} />
+                </div>
+              )}
             </div>
 
           </header>
 
           {/* Main Content Area */}
-          <main className="flex-1 bg-black/40 backdrop-blur-md border border-white/10 rounded-3xl shadow-lg overflow-y-auto p-8 custom-scrollbar transform-gpu will-change-transform">
+          <main className="flex-1 overflow-y-auto p-8 custom-scrollbar transform-gpu will-change-transform">
             {activeView === 'dashboard' ? (
               <MainDashboardView />
             ) : activeView === 'user-staff' ? (
               <StaffManager />
-            ) : activeView === 'user-customers' ? (
+            ) : activeView === 'crm-customers' ? (
               <CustomerManager />
+            ) : activeView === 'crm-leads' ? (
+              <LeadManager />
             ) : activeView === 'planned' ? (
               <InteractiveCalendar />
             ) : activeView === 'product' || activeView === 'product-list' ? (
@@ -154,8 +134,6 @@ export function DashboardLayout() {
               <Banners />
             ) : activeView === 'marketing' ? (
               <Marketing />
-            ) : activeView === 'delivery' ? (
-              <Delivery />
             ) : activeView === 'orders' || activeView === 'orders-list' ? (
               <Orders />
             ) : activeView === 'orders-disputes' ? (
