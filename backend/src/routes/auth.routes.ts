@@ -7,7 +7,7 @@ import nodemailer from 'nodemailer';
 const router = express.Router();
 const prisma = new PrismaClient();
 
-const JWT_SECRET = process.env.JWT_SECRET || 'fallback_secret_key_for_development';
+import { JWT_SECRET } from '../config/auth';
 
 const smtpTransporter = nodemailer.createTransport({
   service: 'gmail',
