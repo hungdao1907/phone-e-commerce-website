@@ -22,6 +22,7 @@ import { Search } from 'lucide-react';
 import notificationAnimation from '@/data/notification.json';
 import settingAnimation from '@/data/setting.json';
 import { SettingsManager } from '@/components/admin/views/SettingsManager';
+import { AdminChatWidget } from '@/components/admin/chat/AdminChatWidget';
 
 // Map view IDs to readable titles
 const VIEW_LABELS: Record<string, string> = {
@@ -197,6 +198,9 @@ export function DashboardLayout() {
           </main>
         </div>
       </div>
+      
+      {/* Floating Admin Chat Widget */}
+      <AdminChatWidget />
     </div>
   );
 }

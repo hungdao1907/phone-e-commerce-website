@@ -18,6 +18,8 @@ import campaignRoutes from './routes/campaign.routes';
 import promoCodeRoutes from './routes/promoCode.routes';
 import bannerRoutes from './routes/banner.routes';
 import uploadRoutes from './routes/upload.routes';
+import chatbotRoutes from './routes/chatbot.routes';
+import adminChatbotRoutes from './routes/admin-chatbot.routes';
 import footerRoutes from './routes/footer.routes';
 import rewardRoutes from './routes/reward.routes';
 
@@ -59,6 +61,8 @@ app.use('/api/campaigns', campaignRoutes);
 app.use('/api/promo-codes', promoCodeRoutes);
 app.use('/api/banners', bannerRoutes);
 app.use('/api/upload', uploadRoutes);
+app.use('/api/chatbot', chatbotRoutes);
+app.use('/api/admin/chatbot', adminChatbotRoutes);
 app.use('/api/footer', footerRoutes);
 app.use('/api/rewards', rewardRoutes);
 
