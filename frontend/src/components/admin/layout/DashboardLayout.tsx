@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
+import { useParams, useNavigate } from 'react-router-dom';
 import { VerticalDock } from './VerticalDock';
 import InteractiveCalendar from '@/components/admin/widgets/InteractiveCalendar';
 import { SearchButton } from '@/components/admin/layout/SearchButton';
@@ -10,6 +11,8 @@ import { Inventory } from '@/components/admin/views/Inventory';
 import { Categories } from '@/components/admin/views/Categories';
 import { Marketing } from '@/components/admin/views/Marketing';
 import { Banners } from '@/components/admin/views/Banners';
+import { FooterManagement } from '@/components/admin/views/FooterManagement';
+import { Delivery } from '@/components/admin/views/Delivery';
 import { Orders } from '@/components/admin/views/Orders';
 import { Disputes } from '@/components/admin/views/Disputes';
 import { Invoices } from '@/components/admin/views/Invoices';
@@ -22,10 +25,12 @@ import { SettingsManager } from '@/components/admin/views/SettingsManager';
 // Map view IDs to readable titles
 const VIEW_LABELS: Record<string, string> = {
   dashboard: 'Tổng quan',
-  calendar: 'Lịch',
+  calendar: 'Nội dung & Marketing',
   planned: 'Lịch kế hoạch',
   marketing: 'Chiến dịch marketing',
   banners: 'Quản lý Banner',
+  footer: 'Quản lý Footer',
+  delivery: 'Lịch giao hàng',
   product: 'Sản phẩm',
   orders: 'Đơn hàng',
   crm: 'CRM',
@@ -37,7 +42,22 @@ const VIEW_LABELS: Record<string, string> = {
 };
 
 export function DashboardLayout() {
-  const [activeView, setActiveView] = useState('dashboard');
+  const { view: routeView } = useParams<{ view?: string }>();
+  const navigate = useNavigate();
+  const [activeView, setActiveView] = useState(() => routeView || 'dashboard');
+
+  useEffect(() => {
+    if (routeView && routeView !== activeView) {
+      setActiveView(routeView);
+    } else if (!routeView && activeView !== 'dashboard') {
+      setActiveView('dashboard');
+    }
+  }, [routeView]);
+
+  const handleNavigate = (newView: string) => {
+    setActiveView(newView);
+    navigate(newView === 'dashboard' ? '/dashboard' : `/dashboard/${newView}`, { replace: false });
+  };
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [isNotifHovered, setIsNotifHovered] = useState(false);
@@ -70,7 +90,7 @@ export function DashboardLayout() {
       {/* Main Content Area */}
       <div className="relative z-10 flex h-screen p-4 pl-24">
         {/* Left Dock */}
-        <VerticalDock activeView={activeView} onNavigate={setActiveView} />
+        <VerticalDock activeView={activeView} onNavigate={handleNavigate} />
 
         {/* Right Area (Navbar + Main Workspace) */}
         <div className="flex-1 flex flex-col h-full bg-[#0D1F16]/70 backdrop-blur-md border border-white/10 rounded-3xl shadow-lg overflow-hidden">
@@ -132,6 +152,8 @@ export function DashboardLayout() {
               <Categories />
             ) : activeView === 'banners' ? (
               <Banners />
+            ) : activeView === 'footer' ? (
+              <FooterManagement />
             ) : activeView === 'marketing' ? (
               <Marketing />
             ) : activeView === 'orders' || activeView === 'orders-list' ? (

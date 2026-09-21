@@ -1,10 +1,10 @@
 import { useRef, useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
+import { Link } from 'react-router-dom';
 import { motion, AnimatePresence, useInView, useReducedMotion } from 'motion/react';
 import type { Variants } from 'motion/react';
-import { CheckCircle2 } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { GlassButton } from '@/components/ui/GlassButton';
-import { GlassDescriptionBadge } from '@/components/ui/GlassDescriptionBadge';
 
 export type EcosystemDeviceId = 'smartphone' | 'laptop' | 'tablet' | 'watch';
 
@@ -13,6 +13,9 @@ interface EcosystemDeviceData {
   index: string;
   title: string;
   category: string;
+  productName: string;
+  ctaLabel: string;
+  route: string;
   description: string;
   tagline: string;
   accent: string;
@@ -31,12 +34,15 @@ const ECOSYSTEM_DEVICES: Record<EcosystemDeviceId, EcosystemDeviceData> = {
     index: '01',
     title: 'Kết nối',
     category: 'Trung tâm điều khiển',
+    productName: 'iPhone',
+    ctaLabel: 'Khám phá iPhone',
+    route: '/phone/iphone',
     description: 'Điểm trung tâm của mọi trải nghiệm.',
     tagline: 'Mọi thiết bị, một nhịp.',
     accent: '#475569',
     halo: 'radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(203,213,225,0.45) 45%, transparent 74%)',
     image: '/images/ecosystem/ecosystem-phone.webp',
-    alt: 'Điện thoại thông minh màu xanh',
+    alt: 'iPhone',
     sizeClass: 'product-size--phone',
     aspectRatio: 309 / 543,
     centralWidth: 165,
@@ -46,12 +52,15 @@ const ECOSYSTEM_DEVICES: Record<EcosystemDeviceId, EcosystemDeviceData> = {
     index: '02',
     title: 'Làm việc',
     category: 'Hiệu suất cao',
+    productName: 'MacBook',
+    ctaLabel: 'Khám phá MacBook',
+    route: '/laptop/macbook',
     description: 'Tiếp tục công việc ở bất cứ đâu.',
     tagline: 'Liền mạch mọi tác vụ.',
     accent: '#2563eb',
     halo: 'radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(219,234,254,0.5) 45%, transparent 74%)',
     image: '/images/ecosystem/ecosystem-laptop.webp',
-    alt: 'Máy tính xách tay màu đen',
+    alt: 'MacBook',
     sizeClass: 'product-size--laptop',
     aspectRatio: 970 / 586,
     centralWidth: 275,
@@ -61,12 +70,15 @@ const ECOSYSTEM_DEVICES: Record<EcosystemDeviceId, EcosystemDeviceData> = {
     index: '03',
     title: 'Sáng tạo',
     category: 'Không gian mở',
+    productName: 'iPad',
+    ctaLabel: 'Khám phá iPad',
+    route: '/tablet/ipad',
     description: 'Không gian linh hoạt cho mọi ý tưởng.',
     tagline: 'Không gian cho mọi ý tưởng.',
     accent: '#7c3aed',
     halo: 'radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(243,232,255,0.5) 45%, transparent 74%)',
     image: '/images/ecosystem/ecosystem-tablet.webp',
-    alt: 'Máy tính bảng',
+    alt: 'iPad',
     sizeClass: 'product-size--tablet',
     aspectRatio: 277 / 318,
     centralWidth: 195,
@@ -76,12 +88,15 @@ const ECOSYSTEM_DEVICES: Record<EcosystemDeviceId, EcosystemDeviceData> = {
     index: '04',
     title: 'Đồng hành',
     category: 'Sức khỏe & Kết nối',
+    productName: 'Apple Watch',
+    ctaLabel: 'Khám phá Apple Watch',
+    route: '/watch/exploreWatch',
     description: 'Thông tin cần thiết luôn gần bạn.',
     tagline: 'Luôn gần bên bạn.',
     accent: '#059669',
     halo: 'radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(209,250,229,0.5) 45%, transparent 74%)',
     image: '/images/ecosystem/ecosystem-watch.webp',
-    alt: 'Đồng hồ thông minh màu đen',
+    alt: 'Apple Watch',
     sizeClass: 'product-size--watch',
     aspectRatio: 335 / 388,
     centralWidth: 150,
@@ -787,7 +802,7 @@ export function EcosystemExperienceSection() {
                 })}
               </div>
 
-              {/* ── CENTRAL HERO PRODUCT ── */}
+              {/* ── CENTRAL HERO PRODUCT & CONTEXTUAL CTA ── */}
               {/* This ref is used to measure where the clone should land */}
               <div
                 ref={centralTargetRef}
@@ -822,27 +837,51 @@ export function EcosystemExperienceSection() {
                         />
                       </div>
 
-                      {/* Central Hero Liquid Glass Description Block */}
+                      {/* Central Hero Contextual Apple Ecosystem CTA Button */}
                       <motion.div
-                        className="mt-3.5"
+                        className="mt-4 sm:mt-5 pointer-events-auto"
                         initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: 6 }}
                         animate={{
                           opacity: 1,
                           y: 0,
-                          transition: { duration: isTransitioning ? 0.15 : 0.45, ease: ENTER_EASE, delay: isTransitioning ? 0 : 0.04 },
+                          transition: {
+                            duration: isTransitioning ? 0.15 : 0.45,
+                            ease: ENTER_EASE,
+                            delay: isTransitioning ? 0 : 0.04,
+                          },
                         }}
-                        exit={shouldReduceMotion ? { opacity: 0 } : {
-                          opacity: 0,
-                          y: -4,
-                          transition: { duration: 0.18, ease: 'easeOut' },
-                        }}
+                        exit={
+                          shouldReduceMotion
+                            ? { opacity: 0 }
+                            : {
+                                opacity: 0,
+                                y: -4,
+                                transition: { duration: 0.18, ease: 'easeOut' },
+                              }
+                        }
                       >
-                        <GlassDescriptionBadge
-                          index={activeData.index}
-                          title={activeData.title}
-                          tagline={activeData.tagline}
-                          accentColor={activeData.accent}
-                        />
+                        <Link
+                          to={activeData.route}
+                          className="group/eco-cta inline-flex items-center gap-2 rounded-full border border-black/[0.08] bg-white/90 backdrop-blur-md px-5 sm:px-6 py-2.5 sm:py-3 text-[13px] sm:text-sm font-semibold text-[#1d1d1f] shadow-[0_4px_16px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.04)] transition-all duration-200 hover:-translate-y-[1px] hover:scale-[1.02] hover:bg-white hover:shadow-[0_8px_24px_rgba(0,0,0,0.09)] active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black min-h-[44px]"
+                          aria-label={`${activeData.ctaLabel} - Hệ sinh thái Apple`}
+                        >
+                          <AnimatePresence mode="wait" initial={false}>
+                            <motion.span
+                              key={activeData.id}
+                              className="inline-flex items-center gap-1.5 whitespace-nowrap"
+                              initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: 6 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: -6 }}
+                              transition={{ duration: shouldReduceMotion ? 0.15 : 0.25, ease: PREMIUM_EASE }}
+                            >
+                              <span>{activeData.ctaLabel}</span>
+                              <ArrowRight
+                                className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#1d1d1f] transition-transform duration-200 group-hover/eco-cta:translate-x-1"
+                                aria-hidden="true"
+                              />
+                            </motion.span>
+                          </AnimatePresence>
+                        </Link>
                       </motion.div>
                     </motion.div>
                   )}
@@ -854,9 +893,11 @@ export function EcosystemExperienceSection() {
 
         {/* MOBILE DOCKED STATUS CARD */}
         <div className="mt-8 lg:hidden">
-          <div
-            className="rounded-2xl p-4 border border-white/95 bg-white/85 backdrop-blur-md shadow-sm transition-all duration-300"
+          <Link
+            to={activeData.route}
+            className="block rounded-2xl p-4 border border-white/95 bg-white/85 backdrop-blur-md shadow-sm transition-all duration-300 hover:shadow-md active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black"
             style={{ borderLeft: `4px solid ${activeData.accent}` }}
+            aria-label={`${activeData.ctaLabel} - ${activeData.title}`}
           >
             <div className="flex items-center justify-between">
               <span
@@ -868,11 +909,11 @@ export function EcosystemExperienceSection() {
               <span className="text-[10px] text-slate-400 font-mono">{activeData.category}</span>
             </div>
             <p className="mt-1.5 text-sm text-slate-700 font-medium">{activeData.tagline}</p>
-            <div className="mt-3 pt-2.5 border-t border-slate-200/60 flex items-center justify-between text-[11px] text-slate-500 font-mono">
-              <span>TRẠNG THÁI: TRUNG TÂM HỆ SINH THÁI</span>
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+            <div className="mt-3 pt-2.5 border-t border-slate-200/60 flex items-center justify-between text-[11px] font-semibold text-slate-800">
+              <span>{activeData.ctaLabel}</span>
+              <ArrowRight className="w-3.5 h-3.5 text-slate-700" aria-hidden="true" />
             </div>
-          </div>
+          </Link>
         </div>
       </div>
     </section>

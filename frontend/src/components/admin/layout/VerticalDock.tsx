@@ -12,11 +12,15 @@ const DOCK_ITEMS = [
   { 
     id: 'calendar', 
     icon: "/lottie/calendar.json", 
-    label: 'Lịch', 
+    label: 'Nội dung & Marketing',
     isLottie: true, 
     path: '/calendar',
     subItems: [
-      { id: 'planned', label: 'Lịch kế hoạch' }
+      { id: 'planned', label: 'Lịch kế hoạch' },
+      { id: 'marketing', label: 'Chiến dịch marketing' },
+      { id: 'banners', label: 'Quản lý Banner' },
+      { id: 'footer', label: 'Quản lý Footer' },
+      { id: 'delivery', label: 'Lịch giao hàng' }
     ]
   },
   { 
