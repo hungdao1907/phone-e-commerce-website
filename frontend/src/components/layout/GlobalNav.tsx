@@ -205,12 +205,7 @@ export function GlobalNav() {
             <img src="/images/logo.png" alt="Logo" className="h-7 w-auto object-contain" />
           </Link>
 
-          {/* Hidden Measurement Container */}
-          <ul ref={hiddenMeasureRef} className="absolute opacity-0 pointer-events-none flex space-x-7 text-xs font-medium -z-10">
-            {navItems.map(item => (
-              <li key={item.id} className="whitespace-nowrap">{item.name}</li>
-            ))}
-          </ul>
+
 
           {/* Desktop Nav Links */}
           <div ref={containerRef} className="flex-1 mx-6 lg:mx-12 h-full flex justify-center min-w-0">
