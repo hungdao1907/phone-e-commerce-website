@@ -31,55 +31,38 @@ export function GlobalNav() {
       .catch(err => console.error(err));
   }, []);
 
-  const navItems = useMemo(() => {
+  const [activeMoreCategory, setActiveMoreCategory] = useState<any | null>(null);
+
+  const { visibleItems, overflowItems, navItems } = useMemo(() => {
     const rootCats = categories.filter(c => c.parentId === null && c.isActive);
     rootCats.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
     
-    return [
+    const TARGET_SLUGS = ['dien-thoai', 'ien-thoai', 'may-tinh-bang', 'tablet', 'laptop', 'ong-ho-thong-minh', 'dong-ho-thong-minh', 'watch', 'phone'];
+
+    const allCats = [
       { id: 'store', name: 'Cửa Hàng', slug: '', isStatic: true },
       ...rootCats,
       { id: 'support', name: 'Hỗ Trợ', slug: 'support', isStatic: true }
     ];
+
+    const visible = [
+      { id: 'store', name: 'Cửa Hàng', slug: '', isStatic: true },
+      ...rootCats.filter(c => TARGET_SLUGS.includes(c.slug.toLowerCase())),
+      { id: 'support', name: 'Hỗ Trợ', slug: 'support', isStatic: true }
+    ];
+
+    const overflow = rootCats.filter(c => !TARGET_SLUGS.includes(c.slug.toLowerCase()));
+
+    return { visibleItems: visible, overflowItems: overflow, navItems: allCats };
   }, [categories]);
 
-  // Handle Overflow Measurement
-  const [visibleCount, setVisibleCount] = useState<number | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const hiddenMeasureRef = useRef<HTMLUListElement>(null);
 
-  useLayoutEffect(() => {
-    if (navItems.length === 0) return;
-    const measure = () => {
-      if (!containerRef.current || !hiddenMeasureRef.current) return;
-      const available = containerRef.current.clientWidth;
-      const children = Array.from(hiddenMeasureRef.current.children) as HTMLElement[];
-      let usedWidth = 0;
-      let count = 0;
-      const GAP = 28; // 1.75rem for space-x-7
-      const MORE_WIDTH = 90; // Approx width for "Xem thêm"
-
-      for (let i = 0; i < children.length; i++) {
-        const w = children[i].getBoundingClientRect().width;
-        const isLast = i === children.length - 1;
-        const threshold = isLast ? available : available - MORE_WIDTH;
-
-        if (usedWidth + w > threshold && count > 0) {
-          break;
-        }
-        usedWidth += w + (isLast ? 0 : GAP);
-        count++;
-      }
-      setVisibleCount(count);
-    };
-    
-    measure();
-    const observer = new ResizeObserver(measure);
-    if (containerRef.current) observer.observe(containerRef.current);
-    return () => observer.disconnect();
-  }, [navItems]);
-
-  const visibleItems = visibleCount !== null ? navItems.slice(0, visibleCount) : navItems;
-  const overflowItems = visibleCount !== null ? navItems.slice(visibleCount) : [];
+  useEffect(() => {
+    if (!activeMoreCategory && overflowItems.length > 0) {
+      setActiveMoreCategory(overflowItems[0]);
+    }
+  }, [overflowItems, activeMoreCategory]);
 
   if (activeMenu) {
     previousMenuRef.current = activeMenu;
@@ -253,22 +236,10 @@ export function GlobalNav() {
               ))}
               
               {overflowItems.length > 0 && (
-                <li className="relative h-full flex items-center group">
+                <li className="relative h-full flex items-center group" onMouseEnter={() => { handleMouseEnter({ id: 'more', name: 'Xem thêm' }); if(overflowItems.length > 0) setActiveMoreCategory(overflowItems[0]); }}>
                   <button className="flex items-center gap-1 font-medium hover:text-[#22c55e] transition-colors h-full">
                     Xem thêm <ChevronDown className="w-3 h-3 group-hover:rotate-180 transition-transform duration-300" />
                   </button>
-                  <div className="absolute top-full right-0 mt-0 w-56 bg-white border border-neutral-100 shadow-xl rounded-2xl py-3 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
-                    {overflowItems.map(item => (
-                      <Link 
-                        key={item.id} 
-                        to={`/${item.slug}`}
-                        className="block px-5 py-2.5 text-[13px] font-semibold text-neutral-700 hover:bg-neutral-50 hover:text-[#22c55e]"
-                        onClick={() => setActiveMenu(null)}
-                      >
-                        {item.name}
-                      </Link>
-                    ))}
-                  </div>
                 </li>
               )}
             </ul>
@@ -343,7 +314,51 @@ export function GlobalNav() {
               activeMenu ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'
             }`}
           >
-            {displayMenu && (
+            {displayMenu?.id === 'more' ? (
+              <div className="flex gap-10">
+                {/* Column 1: Categories */}
+                <div className="w-64 flex-shrink-0 border-r border-neutral-200 pr-4">
+                  <h4 className="text-[11px] font-bold text-neutral-400 uppercase tracking-widest mb-5">DANH MỤC KHÁC</h4>
+                  <ul className="space-y-3">
+                    {overflowItems.map((cat: any) => (
+                      <li key={cat.id}>
+                        <div
+                          className={`cursor-pointer block transition-colors duration-200 py-1 ${activeMoreCategory?.id === cat.id ? 'text-[#22c55e] font-bold' : 'text-sm font-semibold text-[#1d1d1f] hover:text-[#22c55e]'}`}
+                          onMouseEnter={() => setActiveMoreCategory(cat)}
+                          onClick={() => { setActiveMenu(null); window.location.href = `/${cat.slug}`; }}
+                        >
+                          {cat.name}
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                {/* Column 2,3,4: Data for hovered category */}
+                <div className="flex-1 grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-x-10 gap-y-10">
+                  {activeMoreCategory && getMegaMenuGroups(activeMoreCategory).map((group, idx) => (
+                    <div key={idx}>
+                      <h4 className="text-[11px] font-bold text-neutral-400 uppercase tracking-widest mb-5">{group.title}</h4>
+                      <ul className={`transition-all ${group.title === 'THƯƠNG HIỆU' ? 'space-y-4' : 'space-y-3'}`}>
+                        {group.links.map((link: string, linkIdx: number) => {
+                           const targetSlug = group.slugs && group.slugs[linkIdx] ? `/${group.slugs[linkIdx]}` : '/';
+                           return (
+                            <li key={linkIdx}>
+                              <Link
+                                to={targetSlug}
+                                onClick={() => setActiveMenu(null)}
+                                className={`block transition-colors duration-200 hover:text-[#22c55e] text-sm font-semibold text-[#1d1d1f]`}
+                              >
+                                {link}
+                              </Link>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : (displayMenu && (
               <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-x-10 gap-y-10">
                 {getMegaMenuGroups(displayMenu).map((group, idx) => (
                   <div key={idx}>
@@ -370,7 +385,7 @@ export function GlobalNav() {
                   </div>
                 ))}
               </div>
-            )}
+            ))}
           </div>
         </div>
 
