@@ -6,7 +6,7 @@ export function CartRecommendations() {
   const [recommendations, setRecommendations] = useState<any[]>([]);
 
   useEffect(() => {
-    fetch('http://localhost:3001/api/products')
+    fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/products`)
       .then(res => res.json())
       .then(data => {
         if (Array.isArray(data)) {

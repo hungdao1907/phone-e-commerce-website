@@ -10,7 +10,7 @@ import {
 import { useAuthStore } from '@/store/authStore';
 import { resolveMediaUrl } from '@/utils/media';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3001';
+const API_BASE_URL = import.meta.env.VITE_API_URL ?? `${import.meta.env.VITE_API_URL || 'http://localhost:3001'}`;
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
 
 type BannerStatus = 'active' | 'scheduled' | 'expired' | 'disabled';

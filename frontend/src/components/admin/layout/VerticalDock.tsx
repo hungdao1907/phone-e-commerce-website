@@ -1,53 +1,27 @@
 // @ts-nocheck
 import React, { useState, useRef, useEffect } from 'react';
 import lottie from 'lottie-web';
-import dashboardAnimation from '@/data/dashboard.json';
-import calendarAnimation from '@/data/calendar.json';
-import productAnimation from '@/data/product.json';
-import ordersAnimation from '@/data/orders.json';
-import userAnimation from '@/data/user.json';
-import performanceAnimation from '@/data/performance.json';
-import { ChevronRight } from 'lucide-react';
+import { ChevronRight, LogOut } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-
-const LottieIcon = ({ animationData }) => {
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!containerRef.current) return;
-    const anim = lottie.loadAnimation({
-      container: containerRef.current,
-      renderer: 'svg',
-      loop: true,
-      autoplay: true,
-      animationData: animationData,
-    });
-    return () => anim.destroy();
-  }, [animationData]);
-
-  return <div ref={containerRef} className="w-full h-full" />;
-};
+import { LottieIcon } from '@/components/ui/LottieIcon';
 import { cn } from '@/lib/utils';
+import { useAuthStore } from '@/store/authStore';
 
 const DOCK_ITEMS = [
-  { id: 'dashboard', icon: dashboardAnimation, label: 'Tổng quan', isLottie: true, path: '/dashboard' },
+  { id: 'dashboard', icon: "/lottie/dashboard.json", label: 'Tổng quan', isLottie: true, path: '/dashboard' },
   { 
     id: 'calendar', 
-    icon: calendarAnimation, 
-    label: 'Nội dung & Marketing',
+    icon: "/lottie/calendar.json", 
+    label: 'Lịch',
     isLottie: true, 
     path: '/calendar',
     subItems: [
-      { id: 'planned', label: 'Lịch kế hoạch' },
-      { id: 'marketing', label: 'Chiến dịch marketing' },
-      { id: 'banners', label: 'Quản lý Banner' },
-      { id: 'footer', label: 'Quản lý Footer' },
-      { id: 'delivery', label: 'Lịch giao hàng' }
+      { id: 'planned', label: 'Lịch kế hoạch' }
     ]
   },
   { 
     id: 'product', 
-    icon: productAnimation, 
+    icon: "/lottie/product.json", 
     label: 'Sản phẩm', 
     isLottie: true, 
     path: '/product',
@@ -59,7 +33,7 @@ const DOCK_ITEMS = [
   },
   { 
     id: 'orders', 
-    icon: ordersAnimation, 
+    icon: "/lottie/orders.json", 
     label: 'Đơn hàng', 
     isLottie: true, 
     path: '/orders',
@@ -70,23 +44,45 @@ const DOCK_ITEMS = [
     ]
   },
   { 
+    id: 'crm', 
+    icon: "/lottie/user.json", 
+    label: 'CRM', 
+    isLottie: true, 
+    path: '/crm',
+    subItems: [
+      { id: 'crm-leads', label: 'Khách hàng tiềm năng' },
+      { id: 'crm-customers', label: 'Khách hàng' }
+    ]
+  },
+  { 
     id: 'user', 
-    icon: userAnimation, 
-    label: 'Người dùng', 
+    icon: "/lottie/user.json", 
+    label: 'Nhân sự', 
     isLottie: true, 
     path: '/user',
     subItems: [
-      { id: 'user-staff', label: 'Nhân sự' },
-      { id: 'user-customers', label: 'Khách hàng' }
+      { id: 'user-staff', label: 'Quản trị viên' }
     ]
   },
-  { id: 'performance', icon: performanceAnimation, label: 'Hiệu suất', isLottie: true, path: '/performance' },
+  { 
+    id: 'marketing-module', 
+    icon: "/lottie/performance.json", 
+    label: 'Marketing', 
+    isLottie: true, 
+    path: '/marketing-module',
+    subItems: [
+      { id: 'marketing', label: 'Chiến dịch marketing' },
+      { id: 'banners', label: 'Quản lý Banner' }
+    ]
+  },
 ];
 
 export function VerticalDock({ activeView, onNavigate }: { activeView: string; onNavigate: (view: string) => void }) {
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [isExpanded, setIsExpanded] = useState(false);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [isSettingsHovered, setIsSettingsHovered] = useState(false);
+
 
   return (
     <div
@@ -172,7 +168,7 @@ export function VerticalDock({ activeView, onNavigate }: { activeView: string; o
                   >
                     {item.isLottie ? (
                       <div className="w-7 h-7 flex items-center justify-center">
-                        <LottieIcon animationData={item.icon} />
+                        <LottieIcon path={item.icon as string} playing={isItemHovered} />
                       </div>
                     ) : (
                       <item.icon className="w-6 h-6 text-white/80" />
@@ -298,6 +294,95 @@ export function VerticalDock({ activeView, onNavigate }: { activeView: string; o
               </div>
             );
           })}
+        </div>
+
+        {/* Footer Icons: Settings, Notif, Avatar */}
+        <div className="mt-auto pt-4 border-t border-white/10 flex flex-col gap-3 w-full relative">
+          
+
+
+          {/* Settings */}
+          <div className="w-full flex flex-col">
+            <button 
+              onClick={() => onNavigate('settings')}
+              onMouseEnter={() => setIsSettingsHovered(true)}
+              onMouseLeave={() => setIsSettingsHovered(false)}
+              className="relative group outline-none flex items-center w-full rounded-2xl"
+            >
+              <motion.div
+                className="absolute inset-0 rounded-2xl pointer-events-none"
+                animate={{ opacity: isSettingsHovered ? 0.5 : 0 }}
+                style={{ background: "linear-gradient(to right, transparent 0%, rgba(255,255,255,0.04) 35%, rgba(255,255,255,0.12) 100%)" }}
+                transition={{ duration: 0.35, ease: "easeOut" }}
+              />
+              <motion.div 
+                animate={{ scale: isSettingsHovered ? 1.2 : 1 }}
+                transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                className="w-10 h-10 shrink-0 flex items-center justify-center"
+              >
+                <div className="w-7 h-7">
+                  <LottieIcon path="/lottie/setting.json" playing={isSettingsHovered} />
+                </div>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: isExpanded ? 1 : 0 }}
+                transition={{ duration: 0.2 }}
+                className="whitespace-nowrap ml-4 font-medium transition-colors duration-200 flex-1 flex items-center justify-between text-white/60 group-hover:text-white/90"
+              >
+                <span>Cài đặt</span>
+              </motion.div>
+            </button>
+          </div>
+
+          {/* User Avatar */}
+          <div className="w-full flex flex-col">
+            <div className="relative group flex items-center justify-between w-full rounded-2xl pr-2">
+              <button className="relative outline-none flex items-center flex-1 rounded-2xl">
+                <motion.div
+                  className="absolute inset-0 rounded-2xl pointer-events-none group-hover:bg-white/5 transition-colors"
+                />
+                <div className="w-10 h-10 shrink-0 flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-xl overflow-hidden border border-white/10 group-hover:border-white/30 transition-colors shadow-lg">
+                    <img 
+                      src="https://ui-avatars.com/api/?name=Admin&background=random&color=fff" 
+                      alt="User Avatar" 
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                </div>
+
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: isExpanded ? 1 : 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="whitespace-nowrap ml-4 transition-colors duration-200 flex-1 flex flex-col items-start justify-center overflow-hidden text-left"
+                >
+                  <span className="text-sm font-medium text-white/90 leading-tight">Admin</span>
+                  <span className="text-xs text-white/50 leading-tight">Super Admin</span>
+                </motion.div>
+              </button>
+
+              <AnimatePresence>
+                {isExpanded && (
+                  <motion.button
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.8 }}
+                    onClick={() => {
+                      useAuthStore.getState().logout();
+                    }}
+                    title="Đăng xuất"
+                    className="w-8 h-8 ml-2 rounded-full bg-red-500/10 text-red-500 hover:bg-red-500/20 hover:text-red-400 flex items-center justify-center transition-colors shadow-inner flex-shrink-0 cursor-pointer"
+                  >
+                    <LogOut className="w-4 h-4" />
+                  </motion.button>
+                )}
+              </AnimatePresence>
+            </div>
+          </div>
+
         </div>
 
       </motion.div>

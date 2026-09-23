@@ -332,3 +332,30 @@ model RewardMilestone {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
+
+// ========== CRM (LEADS) ==========
+
+model Lead {
+  id              String            @id @default(uuid())
+  fullName        String
+  email           String?
+  phone           String?
+  source          String            @default("Website") // Website, Facebook, Zalo, TikTok, AI Chatbot, Khác
+  status          String            @default("new")     // new, contacted, consulting, considering, quoted, converted, no_interest, unreachable
+  leadScore       Int               @default(0)         // 0-100
+  interestedIn    String?           // Sản phẩm quan tâm
+  assignedTo      String?           // Nhân viên phụ trách (có thể là tên hoặc ID)
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  interactions    LeadInteraction[]
+}
+
+model LeadInteraction {
+  id        String   @id @default(uuid())
+  leadId    String
+  lead      Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  type      String   // message, call, status_change, note
+  content   String
+  createdBy String?  // AI, Admin, System, Khách
+  createdAt DateTime @default(now())
+}

@@ -28,13 +28,13 @@ export function ProductPurchasePage() {
         const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slug);
         
         if (isUUID) {
-          const res = await fetch(`http://localhost:3001/api/products/${slug}`);
+          const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/products/${slug}`);
           if (res.ok) dbProduct = await res.json();
         } else {
           // It's a mock product slug!
           const mockProduct = SMARTPHONE_PRODUCTS.find(p => p.slug === slug || p.id === slug);
           if (mockProduct) {
-            const res = await fetch(`http://localhost:3001/api/products/sync-mock`, {
+            const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/products/sync-mock`, {
                method: 'POST',
                headers: { 'Content-Type': 'application/json' },
                body: JSON.stringify(mockProduct)
@@ -42,7 +42,7 @@ export function ProductPurchasePage() {
             if (res.ok) dbProduct = await res.json();
           } else {
             // Try fetching by ID anyway just in case
-            const res = await fetch(`http://localhost:3001/api/products/${slug}`);
+            const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/products/${slug}`);
             if (res.ok) dbProduct = await res.json();
           }
         }
@@ -57,12 +57,12 @@ export function ProductPurchasePage() {
                 id: `color-${colorName}`,
                 name: colorName,
                 hex: v.colorCode ? (v.colorCode.startsWith('#') ? v.colorCode : `#${v.colorCode}`) : '#CCCCCC',
-                images: v.image ? [v.image] : [dbProduct.image].filter(Boolean)
+                images: (v.image ? [v.image] : [dbProduct.image]).filter(Boolean).map((img: string) => img.startsWith('/uploads') ? `${import.meta.env.VITE_API_URL || 'http://localhost:3001'}${img}` : img)
               });
             }
           });
           const colors = Array.from(uniqueColors.values());
-          if (colors.length === 0) colors.push({ id: 'default-color', name: 'Mặc định', hex: '#CCCCCC', images: [dbProduct.image].filter(Boolean) });
+          if (colors.length === 0) colors.push({ id: 'default-color', name: 'Mặc định', hex: '#CCCCCC', images: [dbProduct.image].filter(Boolean).map((img: string) => img.startsWith('/uploads') ? `${import.meta.env.VITE_API_URL || 'http://localhost:3001'}${img}` : img) });
 
           const uniqueStorages = new Map();
           dbProduct.variants?.forEach((v: any) => {
@@ -112,6 +112,12 @@ export function ProductPurchasePage() {
             }));
           }
 
+          const resolveImageUrl = (url: string) => {
+            if (!url) return undefined;
+            if (url.startsWith('/uploads')) return `${import.meta.env.VITE_API_URL || 'http://localhost:3001'}${url}`;
+            return url;
+          };
+
           const mappedProduct = {
             id: dbProduct.id,
             slug: dbProduct.id,
@@ -124,8 +130,8 @@ export function ProductPurchasePage() {
             tagline: dbProduct.description || 'Sản phẩm chính hãng',
             description: dbProduct.description,
             badge: 'Mới',
-            defaultImage: dbProduct.image || 'https://via.placeholder.com/300',
-            galleryImages: [dbProduct.image, ...(dbProduct.images || [])].filter(Boolean),
+            defaultImage: resolveImageUrl(dbProduct.image) || 'https://via.placeholder.com/300',
+            galleryImages: [dbProduct.image, ...(dbProduct.images || [])].filter(Boolean).map(resolveImageUrl),
             colors,
             storageOptions,
             specifications: parsedSpecs.length > 0 ? parsedSpecs : [{ label: 'Đang cập nhật', value: 'Chưa có thông số' }],
@@ -164,8 +170,13 @@ export function ProductPurchasePage() {
 
   const galleryImages = useMemo(() => {
     if (!product) return [];
+    const selectedColor = product.colors.find((c: any) => c.id === selectedColorId);
+    if (selectedColor && selectedColor.images && selectedColor.images.length > 0) {
+      const allImages = [...selectedColor.images, ...(product.galleryImages ?? [product.defaultImage])];
+      return Array.from(new Set(allImages));
+    }
     return product.galleryImages ?? [product.defaultImage];
-  }, [product]);
+  }, [product, selectedColorId]);
 
   useEffect(() => {
     if (!product) {

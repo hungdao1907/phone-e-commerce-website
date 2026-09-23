@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { Settings, Gift, Tag, PackageSearch, LayoutDashboard } from 'lucide-react';
+import { Settings, Gift, Tag, PackageSearch, LayoutDashboard, PanelBottom } from 'lucide-react';
 import { CartRewardsSetting } from '../settings/CartRewardsSetting';
 import { PromoCodesSetting } from '../settings/PromoCodesSetting';
+import { FooterManagement } from './FooterManagement';
 
-type SettingsTab = 'general' | 'cart-rewards' | 'promo-codes';
+type SettingsTab = 'general' | 'cart-rewards' | 'promo-codes' | 'footer';
 
 export function SettingsManager() {
   const [activeTab, setActiveTab] = useState<SettingsTab>('cart-rewards');
@@ -11,7 +12,8 @@ export function SettingsManager() {
   const tabs = [
     { id: 'general', label: 'Cài đặt chung', icon: Settings },
     { id: 'cart-rewards', label: 'Mốc thưởng Giỏ hàng', icon: Gift },
-    { id: 'promo-codes', label: 'Mã giảm giá', icon: Tag }
+    { id: 'promo-codes', label: 'Mã giảm giá', icon: Tag },
+    { id: 'footer', label: 'Quản lý Footer', icon: PanelBottom }
   ];
 
   return (
@@ -49,6 +51,7 @@ export function SettingsManager() {
       <div className="flex-1 overflow-y-auto p-8 custom-scrollbar relative">
         {activeTab === 'cart-rewards' && <CartRewardsSetting />}
         {activeTab === 'promo-codes' && <PromoCodesSetting />}
+        {activeTab === 'footer' && <FooterManagement />}
         {activeTab === 'general' && (
           <div className="flex flex-col items-center justify-center h-full text-white/50">
             <Settings className="w-12 h-12 mb-4 opacity-20" />

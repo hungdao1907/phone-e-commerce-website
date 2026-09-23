@@ -64,6 +64,14 @@ router.get('/', async (req, res) => {
         verified: true,
         createdAt: true,
         updatedAt: true,
+        Order: {
+          select: {
+            id: true,
+            totalAmount: true,
+            createdAt: true,
+            status: true
+          }
+        }
       },
       orderBy: {
         createdAt: 'desc',

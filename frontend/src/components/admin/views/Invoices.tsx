@@ -26,7 +26,7 @@ export function Invoices() {
   const fetchInvoices = async () => {
     try {
       setIsLoading(true);
-      const res = await fetch('http://localhost:3001/api/invoices', { headers: { 'Authorization': `Bearer ${token}` } });
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/invoices`, { headers: { 'Authorization': `Bearer ${token}` } });
       if (res.ok) setInvoices(await res.json());
     } catch (error) { console.error(error); } finally {
       setIsLoading(false);

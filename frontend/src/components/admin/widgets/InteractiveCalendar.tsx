@@ -3,8 +3,6 @@ import { motion, AnimatePresence, HTMLMotionProps } from 'framer-motion';
 import { Columns3, Grid, X, MapPin, Clock, Users, CalendarDays, MoreHorizontal } from 'lucide-react';
 import MotionButton from '@/components/ui/MotionButton';
 import { LottieIcon } from '@/components/ui/LottieIcon';
-import editAnimation from '@/data/edit.json';
-import deleteAnimation from '@/data/delete.json';
 
 export type DayType = {
   day: string;
@@ -140,13 +138,13 @@ const MeetingActions = ({ mIndex, day, meeting, fetchPlans, onEdit }: { mIndex: 
                 onMouseEnter={() => setIsHoveringEdit(true)}
                 onMouseLeave={() => setIsHoveringEdit(false)}
               >
-                <div className="w-3.5 h-3.5 opacity-80"><LottieIcon animationData={editAnimation} playing={isHoveringEdit} /></div>
+                <div className="w-3.5 h-3.5 opacity-80"><LottieIcon path="/lottie/edit.json" playing={isHoveringEdit} /></div>
                 <span className="text-xs font-medium">Sửa</span>
               </button>
               <button
                 onClick={async () => {
                   try {
-                    await fetch(`http://localhost:3001/api/plans/${meeting.id}`, { method: 'DELETE' });
+                    await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/plans/${meeting.id}`, { method: 'DELETE' });
                     fetchPlans();
                   } catch (e) { console.error(e); }
                 }}
@@ -154,7 +152,7 @@ const MeetingActions = ({ mIndex, day, meeting, fetchPlans, onEdit }: { mIndex: 
                 onMouseEnter={() => setIsHoveringDelete(true)}
                 onMouseLeave={() => setIsHoveringDelete(false)}
               >
-                <div className="w-3.5 h-3.5 opacity-80 text-red-400"><LottieIcon animationData={deleteAnimation} playing={isHoveringDelete} /></div>
+                <div className="w-3.5 h-3.5 opacity-80 text-red-400"><LottieIcon path="/lottie/delete.json" playing={isHoveringDelete} /></div>
                 <span className="text-xs font-medium">Xoá</span>
               </button>
               <button
@@ -235,7 +233,7 @@ const InteractiveCalendar = React.forwardRef((
 
   const fetchPlans = async () => {
     try {
-      const res = await fetch('http://localhost:3001/api/plans');
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/plans`);
       const data = await res.json();
       setFetchedPlans(data);
     } catch (err) { console.error(err); }
@@ -290,7 +288,7 @@ const InteractiveCalendar = React.forwardRef((
 
   const handleSubmitPlan = async () => {
     try {
-      await fetch('http://localhost:3001/api/plans', {
+      await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/plans`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -325,7 +323,7 @@ const InteractiveCalendar = React.forwardRef((
 
   const handleUpdatePlan = async () => {
     try {
-      await fetch(`http://localhost:3001/api/plans/${editingPlanId}`, {
+      await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/plans/${editingPlanId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

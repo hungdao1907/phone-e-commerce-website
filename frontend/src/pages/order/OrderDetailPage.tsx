@@ -20,7 +20,7 @@ export function OrderDetailPage() {
     // In a real app, we fetch by ID. Here we fetch all and find, or mock if not found.
     const fetchOrder = async () => {
       try {
-        const res = await fetch('http://localhost:3001/api/orders', {
+        const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/orders`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         if (res.ok) {

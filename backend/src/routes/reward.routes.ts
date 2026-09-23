@@ -52,7 +52,7 @@ router.put('/:id', async (req: Request, res: Response) => {
     const { amount, label, type, discount, isActive } = req.body;
     
     const updatedMilestone = await prisma.rewardMilestone.update({
-      where: { id },
+      where: { id: id as string },
       data: {
         ...(amount !== undefined && { amount: Number(amount) }),
         ...(label !== undefined && { label }),
@@ -74,7 +74,7 @@ router.delete('/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     await prisma.rewardMilestone.delete({
-      where: { id }
+      where: { id: id as string }
     });
     res.status(204).send();
   } catch (error) {

@@ -31,8 +31,8 @@ export function Marketing() {
     try {
       setIsLoading(true);
       const [campRes, prodRes] = await Promise.all([
-        fetch('http://localhost:3001/api/campaigns', { headers: { 'Authorization': `Bearer ${token}` } }),
-        fetch('http://localhost:3001/api/products')
+        fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/campaigns`, { headers: { 'Authorization': `Bearer ${token}` } }),
+        fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/products`)
       ]);
       if (campRes.ok) setCampaigns(await campRes.json());
       if (prodRes.ok) setProducts(await prodRes.json());
@@ -46,7 +46,7 @@ export function Marketing() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const url = editingId ? `http://localhost:3001/api/campaigns/${editingId}` : 'http://localhost:3001/api/campaigns';
+      const url = editingId ? `${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/campaigns/${editingId}` : `${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/campaigns`;
       const method = editingId ? 'PUT' : 'POST';
       
       const payload = {
@@ -76,14 +76,14 @@ export function Marketing() {
   const handleDelete = async (id: string) => {
     if (!confirm('Bạn có chắc muốn xóa chiến dịch này?')) return;
     try {
-      await fetch(`http://localhost:3001/api/campaigns/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
+      await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/campaigns/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
       fetchData();
     } catch (error) { alert('Lỗi xóa chiến dịch'); }
   };
 
   const handleToggleActive = async (id: string, currentStatus: boolean) => {
     try {
-      await fetch(`http://localhost:3001/api/campaigns/${id}`, {
+      await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/campaigns/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ isActive: !currentStatus })

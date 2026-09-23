@@ -119,7 +119,7 @@ export function Categories() {
   const fetchCategories = async () => {
     try {
       setIsLoading(true);
-      const res = await fetch('http://localhost:3001/api/categories');
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/categories`);
       if (res.ok) {
         const data = await res.json();
         setCategories(data);
@@ -168,8 +168,8 @@ export function Categories() {
     setErrorMsg('');
     try {
       const url = editingCategory
-        ? `http://localhost:3001/api/categories/${editingCategory.id}`
-        : 'http://localhost:3001/api/categories';
+        ? `${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/categories/${editingCategory.id}`
+        : `${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/categories`;
       const method = editingCategory ? 'PUT' : 'POST';
 
       const res = await fetch(url, {
@@ -195,7 +195,7 @@ export function Categories() {
   const handleDeleteCat = async (id: string, name: string) => {
     if (!window.confirm(`Xóa danh mục "${name}" và toàn bộ danh mục con?`)) return;
     try {
-      await fetch(`http://localhost:3001/api/categories/${id}`, {
+      await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/categories/${id}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -208,7 +208,7 @@ export function Categories() {
 
   const handleToggleActive = async (cat: Category) => {
     try {
-      await fetch(`http://localhost:3001/api/categories/${cat.id}`, {
+      await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/categories/${cat.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ isActive: !cat.isActive })

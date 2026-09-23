@@ -21,7 +21,7 @@ export const useRewardsStore = create<RewardsState>()(
     setMilestones: (milestones) => set({ milestones }),
     fetchMilestones: async () => {
       try {
-        const response = await fetch('http://localhost:3001/api/rewards');
+        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/rewards`);
         if (response.ok) {
           const data = await response.json();
           set({ milestones: data });

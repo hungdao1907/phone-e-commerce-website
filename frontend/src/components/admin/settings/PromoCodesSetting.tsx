@@ -23,7 +23,7 @@ export function PromoCodesSetting() {
   // Fetch campaigns
   const fetchCampaigns = async () => {
     try {
-      const res = await fetch('http://localhost:3001/api/promo-codes');
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/promo-codes`);
       if (res.ok) {
         const data = await res.json();
         setPromoCodes(data);
@@ -48,7 +48,7 @@ export function PromoCodesSetting() {
     if (!code || !discountAmount || !expiresAt) return;
     
     try {
-      const res = await fetch('http://localhost:3001/api/promo-codes', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/promo-codes`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -82,7 +82,7 @@ export function PromoCodesSetting() {
 
   const toggleActive = async (id: string, currentActive: boolean) => {
     try {
-      await fetch(`http://localhost:3001/api/promo-codes/${id}`, {
+      await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/promo-codes/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ isActive: !currentActive })
@@ -96,7 +96,7 @@ export function PromoCodesSetting() {
   const deletePromo = async (id: string) => {
     if(confirm('Xóa mã giảm giá này?')) {
       try {
-        await fetch(`http://localhost:3001/api/promo-codes/${id}`, {
+        await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/promo-codes/${id}`, {
           method: 'DELETE'
         });
         fetchCampaigns();

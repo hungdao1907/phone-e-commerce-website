@@ -64,7 +64,7 @@ export function Inventory() {
   const fetchProducts = async () => {
     try {
       setIsLoading(true);
-      const res = await fetch('http://localhost:3001/api/products');
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/products`);
       if (res.ok) setProducts(await res.json());
     } catch (error) {
       console.error('Lỗi tải dữ liệu kho:', error);
@@ -122,7 +122,7 @@ export function Inventory() {
 
     updateTimeoutRef.current[variantId] = setTimeout(async () => {
       try {
-        await fetch(`http://localhost:3001/api/products/variants/${variantId}`, {
+        await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/products/variants/${variantId}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
           body: JSON.stringify({ stock: newStock })

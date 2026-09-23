@@ -21,6 +21,8 @@ import chatbotRoutes from './routes/chatbot.routes';
 import adminChatbotRoutes from './routes/admin-chatbot.routes';
 import footerRoutes from './routes/footer.routes';
 import rewardRoutes from './routes/reward.routes';
+import leadRoutes from './routes/lead.routes';
+import dashboardRoutes from './routes/dashboard.routes';
 
 const app = express();
 const port = process.env.PORT || 3001;
@@ -64,6 +66,8 @@ app.use('/api/chatbot', chatbotRoutes);
 app.use('/api/admin/chatbot', adminChatbotRoutes);
 app.use('/api/footer', footerRoutes);
 app.use('/api/rewards', rewardRoutes);
+app.use('/api/leads', leadRoutes);
+app.use('/api/dashboard', dashboardRoutes);
 
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'ok' });
