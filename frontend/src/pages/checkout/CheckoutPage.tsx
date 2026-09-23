@@ -18,6 +18,55 @@ export function CheckoutPage() {
   const [profileAddress, setProfileAddress] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  const applySavedAddress = async (addrString: string) => {
+    setErrors({});
+    try {
+      const parsed = JSON.parse(addrString);
+      let cCode = parsed.cityCode;
+      let dCode = parsed.districtCode;
+      let wCode = parsed.wardCode;
+      
+      const normalize = (s: string) => s.toLowerCase().replace(/(thành phố|tỉnh|quận|huyện|phường|xã|tp\.|tp)/g, '').trim();
+
+      if (!cCode && parsed.city && provinces.length > 0) {
+         const search = normalize(parsed.city);
+         const match = provinces.find(p => normalize(p.name).includes(search) || search.includes(normalize(p.name)));
+         if (match) cCode = match.code;
+      }
+
+      if (cCode && !dCode && parsed.district) {
+         const res = await fetch(`https://provinces.open-api.vn/api/p/${cCode}?depth=2`);
+         const data = await res.json();
+         const search = normalize(parsed.district);
+         const match = (data.districts || []).find((d: any) => normalize(d.name).includes(search) || search.includes(normalize(d.name)));
+         if (match) dCode = match.code;
+      }
+
+      if (dCode && !wCode && parsed.ward) {
+         const res = await fetch(`https://provinces.open-api.vn/api/d/${dCode}?depth=2`);
+         const data = await res.json();
+         const search = normalize(parsed.ward);
+         const match = (data.wards || []).find((w: any) => normalize(w.name).includes(search) || search.includes(normalize(w.name)));
+         if (match) wCode = match.code;
+      }
+
+      setDeliveryInfo({
+        city: parsed.city || '',
+        cityCode: cCode,
+        district: parsed.district || '',
+        districtCode: dCode,
+        ward: parsed.ward || '',
+        wardCode: wCode,
+        address: parsed.detailAddress || ''
+      });
+      
+      if (cCode) fetchDistricts(cCode);
+      if (dCode) fetchWards(dCode);
+    } catch (e) {
+      setDeliveryInfo({ address: addrString });
+    }
+  };
+
   useEffect(() => {
     if (!token || !user) {
       alert('Vui lòng đăng nhập để thanh toán');
@@ -37,39 +86,12 @@ export function CheckoutPage() {
     .then(data => {
       if (data.address) {
         setProfileAddress(data.address);
-        let savedCity = '';
-        let savedCityCode: number | undefined;
-        let savedDistrict = '';
-        let savedDistrictCode: number | undefined;
-        let savedWard = '';
-        let savedWardCode: number | undefined;
-        let savedDetail = '';
-        try {
-          const parsed = JSON.parse(data.address);
-          savedCity = parsed.city || '';
-          savedCityCode = parsed.cityCode;
-          savedDistrict = parsed.district || '';
-          savedDistrictCode = parsed.districtCode;
-          savedWard = parsed.ward || '';
-          savedWardCode = parsed.wardCode;
-          savedDetail = parsed.detailAddress || '';
-        } catch (e) {
-          savedDetail = data.address;
-        }
-
         // Automatically fill if empty
-        if (!deliveryInfo.address && !deliveryInfo.city) {
-          setDeliveryInfo({ 
-            address: savedDetail,
-            city: savedCity,
-            cityCode: savedCityCode,
-            district: savedDistrict,
-            districtCode: savedDistrictCode,
-            ward: savedWard,
-            wardCode: savedWardCode
-          });
-          if (savedCityCode) fetchDistricts(savedCityCode);
-          if (savedDistrictCode) fetchWards(savedDistrictCode);
+        if (!deliveryInfo.address && !deliveryInfo.city && provinces.length > 0) {
+          applySavedAddress(data.address);
+        } else if (!deliveryInfo.address && !deliveryInfo.city) {
+          // Fallback if provinces are not loaded yet
+          setTimeout(() => applySavedAddress(data.address), 1000);
         }
       }
       if (data.phone && !deliveryInfo.phone) {
@@ -80,7 +102,7 @@ export function CheckoutPage() {
       }
     })
     .catch(console.error);
-  }, [token, items, navigate]);
+  }, [token, items, navigate, provinces.length]);
 
   const validate = () => {
     const newErrors: Record<string, string> = {};
@@ -148,24 +170,7 @@ export function CheckoutPage() {
                 </div>
                 {profileAddress && (
                   <button 
-                    onClick={() => {
-                      try {
-                        const parsed = JSON.parse(profileAddress);
-                        setDeliveryInfo({ 
-                          city: parsed.city || '',
-                          cityCode: parsed.cityCode,
-                          district: parsed.district || '',
-                          districtCode: parsed.districtCode,
-                          ward: parsed.ward || '',
-                          wardCode: parsed.wardCode,
-                          address: parsed.detailAddress || ''
-                        });
-                        if (parsed.cityCode) fetchDistricts(parsed.cityCode);
-                        if (parsed.districtCode) fetchWards(parsed.districtCode);
-                      } catch (e) {
-                        setDeliveryInfo({ address: profileAddress });
-                      }
-                    }}
+                    onClick={() => applySavedAddress(profileAddress)}
                     className="text-xs font-semibold text-blue-600 bg-blue-50 px-3 py-1.5 rounded-lg hover:bg-blue-100 transition-colors"
                   >
                     Dùng địa chỉ đã lưu

@@ -263,30 +263,7 @@ model Banner {
   updatedAt DateTime  @updatedAt
 }
 
-model Lead {
-  id              String            @id
-  fullName        String
-  email           String?
-  phone           String?
-  source          String            @default("Website")
-  status          String            @default("new")
-  leadScore       Int               @default(0)
-  interestedIn    String?
-  assignedTo      String?
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime
-  LeadInteraction LeadInteraction[]
-}
 
-model LeadInteraction {
-  id        String   @id
-  leadId    String
-  type      String
-  content   String
-  createdBy String?
-  createdAt DateTime @default(now())
-  Lead      Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
-}
 
 model FooterSection {
   id            String  @id @default(uuid())
@@ -358,4 +335,22 @@ model LeadInteraction {
   content   String
   createdBy String?  // AI, Admin, System, Khách
   createdAt DateTime @default(now())
+}
+
+// ========== NOTIFICATIONS ==========
+
+model Notification {
+  id            String   @id @default(uuid())
+  type          String   // ORDER, REVIEW, DISPUTE, INVENTORY, CUSTOMER, PAYMENT
+  title         String
+  message       String
+  isRead        Boolean  @default(false)
+  referenceType String?  // Order, Review, Dispute, Product, Customer
+  referenceId   String?  // ID của entity liên quan
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([createdAt(sort: Desc)])
+  @@index([type])
+  @@index([isRead])
 }

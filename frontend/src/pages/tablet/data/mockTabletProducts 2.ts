@@ -1,0 +1,227 @@
+import type { TabletColor, TabletModel } from '../types/tablet';
+
+const appleImage = '/images/tablet/ipad-prototype.svg';
+const samsungImage = '/images/tablet/galaxy-tab-prototype.svg';
+const xiaomiImage = '/images/tablet/xiaomi-pad-prototype.svg';
+
+const createTablet = (
+  id: string,
+  brand: TabletModel['brand'],
+  family: string,
+  name: string,
+  tagline: string,
+  description: string,
+  price: number,
+  image: string,
+  colors: TabletColor[],
+  specs: TabletModel['specs'],
+  featured = true,
+): TabletModel => ({
+  id,
+  slug: id,
+  brand,
+  family,
+  name,
+  tagline,
+  description,
+  image,
+  badge: 'Catalog prototype',
+  price,
+  originalPrice: price + 2000000,
+  colors,
+  specs,
+  featured,
+});
+
+export const TABLET_PRODUCTS: TabletModel[] = [
+  // Apple iPad products
+  createTablet(
+    'ipad-pro',
+    'ipad',
+    'iPad Pro',
+    'iPad Pro',
+    'Mỏng hơn. Mạnh hơn. Linh hoạt hơn.',
+    'Không gian làm việc và sáng tạo rộng mở trong một thiết kế tối giản.',
+    24990000,
+    appleImage,
+    [
+      { name: 'Space Black', hex: '#252525' },
+      { name: 'Silver', hex: '#E2E3E4' },
+    ],
+    {
+      display: 'Màn hình lớn cho sáng tạo',
+      chipset: 'Hiệu năng chuyên nghiệp',
+      battery: 'Pin cho một ngày làm việc',
+      storage: 'Từ 256GB',
+    },
+  ),
+  createTablet(
+    'ipad-air',
+    'ipad',
+    'iPad Air',
+    'iPad Air',
+    'Sẵn sàng cho mọi ý tưởng.',
+    'Cân bằng giữa hiệu năng, sự linh hoạt và cảm giác sử dụng nhẹ nhàng.',
+    16990000,
+    appleImage,
+    [
+      { name: 'Blue', hex: '#A7C0D8' },
+      { name: 'Starlight', hex: '#EEE9DE' },
+      { name: 'Purple', hex: '#C6BED9' },
+    ],
+    {
+      display: 'Màn hình Liquid Retina',
+      chipset: 'Hiệu năng cho đa nhiệm',
+      battery: 'Pin dùng cả ngày',
+      storage: 'Từ 128GB',
+    },
+  ),
+  createTablet(
+    'ipad',
+    'ipad',
+    'iPad',
+    'iPad',
+    'Dễ dùng. Dễ sáng tạo. Dễ mang theo.',
+    'Một chiếc iPad linh hoạt cho học tập, giải trí và những việc thường ngày.',
+    10990000,
+    appleImage,
+    [
+      { name: 'Blue', hex: '#A8C3D5' },
+      { name: 'Pink', hex: '#E8C1C7' },
+      { name: 'Yellow', hex: '#E5D88E' },
+    ],
+    {
+      display: 'Màn hình sống động',
+      chipset: 'Hiệu năng hằng ngày',
+      battery: 'Pin dùng linh hoạt',
+      storage: 'Từ 128GB',
+    },
+  ),
+
+  // Samsung Galaxy Tab products
+  createTablet(
+    'galaxy-tab-s-ultra',
+    'samsung',
+    'Galaxy Tab S',
+    'Galaxy Tab S Ultra',
+    'Không gian lớn hơn cho mọi ý tưởng.',
+    'Một không gian tablet cao cấp cho đa nhiệm, sáng tạo và giải trí.',
+    26990000,
+    samsungImage,
+    [
+      { name: 'Graphite', hex: '#34363A' },
+      { name: 'Silver', hex: '#C7C9CF' },
+    ],
+    {
+      display: 'Màn hình lớn cao cấp',
+      chipset: 'Hiệu năng Galaxy Tab',
+      battery: 'Pin bền bỉ cho đa nhiệm',
+      storage: 'Từ 256GB',
+    },
+  ),
+  createTablet(
+    'galaxy-tab-s',
+    'samsung',
+    'Galaxy Tab S',
+    'Galaxy Tab S',
+    'Sức mạnh linh hoạt cho từng nhịp làm việc.',
+    'Thiết kế cân bằng giữa hiệu năng, trải nghiệm bút và khả năng kết nối Galaxy.',
+    18990000,
+    samsungImage,
+    [
+      { name: 'Graphite', hex: '#34363A' },
+      { name: 'Blue', hex: '#7388A6' },
+      { name: 'Mint', hex: '#B7D5CE' },
+    ],
+    {
+      display: 'Màn hình 120Hz mượt mà',
+      chipset: 'Hiệu năng Galaxy AI',
+      battery: 'Pin cả ngày',
+      storage: 'Từ 128GB',
+    },
+  ),
+  createTablet(
+    'galaxy-tab-a',
+    'samsung',
+    'Galaxy Tab A',
+    'Galaxy Tab A',
+    'Khám phá nhiều hơn mỗi ngày.',
+    'Một tablet dễ tiếp cận cho giải trí, kết nối và các công việc nhẹ nhàng.',
+    8990000,
+    samsungImage,
+    [
+      { name: 'Gray', hex: '#71757C' },
+      { name: 'Silver', hex: '#D9DADF' },
+    ],
+    {
+      display: 'Màn hình rộng cho giải trí',
+      chipset: 'Hiệu năng cân bằng',
+      battery: 'Pin dùng hằng ngày',
+      storage: 'Từ 64GB',
+    },
+  ),
+
+  // Xiaomi Pad products
+  createTablet(
+    'xiaomi-pad-pro',
+    'xiaomi',
+    'Xiaomi Pad',
+    'Xiaomi Pad Pro',
+    'Mở rộng cách bạn làm việc và giải trí.',
+    'Hiệu năng cao trong một thiết kế sạch, hỗ trợ công việc, nội dung và thư giãn.',
+    15990000,
+    xiaomiImage,
+    [
+      { name: 'Graphite', hex: '#4A4A49' },
+      { name: 'Silver', hex: '#D1D2D1' },
+      { name: 'Blue', hex: '#85A7BB' },
+    ],
+    {
+      display: 'Màn hình lớn tần số quét cao',
+      chipset: 'Hiệu năng cao cho đa nhiệm',
+      battery: 'Pin lớn, sạc nhanh',
+      storage: 'Từ 128GB',
+    },
+  ),
+  createTablet(
+    'xiaomi-pad',
+    'xiaomi',
+    'Xiaomi Pad',
+    'Xiaomi Pad',
+    'Gọn nhẹ để làm được nhiều hơn.',
+    'Một tablet linh hoạt cho học tập, làm việc và giải trí trên màn hình rộng.',
+    10990000,
+    xiaomiImage,
+    [
+      { name: 'Graphite', hex: '#4A4A49' },
+      { name: 'Mint', hex: '#B4D2C8' },
+      { name: 'Blue', hex: '#8FAEBE' },
+    ],
+    {
+      display: 'Màn hình rõ nét',
+      chipset: 'Hiệu năng thông minh',
+      battery: 'Pin bền bỉ',
+      storage: 'Từ 128GB',
+    },
+  ),
+  createTablet(
+    'redmi-pad',
+    'xiaomi',
+    'Redmi Pad',
+    'Redmi Pad',
+    'Không gian lớn cho những điều đơn giản.',
+    'Một lựa chọn thân thiện để đọc, xem, học và giữ liên lạc mỗi ngày.',
+    6990000,
+    xiaomiImage,
+    [
+      { name: 'Graphite', hex: '#4A4A49' },
+      { name: 'Lavender', hex: '#BEB7CC' },
+    ],
+    {
+      display: 'Màn hình rộng',
+      chipset: 'Hiệu năng hằng ngày',
+      battery: 'Pin lâu dài',
+      storage: 'Từ 64GB',
+    },
+  ),
+];

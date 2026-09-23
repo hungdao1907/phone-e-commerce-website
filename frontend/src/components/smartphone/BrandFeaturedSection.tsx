@@ -21,12 +21,12 @@ export function BrandFeaturedSection({ config, products }: BrandFeaturedSectionP
   const opacity = useTransform(scrollYProgress, [0, 0.15, 0.85, 1], [0, 1, 1, 0]);
   const y = useTransform(scrollYProgress, [0, 0.15], [80, 0]);
 
-  // Select top featured products (up to 3)
+  // Select top featured products (up to 4)
   const featuredModels = (
     products.filter((product) => product.featured).length > 0
       ? products.filter((product) => product.featured)
       : products
-  ).slice(0, 3);
+  ).slice(0, 4);
 
   // State to track selected color for each featured card
   const [selectedColors, setSelectedColors] = useState<Record<string, string>>(() => {

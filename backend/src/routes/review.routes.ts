@@ -40,8 +40,24 @@ router.post('/', authenticateToken, async (req, res) => {
         rating,
         comment,
         images: images || []
+      },
+      include: {
+        customer: { select: { fullName: true } },
+        order: { select: { orderCode: true } }
       }
     });
+
+    // 🔔 Create notification for new review
+    const stars = '⭐'.repeat(review.rating);
+    prisma.notification.create({
+      data: {
+        type: 'REVIEW',
+        title: `Đánh giá mới ${stars}`,
+        message: `${review.customer?.fullName || 'Khách hàng'} vừa đánh giá đơn hàng #${review.order?.orderCode}${review.comment ? ': ' + review.comment.slice(0, 60) : ''}.`,
+        referenceType: 'Review',
+        referenceId: review.id,
+      },
+    }).catch(console.error);
 
     res.status(201).json({ message: 'Tạo đánh giá thành công', review });
   } catch (error) {

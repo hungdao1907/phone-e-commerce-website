@@ -2,6 +2,12 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Plus, Edit2, Trash2, X, Package, RefreshCw, ChevronDown, ChevronRight, ArrowLeft, Image as ImageIcon, Zap, Upload } from 'lucide-react';
 import { cn } from '@/lib/utils';
+
+import { AdminProductFilterSidebar } from './products/AdminProductFilterSidebar';
+import { AdminProductCard } from './products/AdminProductCard';
+import { VariantManagementModal } from './products/VariantManagementModal';
+import { ProductImportModal } from './products/ProductImportModal';
+
 import { useAuthStore } from '@/store/authStore';
 import { resolveMediaUrl } from '@/utils/media';
 
@@ -123,9 +129,132 @@ export function ProductList() {
   const [search, setSearch] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const { token } = useAuthStore();
+  const [view, setView] = useState<'list' | 'form'>('list');
+
+  // --- Admin List State ---
+  const [listData, setListData] = useState<any[]>([]);
+  const [pagination, setPagination] = useState({ page: 1, limit: 12, total: 0, totalPages: 0 });
+  const [listFilters, setListFilters] = useState<Record<string, string[]>>({});
+  const [adminFilters, setAdminFilters] = useState<Record<string, any>>({});
+  const [listCategory, setListCategory] = useState('');
+  const [listStatus, setListStatus] = useState('');
+  const [listStock, setListStock] = useState('');
+  const [listSort, setListSort] = useState('newest');
+  const [selectedProductIds, setSelectedProductIds] = useState<string[]>([]);
+  const [isFetchingList, setIsFetchingList] = useState(false);
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [showVariantModalFor, setShowVariantModalFor] = useState<any>(null);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearch(search);
+      setPagination(p => ({ ...p, page: 1 }));
+    }, 500);
+    return () => clearTimeout(handler);
+  }, [search]);
+
+  // Fetch Admin Filters
+  const fetchAdminFilters = async () => {
+    try {
+      const url = new URL(`${API_BASE_URL}/api/products/admin/filters`);
+      if (listCategory) url.searchParams.append('category', listCategory);
+      const res = await fetch(url.toString(), { headers: { 'Authorization': `Bearer ${token}` } });
+      if (res.ok) setAdminFilters(await res.json());
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  // Fetch Admin Products
+  const fetchAdminProducts = async () => {
+    try {
+      setIsFetchingList(true);
+      const url = new URL(`${API_BASE_URL}/api/products/admin/search`);
+      url.searchParams.append('page', pagination.page.toString());
+      url.searchParams.append('limit', pagination.limit.toString());
+      if (debouncedSearch) url.searchParams.append('search', debouncedSearch);
+      if (listCategory) url.searchParams.append('category', listCategory);
+      if (listStatus) url.searchParams.append('status', listStatus);
+      if (listStock) url.searchParams.append('stock', listStock);
+      if (listSort) url.searchParams.append('sort', listSort);
+      
+      Object.entries(listFilters).forEach(([key, values]) => {
+        if (values.length > 0) {
+          url.searchParams.append(key, values.join(','));
+        }
+      });
+
+      const res = await fetch(url.toString(), { headers: { 'Authorization': `Bearer ${token}` } });
+      if (res.ok) {
+        const data = await res.json();
+        setListData(data.data);
+        setPagination(data.pagination);
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsFetchingList(false);
+    }
+  };
+
+  useEffect(() => {
+    if (view === 'list') {
+      fetchAdminFilters();
+    }
+  }, [listCategory, view]);
+
+  useEffect(() => {
+    if (view === 'list') {
+      fetchAdminProducts();
+    }
+  }, [debouncedSearch, listCategory, listStatus, listStock, listSort, listFilters, pagination.page, view]);
+
+  const handleFilterChange = (groupKey: string, value: string) => {
+    setListFilters(prev => {
+      const current = prev[groupKey] || [];
+      const updated = current.includes(value) ? current.filter(v => v !== value) : [...current, value];
+      return { ...prev, [groupKey]: updated };
+    });
+    setPagination(p => ({ ...p, page: 1 }));
+  };
+
+  const clearAllFilters = () => {
+    setListFilters({});
+    setListCategory('');
+    setListStatus('');
+    setListStock('');
+    setSearch('');
+    setPagination(p => ({ ...p, page: 1 }));
+  };
+
+  const handleBulkAction = async (action: string) => {
+    if (selectedProductIds.length === 0) return;
+    const confirmMsg = action === 'delete' ? 'Bạn có chắc muốn xoá các sản phẩm đã chọn?' : `Thay đổi trạng thái ${selectedProductIds.length} sản phẩm?`;
+    if (!window.confirm(confirmMsg)) return;
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/products/admin/bulk-action`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ action, productIds: selectedProductIds })
+      });
+      if (res.ok) {
+        setSelectedProductIds([]);
+        fetchAdminProducts();
+        if (action === 'delete') fetchAdminFilters();
+      } else {
+        const errorData = await res.json();
+        alert(errorData.message || 'Lỗi khi thực hiện thao tác.');
+      }
+    } catch (e) {
+      console.error(e);
+      alert('Lỗi kết nối máy chủ.');
+    }
+  };
+
 
   // VIEW STATE: 'list' or 'form'
-  const [view, setView] = useState<'list' | 'form'>('list');
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
 
   // Form State
@@ -753,114 +882,196 @@ export function ProductList() {
 
   // ===== RENDER LIST VIEW =====
   return (
-    <div className="flex flex-col h-full gap-6 text-white w-full relative">
-      {/* HEADER LIST */}
-      <div className="flex items-center justify-between shrink-0">
+    <div className="flex flex-col h-full gap-4 text-white w-full relative">
+      {/* HEADER */}
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shrink-0 bg-[#1c1c1e] p-4 rounded-2xl border border-white/10">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Danh sách sản phẩm</h1>
-          <p className="text-sm text-white/50 mt-1">Quản lý {products.length} sản phẩm.</p>
+          <h1 className="text-xl font-bold tracking-tight text-white">Sản phẩm</h1>
+          <p className="text-xs text-white/50 mt-1">Quản lý {pagination.total} sản phẩm</p>
         </div>
-        <div className="flex items-center gap-3">
-          <div className="relative">
+        
+        <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
+          {/* Bulk Actions */}
+          {selectedProductIds.length > 0 && (
+            <div className="flex items-center gap-2 bg-emerald-500/10 px-3 py-1.5 rounded-xl border border-emerald-500/20 mr-2">
+              <span className="text-xs text-emerald-400 font-medium">Đã chọn {selectedProductIds.length}</span>
+              <div className="h-4 w-px bg-emerald-500/20 mx-1"></div>
+              <button onClick={() => handleBulkAction('activate')} className="text-[10px] bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 px-2 py-1 rounded transition-colors">Hiện</button>
+              <button onClick={() => handleBulkAction('deactivate')} className="text-[10px] bg-orange-500/20 text-orange-400 hover:bg-orange-500/30 px-2 py-1 rounded transition-colors">Ẩn</button>
+              <button onClick={() => handleBulkAction('delete')} className="text-[10px] bg-red-500/20 text-red-400 hover:bg-red-500/30 px-2 py-1 rounded transition-colors">Xoá</button>
+            </div>
+          )}
+
+          <div className="relative flex-1 md:w-64">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
-            <input type="text" placeholder="Tìm tên, SKU..." value={search} onChange={e => setSearch(e.target.value)}
-              className="h-10 pl-9 pr-4 rounded-xl bg-white/5 border border-white/10 text-sm outline-none focus:border-white/30 transition-colors w-64 placeholder:text-white/30" />
+            <input 
+              type="text" 
+              placeholder="Tìm tên, SKU..." 
+              value={search} 
+              onChange={e => setSearch(e.target.value)}
+              className="w-full h-10 pl-9 pr-4 rounded-xl bg-black/20 border border-white/10 text-sm outline-none focus:border-emerald-500 transition-colors placeholder:text-white/30" 
+            />
           </div>
-          <button onClick={handleOpenCreate} className="h-10 px-4 rounded-xl bg-gradient-to-r from-emerald-400 to-cyan-400 text-black flex items-center gap-2 hover:opacity-90 transition-opacity text-sm font-bold shadow-[0_0_20px_rgba(52,211,153,0.3)]">
-            <Plus className="w-4 h-4" /> Thêm sản phẩm
+
+          <div className="relative">
+            <select 
+              value={listSort} 
+              onChange={e => setListSort(e.target.value)}
+              className="h-10 pl-3 pr-8 rounded-xl bg-black/20 border border-white/10 text-sm outline-none focus:border-emerald-500 appearance-none text-white/80"
+            >
+              <option value="newest">Mới nhất</option>
+              <option value="price_asc">Giá tăng dần</option>
+              <option value="price_desc">Giá giảm dần</option>
+              <option value="name_asc">Tên A-Z</option>
+              <option value="name_desc">Tên Z-A</option>
+            </select>
+            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40 pointer-events-none" />
+          </div>
+
+          <button onClick={() => setIsImportModalOpen(true)} className="h-10 px-4 rounded-xl bg-white/10 hover:bg-white/20 text-white flex items-center gap-2 transition-colors text-sm font-semibold whitespace-nowrap border border-white/10">
+            <Upload className="w-4 h-4" /> Import
+          </button>
+          <button onClick={handleOpenCreate} className="h-10 px-4 rounded-xl bg-gradient-to-r from-emerald-400 to-cyan-400 text-black flex items-center gap-2 hover:opacity-90 transition-opacity text-sm font-bold shadow-[0_0_15px_rgba(52,211,153,0.3)] whitespace-nowrap">
+            <Plus className="w-4 h-4" /> Thêm mới
           </button>
         </div>
       </div>
 
-      {/* TABLE */}
-      <div className="flex-1 overflow-hidden flex flex-col bg-white/5 border border-white/10 rounded-2xl shadow-xl">
-        <div className="grid grid-cols-12 gap-4 p-4 border-b border-white/10 text-xs font-semibold text-white/50 uppercase tracking-wider shrink-0">
-          <div className="col-span-4 pl-2">Sản phẩm</div>
-          <div className="col-span-2">Danh mục</div>
-          <div className="col-span-2">Biến thể</div>
-          <div className="col-span-2">Giá bán</div>
-          <div className="col-span-2">Tồn kho</div>
+      {/* MAIN CONTENT AREA */}
+      <div className="flex-1 flex gap-6 min-h-0 relative">
+        {/* SIDEBAR */}
+        <div className="hidden lg:block w-64 shrink-0 overflow-y-auto custom-scrollbar pb-4 pr-1">
+          <AdminProductFilterSidebar 
+            categories={flatCats}
+            currentCategory={listCategory}
+            onCategoryChange={c => { setListCategory(c); setPagination(p => ({...p, page: 1})); }}
+            filters={adminFilters}
+            selectedFilters={listFilters}
+            onFilterChange={handleFilterChange}
+            statusFilter={listStatus}
+            onStatusChange={s => { setListStatus(s); setPagination(p => ({...p, page: 1})); }}
+            stockFilter={listStock}
+            onStockChange={s => { setListStock(s); setPagination(p => ({...p, page: 1})); }}
+            isLoading={isFetchingList && Object.keys(adminFilters).length === 0}
+            onClearFilters={clearAllFilters}
+          />
         </div>
 
-        <div className="flex-1 overflow-y-auto custom-scrollbar p-2 flex flex-col gap-1">
-          {isLoading ? (
-            <div className="flex items-center justify-center h-40"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500" /></div>
-          ) : listFilteredProducts.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-40 text-white/40">
-              <Package className="w-10 h-10 text-white/15 mb-3" />
-              <p>Chưa có sản phẩm nào</p>
+        {/* GRID VIEW */}
+        <div className="flex-1 flex flex-col min-h-0 bg-[#1c1c1e]/50 border border-white/5 rounded-2xl p-4 overflow-hidden">
+          
+          <div className="flex items-center justify-between mb-4 text-xs font-semibold text-white/50 px-2 shrink-0">
+            <div className="flex items-center">
+              <label className="flex items-center gap-2 cursor-pointer hover:text-white transition-colors">
+                <input 
+                  type="checkbox" 
+                  className="rounded border-white/20 bg-transparent text-emerald-500 focus:ring-emerald-500 focus:ring-offset-gray-900"
+                  checked={listData.length > 0 && selectedProductIds.length === listData.length}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setSelectedProductIds(listData.map(p => p.id));
+                    } else {
+                      setSelectedProductIds([]);
+                    }
+                  }}
+                />
+                Chọn tất cả trang này
+              </label>
+              {isFetchingList && <div className="ml-4 flex items-center gap-2 text-emerald-400"><RefreshCw className="w-3 h-3 animate-spin"/> Đang tải...</div>}
             </div>
-          ) : listFilteredProducts.map((product, index) => {
-            const totalStock = product.variants.reduce((s, v) => s + v.stock, 0);
-            const isLow = totalStock > 0 && totalStock <= 10;
-            const isOut = totalStock === 0;
-            const minP = product.variants.length > 0 ? Math.min(...product.variants.map(v => v.salePrice || v.price)) : 0;
-            const maxP = product.variants.length > 0 ? Math.max(...product.variants.map(v => v.price)) : 0;
-            
-            return (
-              <motion.div key={product.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2, delay: index * 0.03 }}
-                className="group relative grid grid-cols-12 gap-4 items-center p-3 rounded-xl hover:bg-white/5 transition-colors cursor-pointer"
-              >
-                {/* Sản phẩm */}
-                <div className="col-span-4 flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-white/10 overflow-hidden shrink-0 border border-white/5 flex items-center justify-center p-1">
-                    {product.image ? <img src={resolveMediaUrl(product.image)} alt={product.name} className="w-full h-full object-contain drop-shadow-md" /> : <div className="text-[10px] text-white/20">No img</div>}
-                  </div>
-                  <div className="flex flex-col overflow-hidden">
-                    <span className="font-medium text-white truncate flex items-center gap-2">
-                      {product.name}
-                      {product.status === 'draft' && <span className="text-[10px] bg-white/10 px-1.5 py-0.5 rounded text-white/60">Draft</span>}
-                      {product.status === 'inactive' && <span className="text-[10px] bg-orange-500/20 text-orange-400 px-1.5 py-0.5 rounded">Ẩn</span>}
-                    </span>
-                    <span className="text-xs text-white/40 mt-0.5">{product.brand || 'No Brand'}</span>
-                  </div>
-                </div>
+            <div>{listData.length} kết quả</div>
+          </div>
 
-                {/* Danh mục */}
-                <div className="col-span-2">
-                  <span className="inline-flex px-2 py-1 rounded-md bg-white/5 text-xs text-white/70 border border-white/10">
-                    {product.category?.name || '—'}
-                  </span>
-                </div>
+          <div className="flex-1 overflow-y-auto custom-scrollbar pb-10">
+            {listData.length === 0 && !isFetchingList ? (
+              <div className="h-full flex flex-col items-center justify-center text-white/40">
+                <Package className="w-12 h-12 mb-3 opacity-20" />
+                <p>Không tìm thấy sản phẩm nào</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4 p-2">
+                {listData.map((product) => (
+                  <AdminProductCard
+                    key={product.id}
+                    product={product}
+                    isSelected={selectedProductIds.includes(product.id)}
+                    onSelect={() => {
+                      setSelectedProductIds(prev => 
+                        prev.includes(product.id) ? prev.filter(id => id !== product.id) : [...prev, product.id]
+                      );
+                    }}
+                    onEdit={() => handleOpenEdit(product)}
+                    onDelete={() => {
+                      setSelectedProductIds([product.id]);
+                      setTimeout(() => handleBulkAction('delete'), 0);
+                    }}
+                    onManageVariants={() => setShowVariantModalFor(product)}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
 
-                {/* Biến thể */}
-                <div className="col-span-2 flex items-center">
-                  <span className="text-sm font-medium bg-white/10 px-2 py-1 rounded-lg">{product.variants.length}</span>
+          {/* PAGINATION */}
+          {pagination.totalPages > 1 && (
+            <div className="mt-4 pt-4 border-t border-white/10 flex items-center justify-between shrink-0 px-2">
+              <div className="text-xs text-white/40">
+                Trang {pagination.page} / {pagination.totalPages}
+              </div>
+              <div className="flex items-center gap-2">
+                <button 
+                  disabled={pagination.page <= 1}
+                  onClick={() => setPagination(p => ({ ...p, page: p.page - 1 }))}
+                  className="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-sm hover:bg-white/10 disabled:opacity-30 transition-colors"
+                >
+                  Trước
+                </button>
+                <div className="flex items-center gap-1 overflow-x-auto max-w-[200px] sm:max-w-none">
+                  {Array.from({ length: pagination.totalPages }).map((_, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setPagination(p => ({ ...p, page: i + 1 }))}
+                      className={`w-8 h-8 shrink-0 rounded-lg text-sm flex items-center justify-center transition-colors ${pagination.page === i + 1 ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'hover:bg-white/10 text-white/60'}`}
+                    >
+                      {i + 1}
+                    </button>
+                  ))}
                 </div>
+                <button 
+                  disabled={pagination.page >= pagination.totalPages}
+                  onClick={() => setPagination(p => ({ ...p, page: p.page + 1 }))}
+                  className="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-sm hover:bg-white/10 disabled:opacity-30 transition-colors"
+                >
+                  Sau
+                </button>
+              </div>
+            </div>
+          )}
 
-                {/* Giá bán */}
-                <div className="col-span-2 text-sm">
-                  {minP === maxP ? (
-                    <span className="font-medium text-white/90">{formatCurrency(minP)}</span>
-                  ) : (
-                    <div className="flex flex-col">
-                      <span className="font-medium text-emerald-400">{formatCurrency(minP)}</span>
-                      <span className="text-xs text-white/40 line-through">{formatCurrency(maxP)}</span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Tồn kho */}
-                <div className="col-span-2 flex items-center justify-between">
-                  <div className="flex flex-col gap-1">
-                    <span className={cn("text-sm font-medium", isOut ? "text-red-400" : isLow ? "text-orange-400" : "text-white/90")}>
-                      {totalStock} chiếc
-                    </span>
-                    <div className="w-16 h-1 bg-white/10 rounded-full overflow-hidden">
-                      <motion.div initial={{ width: 0 }} animate={{ width: `${Math.min((totalStock / 100) * 100, 100)}%` }} transition={{ duration: 1 }}
-                        className={cn("h-full rounded-full", isOut ? "bg-red-500" : isLow ? "bg-orange-500" : "bg-emerald-500")} />
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button onClick={e => { e.stopPropagation(); handleOpenEdit(product); }} className="p-1.5 hover:bg-white/10 rounded-lg text-emerald-400/50 hover:text-emerald-400 transition-colors"><Edit2 className="w-4 h-4" /></button>
-                    <button onClick={e => { e.stopPropagation(); handleDelete(product.id, product.name); }} className="p-1.5 hover:bg-red-500/20 rounded-lg text-red-400/50 hover:text-red-400 transition-colors"><Trash2 className="w-4 h-4" /></button>
-                  </div>
-                </div>
-              </motion.div>
-            );
-          })}
         </div>
       </div>
+
+      {showVariantModalFor && (
+        <VariantManagementModal 
+          product={showVariantModalFor} 
+          onClose={() => setShowVariantModalFor(null)} 
+          onSaved={() => {
+            setShowVariantModalFor(null);
+            fetchAdminProducts();
+          }} 
+        />
+      )}
+
+      <ProductImportModal
+        isOpen={isImportModalOpen}
+        onClose={() => setIsImportModalOpen(false)}
+        onSuccess={() => {
+          setIsImportModalOpen(false);
+          fetchAdminProducts();
+          fetchAdminFilters();
+        }}
+        token={token || ''}
+      />
     </div>
   );
 }

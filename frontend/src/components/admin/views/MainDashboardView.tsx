@@ -13,7 +13,7 @@ import { PlanScheduleWidget } from '@/components/admin/widgets/PlanScheduleWidge
 import { useDashboardSummary } from '@/hooks/useDashboardSummary';
 import { useAuthStore } from '@/store/authStore';
 
-export function MainDashboardView() {
+export const MainDashboardView = React.memo(function MainDashboardView({ onViewAll }: { onViewAll?: () => void }) {
   const [showWelcomeText, setShowWelcomeText] = useState(false);
   const user = useAuthStore(state => state.user);
   const { data: summary, isLoading } = useDashboardSummary();
@@ -143,7 +143,7 @@ export function MainDashboardView() {
 
           {/* Notifications — horizontal */}
           <div className="relative">
-            <NotificationsWidget />
+            <NotificationsWidget onViewAll={onViewAll} />
           </div>
         </div>
 
@@ -168,4 +168,4 @@ export function MainDashboardView() {
 
     </div>
   );
-}
+});

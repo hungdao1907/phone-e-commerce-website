@@ -224,6 +224,17 @@ router.post('/', authenticateToken, async (req, res) => {
       sendOrderReceivedEmail(newOrder.customer.email, newOrder.customer.fullName, newOrder.orderCode).catch(console.error);
     }
 
+    // 🔔 Create notification for new order
+    prisma.notification.create({
+      data: {
+        type: 'ORDER',
+        title: `Đơn hàng mới #${newOrder.orderCode}`,
+        message: `${newOrder.customer?.fullName || 'Khách hàng'} vừa đặt hàng. Tổng: ${new Intl.NumberFormat('vi-VN').format(newOrder.totalAmount)}đ.`,
+        referenceType: 'Order',
+        referenceId: newOrder.id,
+      },
+    }).catch(console.error);
+
     // Attach current VietQR config so frontend can display it
     const paymentConfig = {
       bankId: process.env.VIETQR_BANK_ID || 'MB',

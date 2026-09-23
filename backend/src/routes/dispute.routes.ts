@@ -39,8 +39,23 @@ router.post('/', authenticateToken, async (req, res) => {
         description,
         images: images || [],
         status: 'open'
+      },
+      include: {
+        customer: { select: { fullName: true } },
+        order: { select: { orderCode: true } }
       }
     });
+
+    // 🔔 Create notification for new dispute
+    prisma.notification.create({
+      data: {
+        type: 'DISPUTE',
+        title: `Khiếu nại mới từ ${dispute.customer?.fullName || 'khách hàng'}`,
+        message: `Đơn hàng #${dispute.order?.orderCode} — ${dispute.reason}: ${dispute.description.slice(0, 80)}`,
+        referenceType: 'Dispute',
+        referenceId: dispute.id,
+      },
+    }).catch(console.error);
 
     res.status(201).json({ message: 'Tạo khiếu nại thành công', dispute });
   } catch (error) {

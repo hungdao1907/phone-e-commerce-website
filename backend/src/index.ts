@@ -22,6 +22,7 @@ import footerRoutes from './routes/footer.routes';
 import rewardRoutes from './routes/reward.routes';
 import leadRoutes from './routes/lead.routes';
 import dashboardRoutes from './routes/dashboard.routes';
+import notificationRoutes from './routes/notification.routes';
 
 const app = express();
 const port = process.env.PORT || 3001;
@@ -65,6 +66,7 @@ app.use('/api/footer', footerRoutes);
 app.use('/api/rewards', rewardRoutes);
 app.use('/api/leads', leadRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'ok' });
