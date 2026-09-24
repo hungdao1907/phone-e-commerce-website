@@ -1,5 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { motion } from 'framer-motion';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { VerticalDock } from './VerticalDock';
 import InteractiveCalendar from '@/components/admin/widgets/InteractiveCalendar';
@@ -42,6 +41,7 @@ export function DashboardLayout() {
   const { view: routeView } = useParams<{ view?: string }>();
   const navigate = useNavigate();
   const [activeView, setActiveView] = useState(() => routeView || 'dashboard');
+  const [isNotifCenterOpen, setIsNotifCenterOpen] = useState(false);
 
   useEffect(() => {
     if (routeView && routeView !== activeView) {
@@ -49,30 +49,14 @@ export function DashboardLayout() {
     } else if (!routeView && activeView !== 'dashboard') {
       setActiveView('dashboard');
     }
-  }, [routeView]);
+  }, [routeView, activeView]);
 
   const handleNavigate = (newView: string) => {
     setActiveView(newView);
     navigate(newView === 'dashboard' ? '/dashboard' : `/dashboard/${newView}`, { replace: false });
   };
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [isNotifCenterOpen, setIsNotifCenterOpen] = useState(false);
 
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
-        e.preventDefault();
-        setIsSearchOpen(true);
-      }
-    };
-    
-    window.addEventListener('keydown', handleKeyDown);
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-    };
-  }, []);
-
-  const handleOpenNotifCenter = React.useCallback(() => setIsNotifCenterOpen(true), []);
+  const handleOpenNotifCenter = useCallback(() => setIsNotifCenterOpen(true), []);
 
   return (
     <div className="relative min-h-screen w-full overflow-hidden bg-gradient-to-br from-[#183D61] via-[#ACD99C] to-[#E0CD39] text-white font-sans">
