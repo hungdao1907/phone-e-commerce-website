@@ -55,15 +55,28 @@ export function ProductConfigurator({
         <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-neutral-950 leading-tight">
           {product.name}
         </h1>
-        <div className="mt-2 flex items-center gap-3 text-sm">
-          <div className="flex items-center text-yellow-500">
-            {'★★★★★'.split('').map((star, i) => (
-              <span key={i}>{star}</span>
-            ))}
+        {product.reviewCount ? (
+          <div 
+            className="mt-2 flex items-center gap-3 text-sm cursor-pointer hover:opacity-80 transition-opacity"
+            onClick={() => document.getElementById('product-reviews-section')?.scrollIntoView({ behavior: 'smooth' })}
+          >
+            <div className="flex items-center text-yellow-500">
+              {'★★★★★'.split('').map((star, i) => (
+                <span key={i} className={i < Math.round(product.ratingAverage || 0) ? 'text-yellow-500' : 'text-neutral-300'}>★</span>
+              ))}
+            </div>
+            <span className="font-medium text-neutral-700">{product.ratingAverage}</span>
+            <span className="text-neutral-500">({product.reviewCount} đánh giá)</span>
           </div>
-          <span className="font-medium text-neutral-700">4.8</span>
-          <span className="text-neutral-500">(124 đánh giá)</span>
-        </div>
+        ) : (
+          <div 
+            className="mt-2 flex items-center gap-2 text-sm cursor-pointer hover:opacity-80 transition-opacity text-neutral-500"
+            onClick={() => document.getElementById('product-reviews-section')?.scrollIntoView({ behavior: 'smooth' })}
+          >
+            <span className="text-neutral-300">☆</span>
+            <span>Chưa có đánh giá</span>
+          </div>
+        )}
 
         <div className="mt-5">
           <AnimatePresence mode="wait" initial={false}>

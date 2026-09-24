@@ -7,6 +7,8 @@ import { InfoTab } from '@/components/profile/InfoTab';
 import { AddressTab } from '@/components/profile/AddressTab';
 import { OrdersTab } from '@/components/profile/OrdersTab';
 import { EmptyState } from '@/components/profile/EmptyState';
+import { MyComplaintsTab } from '@/components/profile/MyComplaintsTab';
+import { ComplaintModal } from '@/components/complaint/ComplaintModal';
 
 export const CustomerProfile = () => {
   const { user, token } = useAuthStore();
@@ -20,6 +22,17 @@ export const CustomerProfile = () => {
   
   // Orders state
   const [orders, setOrders] = useState<any[]>([]);
+
+  // Complaint modal state
+  const [complaintModal, setComplaintModal] = useState({
+    isOpen: false,
+    orderId: '',
+    orderItemId: '',
+    productId: '',
+    variantId: '',
+    productName: '',
+    variantInfo: ''
+  });
 
   const fetchOrders = async () => {
     try {
@@ -117,18 +130,21 @@ export const CustomerProfile = () => {
     } catch (e) { alert('Lỗi'); }
   };
 
-  const handleDispute = async (orderId: string) => {
-    const reason = prompt('Nhập lý do khiếu nại:');
-    if(!reason) return;
-    try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/disputes`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({ orderId, customerId: user?.id, reason, description: reason })
-      });
-      if (res.ok) alert('Đã tạo khiếu nại! Admin sẽ liên hệ lại.');
-      else alert('Tạo khiếu nại thất bại');
-    } catch (e) { alert('Lỗi'); }
+  const handleOpenComplaint = (item: any, order: any) => {
+    setComplaintModal({
+      isOpen: true,
+      orderId: order.id,
+      orderItemId: item.id,
+      productId: item.productId || item.variant?.productId || '',
+      variantId: item.variantId,
+      productName: item.productName,
+      variantInfo: item.variantInfo
+    });
+  };
+
+  const handleComplaintSuccess = () => {
+    alert('Đã gửi khiếu nại thành công! Chúng tôi sẽ phản hồi sớm nhất.');
+    fetchOrders(); // refresh data
   };
 
   if (isFetching) {
@@ -184,8 +200,8 @@ export const CustomerProfile = () => {
               <OrdersTab 
                 orders={orders} 
                 onReview={handleReview} 
-                onDispute={handleDispute} 
                 onComplete={handleCompleteOrder} 
+                onOpenComplaint={handleOpenComplaint}
               />
             )}
 
@@ -234,9 +250,19 @@ export const CustomerProfile = () => {
                 />
               </div>
             )}
+
+            {activeTab === 'complaints' && (
+              <MyComplaintsTab />
+            )}
           </div>
         </div>
       </div>
+
+      <ComplaintModal
+        {...complaintModal}
+        onClose={() => setComplaintModal(prev => ({ ...prev, isOpen: false }))}
+        onSuccess={handleComplaintSuccess}
+      />
     </div>
   );
 };

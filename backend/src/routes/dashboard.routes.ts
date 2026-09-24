@@ -215,4 +215,46 @@ router.get('/top-products', async (req, res) => {
   }
 });
 
+router.get('/pending-orders', async (req, res) => {
+  try {
+    const PENDING_STATUSES = ['pending', 'PENDING', 'pending_payment', 'PENDING_PAYMENT'];
+    
+    // Get total count
+    const count = await prisma.order.count({
+      where: { status: { in: PENDING_STATUSES } }
+    });
+
+    // Get top 3 latest pending orders
+    const orders = await prisma.order.findMany({
+      where: { status: { in: PENDING_STATUSES } },
+      orderBy: { createdAt: 'desc' },
+      take: 3,
+      include: {
+        customer: {
+          select: { fullName: true }
+        },
+        items: {
+          select: { productName: true, variantInfo: true, quantity: true }
+        }
+      }
+    });
+
+    res.json({
+      count,
+      orders: orders.map(o => ({
+        id: o.id,
+        orderCode: o.orderCode,
+        customer: o.customer,
+        items: o.items,
+        totalAmount: o.totalAmount,
+        status: o.status,
+        createdAt: o.createdAt
+      }))
+    });
+  } catch (error) {
+    console.error('Error fetching pending orders:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
 export default router;

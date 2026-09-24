@@ -40,6 +40,10 @@ const WatchUltra3Page = lazy(() =>
   import('./pages/watch/ultra-3/WatchUltra3Page').then(({ WatchUltra3Page: Page }) => ({ default: Page })),
 );
 
+const WatchBrandPage = lazy(() =>
+  import('./pages/watch/brand/WatchBrandPage').then(({ WatchBrandPage: Page }) => ({ default: Page })),
+);
+
 const TabletPage = lazy(() =>
   import('./pages/tablet/TabletPage').then(({ TabletPage: Page }) => ({ default: Page })),
 );
@@ -48,6 +52,10 @@ const LaptopPage = lazy(() =>
 );
 const ProductPurchasePage = lazy(() =>
   import('./pages/product/ProductPurchasePage').then((mod) => ({ default: mod.default || mod.ProductPurchasePage })),
+);
+
+const ProductsFilterPage = lazy(() =>
+  import('./pages/store/ProductsFilterPage').then((mod) => ({ default: mod.default || mod.ProductsFilterPage })),
 );
 
 
@@ -115,6 +123,9 @@ export default function App() {
                 <Route path="/phone/oppo" element={<SmartphonePage brand="oppo" />} />
 
                 {/* Watch Routes */}
+                <Route path="/watch/apple-watch" element={<WatchBrandPage brand="apple-watch" />} />
+                <Route path="/watch/samsung" element={<WatchBrandPage brand="samsung" />} />
+                <Route path="/watch/xiaomi" element={<WatchBrandPage brand="xiaomi" />} />
                 <Route path="/watch/exploreWatch" element={<WatchPage />} />
                 <Route path="/watch/exploreSeries-11" element={<WatchSeries11Page />} />
                 <Route path="/watch/exploreSe-3" element={<WatchSE3Page />} />
@@ -130,6 +141,7 @@ export default function App() {
                 <Route path="/laptop/asus" element={<LaptopPage brand="asus" />} />
                 <Route path="/laptop/lenovo-6xfo" element={<LaptopPage brand="lenovo" />} />
                 <Route path="/product/:slug" element={<ProductPurchasePage />} />
+                <Route path="/products" element={<ProductsFilterPage />} />
                 <Route path="/checkout" element={<CheckoutPage />} />
                 <Route path="/checkout/payment" element={<PaymentPage />} />
                 <Route path="/order-success" element={<OrderSuccessPage />} />

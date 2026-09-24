@@ -27,6 +27,8 @@ export interface BrandModel {
   };
   colors: BrandColor[];
   featured?: boolean;
+  ratingAverage?: number;
+  reviewCount?: number;
 }
 
 export type SmartphoneModel = BrandModel;

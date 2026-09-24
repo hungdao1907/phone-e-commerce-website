@@ -4,15 +4,14 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { VerticalDock } from './VerticalDock';
 import InteractiveCalendar from '@/components/admin/widgets/InteractiveCalendar';
 import { SearchButton } from '@/components/admin/layout/SearchButton';
-import { NotificationDropdown } from '@/components/admin/layout/NotificationDropdown';
-import { LottieIcon } from '@/components/ui/LottieIcon';
 import { ProductList } from '@/components/admin/views/ProductList';
 import { Inventory } from '@/components/admin/views/Inventory';
 import { Categories } from '@/components/admin/views/Categories';
 import { Marketing } from '@/components/admin/views/Marketing';
 import { Banners } from '@/components/admin/views/Banners';
 import { Orders } from '@/components/admin/views/Orders';
-import { Disputes } from '@/components/admin/views/Disputes';
+import { Reviews } from '@/components/admin/views/Reviews';
+import { Complaints } from '@/components/admin/views/Complaints';
 import { Invoices } from '@/components/admin/views/Invoices';
 import { MainDashboardView } from '@/components/admin/views/MainDashboardView';
 import { StaffManager } from '@/components/admin/views/StaffManager';
@@ -20,6 +19,7 @@ import { CustomerManager } from '@/components/admin/views/CustomerManager';
 import { LeadManager } from '@/components/admin/views/LeadManager';
 import { SettingsManager } from '@/components/admin/views/SettingsManager';
 import { AdminChatWidget } from '@/components/admin/chat/AdminChatWidget';
+import { NotificationCenter } from '@/components/admin/NotificationCenter';
 
 // Map view IDs to readable titles
 const VIEW_LABELS: Record<string, string> = {
@@ -56,9 +56,7 @@ export function DashboardLayout() {
     navigate(newView === 'dashboard' ? '/dashboard' : `/dashboard/${newView}`, { replace: false });
   };
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [isNotifOpen, setIsNotifOpen] = useState(false);
-  const [isNotifHovered, setIsNotifHovered] = useState(false);
-  const notifRef = useRef<HTMLDivElement>(null);
+  const [isNotifCenterOpen, setIsNotifCenterOpen] = useState(false);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -67,18 +65,14 @@ export function DashboardLayout() {
         setIsSearchOpen(true);
       }
     };
-    const handleOutsideClick = (e: MouseEvent) => {
-      if (notifRef.current && !notifRef.current.contains(e.target as Node)) {
-        setIsNotifOpen(false);
-      }
-    };
+    
     window.addEventListener('keydown', handleKeyDown);
-    document.addEventListener('mousedown', handleOutsideClick);
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
-      document.removeEventListener('mousedown', handleOutsideClick);
     };
   }, []);
+
+  const handleOpenNotifCenter = React.useCallback(() => setIsNotifCenterOpen(true), []);
 
   return (
     <div className="relative min-h-screen w-full overflow-hidden bg-gradient-to-br from-[#183D61] via-[#ACD99C] to-[#E0CD39] text-white font-sans">
@@ -103,28 +97,8 @@ export function DashboardLayout() {
             </div>
 
             {/* Right Icons */}
-            <div className="flex flex-1 items-center justify-end gap-4 relative" ref={notifRef}>
-              <button 
-                onClick={() => setIsNotifOpen(!isNotifOpen)}
-                onMouseEnter={() => setIsNotifHovered(true)}
-                onMouseLeave={() => setIsNotifHovered(false)}
-                className="relative group outline-none flex items-center justify-center w-12 h-12 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors"
-              >
-                <motion.div 
-                  animate={{ scale: isNotifHovered ? 1.2 : 1 }}
-                  transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                  className="w-8 h-8 flex items-center justify-center relative"
-                >
-                  <LottieIcon path="/lottie/notification.json" playing={isNotifHovered} />
-                  <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full shadow-[0_0_8px_rgba(239,68,68,0.8)]"></span>
-                </motion.div>
-              </button>
-
-              {isNotifOpen && (
-                <div className="absolute top-[3.5rem] right-0 z-[100] w-[320px]">
-                  <NotificationDropdown isOpen={isNotifOpen} onClose={() => setIsNotifOpen(false)} />
-                </div>
-              )}
+            <div className="flex flex-1 items-center justify-end gap-4 relative">
+              {/* Removed notification button */}
             </div>
 
           </header>
@@ -132,7 +106,7 @@ export function DashboardLayout() {
           {/* Main Content Area */}
           <main className="flex-1 overflow-y-auto p-8 custom-scrollbar transform-gpu will-change-transform">
             {activeView === 'dashboard' ? (
-              <MainDashboardView />
+              <MainDashboardView onViewAll={handleOpenNotifCenter} />
             ) : activeView === 'user-staff' ? (
               <StaffManager />
             ) : activeView === 'crm-customers' ? (
@@ -153,8 +127,10 @@ export function DashboardLayout() {
               <Marketing />
             ) : activeView === 'orders' || activeView === 'orders-list' ? (
               <Orders />
-            ) : activeView === 'orders-disputes' ? (
-              <Disputes />
+            ) : activeView === 'orders-reviews' ? (
+              <Reviews />
+            ) : activeView === 'orders-complaints' ? (
+              <Complaints />
             ) : activeView === 'orders-invoices' ? (
               <Invoices />
             ) : activeView === 'settings' ? (
@@ -171,9 +147,14 @@ export function DashboardLayout() {
           </main>
         </div>
       </div>
-      
       {/* Floating Admin Chat Widget */}
       <AdminChatWidget />
+
+      {/* Notification Center Drawer — overlay on full layout */}
+      <NotificationCenter
+        isOpen={isNotifCenterOpen}
+        onClose={() => setIsNotifCenterOpen(false)}
+      />
     </div>
   );
 }

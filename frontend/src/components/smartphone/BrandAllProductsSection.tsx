@@ -1,9 +1,8 @@
-import React, { useMemo, useRef, useState } from 'react';
-import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion';
+import React, { useRef, useState, useEffect, useMemo } from 'react';
+import { motion, useScroll, useTransform } from 'framer-motion';
 import {
   ArrowDownNarrowWide,
   ArrowUpNarrowWide,
-  ArrowUpRight,
   BadgePercent,
   Layers,
   Sparkles,
@@ -12,28 +11,29 @@ import {
   X,
   PhoneCall,
   RefreshCw,
+  Filter,
+  AlertCircle
 } from 'lucide-react';
-import { BrandProductCard } from '@/components/product-cards/SmartphoneProductCard';
+import { useSearchParams } from 'react-router-dom';
+import { useQuery, keepPreviousData } from '@tanstack/react-query';
+import { SidebarFilter } from '@/components/store/SidebarFilter';
+import { ActiveFilterChips } from '@/components/store/ActiveFilterChips';
+import { FilteredProductCard } from '@/components/store/FilteredProductCard';
 import type { BrandConfig, BrandModel } from '@/types/smartphone';
 
-type BrandProductFilter = 'popular' | 'promotion' | 'price-asc' | 'price-desc';
-
-const PRODUCT_FILTERS = [
-  { id: 'popular', label: 'Phổ biến', icon: Star },
-  { id: 'promotion', label: 'Khuyến mãi HOT', icon: BadgePercent },
-  { id: 'price-asc', label: 'Giá Thấp - Cao', icon: ArrowUpNarrowWide },
-  { id: 'price-desc', label: 'Giá Cao - Thấp', icon: ArrowDownNarrowWide },
-] as const;
-
-const toPriceValue = (price: string) => Number.parseInt(price.replace(/\D/g, ''), 10) || 0;
-
-const getDiscountValue = (product: BrandModel) =>
-  product.originalPrice ? toPriceValue(product.originalPrice) - toPriceValue(product.price) : 0;
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
 interface BrandAllProductsSectionProps {
   config: BrandConfig;
-  products: BrandModel[];
+  products: BrandModel[]; // We keep this for series extraction
 }
+
+const PRODUCT_FILTERS = [
+  { id: 'popular', label: 'Phổ biến', icon: Star, sortValue: 'newest' },
+  { id: 'promotion', label: 'Khuyến mãi HOT', icon: BadgePercent, sortValue: 'promotion' },
+  { id: 'price-asc', label: 'Giá Thấp - Cao', icon: ArrowUpNarrowWide, sortValue: 'price_asc' },
+  { id: 'price-desc', label: 'Giá Cao - Thấp', icon: ArrowDownNarrowWide, sortValue: 'price_desc' },
+] as const;
 
 export function BrandAllProductsSection({ config, products }: BrandAllProductsSectionProps) {
   const containerRef = useRef<HTMLElement>(null);
@@ -45,11 +45,15 @@ export function BrandAllProductsSection({ config, products }: BrandAllProductsSe
   const opacity = useTransform(scrollYProgress, [0, 0.12, 0.88, 1], [0, 1, 1, 0]);
   const y = useTransform(scrollYProgress, [0, 0.12], [60, 0]);
 
-  const [activeFilter, setActiveFilter] = useState<BrandProductFilter>('popular');
-  const [selectedSeries, setSelectedSeries] = useState<string>('all');
-  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
-  // Extract all distinct series from products
+  // Mappings
+  const categorySlug = 'phone';
+  let brandSlug = config.id.toLowerCase();
+  if (brandSlug === 'iphone') brandSlug = 'apple';
+
+  // Extract all distinct series from the initial 'products' prop to render the Series Tabs
   const availableSeries = useMemo(() => {
     const seriesSet = new Set<string>();
     products.forEach((p) => {
@@ -58,118 +62,88 @@ export function BrandAllProductsSection({ config, products }: BrandAllProductsSe
     return Array.from(seriesSet);
   }, [products]);
 
-  // Filter and sort products
-  const processedProducts = useMemo(() => {
-    let list = [...products];
+  const activeSeries = searchParams.get('series') || 'all';
+  const activeSort = searchParams.get('sort') || 'newest';
+  const searchQuery = searchParams.get('q') || '';
 
-    // 1. Search Query Filter
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase().trim();
-      list = list.filter(
-        (p) =>
-          p.name.toLowerCase().includes(q) ||
-          p.tagline?.toLowerCase().includes(q) ||
-          p.series?.toLowerCase().includes(q) ||
-          p.specs?.chipset?.toLowerCase().includes(q) ||
-          p.specs?.camera?.toLowerCase().includes(q)
-      );
+  const fetchFilters = async () => {
+    const params = new URLSearchParams(searchParams);
+    params.delete('page');
+    params.delete('limit');
+    params.delete('sort');
+    params.delete('series');
+    params.delete('q');
+    params.set('category', categorySlug);
+    params.set('brand', brandSlug);
+    
+    const res = await fetch(`${API_URL}/api/products/filters?${params.toString()}`);
+    if (!res.ok) throw new Error('Failed to fetch filters');
+    return res.json();
+  };
+
+  const fetchProducts = async () => {
+    const params = new URLSearchParams(searchParams);
+    params.set('category', categorySlug);
+    params.set('brand', brandSlug);
+
+    const res = await fetch(`${API_URL}/api/products/search?${params.toString()}`);
+    if (!res.ok) throw new Error('Failed to fetch products');
+    return res.json();
+  };
+
+  const { data: filtersData, isLoading: isLoadingFilters } = useQuery({
+    queryKey: ['productsFilters', categorySlug, brandSlug, searchParams.toString()],
+    queryFn: fetchFilters,
+    placeholderData: keepPreviousData,
+  });
+
+  const { data: productsData, isLoading: isLoadingProducts } = useQuery({
+    queryKey: ['productsSearch', categorySlug, brandSlug, searchParams.toString()],
+    queryFn: fetchProducts,
+    placeholderData: keepPreviousData,
+  });
+
+  const handleSortChange = (sortValue: string) => {
+    searchParams.set('sort', sortValue);
+    searchParams.set('page', '1');
+    setSearchParams(searchParams);
+  };
+
+  const handleSeriesChange = (series: string) => {
+    if (series === 'all') {
+      searchParams.delete('series');
+    } else {
+      searchParams.set('series', series);
     }
+    searchParams.set('page', '1');
+    setSearchParams(searchParams);
+  };
 
-    // 2. Series Tab Filter
-    if (selectedSeries !== 'all') {
-      list = list.filter((p) => p.series === selectedSeries);
+  const handleSearch = (q: string) => {
+    if (q) searchParams.set('q', q);
+    else searchParams.delete('q');
+    searchParams.set('page', '1');
+    setSearchParams(searchParams);
+  };
+
+  const handlePageChange = (page: number) => {
+    searchParams.set('page', page.toString());
+    if (containerRef.current) {
+       const topPos = containerRef.current.getBoundingClientRect().top + window.scrollY - 100;
+       window.scrollTo({ top: topPos, behavior: 'smooth' });
     }
+    setSearchParams(searchParams);
+  };
 
-    // 3. Sorting / Filters
-    if (activeFilter === 'promotion') {
-      list = list
-        .filter((p) => Boolean(p.originalPrice))
-        .sort((a, b) => getDiscountValue(b) - getDiscountValue(a));
-    } else if (activeFilter === 'price-asc') {
-      list = list.sort((a, b) => toPriceValue(a.price) - toPriceValue(b.price));
-    } else if (activeFilter === 'price-desc') {
-      list = list.sort((a, b) => toPriceValue(b.price) - toPriceValue(a.price));
-    }
+  useEffect(() => {
+    if (isMobileSidebarOpen) document.body.style.overflow = 'hidden';
+    else document.body.style.overflow = '';
+    return () => { document.body.style.overflow = ''; };
+  }, [isMobileSidebarOpen]);
 
-    return list;
-  }, [products, searchQuery, selectedSeries, activeFilter]);
-
-  // Group products by series if "all" series and no search query
-  const groupedSections = useMemo(() => {
-    if (searchQuery.trim() || selectedSeries !== 'all') {
-      return null;
-    }
-
-    // Use predefined groups from config, plus collect any remaining products
-    const assignedIds = new Set<string>();
-    const groups: {
-      id: string;
-      label: string;
-      title: string;
-      description: string;
-      tagColor: string;
-      products: BrandModel[];
-    }[] = [];
-
-    // Match with config.productGroups
-    if (config.productGroups && config.productGroups.length > 0) {
-      config.productGroups.forEach((groupDef) => {
-        let matching = products.filter(
-          (p) => p.series?.toLowerCase() === groupDef.series?.toLowerCase() || p.series?.toLowerCase() === groupDef.title?.toLowerCase()
-        );
-
-        if (activeFilter === 'promotion') {
-          matching = matching
-            .filter((p) => Boolean(p.originalPrice))
-            .sort((a, b) => getDiscountValue(b) - getDiscountValue(a));
-        } else if (activeFilter === 'price-asc') {
-          matching = matching.sort((a, b) => toPriceValue(a.price) - toPriceValue(b.price));
-        } else if (activeFilter === 'price-desc') {
-          matching = matching.sort((a, b) => toPriceValue(b.price) - toPriceValue(a.price));
-        }
-
-        if (matching.length > 0) {
-          matching.forEach((p) => assignedIds.add(p.id));
-          groups.push({
-            id: groupDef.id,
-            label: groupDef.label || 'DÒNG SẢN PHẨM',
-            title: groupDef.title,
-            description: groupDef.description,
-            tagColor: groupDef.tagColor || 'text-neutral-700 bg-neutral-100 border-neutral-200',
-            products: matching,
-          });
-        }
-      });
-    }
-
-    // Unassigned products fallback group (ensures 100% data visibility)
-    const unassigned = products.filter((p) => !assignedIds.has(p.id));
-    if (unassigned.length > 0) {
-      let matching = [...unassigned];
-      if (activeFilter === 'promotion') {
-        matching = matching
-          .filter((p) => Boolean(p.originalPrice))
-          .sort((a, b) => getDiscountValue(b) - getDiscountValue(a));
-      } else if (activeFilter === 'price-asc') {
-        matching = matching.sort((a, b) => toPriceValue(a.price) - toPriceValue(b.price));
-      } else if (activeFilter === 'price-desc') {
-        matching = matching.sort((a, b) => toPriceValue(b.price) - toPriceValue(a.price));
-      }
-
-      if (matching.length > 0) {
-        groups.push({
-          id: 'other-products',
-          label: 'DANH MỤC SẢN PHẨM',
-          title: `Bộ Sưu Tập ${config.brand}`,
-          description: `Đầy đủ các thiết bị ${config.brand} chính hãng với nhiều tùy chọn hấp dẫn.`,
-          tagColor: 'text-blue-700 bg-blue-50 border-blue-200',
-          products: matching,
-        });
-      }
-    }
-
-    return groups.length > 0 ? groups : null;
-  }, [config.productGroups, config.brand, products, searchQuery, selectedSeries, activeFilter]);
+  // Group products by series if we want to show the grouped layout 
+  // (only if no deep filters/search/sort are active, otherwise flatten)
+  const isDefaultView = !searchQuery && activeSeries === 'all' && activeSort === 'newest' && Array.from(searchParams.keys()).filter(k => !['category','brand','page','sort','series','q'].includes(k)).length === 0;
 
   return (
     <section
@@ -177,7 +151,6 @@ export function BrandAllProductsSection({ config, products }: BrandAllProductsSe
       ref={containerRef}
       className="relative w-full py-20 sm:py-28 bg-[#f8f9fc] text-neutral-900 px-4 sm:px-6 lg:px-8 overflow-hidden"
     >
-      {/* Background Glows */}
       <div
         className="absolute top-20 left-1/4 w-[450px] h-[450px] blur-[150px] rounded-full pointer-events-none opacity-25"
         style={{ backgroundColor: config.accent }}
@@ -187,7 +160,7 @@ export function BrandAllProductsSection({ config, products }: BrandAllProductsSe
         style={{ backgroundColor: config.accentSoft || '#60a5fa' }}
       />
 
-      <motion.div style={{ opacity, y }} className="relative z-10 w-full max-w-7xl mx-auto flex flex-col">
+      <motion.div style={{ opacity, y }} className="relative z-10 w-full max-w-[1400px] mx-auto flex flex-col">
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto mb-14 space-y-3">
           <motion.div
@@ -210,8 +183,8 @@ export function BrandAllProductsSection({ config, products }: BrandAllProductsSe
           </p>
         </div>
 
-        {/* Search Bar & Series Navigation Tabs */}
-        <div className="w-full mb-10 space-y-4">
+        {/* Search Bar & Series Navigation Tabs (Restored) */}
+        <div className="w-full mb-10 space-y-4 max-w-7xl mx-auto">
           {/* Real-time Search Input */}
           <div className="relative max-w-xl mx-auto">
             <div className="relative flex items-center">
@@ -219,14 +192,14 @@ export function BrandAllProductsSection({ config, products }: BrandAllProductsSe
               <input
                 type="text"
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => handleSearch(e.target.value)}
                 placeholder={`Tìm kiếm điện thoại ${config.brand} (vd: Pro Max, Ultra, 512GB, 48MP...)`}
                 className="w-full pl-12 pr-10 py-3.5 rounded-2xl bg-white border border-neutral-200/90 focus:border-neutral-900 focus:ring-4 focus:ring-neutral-900/5 text-sm sm:text-base text-neutral-900 placeholder:text-neutral-400 shadow-sm transition-all duration-200 outline-none"
               />
               {searchQuery && (
                 <button
                   type="button"
-                  onClick={() => setSearchQuery('')}
+                  onClick={() => handleSearch('')}
                   className="absolute right-3.5 p-1 rounded-full text-neutral-400 hover:text-neutral-700 hover:bg-neutral-100 transition-colors"
                 >
                   <X className="w-4 h-4" />
@@ -240,30 +213,29 @@ export function BrandAllProductsSection({ config, products }: BrandAllProductsSe
             <div className="flex overflow-x-auto no-scrollbar justify-start sm:justify-center gap-2 pt-2 pb-1">
               <button
                 type="button"
-                onClick={() => setSelectedSeries('all')}
+                onClick={() => handleSeriesChange('all')}
                 className={`px-4 py-2 rounded-full text-xs sm:text-sm font-bold whitespace-nowrap transition-all duration-200 cursor-pointer ${
-                  selectedSeries === 'all'
+                  activeSeries === 'all'
                     ? 'bg-neutral-900 text-white shadow-md'
                     : 'bg-white text-neutral-700 hover:bg-neutral-100 border border-neutral-200/80'
                 }`}
               >
-                Tất Cả ({products.length})
+                Tất Cả
               </button>
               {availableSeries.map((series) => {
-                const count = products.filter((p) => p.series === series).length;
-                const isSelected = selectedSeries === series;
+                const isSelected = activeSeries === series;
                 return (
                   <button
                     key={series}
                     type="button"
-                    onClick={() => setSelectedSeries(series)}
+                    onClick={() => handleSeriesChange(series)}
                     className={`px-4 py-2 rounded-full text-xs sm:text-sm font-bold whitespace-nowrap transition-all duration-200 cursor-pointer ${
                       isSelected
                         ? 'bg-neutral-900 text-white shadow-md'
                         : 'bg-white text-neutral-700 hover:bg-neutral-100 border border-neutral-200/80'
                     }`}
                   >
-                    {series} ({count})
+                    {series}
                   </button>
                 );
               })}
@@ -272,14 +244,22 @@ export function BrandAllProductsSection({ config, products }: BrandAllProductsSe
 
           {/* Sorter & Quick Filter Chips */}
           <div className="flex overflow-x-auto no-scrollbar justify-start sm:justify-center gap-2 pt-1 pb-1">
+            <button
+              className="md:hidden flex items-center gap-2 bg-white px-4 py-2 rounded-full border border-neutral-200 text-sm font-semibold shadow-sm"
+              onClick={() => setIsMobileSidebarOpen(true)}
+            >
+              <Filter className="w-4 h-4" />
+              Bộ lọc
+            </button>
+            
             {PRODUCT_FILTERS.map((filter) => {
               const Icon = filter.icon;
-              const isActive = activeFilter === filter.id;
+              const isActive = activeSort === filter.sortValue;
               return (
                 <button
                   key={filter.id}
                   type="button"
-                  onClick={() => setActiveFilter(filter.id)}
+                  onClick={() => handleSortChange(filter.sortValue)}
                   className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-xs sm:text-sm font-semibold whitespace-nowrap transition-all duration-200 cursor-pointer ${
                     isActive
                       ? 'bg-white shadow-sm border-neutral-900 text-neutral-950 font-bold'
@@ -295,67 +275,53 @@ export function BrandAllProductsSection({ config, products }: BrandAllProductsSe
           </div>
         </div>
 
-        {/* Product Catalog Display */}
-        {groupedSections && groupedSections.length > 0 ? (
-          /* Render by Grouped Sections */
-          <div className="space-y-16 sm:space-y-20">
-            {groupedSections.map((group, groupIdx) => (
-              <div key={group.id} id={`group-${group.id}`} className="scroll-mt-24">
-                {/* Group Header Bar */}
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.5 }}
-                  className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8 pb-4 border-b border-neutral-200"
-                >
-                  <div className="space-y-1 max-w-2xl">
-                    <span className={`inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${group.tagColor}`}>
-                      {group.label}
-                    </span>
-                    <h3 className="text-2xl sm:text-3xl font-bold tracking-tight text-neutral-900">
-                      {group.title}
-                    </h3>
-                    <p className="text-xs sm:text-sm text-neutral-600 leading-normal">
-                      {group.description}
-                    </p>
-                  </div>
-
-                  <div className="hidden md:flex items-center gap-2 text-xs font-semibold text-neutral-500">
-                    <Layers className="w-4 h-4" />
-                    <span>{group.products.length} sản phẩm</span>
-                  </div>
-                </motion.div>
-
-                {/* Products Grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {group.products.map((product, idx) => (
-                    <BrandProductCard
-                      key={product.id}
-                      product={product}
-                      index={groupIdx * 4 + idx}
-                      accentColor={config.accent}
-                    />
-                  ))}
-                </div>
+        {/* Dynamic Filter Layout - Sidebar + Grid */}
+        <div className="flex flex-col md:flex-row gap-8 max-w-[1400px] mx-auto w-full">
+          
+          {/* Sidebar Area */}
+          <div className={`
+            fixed inset-0 z-50 bg-black/50 md:bg-transparent md:static md:w-64 md:flex-shrink-0 transition-opacity duration-300
+            ${isMobileSidebarOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none md:opacity-100 md:pointer-events-auto'}
+          `}>
+            <div className={`
+              absolute md:static inset-y-0 left-0 w-[85%] max-w-sm bg-[#f5f5f7] md:bg-transparent h-full md:h-auto md:w-full transition-transform duration-300 transform overflow-y-auto md:overflow-visible
+              ${isMobileSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+            `}>
+              <div className="md:hidden flex items-center justify-between p-4 bg-white border-b border-neutral-200 sticky top-0 z-10">
+                <h2 className="font-bold text-lg">Bộ lọc sản phẩm</h2>
+                <button onClick={() => setIsMobileSidebarOpen(false)} className="p-2 bg-neutral-100 rounded-full">
+                  <span className="sr-only">Close</span>
+                  <X className="w-5 h-5" />
+                </button>
               </div>
-            ))}
+              <div className="p-4 md:p-0 sidebar-filter-wrapper">
+                <SidebarFilter 
+                  filters={filtersData} 
+                  isLoading={isLoadingFilters} 
+                  hideCategoryAndBrand={true} 
+                  categorySlug={categorySlug}
+                />
+              </div>
+              <div className="md:hidden sticky bottom-0 p-4 bg-white border-t border-neutral-200">
+                <button onClick={() => setIsMobileSidebarOpen(false)} className="w-full bg-blue-600 text-white font-bold py-3 rounded-xl">
+                  Xem kết quả
+                </button>
+              </div>
+            </div>
           </div>
-        ) : processedProducts.length > 0 ? (
-          /* Render Flattened / Filtered Grid */
-          <div>
+
+          {/* Product Grid Area */}
+          <div className="flex-1 min-w-0">
+            <ActiveFilterChips />
+            
             <div className="mb-6 flex items-center justify-between">
               <span className="text-xs sm:text-sm font-bold text-neutral-600">
-                Tìm thấy {processedProducts.length} sản phẩm phù hợp
+                {isLoadingProducts ? 'Đang tải...' : `Tìm thấy ${productsData?.total || 0} sản phẩm phù hợp`}
               </span>
-              {(searchQuery || selectedSeries !== 'all' || activeFilter !== 'popular') && (
+              {Array.from(searchParams.keys()).length > 0 && (
                 <button
                   type="button"
-                  onClick={() => {
-                    setSearchQuery('');
-                    setSelectedSeries('all');
-                    setActiveFilter('popular');
-                  }}
+                  onClick={() => setSearchParams(new URLSearchParams())}
                   className="text-xs font-bold text-neutral-900 hover:underline cursor-pointer"
                 >
                   Đặt lại tất cả bộ lọc
@@ -363,37 +329,178 @@ export function BrandAllProductsSection({ config, products }: BrandAllProductsSe
               )}
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {processedProducts.map((product, idx) => (
-                <BrandProductCard
-                  key={product.id}
-                  product={product}
-                  index={idx}
-                  accentColor={config.accent}
-                />
-              ))}
-            </div>
+            {isLoadingProducts ? (
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
+                {[1, 2, 3, 4, 5, 6].map(i => (
+                  <div key={i} className="bg-white rounded-2xl h-80 animate-pulse border border-neutral-100"></div>
+                ))}
+              </div>
+            ) : productsData?.data?.length === 0 ? (
+              <div className="bg-white rounded-2xl border border-neutral-200 p-12 flex flex-col items-center justify-center text-center">
+                <div className="w-16 h-16 bg-neutral-100 rounded-full flex items-center justify-center mb-4">
+                  <AlertCircle className="w-8 h-8 text-neutral-400" />
+                </div>
+                <h3 className="text-xl font-bold text-neutral-900 mb-2">Không tìm thấy sản phẩm</h3>
+                <p className="text-neutral-500 max-w-md mx-auto mb-6">
+                  Rất tiếc, không có sản phẩm nào khớp với các bộ lọc bạn đã chọn.
+                </p>
+                <button 
+                  onClick={() => setSearchParams(new URLSearchParams())}
+                  className="bg-neutral-900 text-white px-6 py-2.5 rounded-full font-semibold hover:bg-neutral-800 transition-colors"
+                >
+                  Xóa tất cả bộ lọc
+                </button>
+              </div>
+            ) : (
+              <>
+                {isDefaultView && config.productGroups ? (
+                  // Render grouped by series if default view
+                  <div className="space-y-16 sm:space-y-20">
+                    {(() => {
+                      const assignedIds = new Set<string>();
+                      const renderedGroups = config.productGroups.map((groupDef, groupIdx) => {
+                        const matching = productsData.data.filter((p: any) => 
+                          p.series?.toLowerCase() === groupDef.series?.toLowerCase() || 
+                          p.series?.toLowerCase() === groupDef.title?.toLowerCase()
+                        );
+                        if (matching.length === 0) return null;
+                        
+                        matching.forEach((p: any) => assignedIds.add(p.id));
+                        
+                        return (
+                          <div key={groupDef.id} className="scroll-mt-24">
+                            <motion.div
+                              initial={{ opacity: 0, y: 20 }}
+                              whileInView={{ opacity: 1, y: 0 }}
+                              viewport={{ once: true }}
+                              transition={{ duration: 0.5 }}
+                              className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8 pb-4 border-b border-neutral-200"
+                            >
+                              <div className="space-y-1 max-w-2xl">
+                                <span className={`inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${groupDef.tagColor || 'text-neutral-700 bg-neutral-100 border-neutral-200'}`}>
+                                  {groupDef.label || 'DÒNG SẢN PHẨM'}
+                                </span>
+                                <h3 className="text-2xl sm:text-3xl font-bold tracking-tight text-neutral-900">
+                                  {groupDef.title}
+                                </h3>
+                                <p className="text-xs sm:text-sm text-neutral-600 leading-normal">
+                                  {groupDef.description}
+                                </p>
+                              </div>
+                              <div className="hidden md:flex items-center gap-2 text-xs font-semibold text-neutral-500">
+                                <Layers className="w-4 h-4" />
+                                <span>{matching.length} sản phẩm</span>
+                              </div>
+                            </motion.div>
+                            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
+                              {matching.map((product: any) => (
+                                <FilteredProductCard 
+                                  key={product.id} 
+                                  product={product} 
+                                  categorySlug={categorySlug} 
+                                />
+                              ))}
+                            </div>
+                          </div>
+                        );
+                      });
+
+                      const unassigned = productsData.data.filter((p: any) => !assignedIds.has(p.id));
+                      
+                      return (
+                        <>
+                          {renderedGroups}
+                          {unassigned.length > 0 && (
+                            <div key="unassigned" className="scroll-mt-24">
+                              <motion.div
+                                initial={{ opacity: 0, y: 20 }}
+                                whileInView={{ opacity: 1, y: 0 }}
+                                viewport={{ once: true }}
+                                transition={{ duration: 0.5 }}
+                                className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8 pb-4 border-b border-neutral-200"
+                              >
+                                <div className="space-y-1 max-w-2xl">
+                                  <span className="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold border text-blue-700 bg-blue-50 border-blue-200">
+                                    DANH MỤC SẢN PHẨM
+                                  </span>
+                                  <h3 className="text-2xl sm:text-3xl font-bold tracking-tight text-neutral-900">
+                                    Bộ Sưu Tập {config.brand}
+                                  </h3>
+                                  <p className="text-xs sm:text-sm text-neutral-600 leading-normal">
+                                    Đầy đủ các thiết bị {config.brand} chính hãng với nhiều tùy chọn hấp dẫn.
+                                  </p>
+                                </div>
+                                <div className="hidden md:flex items-center gap-2 text-xs font-semibold text-neutral-500">
+                                  <Layers className="w-4 h-4" />
+                                  <span>{unassigned.length} sản phẩm</span>
+                                </div>
+                              </motion.div>
+                              <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
+                                {unassigned.map((product: any) => (
+                                  <FilteredProductCard 
+                                    key={product.id} 
+                                    product={product} 
+                                    categorySlug={categorySlug} 
+                                  />
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </>
+                      );
+                    })()}
+                  </div>
+                ) : (
+                  // Flattened grid
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
+                    {productsData.data.map((product: any) => (
+                      <FilteredProductCard 
+                        key={product.id} 
+                        product={product} 
+                        categorySlug={categorySlug} 
+                      />
+                    ))}
+                  </div>
+                )}
+
+                {/* Pagination */}
+                {productsData?.totalPages > 1 && (
+                  <div className="flex justify-center items-center gap-2 mt-12">
+                    <button 
+                      disabled={productsData.page === 1}
+                      onClick={() => handlePageChange(productsData.page - 1)}
+                      className="px-4 py-2 border border-neutral-200 rounded-full text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed hover:bg-white transition-colors"
+                    >
+                      Trước
+                    </button>
+                    <div className="flex gap-1">
+                      {Array.from({ length: productsData.totalPages }).map((_, idx) => (
+                        <button
+                          key={idx}
+                          onClick={() => handlePageChange(idx + 1)}
+                          className={`w-10 h-10 rounded-full text-sm font-bold flex items-center justify-center transition-colors ${
+                            productsData.page === idx + 1 
+                              ? 'bg-neutral-900 text-white' 
+                              : 'bg-transparent text-neutral-600 hover:bg-neutral-200'
+                          }`}
+                        >
+                          {idx + 1}
+                        </button>
+                      ))}
+                    </div>
+                    <button 
+                      disabled={productsData.page === productsData.totalPages}
+                      onClick={() => handlePageChange(productsData.page + 1)}
+                      className="px-4 py-2 border border-neutral-200 rounded-full text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed hover:bg-white transition-colors"
+                    >
+                      Sau
+                    </button>
+                  </div>
+                )}
+              </>
+            )}
           </div>
-        ) : (
-          /* Empty State */
-          <div className="py-20 text-center space-y-4 bg-white rounded-3xl border border-neutral-200">
-            <p className="text-lg font-bold text-neutral-800">Không tìm thấy sản phẩm nào</p>
-            <p className="text-sm text-neutral-500 max-w-md mx-auto">
-              Không có sản phẩm nào khớp với từ khóa "{searchQuery}" hoặc bộ lọc hiện tại.
-            </p>
-            <button
-              type="button"
-              onClick={() => {
-                setSearchQuery('');
-                setSelectedSeries('all');
-                setActiveFilter('popular');
-              }}
-              className="px-6 py-2.5 rounded-full bg-neutral-900 text-white text-xs font-bold hover:bg-black transition-colors"
-            >
-              Xem Tất Cả Sản Phẩm
-            </button>
-          </div>
-        )}
+        </div>
 
         {/* Bottom Consultation & Trade-in Banner */}
         <motion.div

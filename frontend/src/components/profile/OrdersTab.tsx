@@ -4,8 +4,8 @@ import { ShoppingBag, Package } from 'lucide-react';
 interface OrdersTabProps {
   orders: any[];
   onReview: (orderId: string, productId: string) => Promise<void>;
-  onDispute: (orderId: string) => Promise<void>;
   onComplete: (orderId: string) => Promise<void>;
+  onOpenComplaint: (item: any, order: any) => void;
 }
 
 type OrderFilter = 'all' | 'pending' | 'shipping' | 'delivered' | 'completed' | 'cancelled';
@@ -18,7 +18,7 @@ const STATUS_FILTERS: { id: OrderFilter; label: string }[] = [
   { id: 'completed', label: 'Hoàn thành' },
 ];
 
-export function OrdersTab({ orders, onReview, onDispute, onComplete }: OrdersTabProps) {
+export function OrdersTab({ orders, onReview, onComplete, onOpenComplaint }: OrdersTabProps) {
   const [activeFilter, setActiveFilter] = useState<OrderFilter>('all');
 
   const filteredOrders = useMemo(() => {
@@ -128,12 +128,18 @@ export function OrdersTab({ orders, onReview, onDispute, onComplete }: OrdersTab
                         </div>
                         
                         {(order.status === 'completed' || order.status === 'delivered') && (
-                          <div className="mt-2">
+                          <div className="mt-2 flex items-center gap-2">
                             <button 
                               onClick={() => onReview(order.id, item.productId)} 
                               className="text-xs font-bold text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-full transition-colors"
                             >
                               Viết đánh giá
+                            </button>
+                            <button 
+                              onClick={() => onOpenComplaint(item, order)} 
+                              className="text-xs font-bold text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-full transition-colors"
+                            >
+                              Khiếu nại
                             </button>
                           </div>
                         )}
@@ -153,12 +159,6 @@ export function OrdersTab({ orders, onReview, onDispute, onComplete }: OrdersTab
                     </a>
                   </div>
                   <div className="flex flex-wrap gap-3">
-                    <button 
-                      onClick={() => onDispute(order.id)} 
-                      className="px-5 py-2 text-sm font-bold text-red-600 hover:bg-red-50 rounded-full transition-colors border border-red-200"
-                    >
-                      Khiếu nại
-                    </button>
                     {order.status === 'delivered' && (
                       <button 
                         onClick={() => onComplete(order.id)} 

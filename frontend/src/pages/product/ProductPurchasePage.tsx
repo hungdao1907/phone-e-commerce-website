@@ -135,7 +135,9 @@ export function ProductPurchasePage() {
             colors,
             storageOptions,
             specifications: parsedSpecs.length > 0 ? parsedSpecs : [{ label: 'Đang cập nhật', value: 'Chưa có thông số' }],
-            variants
+            variants,
+            ratingAverage: dbProduct.ratingAverage || 0,
+            reviewCount: dbProduct.reviewCount || 0
           };
           setProduct(mappedProduct);
         }
@@ -340,7 +342,9 @@ export function ProductPurchasePage() {
         <div className="flex flex-col gap-8 w-full mx-auto mt-4">
           
           {/* Reviews Section */}
-          <ProductReviews />
+          <div id="product-reviews-section">
+            <ProductReviews productId={product.id} />
+          </div>
           
           {/* Related Products Demo */}
           <section className="rounded-3xl border border-neutral-200 bg-white p-6 sm:p-8 lg:p-10 shadow-sm">

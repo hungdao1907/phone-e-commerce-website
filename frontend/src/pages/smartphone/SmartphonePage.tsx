@@ -110,7 +110,7 @@ export function SmartphonePage({ brand }: SmartphonePageProps) {
                 badge: idx === 0 ? 'MỚI RA MẮT' : (ap.badge || undefined),
                 image: resolveImageUrl(ap.image) || resolveImageUrl(ap.images?.[0]) || '/images/hero.png',
                 accentColor: config.accent,
-                featured: idx < 3,
+                featured: idx < 4,
                 specs: {
                   display: getSpec('màn hình') || '6.7" OLED 120Hz',
                   chipset: getSpec('chip') || 'Vi xử lý thế hệ mới',

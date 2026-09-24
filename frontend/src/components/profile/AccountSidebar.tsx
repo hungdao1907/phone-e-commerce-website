@@ -1,8 +1,8 @@
 import React from 'react';
-import { User, Package, Heart, MapPin, Ticket, Star, Lock, LogOut } from 'lucide-react';
+import { User, Package, Heart, MapPin, Ticket, Star, Lock, LogOut, MessageSquareWarning } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 
-export type TabId = 'overview' | 'info' | 'orders' | 'wishlist' | 'address' | 'voucher' | 'points' | 'security';
+export type TabId = 'overview' | 'info' | 'orders' | 'wishlist' | 'address' | 'voucher' | 'points' | 'security' | 'complaints';
 
 interface AccountSidebarProps {
   activeTab: TabId;
@@ -16,6 +16,7 @@ const MENU_ITEMS: { id: TabId; label: string; icon: React.ElementType }[] = [
   { id: 'address', label: 'Địa chỉ nhận hàng', icon: MapPin },
   { id: 'voucher', label: 'Voucher', icon: Ticket },
   { id: 'points', label: 'Điểm thưởng', icon: Star },
+  { id: 'complaints', label: 'Khiếu nại của tôi', icon: MessageSquareWarning },
 ];
 
 const SECURITY_ITEMS: { id: TabId; label: string; icon: React.ElementType }[] = [
