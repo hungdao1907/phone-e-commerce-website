@@ -209,7 +209,7 @@ router.patch('/:id/status', authenticateToken, async (req: AuthRequest, res) => 
       return res.status(403).json({ message: 'Không có quyền thực hiện hành động này' });
     }
 
-    const { id } = req.params;
+    const id = getRouteParam(req.params.id);
     const { status } = req.body;
 
     if (!['APPROVED', 'REJECTED', 'PENDING'].includes(status)) {
@@ -235,7 +235,7 @@ router.post('/:id/reply', authenticateToken, async (req: AuthRequest, res) => {
       return res.status(403).json({ message: 'Không có quyền thực hiện hành động này' });
     }
 
-    const { id } = req.params;
+    const id = getRouteParam(req.params.id);
     const { reply } = req.body;
 
     if (!reply) return res.status(400).json({ message: 'Nội dung phản hồi không được trống' });
@@ -307,10 +307,7 @@ router.post('/', authenticateToken, async (req: AuthRequest, res) => {
     // Check duplicate review
     const existingReview = await prisma.review.findUnique({
       where: {
-        customerId_orderItemId: {
-          customerId,
-          orderItemId
-        }
+        orderItemId
       }
     });
 
@@ -360,7 +357,7 @@ router.post('/', authenticateToken, async (req: AuthRequest, res) => {
 router.patch('/:id', authenticateToken, async (req: AuthRequest, res) => {
   try {
     const customerId = req.user?.id;
-    const { id } = req.params;
+    const id = getRouteParam(req.params.id);
     const { rating, comment, images } = req.body;
 
     const existing = await prisma.review.findUnique({ where: { id } });
@@ -394,13 +391,13 @@ router.patch('/:id', authenticateToken, async (req: AuthRequest, res) => {
 // DELETE review
 router.delete('/:id', authenticateToken, async (req: AuthRequest, res) => {
   try {
-    const { id } = req.params;
+    const id = getRouteParam(req.params.id);
     const existing = await prisma.review.findUnique({ where: { id } });
     
     if (!existing) return res.status(404).json({ message: 'Không tìm thấy đánh giá' });
 
     // Allow Admin OR Owner to delete
-    if (req.user?.role !== 'admin' && existing.customerId !== req.user?.id) {
+    if (!['admin', 'superadmin'].includes(req.user?.role as string) && existing.customerId !== req.user?.id) {
       return res.status(403).json({ message: 'Bạn không có quyền xóa đánh giá này' });
     }
 
