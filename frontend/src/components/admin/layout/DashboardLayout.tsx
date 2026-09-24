@@ -17,7 +17,6 @@ import { StaffManager } from '@/components/admin/views/StaffManager';
 import { CustomerManager } from '@/components/admin/views/CustomerManager';
 import { LeadManager } from '@/components/admin/views/LeadManager';
 import { SettingsManager } from '@/components/admin/views/SettingsManager';
-import { AdminChatWidget } from '@/components/admin/chat/AdminChatWidget';
 import { NotificationCenter } from '@/components/admin/NotificationCenter';
 
 // Map view IDs to readable titles
@@ -131,8 +130,6 @@ export function DashboardLayout() {
           </main>
         </div>
       </div>
-      {/* Floating Admin Chat Widget */}
-      <AdminChatWidget />
 
       {/* Notification Center Drawer — overlay on full layout */}
       <NotificationCenter

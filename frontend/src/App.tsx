@@ -63,7 +63,6 @@ const queryClient = new QueryClient();
 
 import { CartDrawer } from './components/cart/CartDrawer';
 import { FloatingCartButton } from './components/cart/FloatingCartButton';
-import { ChatWidget } from './components/chatbot/ChatWidget';
 
 function MainLayout() {
   const isReducedMotion = useMemo(
@@ -90,7 +89,6 @@ function MainLayout() {
         <GlobalNav />
         <CartDrawer />
         <FloatingCartButton />
-        <ChatWidget />
         <Outlet />
         <Footer />
       </div>
