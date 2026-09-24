@@ -118,6 +118,8 @@ export function LaptopPage({ brand }: LaptopPageProps) {
                 badge: idx === 0 ? 'MỚI' : (ap.badge || undefined),
                 price: finalPrice,
                 originalPrice: originalPrice,
+                reviewCount: ap.reviewCount || 0,
+                ratingAverage: ap.ratingAverage || 0,
                 colors: colors.length > 0 ? colors : [{ name: 'Space Gray', hex: '#4b5563' }],
                 specs: {
                   display: getSpec('màn hình') || 'Màn hình sắc nét',

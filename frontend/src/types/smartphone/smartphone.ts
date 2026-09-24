@@ -1,3 +1,4 @@
+import React from 'react';
 export type SmartphoneBrandId = 'iphone' | 'samsung' | 'xiaomi' | 'oppo';
 
 export interface BrandColor {

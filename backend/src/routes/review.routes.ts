@@ -17,6 +17,8 @@ router.get('/product/:productId', async (req, res) => {
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 10;
     const ratingFilter = parseInt(req.query.rating as string) || 0;
+    const hasImage = req.query.hasImage === 'true';
+    const isVerifiedPurchase = req.query.isVerifiedPurchase === 'true';
     const skip = (page - 1) * limit;
 
     const whereClause: any = {
@@ -25,6 +27,12 @@ router.get('/product/:productId', async (req, res) => {
     };
     if (ratingFilter > 0) {
       whereClause.rating = ratingFilter;
+    }
+    if (hasImage) {
+      whereClause.images = { isEmpty: false };
+    }
+    if (isVerifiedPurchase) {
+      whereClause.orderItemId = { not: null };
     }
 
     const baseWhereClause = { productId, status: 'APPROVED' };
@@ -41,19 +49,36 @@ router.get('/product/:productId', async (req, res) => {
         take: limit
       }),
       prisma.review.count({ where: whereClause }),
-      prisma.review.findMany({ where: baseWhereClause, select: { rating: true } })
+      prisma.review.findMany({ where: baseWhereClause, select: { rating: true, experienceRatings: true } })
     ]);
 
     const totalReviews = allRatings.length;
     const ratingBreakdown = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
     let ratingSum = 0;
     
+    // Aggregating experience ratings
+    const expCounts: Record<string, number> = {};
+    const expSums: Record<string, number> = {};
+
     allRatings.forEach(r => {
       ratingBreakdown[r.rating as keyof typeof ratingBreakdown]++;
       ratingSum += r.rating;
+
+      if (r.experienceRatings && typeof r.experienceRatings === 'object') {
+        Object.entries(r.experienceRatings as Record<string, number>).forEach(([key, val]) => {
+          if (typeof val === 'number') {
+            expCounts[key] = (expCounts[key] || 0) + 1;
+            expSums[key] = (expSums[key] || 0) + val;
+          }
+        });
+      }
     });
 
     const ratingAverage = totalReviews > 0 ? Number((ratingSum / totalReviews).toFixed(1)) : 0;
+    const experienceRatings: Record<string, number> = {};
+    Object.keys(expSums).forEach(key => {
+      experienceRatings[key] = Number((expSums[key] / expCounts[key]).toFixed(1));
+    });
 
     res.json({
       reviews: reviews.map(r => ({
@@ -66,12 +91,14 @@ router.get('/product/:productId', async (req, res) => {
         adminReplyAt: r.adminReplyAt,
         customer: r.customer,
         variant: r.variant,
-        isVerifiedPurchase: true
+        experienceRatings: r.experienceRatings,
+        isVerifiedPurchase: !!r.orderItemId
       })),
       ratingSummary: {
         ratingAverage,
         reviewCount: totalReviews,
-        ratingBreakdown
+        ratingBreakdown,
+        experienceRatings
       },
       pagination: {
         page,
@@ -266,66 +293,83 @@ router.post('/', authenticateToken, async (req: AuthRequest, res) => {
     const customerId = req.user?.id;
     if (!customerId) return res.status(401).json({ message: 'Unauthorized' });
 
-    const { productId, variantId, orderId, orderItemId, rating, comment, images } = req.body;
+    const { productId, variantId, orderId, orderItemId, rating, comment, images, experienceRatings } = req.body;
 
     // Validate Rating
     if (!rating || rating < 1 || rating > 5) {
       return res.status(400).json({ message: 'Rating phải từ 1 đến 5' });
     }
 
-    // Verify Order belongs to Customer
-    const order = await prisma.order.findUnique({ 
-      where: { id: orderId },
-      include: { items: true }
-    });
-
-    if (!order) return res.status(404).json({ message: 'Không tìm thấy đơn hàng' });
-    if (order.customerId !== customerId) {
-      return res.status(403).json({ message: 'Bạn không có quyền đánh giá đơn hàng này' });
-    }
-
-    // Verify Order Status
-    if (order.status !== 'completed' && order.status !== 'delivered') {
-      return res.status(400).json({ message: 'Chỉ có thể đánh giá đơn hàng đã hoàn thành hoặc đã giao' });
-    }
-
-    // Verify OrderItem and Variant/Product integrity
-    const orderItem = order.items.find(item => item.id === orderItemId);
-    if (!orderItem) {
-      return res.status(400).json({ message: 'Sản phẩm không thuộc đơn hàng này' });
-    }
-    
-    if (orderItem.variantId !== variantId) {
-      return res.status(400).json({ message: 'Thông tin phiên bản không khớp với đơn hàng' });
-    }
-
-    const variant = await prisma.productVariant.findUnique({ where: { id: variantId } });
-    if (!variant || variant.productId !== productId) {
+    if (!productId) {
       return res.status(400).json({ message: 'Sản phẩm không hợp lệ' });
     }
 
-    // Check duplicate review
+    let orderCode = 'Không xác định';
+
+    // Verify the purchase. The new rule states only verified buyers can review.
+    // If orderId and orderItemId are provided, verify the purchase
+    if (orderId && orderItemId) {
+      const order = await prisma.order.findUnique({ 
+        where: { id: orderId },
+        include: { items: true }
+      });
+
+      if (!order) return res.status(404).json({ message: 'Không tìm thấy đơn hàng' });
+      if (order.customerId !== customerId) {
+        return res.status(403).json({ message: 'Bạn không có quyền đánh giá đơn hàng này' });
+      }
+
+      if (order.status !== 'completed' && order.status !== 'delivered') {
+        return res.status(400).json({ message: 'Chỉ có thể đánh giá đơn hàng đã hoàn thành hoặc đã giao' });
+      }
+
+      const orderItem = order.items.find(item => item.id === orderItemId);
+      if (!orderItem) {
+        return res.status(400).json({ message: 'Sản phẩm không thuộc đơn hàng này' });
+      }
+      
+      if (variantId && orderItem.variantId !== variantId) {
+        return res.status(400).json({ message: 'Thông tin phiên bản không khớp với đơn hàng' });
+      }
+
+      orderCode = order.orderCode;
+    } else {
+      return res.status(400).json({ message: 'Bạn cần mua và nhận sản phẩm này trước khi có thể đánh giá.' });
+    }
+
+    if (variantId) {
+      const variant = await prisma.productVariant.findUnique({ where: { id: variantId } });
+      if (!variant || variant.productId !== productId) {
+        return res.status(400).json({ message: 'Sản phẩm/Phiên bản không hợp lệ' });
+      }
+    }
+
+    // Check duplicate review for the same product by the same customer
     const existingReview = await prisma.review.findUnique({
       where: {
-        orderItemId
+        customerId_productId: {
+          customerId,
+          productId
+        }
       }
     });
 
     if (existingReview) {
-      return res.status(400).json({ message: 'Bạn đã đánh giá sản phẩm này trong đơn hàng này rồi' });
+      return res.status(400).json({ message: 'Bạn đã đánh giá sản phẩm này rồi' });
     }
 
     // Create Review
     const review = await prisma.review.create({
       data: {
-        orderId,
+        orderId: orderId || null,
         customerId,
         productId,
-        variantId,
-        orderItemId,
+        variantId: variantId || null,
+        orderItemId: orderItemId || null,
         rating,
         comment,
         images: Array.isArray(images) ? images : [],
+        experienceRatings: experienceRatings ? experienceRatings : null,
         status: 'PENDING'
       },
       include: {

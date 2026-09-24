@@ -27,7 +27,13 @@ router.get('/', authenticateToken, async (req, res) => {
         customer: {
           select: { fullName: true, email: true, phone: true }
         },
-        items: true,
+        items: {
+          include: {
+            variant: {
+              include: { product: { select: { id: true, name: true, image: true } } }
+            }
+          }
+        },
       },
       orderBy: { createdAt: 'desc' }
     });
@@ -47,7 +53,13 @@ router.get('/:id', authenticateToken, async (req, res) => {
         customer: {
           select: { fullName: true, email: true, phone: true }
         },
-        items: true,
+        items: {
+          include: {
+            variant: {
+              include: { product: { select: { id: true, name: true, image: true } } }
+            }
+          }
+        },
       }
     });
     if (!order) return res.status(404).json({ message: 'Không tìm thấy đơn hàng' });

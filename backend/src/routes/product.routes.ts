@@ -104,18 +104,36 @@ router.get('/', async (req, res) => {
       })
     ]);
 
-    // Attach campaign to products
-    const productsWithCampaigns = products.map((product) => {
+    const productIds = products.map(p => p.id);
+    const _reviews = await prisma.review.findMany({
+      where: { productId: { in: productIds }, status: 'APPROVED' },
+      select: { productId: true, rating: true }
+    });
+
+    // Attach campaign and reviews to products
+    const productsWithData = products.map((product) => {
       // Find a campaign that applies to this product
       const campaign = activeCampaigns.find(c => 
         (c.appliesTo === 'product' && c.targetIds.includes(product.id)) ||
         (c.appliesTo === 'category' && c.targetIds.includes(product.categoryId || '')) ||
         (c.appliesTo === 'all')
       );
-      return { ...product, activeCampaign: campaign || null };
+
+      const pReviews = _reviews.filter(r => r.productId === product.id);
+      const reviewCount = pReviews.length;
+      const ratingAverage = reviewCount > 0
+        ? Number((pReviews.reduce((sum, r) => sum + r.rating, 0) / reviewCount).toFixed(1))
+        : 0;
+
+      return { 
+        ...product, 
+        activeCampaign: campaign || null,
+        reviewCount,
+        ratingAverage
+      };
     });
 
-    res.json(productsWithCampaigns);
+    res.json(productsWithData);
   } catch (error) {
     console.error('Error fetching products:', error);
     res.status(500).json({ message: 'Lỗi server' });

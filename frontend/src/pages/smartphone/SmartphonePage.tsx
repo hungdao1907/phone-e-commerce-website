@@ -111,6 +111,8 @@ export function SmartphonePage({ brand }: SmartphonePageProps) {
                 image: resolveImageUrl(ap.image) || resolveImageUrl(ap.images?.[0]) || '/images/hero.png',
                 accentColor: config.accent,
                 featured: idx < 4,
+                reviewCount: ap.reviewCount || 0,
+                ratingAverage: ap.ratingAverage || 0,
                 specs: {
                   display: getSpec('màn hình') || '6.7" OLED 120Hz',
                   chipset: getSpec('chip') || 'Vi xử lý thế hệ mới',

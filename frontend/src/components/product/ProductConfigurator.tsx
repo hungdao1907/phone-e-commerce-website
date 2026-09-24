@@ -66,7 +66,7 @@ export function ProductConfigurator({
               ))}
             </div>
             <span className="font-medium text-neutral-700">{product.ratingAverage}</span>
-            <span className="text-neutral-500">({product.reviewCount} đánh giá)</span>
+            <span className="text-neutral-500">({product.reviewCount} lượt đánh giá)</span>
           </div>
         ) : (
           <div 

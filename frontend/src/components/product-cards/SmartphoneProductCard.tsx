@@ -240,7 +240,7 @@ export function BrandProductCard({ product, index = 0, accentColor }: BrandProdu
             <div className="flex items-center gap-1.5 mt-2.5">
               <span className="text-yellow-500 text-xs">★</span>
               <span className="text-xs font-bold text-neutral-900">{product.ratingAverage}</span>
-              <span className="text-[11px] text-neutral-500">({product.reviewCount})</span>
+              <span className="text-[11px] text-neutral-500">({product.reviewCount} lượt đánh giá)</span>
             </div>
           ) : (
             <div className="flex items-center gap-1.5 mt-2.5">

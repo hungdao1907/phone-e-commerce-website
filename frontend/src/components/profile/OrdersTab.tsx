@@ -107,10 +107,22 @@ export function OrdersTab({ orders, onReview, onComplete, onOpenComplaint }: Ord
                 </div>
 
                 <div className="space-y-4">
-                  {order.items.map((item: any) => (
+                  {order.items.map((item: any) => {
+                    const productId = item.productId || item.variant?.product?.id || item.variant?.productId || item.variant?.product?.slug;
+                    const productImage = item.variant?.product?.image || item.variant?.image || item.image;
+                    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+                    const imgSrc = productImage?.startsWith('/uploads') ? `${apiUrl}${productImage}` : productImage;
+
+                    const validProductId = productId && productId !== 'undefined' ? productId : null;
+
+                    return (
                     <div key={item.id} className="flex gap-4">
-                      <div className="w-16 h-16 bg-neutral-100 rounded-lg flex items-center justify-center shrink-0 border border-neutral-200/50">
-                        <ShoppingBag className="w-6 h-6 text-neutral-400" />
+                      <div className="w-16 h-16 bg-neutral-100 rounded-lg flex items-center justify-center shrink-0 border border-neutral-200/50 overflow-hidden">
+                        {imgSrc ? (
+                          <img src={imgSrc} alt={item.productName} className="w-full h-full object-cover" />
+                        ) : (
+                          <ShoppingBag className="w-6 h-6 text-neutral-400" />
+                        )}
                       </div>
                       <div className="flex-1 flex flex-col justify-center">
                         <div className="flex justify-between items-start gap-4">
@@ -129,12 +141,14 @@ export function OrdersTab({ orders, onReview, onComplete, onOpenComplaint }: Ord
                         
                         {(order.status === 'completed' || order.status === 'delivered') && (
                           <div className="mt-2 flex items-center gap-2">
-                            <button 
-                              onClick={() => onReview(order.id, item.productId)} 
-                              className="text-xs font-bold text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-full transition-colors"
-                            >
-                              Viết đánh giá
-                            </button>
+                            {validProductId && (
+                              <button 
+                                onClick={() => onReview(order.id, validProductId)} 
+                                className="text-xs font-bold text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-full transition-colors"
+                              >
+                                Viết đánh giá
+                              </button>
+                            )}
                             <button 
                               onClick={() => onOpenComplaint(item, order)} 
                               className="text-xs font-bold text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-full transition-colors"
@@ -145,7 +159,8 @@ export function OrdersTab({ orders, onReview, onComplete, onOpenComplaint }: Ord
                         )}
                       </div>
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
 
                 {/* Actions */}

@@ -191,7 +191,15 @@ export function ProductPurchasePage() {
     setSelectedStorageId(defaultVariant?.storageId ?? '');
     setQuantity(1);
     document.title = product.name + ' | Cửa Hàng Công Nghệ';
-    window.scrollTo(0, 0);
+    
+    if (window.location.hash === '#reviews') {
+      setTimeout(() => {
+        const el = document.getElementById('reviews');
+        if (el) el.scrollIntoView({ behavior: 'smooth' });
+      }, 500);
+    } else {
+      window.scrollTo(0, 0);
+    }
   }, [product]);
 
   useEffect(() => {
@@ -342,8 +350,8 @@ export function ProductPurchasePage() {
         <div className="flex flex-col gap-8 w-full mx-auto mt-4">
           
           {/* Reviews Section */}
-          <div id="product-reviews-section">
-            <ProductReviews productId={product.id} />
+          <div id="reviews" className="scroll-mt-24">
+            <ProductReviews productId={product.id} categorySlug={product.categorySlug} />
           </div>
           
           {/* Related Products Demo */}
