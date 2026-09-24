@@ -1,0 +1,13 @@
+.product-purchase-page {
+  background: #ffffff;
+}
+
+.product-purchase-gallery__image {
+  mix-blend-mode: multiply;
+}
+
+@media (max-width: 1023px) {
+  .product-purchase-page {
+    overflow-x: clip;
+  }
+}

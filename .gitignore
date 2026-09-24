@@ -4,4 +4,4 @@ dist/
 .env*.local
 .DS_Store
 backend/src/config/credentials.json
-backend/uploads/
+# backend/uploads/
