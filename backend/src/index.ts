@@ -69,6 +69,10 @@ app.use('/api/leads', leadRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/notifications', notificationRoutes);
 
+app.get('/', (req, res) => {
+  res.status(200).json({ message: 'Welcome to Phone E-Commerce API', status: 'live' });
+});
+
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'ok' });
 });
