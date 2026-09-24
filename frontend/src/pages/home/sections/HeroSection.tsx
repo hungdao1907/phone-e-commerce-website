@@ -11,6 +11,9 @@ import {
 import type { MotionValue } from 'motion/react';
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
+import { HeroAuroraBackground } from '@/components/ui/HeroAuroraBackground';
+import { GlowingText } from '@/components/ui/GlowingText';
+import { LiquidText } from '@/components/ui/LiquidText';
 
 export interface HeroProductCard {
   id: string;
@@ -132,6 +135,11 @@ const HERO_PRODUCTS: HeroProductCard[] = [
     image: '/images/hero-products/samsung-z-flip6.jpg',
   },
 ];
+
+const HERO_LIQUID_WORDS = ['Đỉnh Cao', 'Đột Phá', 'Kiến Tạo', 'Tiên Phong'];
+
+const HERO_DESCRIPTION_TEXT =
+  'Khám phá những thiết bị được chọn lọc cho công việc, sáng tạo và cuộc sống mỗi ngày.';
 
 interface SlotConfig {
   id: string;
@@ -366,6 +374,7 @@ interface FloatingCardProps {
   reducedMotion: boolean;
   pointerX: MotionValue<number>;
   pointerY: MotionValue<number>;
+  isReady?: boolean;
 }
 
 function FloatingCard({
@@ -375,6 +384,7 @@ function FloatingCard({
   reducedMotion,
   pointerX,
   pointerY,
+  isReady = true,
 }: FloatingCardProps) {
   const parallaxX = useTransform(
     pointerX,
@@ -395,20 +405,22 @@ function FloatingCard({
         x: reducedMotion ? 0 : parallaxX,
         y: reducedMotion ? 0 : parallaxY,
       }}
-      initial={reducedMotion ? { opacity: 1 } : { opacity: 0, y: -20, scale: 0.96 }}
+      initial={reducedMotion ? { opacity: 1 } : { opacity: 0, y: -24, scale: 0.94 }}
       animate={
         reducedMotion
           ? { opacity: 1 }
-          : {
-            opacity: 1,
-            y: 0,
-            scale: 1,
-            transition: {
-              duration: 0.7,
-              delay: 0.08 + index * 0.04,
-              ease: [0.16, 1, 0.3, 1],
-            },
-          }
+          : isReady
+            ? {
+                opacity: 1,
+                y: 0,
+                scale: 1,
+                transition: {
+                  duration: 0.8,
+                  delay: 0.08 + (index % 7) * 0.05,
+                  ease: [0.16, 1, 0.3, 1],
+                },
+              }
+            : { opacity: 0, y: -24, scale: 0.94 }
       }
     >
       {/* Delicate Hanging Line from Top Viewport Edge */}
@@ -418,16 +430,16 @@ function FloatingCard({
           style={{
             height: slot.lineHeight || '50px',
             background:
-              'linear-gradient(to bottom, transparent 0%, rgba(17, 17, 17, 0.08) 100%)',
+              'linear-gradient(to bottom, transparent 0%, rgba(255, 255, 255, 0.22) 100%)',
           }}
           aria-hidden="true"
         />
       )}
 
-      {/* Dashed Accent Vertical Guide Line Below (Amber/orange line from reference) */}
+      {/* Dashed Accent Vertical Guide Line Below */}
       {slot.hasDashedGuideBelow && (
         <div
-          className="pointer-events-none absolute left-1/2 top-full hidden h-28 w-px -translate-x-1/2 border-l border-dashed border-amber-500/50 lg:block xl:h-36"
+          className="pointer-events-none absolute left-1/2 top-full hidden h-28 w-px -translate-x-1/2 border-l border-dashed border-amber-400/50 lg:block xl:h-36"
           aria-hidden="true"
         />
       )}
@@ -466,8 +478,8 @@ function FloatingCard({
             : undefined
         }
       >
-        {/* Full-Bleed Product Card (Pure image, no text/labels) */}
-        <div className="relative aspect-[4/4.5] w-full overflow-hidden rounded-[20px] bg-neutral-200 shadow-[0_12px_28px_-6px_rgba(0,0,0,0.12),0_4px_10px_rgba(0,0,0,0.04)] ring-1 ring-black/[0.04] transition-all duration-300 group-hover:shadow-[0_22px_44px_-8px_rgba(0,0,0,0.18),0_6px_16px_rgba(0,0,0,0.06)] sm:rounded-[24px]">
+        {/* Full-Bleed Product Card (Pure image, glassmorphism border & depth) */}
+        <div className="relative aspect-[4/4.5] w-full overflow-hidden rounded-[20px] bg-neutral-900/70 shadow-[0_16px_36px_-6px_rgba(0,0,0,0.6),0_0_20px_rgba(255,255,255,0.04)] ring-1 ring-white/15 backdrop-blur-md transition-all duration-300 group-hover:shadow-[0_24px_48px_-8px_rgba(0,0,0,0.8),0_0_30px_rgba(99,102,241,0.25)] group-hover:ring-white/30 sm:rounded-[24px]">
           <img
             src={product.image}
             alt={product.name}
@@ -503,11 +515,25 @@ function FloatingCard({
 export type HeroSectionProps = {
   isCovered?: boolean;
   scrollYProgress?: MotionValue<number>;
+  isIntroPlaying?: boolean;
 };
 
-export function HeroSection({ isCovered = false, scrollYProgress }: HeroSectionProps) {
+export function HeroSection({
+  isCovered = false,
+  scrollYProgress,
+  isIntroPlaying = false,
+}: HeroSectionProps) {
   const heroRef = useRef<HTMLElement>(null);
   const reducedMotion = useReducedMotion() === true;
+  const isReady = !isIntroPlaying;
+  const [helloReplayKey, setHelloReplayKey] = useState(0);
+
+  // Kích hoạt animation nét vẽ khi màn intro bắt đầu chuyển giao và isReady = true
+  useEffect(() => {
+    if (isReady) {
+      setHelloReplayKey((k) => k + 1);
+    }
+  }, [isReady]);
 
   // Pointer parallax coordinates
   const pointerX = useMotionValue(0);
@@ -565,15 +591,28 @@ export function HeroSection({ isCovered = false, scrollYProgress }: HeroSectionP
       aria-labelledby="home-hero-title"
       onPointerMove={handlePointerMove}
       onPointerLeave={handlePointerLeave}
-      className="relative z-0 -mt-[44px] flex min-h-[100svh] w-full flex-col justify-end overflow-hidden bg-[#FAFAFA] pt-[44px] text-[#111111]"
+      className="relative z-0 -mt-[44px] flex min-h-[100svh] w-full flex-col justify-end overflow-hidden bg-[#030712] pt-[44px] text-white"
     >
-      {/* Subtle Background Vertical Guide Lines (Exact detail from reference image) */}
+      {/* Three.js Aurora WebGL Shader Background */}
+      <HeroAuroraBackground reducedMotion={reducedMotion} />
+
+      {/* Atmospheric Vignette & Contrast Depth Gradients */}
+      <div
+        className="pointer-events-none absolute inset-0 z-0 bg-[radial-gradient(circle_at_center,transparent_25%,rgba(3,7,18,0.55)_100%)]"
+        aria-hidden="true"
+      />
+      <div
+        className="pointer-events-none absolute inset-x-0 bottom-0 z-0 h-36 bg-gradient-to-t from-[#0b0f12] via-[#0b0f12]/50 to-transparent"
+        aria-hidden="true"
+      />
+
+      {/* Subtle Background Vertical Guide Lines */}
       <div className="pointer-events-none absolute inset-0 z-0 hidden lg:block" aria-hidden="true">
         <div className="relative mx-auto h-full w-full max-w-[1760px]">
           {VERTICAL_GUIDE_LINES.map((leftPos, idx) => (
             <div
               key={`guide-${idx}`}
-              className="absolute inset-y-0 w-px border-r border-neutral-200/40"
+              className="absolute inset-y-0 w-px border-r border-white/[0.06]"
               style={{ left: leftPos }}
             />
           ))}
@@ -586,7 +625,7 @@ export function HeroSection({ isCovered = false, scrollYProgress }: HeroSectionP
           {TOP_GHOST_CARDS.map((ghost, i) => (
             <div
               key={`ghost-${i}`}
-              className="absolute -top-5 h-[64px] w-[105px] rounded-[16px] border border-neutral-200/40 bg-white/50 shadow-2xs md:w-[125px] lg:w-[135px]"
+              className="absolute -top-5 h-[64px] w-[105px] rounded-[16px] border border-white/10 bg-white/[0.04] backdrop-blur-xs shadow-2xs md:w-[125px] lg:w-[135px]"
               style={{ left: ghost.left }}
               aria-hidden="true"
             />
@@ -606,6 +645,7 @@ export function HeroSection({ isCovered = false, scrollYProgress }: HeroSectionP
               reducedMotion={reducedMotion}
               pointerX={smoothPointerX}
               pointerY={smoothPointerY}
+              isReady={isReady}
             />
           ))}
         </div>
@@ -619,62 +659,53 @@ export function HeroSection({ isCovered = false, scrollYProgress }: HeroSectionP
         }}
         className="relative z-20 mx-auto flex w-full max-w-[700px] flex-col items-center px-6 pb-12 pt-[40vh] text-center sm:pb-16 sm:pt-[40vh] lg:pb-20 lg:pt-[40vh]"
       >
-        {/* Eyebrow Pill Badge */}
+        {/* Hero Liquid Headline Title */}
         <motion.div
-          initial={reducedMotion ? false : { opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.55, delay: 0.35, ease: [0.16, 1, 0.3, 1] }}
-          className="mb-3.5 sm:mb-4"
+          initial={reducedMotion ? false : { opacity: 0, scale: 0.96, y: 14 }}
+          animate={
+            isReady
+              ? { opacity: 1, scale: 1, y: 0 }
+              : { opacity: 0, scale: 0.96, y: 14 }
+          }
+          transition={{ duration: 0.75, delay: reducedMotion ? 0 : 0.2, ease: [0.16, 1, 0.3, 1] }}
+          className="my-2 flex flex-col items-center sm:my-3"
         >
-          <span className="inline-block rounded-full border border-neutral-200/80 bg-[#f4f4f4] px-4 py-1 text-[11px] font-medium tracking-wide text-neutral-600 shadow-2xs sm:text-xs">
-            Hệ sinh thái công nghệ
-          </span>
+          <h1
+            id="home-hero-title"
+            className="relative flex w-full items-center justify-center font-['SF_Pro_Display',-apple-system,BlinkMacSystemFont,'Helvetica_Neue',sans-serif] text-center whitespace-nowrap"
+          >
+            <LiquidText
+              texts={HERO_LIQUID_WORDS}
+              isReady={isReady}
+              morphTime={1.25}
+              cooldownTime={1.4}
+            />
+          </h1>
         </motion.div>
 
-        {/* Headline — Authentic Apple SF Pro Typography: all black, uppercase, slightly larger */}
-        <h1
-          id="home-hero-title"
-          className="font-['SF_Pro_Display',-apple-system,BlinkMacSystemFont,'Helvetica_Neue',sans-serif] text-[38px] font-bold uppercase tracking-[-0.01em] leading-[1.03] text-[#111111] sm:text-[50px] md:text-[58px] lg:text-[66px] xl:text-[70px]"
-        >
-          <motion.span
-            className="block text-[#111111]"
-            initial={reducedMotion ? false : { opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.65, delay: 0.45, ease: [0.16, 1, 0.3, 1] }}
-          >
-            CHẠM VÀO
-          </motion.span>
-          <motion.span
-            className="block text-[#111111] sm:mt-1"
-            initial={reducedMotion ? false : { opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.65, delay: 0.56, ease: [0.16, 1, 0.3, 1] }}
-          >
-            THẾ GIỚI MỚI
-          </motion.span>
-        </h1>
+        {/* Supporting Description with Hyperiux Glowing Text Reveal */}
+        <GlowingText
+          text={HERO_DESCRIPTION_TEXT}
+          highlightWords={['công', 'việc,', 'việc', 'sáng', 'tạo', 'cuộc', 'sống']}
+          delay={reducedMotion ? 0 : 0.38}
+          staggerDelay={0.038}
+          isReady={isReady}
+          replayKey={helloReplayKey}
+          className="mt-3.5 max-w-[490px] drop-shadow-[0_2px_12px_rgba(0,0,0,0.8)] sm:mt-4"
+        />
 
-        {/* Supporting Description */}
-        <motion.p
-          initial={reducedMotion ? false : { opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.68, ease: [0.16, 1, 0.3, 1] }}
-          className="mt-3.5 max-w-[480px] font-['SF_Pro_Text',-apple-system,BlinkMacSystemFont,'Helvetica_Neue',sans-serif] text-sm font-normal leading-relaxed text-[#86868b] sm:mt-4 sm:text-[15px] lg:text-base"
-        >
-          Khám phá những thiết bị được chọn lọc cho công việc, sáng tạo và cuộc sống mỗi ngày.
-        </motion.p>
-
-        {/* Minimal CTA Button — Black pill design matching reference */}
+        {/* Minimal CTA Button — Glowing white pill design for striking contrast */}
         <motion.div
-          initial={reducedMotion ? false : { opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.55, delay: 0.8, ease: [0.16, 1, 0.3, 1] }}
+          key={`cta-${helloReplayKey}`}
+          initial={reducedMotion ? false : { opacity: 0, y: 12, scale: 0.96 }}
+          animate={isReady ? { opacity: 1, y: 0, scale: 1 } : { opacity: 0, y: 12, scale: 0.96 }}
+          transition={{ duration: 0.55, delay: reducedMotion ? 0 : 1.1, ease: [0.16, 1, 0.3, 1] }}
           className="mt-6 sm:mt-7"
         >
           <a
             href="#home-experience"
             onClick={handleCtaClick}
-            className="group inline-flex h-[42px] items-center justify-center gap-2 rounded-full bg-black px-6 text-[13px] font-medium text-white shadow-sm transition-all duration-200 hover:scale-[1.02] hover:bg-neutral-800 active:scale-[0.98] sm:h-[44px] sm:px-7 sm:text-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-black"
+            className="group inline-flex h-[42px] items-center justify-center gap-2 rounded-full bg-white px-6 text-[13px] font-semibold text-black shadow-[0_0_25px_rgba(255,255,255,0.3)] transition-all duration-200 hover:scale-[1.03] hover:bg-neutral-100 hover:shadow-[0_0_35px_rgba(255,255,255,0.5)] active:scale-[0.98] sm:h-[44px] sm:px-7 sm:text-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
           >
             <span>Khám phá sản phẩm</span>
             <ArrowRight className="h-3.5 w-3.5 transition-transform duration-200 group-hover:translate-x-1 sm:h-4 sm:w-4" />

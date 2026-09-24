@@ -64,40 +64,9 @@ export function ExpandingCards({
               isActive ? 'expanding-card--active category-liquid-card--active' : ''
             } group select-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2 focus-visible:ring-offset-black`}
           >
-            {/* ═══ LAYER 1: Clear dark-glass base ═══ */}
+            {/* ═══ Solid Pure Black Base (No light reflections or specular glints) ═══ */}
             <div
-              className="category-liquid-glass-base absolute inset-0 rounded-[inherit] pointer-events-none"
-              aria-hidden="true"
-            />
-
-            {/* ═══ LAYER 2: Category Tint (radial, subtle) ═══ */}
-            <div
-              className="category-liquid-tint absolute inset-0 rounded-[inherit] pointer-events-none"
-              style={{
-                background: item.accent
-                  ? `radial-gradient(ellipse 90% 70% at 30% 25%, ${item.accent}1c 0%, transparent 68%)`
-                  : 'radial-gradient(ellipse 90% 70% at 30% 25%, rgba(255,255,255,0.03) 0%, transparent 68%)',
-              }}
-              aria-hidden="true"
-            />
-
-            {/* ═══ LAYER 3: Specular Highlight ═══ */}
-            <div
-              className="category-liquid-specular absolute inset-0 pointer-events-none rounded-[inherit]"
-              aria-hidden="true"
-            />
-
-            {/* ═══ LAYER 4: Restrained surface glint ═══ */}
-            <div
-              className="category-liquid-surface-glint absolute inset-0 pointer-events-none rounded-[inherit] overflow-hidden"
-              aria-hidden="true"
-            >
-              <span className="category-liquid-surface-glint__line" />
-            </div>
-
-            {/* ═══ LAYER 5: Content Scrim ═══ */}
-            <div
-              className="category-liquid-content-scrim absolute inset-0 pointer-events-none rounded-[inherit]"
+              className="absolute inset-0 bg-black rounded-[inherit] pointer-events-none"
               aria-hidden="true"
             />
 
@@ -135,11 +104,11 @@ export function ExpandingCards({
               className={`absolute bottom-4 sm:bottom-5 inset-x-0 text-center px-2 pointer-events-none transition-all duration-400 ease-[cubic-bezier(0.22,1,0.36,1)] ${
                 isActive
                   ? 'opacity-0 translate-y-2 pointer-events-none'
-                  : 'opacity-90 translate-y-0'
+                  : 'opacity-100 translate-y-0'
               }`}
               aria-hidden={isActive}
             >
-              <span className="category-card-luminous-subtext text-xs sm:text-[13px] font-medium tracking-wide truncate block max-w-full">
+              <span className="category-card-luminous-subtext text-xs sm:text-[13px] font-medium tracking-wide truncate block max-w-full text-white">
                 {item.title}
               </span>
             </div>

@@ -700,143 +700,71 @@
   border-radius: 1.75rem;
   cursor: pointer;
   outline: none;
-  /* Transparent base — glass alpha comes from inner layers */
-  background: transparent !important;
-  /* Quiet elevation and a dark lower edge keep the clear glass legible. */
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.07),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.24),
-    0 14px 42px rgba(0, 0, 0, 0.24);
-  border: 1px solid rgba(255, 255, 255, 0.045);
+  background: #000000 !important;
+  opacity: 1 !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   transition:
     flex 0.45s cubic-bezier(0.22, 1, 0.36, 1),
     height 0.45s cubic-bezier(0.22, 1, 0.36, 1),
     border-color 0.4s ease,
-    box-shadow 0.45s cubic-bezier(0.22, 1, 0.36, 1),
-    opacity 0.4s ease,
-    filter 0.4s ease;
+    box-shadow 0.45s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .expanding-card:not(.expanding-card--active) {
-  opacity: 0.72;
-  filter: brightness(0.92);
+  opacity: 1 !important;
+  background: #000000 !important;
+}
+
+.expanding-card:hover {
+  border-color: rgba(255, 255, 255, 0.22);
 }
 
 .expanding-card--active {
-  opacity: 1;
-  filter: none;
+  opacity: 1 !important;
+  background: #000000 !important;
+  border-color: rgba(255, 255, 255, 0.25);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.16);
 }
 
 .category-liquid-glass-base {
-  background-color: rgba(7, 9, 13, 0.11);
-  background-image:
-    linear-gradient(152deg, rgba(255, 255, 255, 0.035) 0%, rgba(255, 255, 255, 0.009) 28%, transparent 56%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.008), rgba(0, 0, 0, 0.02));
-  -webkit-backdrop-filter: blur(2px) saturate(1.07);
-  backdrop-filter: blur(2px) saturate(1.07);
-  transition: background-color 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+  background-color: #000000 !important;
 }
 
 .category-liquid-card--active .category-liquid-glass-base {
-  background-color: rgba(7, 9, 13, 0.045);
+  background-color: #000000 !important;
 }
 
-.category-liquid-tint {
-  opacity: 0.22;
-  transition: opacity 0.45s cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.category-liquid-card--active .category-liquid-tint {
-  opacity: 0.58;
-}
-
-.category-liquid-specular {
-  z-index: 4;
-  background:
-    linear-gradient(112deg, transparent 8%, rgba(255, 255, 255, 0.018) 20%, rgba(255, 255, 255, 0.075) 31%, rgba(255, 255, 255, 0.018) 43%, transparent 58%),
-    radial-gradient(ellipse 70% 42% at 16% 2%, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.022) 44%, transparent 70%);
-  opacity: 0.17;
-  transform: translate3d(-2.5%, 0, 0);
-  transition:
-    opacity 0.45s cubic-bezier(0.22, 1, 0.36, 1),
-    transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.category-liquid-card--active .category-liquid-specular {
-  opacity: 0.74;
-  transform: translate3d(1%, -0.5%, 0);
-}
-
-.category-liquid-surface-glint {
-  z-index: 6;
-  opacity: 0.16;
-  transition: opacity 0.45s cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.category-liquid-card--active .category-liquid-surface-glint {
-  opacity: 0.82;
-}
-
-.category-liquid-surface-glint__line {
-  position: absolute;
-  top: 0.7rem;
-  left: 1.2rem;
-  width: 62%;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.26) 18%, rgba(255, 255, 255, 0.08) 68%, transparent);
-  transform: rotate(-0.8deg);
-  transform-origin: left center;
-}
-
+.category-liquid-tint,
+.category-liquid-specular,
+.category-liquid-surface-glint,
 .category-liquid-content-scrim {
-  z-index: 7;
-  background: linear-gradient(to top, rgba(2, 3, 6, 0.48) 0%, rgba(2, 3, 6, 0.14) 28%, rgba(2, 3, 6, 0.025) 45%, transparent 60%);
-  opacity: 0.78;
-  transition: opacity 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+  display: none !important;
 }
 
-.category-liquid-card--active .category-liquid-content-scrim {
-  opacity: 0.96;
-}
-
-/* ═══ Luminous White Text Effect (Trắng Phát Quang) ═══ */
+/* ═══ Crisp Pure White Text on Pure Black Base ═══ */
 .category-card-luminous-title {
   color: #ffffff !important;
-  text-shadow:
-    0 0 1px rgba(255, 255, 255, 0.95),
-    0 0 16px rgba(255, 255, 255, 0.48),
-    0 0 32px rgba(255, 255, 255, 0.2);
+  text-shadow: none !important;
 }
 
 .category-card-luminous-eyebrow {
   color: #ffffff !important;
-  text-shadow:
-    0 0 1px rgba(255, 255, 255, 0.9),
-    0 0 10px rgba(255, 255, 255, 0.4),
-    0 0 20px rgba(255, 255, 255, 0.15);
+  text-shadow: none !important;
 }
 
 .category-card-luminous-subtext {
-  color: #f5f5f7 !important;
-  text-shadow:
-    0 0 1px rgba(255, 255, 255, 0.8),
-    0 0 10px rgba(255, 255, 255, 0.32),
-    0 0 22px rgba(255, 255, 255, 0.12);
+  color: #ffffff !important;
+  text-shadow: none !important;
 }
 
 .category-card-luminous-cta {
   color: #ffffff !important;
-  text-shadow:
-    0 0 1px rgba(255, 255, 255, 0.95),
-    0 0 12px rgba(255, 255, 255, 0.5),
-    0 0 24px rgba(255, 255, 255, 0.2);
+  text-shadow: none !important;
 }
 
 .category-card-luminous-cta:hover {
-  text-shadow:
-    0 0 1px rgba(255, 255, 255, 1),
-    0 0 18px rgba(255, 255, 255, 0.75),
-    0 0 36px rgba(255, 255, 255, 0.35);
+  text-shadow: none !important;
 }
 
 .category-showcase-iphone-wordmark {
@@ -849,62 +777,11 @@
   max-height: 46%;
 }
 
-/* ═══ Edge Refraction — non-uniform light catching via ::before ═══ */
-.category-liquid-card::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  padding: 1px;
-  pointer-events: none;
-  z-index: 20;
-  background: conic-gradient(
-    from 208deg at 50% 50%,
-    rgba(255, 255, 255, 0.035) 0deg,
-    rgba(255, 255, 255, 0.07) 62deg,
-    rgba(255, 255, 255, 0.4) 112deg,
-    rgba(255, 255, 255, 0.15) 166deg,
-    rgba(255, 255, 255, 0.035) 232deg,
-    rgba(255, 255, 255, 0.085) 302deg,
-    rgba(255, 255, 255, 0.035) 360deg
-  );
-  -webkit-mask:
-    linear-gradient(#fff 0 0) content-box,
-    linear-gradient(#fff 0 0);
-  mask:
-    linear-gradient(#fff 0 0) content-box,
-    linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  opacity: 0.58;
-  transition: opacity 0.45s cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.category-liquid-card--active::before {
-  opacity: 0.96;
-}
-
-/* ═══ Inner Reflection — soft upper-inside glow via ::after ═══ */
+/* ═══ Disabled Edge Light Refraction & Inner Reflections ═══ */
+.category-liquid-card::before,
 .category-liquid-card::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  pointer-events: none;
-  z-index: 5;
-  background:
-    radial-gradient(ellipse 105% 48% at 10% -8%, rgba(255, 255, 255, 0.085), rgba(255, 255, 255, 0.018) 48%, transparent 72%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.022), transparent 26%);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.13),
-    inset 1px 0 0 rgba(255, 255, 255, 0.045),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.24);
-  opacity: 0.48;
-  transition: opacity 0.45s cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.category-liquid-card--active::after {
-  opacity: 0.9;
+  display: none !important;
+  content: none !important;
 }
 
 /* ═══ Desktop Flex Layout ═══ */
@@ -917,12 +794,8 @@
 
   .expanding-card--active {
     flex: 4.2 1 0%;
-    border-color: rgba(255, 255, 255, 0.11);
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.12),
-      inset 0 -1px 0 rgba(0, 0, 0, 0.26),
-      0 22px 60px rgba(0, 0, 0, 0.35),
-      0 0 1px rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.25);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.2);
   }
 }
 
@@ -935,24 +808,8 @@
 
   .expanding-card--active {
     height: 390px;
-    border-color: rgba(255, 255, 255, 0.11);
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.1),
-      inset 0 -1px 0 rgba(0, 0, 0, 0.22),
-      0 16px 40px rgba(0, 0, 0, 0.32);
-  }
-
-  .category-liquid-glass-base {
-    -webkit-backdrop-filter: blur(1.5px) saturate(1.04);
-    backdrop-filter: blur(1.5px) saturate(1.04);
-  }
-
-  .category-liquid-card--active .category-liquid-specular {
-    opacity: 0.52;
-  }
-
-  .category-liquid-card--active .category-liquid-surface-glint {
-    opacity: 0.56;
+    border-color: rgba(255, 255, 255, 0.25);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
   }
 }
 
@@ -1935,15 +1792,128 @@
 }
 
 .trust-benefit-card {
+  perspective: 2200px;
   position: relative;
+  min-height: clamp(265px, 28vh, 295px);
+  border-radius: clamp(1.2rem, 1.5vw, 1.5rem);
+  background: transparent;
+  border: none;
+  padding: 0;
+  box-shadow: none;
+  cursor: pointer;
+  outline: none;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transform: translateZ(0);
+  isolation: isolate;
+  pointer-events: auto;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.trust-benefit-card:focus-visible {
+  outline: 2px solid #0071e3;
+  outline-offset: 4px;
+}
+
+.trust-benefit-card.is-flipped,
+.trust-benefit-card:hover {
+  z-index: 10;
+}
+
+.trust-benefit-card__inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: inherit;
+  border-radius: inherit;
+  transform-style: preserve-3d;
+  -webkit-transform-style: preserve-3d;
+  transition: transform 0.65s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.4s ease;
+  box-shadow: 0 4px 16px -4px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0, 0, 0, 0.02);
+  will-change: transform;
+  pointer-events: none;
+}
+
+.trust-benefit-card:hover .trust-benefit-card__inner,
+.trust-benefit-card.is-flipped .trust-benefit-card__inner {
+  transform: rotateY(180deg);
+  box-shadow: 0 20px 45px -12px rgba(0, 0, 0, 0.14), 0 4px 14px rgba(0, 0, 0, 0.05);
+}
+
+.trust-benefit-card__face {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
-  min-height: clamp(230px, 24vh, 255px);
   padding: clamp(1.25rem, 1.8vw, 1.65rem);
-  border-radius: clamp(1.2rem, 1.5vw, 1.5rem);
-  overflow: hidden;
-  box-shadow: 0 4px 16px -4px rgba(0, 0, 0, 0.03), 0 1px 3px rgba(0, 0, 0, 0.02);
-  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.35s ease, border-color 0.35s ease;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  -webkit-transform-style: preserve-3d;
+  transform-style: preserve-3d;
+  pointer-events: none; /* Crucial: 3D faces never intercept pointer events outside the 2D card bounds */
+  outline: 1px solid transparent;
+  box-sizing: border-box;
+}
+
+.trust-benefit-card__face--front {
+  transform: rotateY(0deg) translateZ(1px);
+  z-index: 2;
+}
+
+.trust-benefit-card__face--back {
+  transform: rotateY(180deg) translateZ(1px);
+  z-index: 1;
+}
+
+
+.trust-benefit-card__badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.6875rem;
+  font-weight: 650;
+  letter-spacing: 0.02em;
+  padding: 0.25rem 0.65rem;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+}
+
+.trust-benefit-card__footer-hint {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.35rem;
+  margin-top: 0.65rem;
+  font-size: 0.72rem;
+  font-weight: 500;
+  opacity: 0.6;
+  transition: opacity 0.25s ease;
+}
+
+.trust-benefit-card:hover .trust-benefit-card__footer-hint,
+.trust-benefit-card.is-flipped .trust-benefit-card__footer-hint {
+  opacity: 1;
+}
+
+.trust-benefit-card__icon-box-back {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .trust-benefit-card__ambient {
@@ -1954,24 +1924,7 @@
   transition: opacity 0.4s ease, transform 0.4s ease;
 }
 
-@media (hover: hover) {
-  .trust-benefit-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.07), 0 4px 12px rgba(0, 0, 0, 0.02);
-  }
-
-  .trust-benefit-card:hover .trust-benefit-card__icon-box {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 16px -2px rgba(0, 0, 0, 0.06);
-  }
-
-  .trust-benefit-card:hover .trust-benefit-card__ambient {
-    opacity: 0.95;
-    transform: scale(1.03);
-  }
-}
-
-/* Card Themes */
+/* Card Themes — Front */
 .trust-benefit-card--warm {
   background: linear-gradient(145deg, #fbf9f5 0%, #f3ece1 100%);
   border: 1px solid rgba(220, 206, 188, 0.45);
@@ -2011,6 +1964,48 @@
 .trust-benefit-card--sage .trust-benefit-card__ambient {
   background: radial-gradient(circle at 85% 20%, rgba(194, 222, 202, 0.32) 0%, transparent 60%);
 }
+
+/* Card Themes — Back */
+.trust-benefit-card--warm-back {
+  background: linear-gradient(145deg, #241d16 0%, #16120d 100%);
+  border: 1px solid rgba(224, 202, 172, 0.35);
+  color: #fbf9f5;
+}
+
+.trust-benefit-card--warm-back .trust-benefit-card__ambient {
+  background: radial-gradient(circle at 85% 20%, rgba(224, 202, 172, 0.22) 0%, transparent 60%);
+}
+
+.trust-benefit-card--silver-back {
+  background: linear-gradient(145deg, #182029 0%, #0d1217 100%);
+  border: 1px solid rgba(198, 214, 230, 0.35);
+  color: #f8f9fa;
+}
+
+.trust-benefit-card--silver-back .trust-benefit-card__ambient {
+  background: radial-gradient(circle at 85% 20%, rgba(198, 214, 230, 0.22) 0%, transparent 60%);
+}
+
+.trust-benefit-card--lavender-back {
+  background: linear-gradient(145deg, #1f1729 0%, #110c18 100%);
+  border: 1px solid rgba(210, 194, 230, 0.35);
+  color: #f9f7fb;
+}
+
+.trust-benefit-card--lavender-back .trust-benefit-card__ambient {
+  background: radial-gradient(circle at 85% 20%, rgba(210, 194, 230, 0.22) 0%, transparent 60%);
+}
+
+.trust-benefit-card--sage-back {
+  background: linear-gradient(145deg, #132219 0%, #0b150f 100%);
+  border: 1px solid rgba(194, 222, 202, 0.35);
+  color: #f6f9f7;
+}
+
+.trust-benefit-card--sage-back .trust-benefit-card__ambient {
+  background: radial-gradient(circle at 85% 20%, rgba(194, 222, 202, 0.22) 0%, transparent 60%);
+}
+
 
 /* Decorative Micro-Scene Placement */
 .trust-benefit-visual {
