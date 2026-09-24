@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Battery, Cpu, HardDrive, Monitor, Zap, ShoppingBag } from 'lucide-react';
 import { useCartStore } from '../../store/useCartStore';
 import { useAppStore } from '../../store/useAppStore';
-import type { LaptopModel } from '@/pages/laptop/types';
+import type { LaptopModel } from '@/types/laptop/types';
 
 interface LaptopProductCardProps {
   key?: string | number;

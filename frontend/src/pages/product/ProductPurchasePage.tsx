@@ -7,7 +7,7 @@ import { ProductReviews } from '@/components/product/ProductReviews';
 import type { ProductVariant } from '@/types/product';
 import { useCartStore } from '../../store/useCartStore';
 import { useAppStore } from '../../store/useAppStore';
-import { SMARTPHONE_PRODUCTS } from '../smartphone/data/mockSmartphoneProducts';
+import { SMARTPHONE_PRODUCTS } from '../../data/smartphone/data/mockSmartphoneProducts';
 
 export function ProductPurchasePage() {
   const { slug } = useParams<{ slug: string }>();

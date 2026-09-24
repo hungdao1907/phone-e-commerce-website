@@ -1,10 +1,10 @@
-import { CategoryShowcaseSection } from './sections/CategoryShowcaseSection';
-import { EcosystemExperienceSection } from './sections/EcosystemExperienceSection';
-import { FeaturedProductsSection } from './sections/FeaturedProductsSection';
-import { HeroCinematicTransition } from './sections/HeroCinematicTransition';
-import { WaveGallery } from './sections/WaveGallery';
-import { TrustBenefitsSection } from './sections/TrustBenefitsSection';
-import { FinalCTASection } from './sections/FinalCTASection';
+import { CategoryShowcaseSection } from '@/components/home/sections/CategoryShowcaseSection';
+import { EcosystemExperienceSection } from '@/components/home/sections/EcosystemExperienceSection';
+import { FeaturedProductsSection } from '@/components/home/sections/FeaturedProductsSection';
+import { HeroCinematicTransition } from '@/components/home/sections/HeroCinematicTransition';
+import { WaveGallery } from '@/components/home/sections/WaveGallery';
+import { TrustBenefitsSection } from '@/components/home/sections/TrustBenefitsSection';
+import { FinalCTASection } from '@/components/home/sections/FinalCTASection';
 import '@/css/home.css';
 
 export function HomePage() {

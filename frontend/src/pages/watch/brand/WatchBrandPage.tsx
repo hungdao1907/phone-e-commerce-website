@@ -1,5 +1,5 @@
 import { useEffect, useState, type CSSProperties } from 'react';
-import { getWatchBrandConfig, getWatchBrandProductsByBrand } from './data';
+import { getWatchBrandConfig, getWatchBrandProductsByBrand } from '../../../data/watch/brand/data/index';
 import {
   WatchBrandAllProductsSection,
   WatchBrandExperienceSection,
@@ -7,8 +7,8 @@ import {
   WatchBrandFinalCTASection,
   WatchBrandHeroSection,
   WatchWhyBrandSection,
-} from './sections';
-import type { WatchBrandId, WatchBrandModel } from './types';
+} from '../../../components/watch/brand/sections/index';
+import type { WatchBrandId, WatchBrandModel } from '../../../types/watch/brand/types/index';
 import '@/css/watch.css';
 
 interface WatchBrandPageProps {

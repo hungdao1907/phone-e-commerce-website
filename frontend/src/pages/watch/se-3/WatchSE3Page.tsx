@@ -6,7 +6,7 @@ import {
   SE3FitnessIntelligenceSection,
   SE3BatteryConnectivitySafetySection,
   SE3FinalCTASection,
-} from './sections';
+} from '../../../components/watch/se-3/sections/index';
 import { SE3SpecsModal } from '@/components/watch/SE3SpecsModal';
 import '@/css/watch-se3.css';
 

@@ -1,5 +1,5 @@
 import { useEffect, useState, type CSSProperties } from 'react';
-import { getTabletBrandConfig, getTabletProductsByBrand } from './data';
+import { getTabletBrandConfig, getTabletProductsByBrand } from '../../data/tablet/data/index';
 import {
   TabletAllProductsSection,
   TabletBrandExperienceSection,
@@ -7,8 +7,8 @@ import {
   TabletFinalCTASection,
   TabletHeroSection,
   TabletWhyBrandSection,
-} from './sections';
-import type { TabletBrandId, TabletModel } from './types';
+} from '../../components/tablet/sections/index';
+import type { TabletBrandId, TabletModel } from '../../types/tablet/types/index';
 import '@/css/tablet.css';
 
 interface TabletPageProps {

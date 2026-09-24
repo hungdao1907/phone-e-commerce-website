@@ -1,5 +1,5 @@
 import { useEffect, useState, type CSSProperties } from 'react';
-import { getLaptopBrandConfig, getLaptopProductsByBrand } from './data';
+import { getLaptopBrandConfig, getLaptopProductsByBrand } from '../../data/laptop/data/index';
 import {
   LaptopAllProductsSection,
   LaptopBrandExperienceSection,
@@ -7,8 +7,8 @@ import {
   LaptopFinalCTASection,
   LaptopHeroSection,
   LaptopWhySection,
-} from './sections';
-import type { LaptopBrandId, LaptopModel } from './types';
+} from '../../components/laptop/sections/index';
+import type { LaptopBrandId, LaptopModel } from '../../types/laptop/types/index';
 import '@/css/laptop.css';
 
 interface LaptopPageProps {
