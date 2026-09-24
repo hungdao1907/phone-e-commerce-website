@@ -18,7 +18,7 @@ import { StaffManager } from '@/components/admin/views/StaffManager';
 import { CustomerManager } from '@/components/admin/views/CustomerManager';
 import { LeadManager } from '@/components/admin/views/LeadManager';
 import { SettingsManager } from '@/components/admin/views/SettingsManager';
-import { NotificationCenter } from '@/components/admin/NotificationCenter';
+import { NotificationCenter } from '@/components/admin/widgets/NotificationCenter';
 
 // Map view IDs to readable titles
 const VIEW_LABELS: Record<string, string> = {
