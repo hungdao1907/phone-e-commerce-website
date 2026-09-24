@@ -101,6 +101,17 @@ export function FilteredProductCard({ product, categorySlug }: FilteredProductCa
             {product.name}
           </h3>
         </Link>
+        {product.reviewCount ? (
+          <div className="flex items-center gap-1.5 mb-3 -mt-1">
+            <span className="text-yellow-500 text-[10px]">★</span>
+            <span className="text-[11px] font-bold text-neutral-900">{product.ratingAverage}</span>
+            <span className="text-[10px] text-neutral-500">({product.reviewCount})</span>
+          </div>
+        ) : (
+          <div className="flex items-center gap-1.5 mb-3 -mt-1 opacity-0">
+            <span className="text-[10px] text-neutral-500">_</span>
+          </div>
+        )}
 
         {/* Dynamic Specifications */}
         <div className="flex flex-wrap gap-1 mb-4 min-h-[44px]">

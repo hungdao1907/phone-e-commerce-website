@@ -10,7 +10,8 @@ import { Categories } from '@/components/admin/views/Categories';
 import { Marketing } from '@/components/admin/views/Marketing';
 import { Banners } from '@/components/admin/views/Banners';
 import { Orders } from '@/components/admin/views/Orders';
-import { Disputes } from '@/components/admin/views/Disputes';
+import { Reviews } from '@/components/admin/views/Reviews';
+import { Complaints } from '@/components/admin/views/Complaints';
 import { Invoices } from '@/components/admin/views/Invoices';
 import { MainDashboardView } from '@/components/admin/views/MainDashboardView';
 import { StaffManager } from '@/components/admin/views/StaffManager';
@@ -125,8 +126,10 @@ export function DashboardLayout() {
               <Marketing />
             ) : activeView === 'orders' || activeView === 'orders-list' ? (
               <Orders />
-            ) : activeView === 'orders-disputes' ? (
-              <Disputes />
+            ) : activeView === 'orders-reviews' ? (
+              <Reviews />
+            ) : activeView === 'orders-complaints' ? (
+              <Complaints />
             ) : activeView === 'orders-invoices' ? (
               <Invoices />
             ) : activeView === 'settings' ? (

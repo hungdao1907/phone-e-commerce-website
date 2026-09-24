@@ -568,8 +568,24 @@ router.get('/search', async (req, res) => {
     const total = products.length;
     const paginatedProducts = products.slice(skip, skip + limitNumber);
 
+    // Fetch review aggregates for the paginated products
+    const productIds = paginatedProducts.map(p => p.id);
+    const _reviews = await prisma.review.findMany({
+      where: { productId: { in: productIds }, status: 'APPROVED' },
+      select: { productId: true, rating: true }
+    });
+
+    const paginatedProductsWithReviews = paginatedProducts.map(p => {
+      const pReviews = _reviews.filter(r => r.productId === p.id);
+      const reviewCount = pReviews.length;
+      const ratingAverage = reviewCount > 0 
+        ? Number((pReviews.reduce((acc, curr) => acc + curr.rating, 0) / reviewCount).toFixed(1))
+        : 0;
+      return { ...p, ratingAverage, reviewCount };
+    });
+
     res.json({
-      data: paginatedProducts,
+      data: paginatedProductsWithReviews,
       total,
       page: pageNumber,
       limit: limitNumber,
@@ -607,7 +623,22 @@ router.get('/:id', async (req, res) => {
       (c.appliesTo === 'all')
     );
 
-    res.json({ ...product, activeCampaign: campaign || null });
+    // Calculate rating summary
+    const _reviews = await prisma.review.findMany({
+      where: { productId: product.id, status: 'APPROVED' },
+      select: { rating: true }
+    });
+    const reviewCount = _reviews.length;
+    const ratingAverage = reviewCount > 0 
+      ? Number((_reviews.reduce((acc, curr) => acc + curr.rating, 0) / reviewCount).toFixed(1))
+      : 0;
+
+    res.json({ 
+      ...product, 
+      activeCampaign: campaign || null,
+      ratingAverage,
+      reviewCount
+    });
   } catch (error) {
     console.error('Error fetching product:', error);
     res.status(500).json({ message: 'Lỗi server' });

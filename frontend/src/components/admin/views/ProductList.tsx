@@ -367,6 +367,16 @@ export function ProductList() {
           const attrArr = [...(newOpts[attrKey] || [])];
           if (attrArr[optIndex]) {
             attrArr[optIndex] = { ...attrArr[optIndex], image: data.imageUrl };
+            
+            // Auto update image in variantRows that match this color
+            if (attrKey === 'Màu sắc') {
+              setVariantRows(currentRows => currentRows.map(row => {
+                if (row.attributes['Màu sắc'] === attrArr[optIndex].name) {
+                  return { ...row, image: data.imageUrl };
+                }
+                return row;
+              }));
+            }
           }
           newOpts[attrKey] = attrArr;
           return newOpts;
@@ -524,8 +534,8 @@ export function ProductList() {
           salePrice: existing?.salePrice || '',
           stock: existing?.stock || '0',
           attributes: currentAttr,
-          colorCode: existing?.colorCode || currentColor?.hex || '',
-          image: existing?.image || currentColor?.image || ''
+          colorCode: currentColor?.hex || existing?.colorCode || '',
+          image: currentColor?.image || existing?.image || ''
         }];
       }
 

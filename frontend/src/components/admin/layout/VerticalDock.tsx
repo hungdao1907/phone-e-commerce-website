@@ -39,7 +39,8 @@ const DOCK_ITEMS = [
     path: '/orders',
     subItems: [
       { id: 'orders-list', label: 'Danh sách đơn hàng' },
-      { id: 'orders-disputes', label: 'Đánh giá & Khiếu nại' },
+      { id: 'orders-reviews', label: 'Đánh giá sản phẩm' },
+      { id: 'orders-complaints', label: 'Khiếu nại / Hỗ trợ' },
       { id: 'orders-invoices', label: 'Hóa đơn & Chứng từ' }
     ]
   },

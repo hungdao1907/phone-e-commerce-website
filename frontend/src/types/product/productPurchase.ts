@@ -40,4 +40,6 @@ export interface PurchaseProduct {
   storageOptions: PurchaseProductOption[];
   specifications: ProductSpecification[];
   variants: ProductVariant[];
+  ratingAverage?: number;
+  reviewCount?: number;
 }

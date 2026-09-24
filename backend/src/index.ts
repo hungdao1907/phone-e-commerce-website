@@ -57,6 +57,7 @@ app.use('/api/categories', categoryRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/disputes', disputeRoutes);
+app.use('/api/complaints', disputeRoutes);
 app.use('/api/invoices', invoiceRoutes);
 app.use('/api/campaigns', campaignRoutes);
 app.use('/api/promo-codes', promoCodeRoutes);
