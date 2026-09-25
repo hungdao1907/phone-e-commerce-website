@@ -39,12 +39,45 @@ export function RichTextEditor({ content, onChange, placeholder }: RichTextEdito
     },
   });
 
+  const [isUploading, setIsUploading] = React.useState(false);
+
   const addImage = useCallback(() => {
     if (!editor) return;
-    const url = window.prompt('Nhập URL hình ảnh:');
-    if (url) {
-      editor.chain().focus().setImage({ src: url }).run();
-    }
+    
+    // Create a hidden file input
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.onchange = async (e: any) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+
+      setIsUploading(true);
+      try {
+        const uploadData = new FormData();
+        uploadData.append('image', file);
+        const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/upload`, { method: 'POST', body: uploadData });
+        
+        if (!res.ok) throw new Error('Upload failed');
+        
+        const data = await res.json();
+        const url = data.url || data.imageUrl;
+        if (url) {
+          // Resolve relative URL if needed
+          const finalUrl = url.startsWith('/uploads') ? `${import.meta.env.VITE_API_URL || 'http://localhost:3001'}${url}` : url;
+          editor.chain().focus().setImage({ src: finalUrl }).run();
+        }
+      } catch (err) {
+        console.error('Error uploading image', err);
+        const manualUrl = window.prompt('Lỗi khi tải ảnh. Bạn có thể nhập URL trực tiếp:');
+        if (manualUrl) {
+          editor.chain().focus().setImage({ src: manualUrl }).run();
+        }
+      } finally {
+        setIsUploading(false);
+      }
+    };
+    input.click();
   }, [editor]);
 
   const setLink = useCallback(() => {
@@ -121,8 +154,8 @@ export function RichTextEditor({ content, onChange, placeholder }: RichTextEdito
         <ToolButton onClick={setLink} isActive={editor.isActive('link')} title="Liên kết">
           <LinkIcon className="w-3.5 h-3.5" />
         </ToolButton>
-        <ToolButton onClick={addImage} title="Chèn ảnh">
-          <ImageIcon className="w-3.5 h-3.5" />
+        <ToolButton onClick={addImage} title={isUploading ? "Đang tải ảnh..." : "Chèn ảnh từ máy tính"}>
+          {isUploading ? <div className="w-3.5 h-3.5 rounded-full border-2 border-emerald-500 border-t-transparent animate-spin" /> : <ImageIcon className="w-3.5 h-3.5" />}
         </ToolButton>
 
         <div className="w-px h-4 bg-white/10 mx-1" />
