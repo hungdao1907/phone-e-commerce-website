@@ -99,7 +99,14 @@ export function buildSpecChipsFromRaw(specifications: { key: string; value: stri
   if (!specifications || !Array.isArray(specifications)) return [];
 
   const getSpec = (keyword: string) => {
-    const spec = specifications.find(s => s.key.toLowerCase().includes(keyword));
+    if (specifications.length > 0 && (specifications[0] as any).title !== undefined) {
+      for (const group of (specifications as any[])) {
+        const item = group.items?.find((i: any) => (i.label || '').toLowerCase().includes(keyword));
+        if (item) return item.value;
+      }
+      return '';
+    }
+    const spec = specifications.find((s: any) => (s.key || s.label || '').toLowerCase().includes(keyword));
     return spec ? spec.value : '';
   };
 

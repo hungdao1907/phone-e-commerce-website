@@ -59,7 +59,15 @@ export function TabletPage({ brand }: TabletPageProps) {
 
               // 2. Specifications
               const getSpec = (keyword: string) => {
-                const spec = ap.specifications?.find((s: any) => s.key.toLowerCase().includes(keyword));
+                if (!ap.specifications) return '';
+                if (ap.specifications.length > 0 && ap.specifications[0].title !== undefined) {
+                  for (const group of ap.specifications) {
+                    const item = group.items?.find((i: any) => (i.label || '').toLowerCase().includes(keyword));
+                    if (item) return item.value;
+                  }
+                  return '';
+                }
+                const spec = ap.specifications.find((s: any) => (s.key || s.label || '').toLowerCase().includes(keyword));
                 return spec ? spec.value : '';
               };
 
