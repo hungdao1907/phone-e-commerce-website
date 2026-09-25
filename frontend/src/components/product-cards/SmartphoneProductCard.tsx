@@ -175,13 +175,28 @@ export function BrandProductCard({ product, index = 0, accentColor }: BrandProdu
     >
       {/* Top Badge & Series */}
       <div className="p-6 pb-2 flex items-start justify-between gap-2 z-10">
-        {product.badge ? (
-          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold tracking-wide bg-neutral-100 text-neutral-800 border border-neutral-200/60 group-hover:bg-neutral-900 group-hover:text-white transition-colors duration-300">
-            {product.badge}
-          </span>
-        ) : (
-          <span />
-        )}
+        {(() => {
+          let discountBadge = '';
+          if (product.originalPrice && product.price) {
+            const orig = parseInt(product.originalPrice.replace(/\D/g, '')) || 0;
+            const curr = parseInt(product.price.replace(/\D/g, '')) || 0;
+            if (orig > curr && orig > 0) {
+              const pct = Math.round(((orig - curr) / orig) * 100);
+              discountBadge = `-${pct}%`;
+            }
+          }
+          return discountBadge ? (
+            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold tracking-wide bg-red-500 text-white shadow-sm transition-colors duration-300">
+              {discountBadge}
+            </span>
+          ) : product.badge ? (
+            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold tracking-wide bg-neutral-100 text-neutral-800 border border-neutral-200/60 group-hover:bg-neutral-900 group-hover:text-white transition-colors duration-300">
+              {product.badge}
+            </span>
+          ) : (
+            <span />
+          );
+        })()}
 
         <span className="text-[11px] font-medium text-neutral-400 uppercase tracking-wider">
           {product.series}

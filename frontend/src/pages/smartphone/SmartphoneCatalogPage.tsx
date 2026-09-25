@@ -44,7 +44,9 @@ export function SmartphoneCatalogPage({ config, products }: SmartphoneCatalogPag
         <BrandFeaturedSection config={config} products={products} />
 
         {/* SECTION 3: BRAND INNOVATION & ECOSYSTEM (Core technological edge, AI, camera & performance) */}
-        <BrandExperienceSection config={config} products={products} />
+        {config.id.toLowerCase() !== 'iphone' && (
+          <BrandExperienceSection config={config} products={products} />
+        )}
 
         {/* SECTION 4: ALL PRODUCTS CATALOG (Smart series tabs, live search, sort filters & luxury cards) */}
         <BrandAllProductsSection config={config} products={products} />

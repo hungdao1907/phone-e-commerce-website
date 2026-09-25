@@ -11,6 +11,39 @@ import { extractFiltersFromProducts, normalizeKey, extractAdminFiltersFromProduc
 const router = express.Router();
 const prisma = new PrismaClient();
 
+const getBestCampaign = (product: any, activeCampaigns: any[]) => {
+  const matching = activeCampaigns.filter(c => 
+    (c.appliesTo === 'product' && c.targetIds.includes(product.id)) ||
+    (c.appliesTo === 'category' && c.targetIds.includes(product.categoryId || '')) ||
+    (c.appliesTo === 'all')
+  );
+  if (matching.length === 0) return null;
+
+  const getPriority = (appliesTo: string) => appliesTo === 'product' ? 3 : appliesTo === 'category' ? 2 : 1;
+  
+  matching.sort((a, b) => {
+    const pA = getPriority(a.appliesTo);
+    const pB = getPriority(b.appliesTo);
+    if (pA !== pB) return pB - pA;
+    
+    let price = 0;
+    if (product.variants && product.variants.length > 0) {
+      price = product.variants[0].price;
+    } else if (product.price) {
+      price = product.price;
+    }
+    
+    const getDiscountAmount = (camp: any, originalPrice: number) => {
+      if (camp.discountType === 'percentage') return (originalPrice * camp.discountValue) / 100;
+      return camp.discountValue;
+    };
+    
+    return getDiscountAmount(b, price) - getDiscountAmount(a, price);
+  });
+  
+  return matching[0];
+};
+
 const uploadMemory = multer({ 
   storage: multer.memoryStorage(),
   limits: { fileSize: 10 * 1024 * 1024 } // 10MB limit
@@ -112,12 +145,7 @@ router.get('/', async (req, res) => {
 
     // Attach campaign and reviews to products
     const productsWithData = products.map((product) => {
-      // Find a campaign that applies to this product
-      const campaign = activeCampaigns.find(c => 
-        (c.appliesTo === 'product' && c.targetIds.includes(product.id)) ||
-        (c.appliesTo === 'category' && c.targetIds.includes(product.categoryId || '')) ||
-        (c.appliesTo === 'all')
-      );
+      const campaign = getBestCampaign(product, activeCampaigns);
 
       const pReviews = _reviews.filter(r => r.productId === product.id);
       const reviewCount = pReviews.length;
@@ -537,28 +565,67 @@ router.get('/search', async (req, res) => {
         // Price Filter (Match if product's price range overlaps or is within requested range)
         if (minVariantPrice > maxP || maxVariantPrice < minP) return false;
 
-        // RAM
-        if (ramArr.length > 0 && !ramArr.includes(specs['ram'])) return false;
+        // RAM - extract short value for matching
+        if (ramArr.length > 0) {
+          const rawRam = specs['ram'] || '';
+          const ramMatch = rawRam.match(/(\d+)\s*GB/i);
+          const shortRam = ramMatch ? ramMatch[1] + 'GB' : rawRam.trim();
+          if (!ramArr.includes(shortRam) && !ramArr.includes(rawRam)) return false;
+        }
         
-        // CPU
-        if (cpuArr.length > 0 && !cpuArr.includes(specs['cpu'])) return false;
+        // CPU/Chip - extract short value for matching
+        if (cpuArr.length > 0) {
+          const rawCpu = specs['cpu'] || '';
+          // Extract short chip name
+          let shortCpu = rawCpu;
+          const aMatch = rawCpu.match(/A(\d+)\s*(Pro|Bionic|Max)?/i);
+          if (aMatch) {
+            shortCpu = 'A' + aMatch[1];
+            if (aMatch[2]) shortCpu += ' ' + aMatch[2].charAt(0).toUpperCase() + aMatch[2].slice(1).toLowerCase();
+          }
+          const snapMatch = rawCpu.match(/Snapdragon\s+(\d+(?:\s+Gen\s+\d+)?)/i);
+          if (snapMatch) shortCpu = 'Snapdragon ' + snapMatch[1];
+          const mMatch = rawCpu.match(/M(\d+)\s*(Pro|Max|Ultra)?/i);
+          if (mMatch) { shortCpu = 'M' + mMatch[1]; if (mMatch[2]) shortCpu += ' ' + mMatch[2]; }
+          
+          if (!cpuArr.includes(shortCpu) && !cpuArr.includes(rawCpu)) return false;
+        }
         
         // GPU
         if (gpuArr.length > 0 && !gpuArr.includes(specs['gpu'])) return false;
         
-        // Screen Size
-        if (screenArr.length > 0 && !screenArr.includes(specs['screensize'])) return false;
+        // Screen Size - extract short value for matching
+        if (screenArr.length > 0) {
+          const rawScreen = specs['screensize'] || specs['screenSize'] || '';
+          const sMatch = rawScreen.match(/([\d,.]+)\s*(?:inch|inches|"|″)/i);
+          const shortScreen = sMatch ? sMatch[1].replace(',', '.') + '"' : rawScreen;
+          if (!screenArr.includes(shortScreen) && !screenArr.includes(rawScreen)) return false;
+        }
+
+        // Camera - extract short value for matching
+        if (typeof req.query.camera === 'string' && req.query.camera) {
+          const cameraArr = req.query.camera.split(',');
+          const rawCamera = specs['camera'] || '';
+          const camMatches = rawCamera.match(/(\d+)\s*MP/gi);
+          let shortCamera = rawCamera;
+          if (camMatches && camMatches.length > 0) {
+            const mpVals = camMatches.map((m: string) => { const n = m.match(/(\d+)/); return n ? parseInt(n[1]) : 0; });
+            shortCamera = Math.max(...mpVals) + 'MP';
+          }
+          if (!cameraArr.includes(shortCamera) && !cameraArr.includes(rawCamera)) return false;
+        }
 
         // Storage (Could be in specs or variant attributes)
         if (storageArr.length > 0) {
           const specStorage = specs['storage'];
-          const hasVariantStorage = Array.from(varAttrs['storage']).some(s => storageArr.includes(s));
+          const hasVariantStorage = Array.from(varAttrs['storage'] || new Set()).some(s => storageArr.includes(s));
           if (!storageArr.includes(specStorage) && !hasVariantStorage) return false;
         }
 
         // Color (Variant attributes)
         if (colorArr.length > 0) {
-          const hasColor = Array.from(varAttrs['color']).some(c => colorArr.includes(c));
+          const colorSet = varAttrs['color'] || varAttrs['colors'] || new Set();
+          const hasColor = Array.from(colorSet).some(c => colorArr.includes(c));
           if (!hasColor) return false;
         }
 
@@ -593,13 +660,23 @@ router.get('/search', async (req, res) => {
       select: { productId: true, rating: true }
     });
 
+    // Fetch active campaigns
+    const activeCampaigns = await prisma.campaign.findMany({
+      where: {
+        isActive: true,
+        startDate: { lte: new Date() },
+        endDate: { gte: new Date() }
+      }
+    });
+
     const paginatedProductsWithReviews = paginatedProducts.map(p => {
       const pReviews = _reviews.filter(r => r.productId === p.id);
       const reviewCount = pReviews.length;
       const ratingAverage = reviewCount > 0 
         ? Number((pReviews.reduce((acc, curr) => acc + curr.rating, 0) / reviewCount).toFixed(1))
         : 0;
-      return { ...p, ratingAverage, reviewCount };
+      const campaign = getBestCampaign(p, activeCampaigns);
+      return { ...p, ratingAverage, reviewCount, activeCampaign: campaign || null };
     });
 
     res.json({
@@ -635,11 +712,7 @@ router.get('/:id', async (req, res) => {
       }
     });
 
-    const campaign = activeCampaigns.find(c => 
-      (c.appliesTo === 'product' && c.targetIds.includes(product.id)) ||
-      (c.appliesTo === 'category' && c.targetIds.includes(product.categoryId || '')) ||
-      (c.appliesTo === 'all')
-    );
+    const campaign = getBestCampaign(product, activeCampaigns);
 
     // Calculate rating summary
     const _reviews = await prisma.review.findMany({
