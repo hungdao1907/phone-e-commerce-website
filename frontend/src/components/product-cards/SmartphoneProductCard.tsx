@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import Lottie from 'lottie-react';
+import { Lottie } from 'lottie-react';
 import cardBagAnimation from '../../../public/lottie/cardBag.json';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
@@ -119,15 +119,10 @@ export function BrandProductCard({ product, index = 0, accentColor }: BrandProdu
       
       // Pulse the floating cart button (now handled by Lottie inside it, but we can keep scale effect)
       if (targetEl) {
-            targetEl.classList.add('scale-125');
-            setTimeout(() => targetEl.classList.remove('scale-125'), 300);
-          }
-          setIsAdding(false);
-        }, 800);
-      } else {
-        performAdd();
-        setIsAdding(false);
+        targetEl.classList.add('scale-125');
+        setTimeout(() => targetEl.classList.remove('scale-125'), 300);
       }
+      setIsAdding(false);
       
     } catch (err: any) {
       console.error(err);
