@@ -59,8 +59,30 @@ export function TabletPage({ brand }: TabletPageProps) {
 
               // 2. Specifications
               const getSpec = (keyword: string) => {
-                const spec = ap.specifications?.find((s: any) => s.key.toLowerCase().includes(keyword));
-                return spec ? spec.value : '';
+                if (!ap.specifications || !Array.isArray(ap.specifications)) return '';
+                const kw = keyword.toLowerCase();
+                for (const s of ap.specifications) {
+                  if (!s || typeof s !== 'object') continue;
+                  const keyStr = (s.key || s.label || s.name || '');
+                  if (typeof keyStr === 'string' && keyStr.toLowerCase().includes(kw)) {
+                    if (s.value) return String(s.value);
+                  }
+                  if (Array.isArray(s.items)) {
+                    for (const item of s.items) {
+                      if (!item || typeof item !== 'object') continue;
+                      const itemKey = (item.label || item.name || item.key || '');
+                      if (typeof itemKey === 'string' && itemKey.toLowerCase().includes(kw)) {
+                        if (item.value) return String(item.value);
+                      }
+                    }
+                    const groupTitle = s.title || s.group || '';
+                    if (typeof groupTitle === 'string' && groupTitle.toLowerCase().includes(kw)) {
+                      const firstVal = s.items.find((i: any) => i?.value)?.value;
+                      if (firstVal) return String(firstVal);
+                    }
+                  }
+                }
+                return '';
               };
 
               // 3. Colors

@@ -26,10 +26,37 @@ export function FilteredProductCard({ product, categorySlug }: FilteredProductCa
   }
 
   // Helper to safely fetch normalized spec
-  const getSpec = (key: string) => {
+  const getSpec = (keyword: string) => {
     if (!product.specifications || !Array.isArray(product.specifications)) return null;
-    const spec = product.specifications.find((s: any) => s.key.toLowerCase().includes(key.toLowerCase()));
-    return spec ? spec.value : null;
+    const kw = keyword.toLowerCase();
+
+    for (const s of product.specifications) {
+      if (!s || typeof s !== 'object') continue;
+
+      // Format 1: Direct key-value / label-value / name-value
+      const keyStr = (s.key || s.label || s.name || '');
+      if (typeof keyStr === 'string' && keyStr.toLowerCase().includes(kw)) {
+        if (s.value) return String(s.value);
+      }
+
+      // Format 2: Grouped sections with s.items array
+      if (Array.isArray(s.items)) {
+        for (const item of s.items) {
+          if (!item || typeof item !== 'object') continue;
+          const itemKey = (item.label || item.name || item.key || '');
+          if (typeof itemKey === 'string' && itemKey.toLowerCase().includes(kw)) {
+            if (item.value) return String(item.value);
+          }
+        }
+        // If the group title matches the keyword, return first item value
+        const groupTitle = s.title || s.group || '';
+        if (typeof groupTitle === 'string' && groupTitle.toLowerCase().includes(kw)) {
+          const firstVal = s.items.find((i: any) => i?.value)?.value;
+          if (firstVal) return String(firstVal);
+        }
+      }
+    }
+    return null;
   };
 
   // Determine key specs to display based on category
@@ -60,19 +87,30 @@ export function FilteredProductCard({ product, categorySlug }: FilteredProductCa
     if (screen) displaySpecs.push(screen);
     if (battery) displaySpecs.push(battery);
   } else {
-    // Fallback: Just grab first two specs
-    if (product.specifications && product.specifications.length > 0) {
-      displaySpecs.push(product.specifications[0].value);
-      if (product.specifications[1]) displaySpecs.push(product.specifications[1].value);
+    // Fallback: Just grab first two specs safely
+    if (product.specifications && Array.isArray(product.specifications)) {
+      for (const item of product.specifications) {
+        if (displaySpecs.length >= 2) break;
+        if (!item) continue;
+        if (typeof item.value === 'string' && item.value) {
+          displaySpecs.push(item.value);
+        } else if (Array.isArray(item.items)) {
+          for (const sub of item.items) {
+            if (displaySpecs.length >= 2) break;
+            if (sub?.value) displaySpecs.push(String(sub.value));
+          }
+        }
+      }
     }
   }
 
   // Determine product url
   const productUrl = `/product/${product.slug || product.id}`;
   
-  // Resolve image URL
-  const imageUrl = product.image 
-    ? (product.image.startsWith('/uploads') ? `${import.meta.env.VITE_API_URL || 'http://localhost:3001'}${product.image}` : product.image)
+  // Resolve image URL safely
+  const rawImage = product.image || (Array.isArray(product.images) ? product.images[0] : null);
+  const imageUrl = rawImage
+    ? (rawImage.startsWith('/uploads') ? `${import.meta.env.VITE_API_URL || 'http://localhost:3001'}${rawImage}` : rawImage)
     : '/images/hero.png';
 
   return (

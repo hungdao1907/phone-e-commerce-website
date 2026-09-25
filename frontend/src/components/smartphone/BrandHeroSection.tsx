@@ -158,13 +158,13 @@ export function BrandHeroSection({ config }: BrandHeroSectionProps) {
     <section id={`${config.id}-hero`} aria-label={`${config.brand} Hero Showcase`} className="relative flex w-full select-none flex-col items-center justify-start overflow-hidden bg-black pb-0 pt-0 text-white">
       <div className="absolute left-1/2 top-1/3 h-[450px] w-full max-w-7xl -translate-x-1/2 -translate-y-1/2 brand-ambient-glow transition-all duration-1000 ease-out sm:h-[700px]" style={{ background: `radial-gradient(ellipse at center, ${config.accent} 0%, rgba(0,0,0,0) 70%)` }} />
 
-      <div className="hidden">{banners.map((banner) => <img key={banner.id} src={resolveBannerImage(banner.image)} alt="" />)}</div>
+      <div className="hidden">{banners.map((banner) => <img key={banner.id} src={resolveBannerImage(banner)} alt="" />)}</div>
 
       <div className="relative z-10 w-full overflow-hidden border-b border-white/10 bg-neutral-950">
         <div className="group relative min-h-[360px] w-full cursor-grab overflow-hidden active:cursor-grabbing sm:min-h-[480px] sm:aspect-[21/9] md:min-h-[580px] md:aspect-[24/10]" onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)}>
           <AnimatePresence initial={false} custom={direction} mode="popLayout">
             <motion.div key={currentBanner.id} custom={direction} variants={slideVariants} initial={shouldReduceMotion ? false : 'enter'} animate="center" exit={shouldReduceMotion ? undefined : 'exit'} drag={bannerCount > 1 ? 'x' : false} dragConstraints={{ left: 0, right: 0 }} dragElastic={0.2} onDragEnd={handleDragEnd} onClick={handleBannerClick} className={`absolute inset-0 flex h-full w-full items-center justify-center ${currentBanner.link ? 'cursor-pointer' : 'cursor-default'}`}>
-              <img src={resolveBannerImage(currentBanner.image)} alt={currentBanner.title} className="pointer-events-none h-full w-full select-none object-cover object-center" loading="eager" draggable={false} />
+              <img src={resolveBannerImage(currentBanner)} alt={currentBanner.title} className="pointer-events-none h-full w-full select-none object-cover object-center" loading="eager" draggable={false} />
             </motion.div>
           </AnimatePresence>
 

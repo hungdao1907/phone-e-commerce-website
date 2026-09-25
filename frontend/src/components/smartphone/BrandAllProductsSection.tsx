@@ -357,12 +357,40 @@ export function BrandAllProductsSection({ config, products }: BrandAllProductsSe
                   // Render grouped by series if default view
                   <div className="space-y-16 sm:space-y-20">
                     {(() => {
+                      const getProductSeries = (p: any) => {
+                        if (p.series) return p.series;
+                        const name = (p.name || '').toLowerCase();
+                        if (brandSlug === 'apple' || brandSlug === 'iphone') {
+                          return name.includes('pro') ? 'iPhone Pro' : 'iPhone';
+                        }
+                        if (brandSlug === 'samsung') {
+                          if (name.includes('fold') || name.includes('flip')) return 'Galaxy Z Series';
+                          if (name.includes('s2') || name.includes('ultra')) return 'Galaxy S Series';
+                          return 'Galaxy Series';
+                        }
+                        if (brandSlug === 'xiaomi') {
+                          if (name.includes('redmi')) return 'Redmi Series';
+                          if (name.includes('ultra') || name.includes('pro')) return 'Xiaomi Flagship';
+                          return 'Xiaomi Series';
+                        }
+                        if (brandSlug === 'oppo') {
+                          if (name.includes('find')) return 'Find Series';
+                          if (name.includes('reno')) return 'Reno Series';
+                          return 'Oppo Series';
+                        }
+                        return 'Dòng Mới';
+                      };
+
                       const assignedIds = new Set<string>();
-                      const renderedGroups = config.productGroups.map((groupDef, groupIdx) => {
-                        const matching = productsData.data.filter((p: any) => 
-                          p.series?.toLowerCase() === groupDef.series?.toLowerCase() || 
-                          p.series?.toLowerCase() === groupDef.title?.toLowerCase()
-                        );
+                      const productsList: any[] = productsData?.data || [];
+                      const renderedGroups = config.productGroups.map((groupDef) => {
+                        const matching = productsList.filter((p: any) => {
+                          const pSeries = getProductSeries(p);
+                          return (
+                            pSeries?.toLowerCase() === groupDef.series?.toLowerCase() ||
+                            pSeries?.toLowerCase() === groupDef.title?.toLowerCase()
+                          );
+                        });
                         if (matching.length === 0) return null;
                         
                         matching.forEach((p: any) => assignedIds.add(p.id));
@@ -405,7 +433,7 @@ export function BrandAllProductsSection({ config, products }: BrandAllProductsSe
                         );
                       });
 
-                      const unassigned = productsData.data.filter((p: any) => !assignedIds.has(p.id));
+                      const unassigned = productsList.filter((p: any) => !assignedIds.has(p.id));
                       
                       return (
                         <>
@@ -453,7 +481,7 @@ export function BrandAllProductsSection({ config, products }: BrandAllProductsSe
                 ) : (
                   // Flattened grid
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
-                    {productsData.data.map((product: any) => (
+                    {(productsData?.data || []).map((product: any) => (
                       <FilteredProductCard 
                         key={product.id} 
                         product={product} 
