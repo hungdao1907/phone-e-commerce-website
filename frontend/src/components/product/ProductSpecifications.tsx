@@ -15,7 +15,12 @@ export function ProductSpecifications({
   
   // Extract specImage if present
   const specImageObj = specifications.find((s: any) => s.type === 'specImage');
-  const specImage = specImageObj ? (specImageObj as any).url : null;
+  const resolveImageUrl = (url: string | null) => {
+    if (!url) return undefined;
+    if (url.startsWith('/uploads')) return `${import.meta.env.VITE_API_URL || 'http://localhost:3001'}${url}`;
+    return url;
+  };
+  const specImage = specImageObj ? resolveImageUrl((specImageObj as any).url) : null;
   const groups = specifications.filter((s: any) => s.type !== 'specImage');
 
   // Flatten items count to determine if we should show expand button
