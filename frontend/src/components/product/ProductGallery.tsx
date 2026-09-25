@@ -2,6 +2,8 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { Heart, Star, Scale, Settings, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useWishlistStore } from '../../store/useWishlistStore';
+import { useAuthStore } from '../../store/authStore';
+import { useNavigate } from 'react-router-dom';
 import CardFanCarousel from '../ui/CardFanCarousel';
 
 interface ProductGalleryProps {
@@ -14,8 +16,17 @@ export function ProductGallery({ productId, images = [], productName }: ProductG
   const shouldReduceMotion = useReducedMotion();
   const [selectedIndex, setSelectedIndex] = useState(0);
 
-  const { items: wishlistItems, toggleItem: toggleWishlist } = useWishlistStore();
+  const { items: wishlistItems, toggleItem: toggleWishlist, syncWithBackend } = useWishlistStore();
+  const { token } = useAuthStore();
+  const navigate = useNavigate();
+  
   const isFavorite = productId ? wishlistItems.includes(productId) : false;
+
+  useEffect(() => {
+    if (token) {
+      syncWithBackend(token);
+    }
+  }, [token, syncWithBackend]);
 
   useEffect(() => {
     setSelectedIndex(0);
@@ -46,6 +57,14 @@ export function ProductGallery({ productId, images = [], productName }: ProductG
     }
   };
 
+  const handleToggleWishlist = async () => {
+    if (!productId) return;
+    const handled = await toggleWishlist(productId, token || undefined);
+    if (!handled) {
+      navigate('/login'); // Assuming standard login path, adjust if it's different
+    }
+  };
+
   return (
     <section aria-label={'Hình ảnh ' + productName} className="w-full">
       <div className="relative pt-[64px] w-full">
@@ -62,7 +81,7 @@ export function ProductGallery({ productId, images = [], productName }: ProductG
         {/* Action Bar (Top Left) */}
         <div className="absolute top-[20px] left-6 flex flex-wrap items-center justify-start gap-4 text-[13px] font-semibold text-neutral-600 z-20">
           <button
-            onClick={() => productId && toggleWishlist(productId)}
+            onClick={handleToggleWishlist}
             className={`flex items-center gap-1.5 transition-colors ${isFavorite ? 'text-red-500' : 'hover:text-red-500'}`}
           >
             <Heart className={`w-4 h-4 ${isFavorite ? 'fill-current' : ''}`} />

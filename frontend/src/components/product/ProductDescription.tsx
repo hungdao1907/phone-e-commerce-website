@@ -22,10 +22,9 @@ export function ProductDescription({ description }: ProductDescriptionProps) {
           className={`overflow-hidden transition-all duration-500 ease-in-out ${isExpanded ? 'max-h-[5000px]' : collapsedHeight}`}
         >
           <div 
-            className="prose prose-neutral max-w-none text-neutral-600 leading-relaxed whitespace-pre-line text-sm sm:text-base"
-          >
-            {description}
-          </div>
+            className="prose prose-neutral max-w-none text-neutral-600 leading-relaxed text-sm sm:text-base [&>ul]:list-disc [&>ol]:list-decimal [&>ul]:pl-5 [&>ol]:pl-5 [&>ul>li]:mb-1 [&>ol>li]:mb-1"
+            dangerouslySetInnerHTML={{ __html: description }}
+          />
         </div>
 
         {!isExpanded && (

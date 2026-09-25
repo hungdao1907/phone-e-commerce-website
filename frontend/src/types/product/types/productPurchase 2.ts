@@ -15,11 +15,6 @@ export interface ProductSpecification {
   value: string;
 }
 
-export interface ProductSpecificationGroup {
-  title: string;
-  items: ProductSpecification[];
-}
-
 export interface ProductVariant {
   id: string;
   sku: string;
@@ -43,8 +38,6 @@ export interface PurchaseProduct {
   galleryImages: string[];
   colors: PurchaseProductColor[];
   storageOptions: PurchaseProductOption[];
-  specifications: ProductSpecificationGroup[];
+  specifications: ProductSpecification[];
   variants: ProductVariant[];
-  ratingAverage?: number;
-  reviewCount?: number;
 }

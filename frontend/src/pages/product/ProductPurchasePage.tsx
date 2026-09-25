@@ -106,10 +106,20 @@ export function ProductPurchasePage() {
           
           let parsedSpecs = [];
           if (Array.isArray(dbProduct.specifications)) {
-            parsedSpecs = dbProduct.specifications.map((s: any) => ({
-              label: s.name || s.label || 'Thông tin',
-              value: s.value || 'N/A'
-            }));
+            const specs = dbProduct.specifications;
+            if (specs.length > 0 && specs[0].title !== undefined) {
+              // It's already grouped format
+              parsedSpecs = specs;
+            } else {
+              // It's flat format, group it
+              parsedSpecs = [{
+                title: 'Thông số kỹ thuật',
+                items: specs.map((s: any) => ({
+                  label: s.name || s.label || s.key || 'Thông tin',
+                  value: s.value || 'N/A'
+                }))
+              }];
+            }
           }
 
           const resolveImageUrl = (url: string) => {
@@ -134,7 +144,7 @@ export function ProductPurchasePage() {
             galleryImages: [dbProduct.image, ...(dbProduct.images || [])].filter(Boolean).map(resolveImageUrl),
             colors,
             storageOptions,
-            specifications: parsedSpecs.length > 0 ? parsedSpecs : [{ label: 'Đang cập nhật', value: 'Chưa có thông số' }],
+            specifications: parsedSpecs.length > 0 ? parsedSpecs : [{ title: 'Thông số kỹ thuật', items: [{ label: 'Đang cập nhật', value: 'Chưa có thông số' }] }],
             variants,
             ratingAverage: dbProduct.ratingAverage || 0,
             reviewCount: dbProduct.reviewCount || 0

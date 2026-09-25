@@ -22,6 +22,7 @@ import rewardRoutes from './routes/reward.routes';
 import leadRoutes from './routes/lead.routes';
 import dashboardRoutes from './routes/dashboard.routes';
 import notificationRoutes from './routes/notification.routes';
+import wishlistRoutes from './routes/wishlist.routes';
 
 const app = express();
 const port = process.env.PORT || 3001;
@@ -67,6 +68,7 @@ app.use('/api/rewards', rewardRoutes);
 app.use('/api/leads', leadRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/wishlist', wishlistRoutes);
 
 app.get('/', (req, res) => {
   res.status(200).json({ message: 'Welcome to Phone E-Commerce API', status: 'live' });

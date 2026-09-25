@@ -7,6 +7,8 @@ import { AdminProductFilterSidebar } from './products/AdminProductFilterSidebar'
 import { AdminProductCard } from './products/AdminProductCard';
 import { VariantManagementModal } from './products/VariantManagementModal';
 import { ProductImportModal } from './products/ProductImportModal';
+import { RichTextEditor } from '../editors/RichTextEditor';
+import { SpecificationGroupEditor, SpecGroup } from '../editors/SpecificationGroupEditor';
 
 import { useAuthStore } from '@/store/authStore';
 import { resolveMediaUrl } from '@/utils/media';
@@ -41,7 +43,7 @@ interface Product {
   categoryId: string | null;
   category: { id: string; name: string } | null;
   status: string;
-  specifications: { key: string; value: string }[] | null;
+  specifications: any[] | null;
   variants: ProductVariant[];
   updatedAt: string;
 }
@@ -275,7 +277,7 @@ export function ProductList() {
   // Dynamic Variant Options state
   const [variantOptions, setVariantOptions] = useState<Record<string, VariantOption[]>>({});
   const [variantRows, setVariantRows] = useState<VariantFormRow[]>([]);
-  const [specifications, setSpecifications] = useState<{ key: string; value: string }[]>([]);
+  const [specGroups, setSpecGroups] = useState<SpecGroup[]>([]);
 
   // Input states for variant tags
   const [attrInputs, setAttrInputs] = useState<Record<string, string>>({});
@@ -341,7 +343,10 @@ export function ProductList() {
   // Pre-fill Specifications & Reset Variants based on Category
   useEffect(() => {
     if (view === 'form' && formData.categoryId && !editingProduct) {
-      setSpecifications(currentConfig.specifications.map(key => ({ key, value: '' })));
+      setSpecGroups([{
+        title: 'Thông số chung',
+        items: currentConfig.specifications.map(key => ({ label: key, value: '' }))
+      }]);
       // Initialize variantOptions with empty arrays for current config
       const initialOpts: Record<string, VariantOption[]> = {};
       currentConfig.variants.forEach(v => {
@@ -437,7 +442,7 @@ export function ProductList() {
     setFormData({ name: '', description: '', brand: '', image: '', images: ['', '', '', '', ''], categoryId: '', status: 'active' });
     setVariantOptions({});
     setVariantRows([]);
-    setSpecifications([]);
+    setSpecGroups([]);
     setErrorMsg('');
     setView('form');
   };
@@ -455,7 +460,23 @@ export function ProductList() {
       status: product.status
     });
 
-    setSpecifications(product.specifications ? (product.specifications as any).map((s:any) => ({ key: s.key, value: s.value })) : []);
+    // Parse specifications: support both old flat format and new grouped format
+    if (product.specifications) {
+      const specs = product.specifications as any[];
+      if (specs.length > 0 && specs[0].title !== undefined) {
+        // New grouped format: [{title, items: [{label, value}]}]
+        setSpecGroups(specs.map((g: any) => ({
+          title: g.title || '',
+          items: (g.items || []).map((i: any) => ({ label: i.label || '', value: i.value || '' }))
+        })));
+      } else {
+        // Old flat format: [{key, value}] → convert to single group
+        const items = specs.map((s: any) => ({ label: s.key || s.label || '', value: s.value || '' }));
+        setSpecGroups(items.length > 0 ? [{ title: 'Thông số chung', items }] : []);
+      }
+    } else {
+      setSpecGroups([]);
+    }
 
     const existingOptions: Record<string, Map<string, VariantOption>> = {};
     
@@ -587,7 +608,7 @@ export function ProductList() {
       const res = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({ ...formData, status: 'active', images: filteredImages, image: finalImage, specifications: specifications.filter(s => s.key), variants })
+        body: JSON.stringify({ ...formData, status: 'active', images: filteredImages, image: finalImage, specifications: specGroups.filter(g => g.title || g.items.some(i => i.label)), variants })
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message);
@@ -675,7 +696,11 @@ export function ProductList() {
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-white/50 mb-1.5">Mô tả sản phẩm</label>
-                  <textarea value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="w-full h-24 bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-emerald-500 resize-none" placeholder="Nhập mô tả chi tiết..." />
+                  <RichTextEditor
+                    content={formData.description}
+                    onChange={(html) => setFormData({...formData, description: html})}
+                    placeholder="Nhập mô tả chi tiết..."
+                  />
                 </div>
               </div>
             </div>
@@ -867,21 +892,11 @@ export function ProductList() {
           <div className="lg:col-span-4 space-y-6 sticky top-4 self-start">
             {/* THÔNG SỐ KỸ THUẬT */}
             <div className="bg-[#1c1c1e] border border-white/10 rounded-2xl p-6 shadow-xl">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-sm font-semibold text-white/50 uppercase tracking-wider">THÔNG SỐ KỸ THUẬT</h3>
-                <button type="button" onClick={() => setSpecifications([...specifications, { key: '', value: '' }])} className="text-xs text-emerald-400 hover:text-emerald-300 font-medium bg-emerald-500/10 px-2 py-1 rounded-lg flex items-center gap-1"><Plus className="w-3 h-3"/> Thêm</button>
-              </div>
-              <div className="grid grid-cols-1 gap-3">
-                {specifications.map((spec, i) => (
-                  <div key={i} className="flex flex-col gap-1.5 bg-black/20 p-2 rounded-xl border border-white/10 group">
-                    <div className="flex items-center justify-between">
-                      <input type="text" placeholder="Tên thông số..." value={spec.key} onChange={e => { const newS = [...specifications]; newS[i].key = e.target.value; setSpecifications(newS); }} className="w-full bg-transparent text-xs font-semibold text-emerald-400 focus:outline-none transition-colors" />
-                      <button type="button" onClick={() => setSpecifications(specifications.filter((_, idx) => idx !== i))} className="p-1 text-white/30 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"><X className="w-3 h-3" /></button>
-                    </div>
-                    <input type="text" placeholder="Giá trị..." value={spec.value} onChange={e => { const newS = [...specifications]; newS[i].value = e.target.value; setSpecifications(newS); }} className="w-full h-8 bg-white/5 px-2 text-xs text-white focus:outline-none focus:bg-white/10 border border-transparent focus:border-emerald-500/30 rounded-lg transition-colors" />
-                  </div>
-                ))}
-              </div>
+              <h3 className="text-sm font-semibold text-white/50 uppercase tracking-wider mb-4">THÔNG SỐ KỸ THUẬT</h3>
+              <SpecificationGroupEditor
+                groups={specGroups}
+                onChange={setSpecGroups}
+              />
             </div>
           </div>
         </div>
