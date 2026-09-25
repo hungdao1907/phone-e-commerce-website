@@ -40,7 +40,7 @@ export function FloatingCartButton() {
         setTimeout(() => setIsPlaying(false), 1500);
         setCartDrawerOpen(true);
       }}
-      className="fixed right-6 bottom-10 md:bottom-auto md:top-1/2 md:-translate-y-1/2 z-40 w-[60px] h-[60px] rounded-full flex items-center justify-center hover:scale-110 active:scale-95 transition-all duration-300"
+      className={`fixed right-6 bottom-10 md:bottom-auto md:top-1/2 md:-translate-y-1/2 z-40 w-[60px] h-[60px] rounded-full flex items-center justify-center hover:scale-110 active:scale-95 transition-all duration-500 ${isPlaying ? 'scale-110 shadow-[0_0_25px_rgba(16,185,129,0.5)]' : ''}`}
       style={{
         background: 'rgba(255, 255, 255, 0.25)',
         backdropFilter: 'blur(12px) saturate(150%)',
@@ -57,7 +57,7 @@ export function FloatingCartButton() {
           playing={isPlaying}
         />
         {cartItemCount > 0 && (
-          <span className="absolute -top-2 -right-2 w-[22px] h-[22px] bg-red-500 text-white text-[11px] font-bold rounded-full flex items-center justify-center shadow-[0_2px_8px_rgba(239,68,68,0.4)] border border-red-400">
+          <span className={`absolute -top-2 -right-2 w-[22px] h-[22px] bg-red-500 text-white text-[11px] font-bold rounded-full flex items-center justify-center shadow-[0_2px_8px_rgba(239,68,68,0.4)] border border-red-400 transition-all duration-500 origin-bottom-left ${isPlaying ? 'scale-[1.3] -rotate-12' : 'scale-100 rotate-0'}`}>
             {cartItemCount}
           </span>
         )}

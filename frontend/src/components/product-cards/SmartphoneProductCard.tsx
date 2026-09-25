@@ -112,7 +112,6 @@ export function BrandProductCard({ product, index = 0, accentColor }: BrandProdu
           stock: variant.stock || 10,
           quantity: 1
         });
-        setCartDrawerOpen(true);
       };
       
       // Call performAdd immediately instead of flying animation

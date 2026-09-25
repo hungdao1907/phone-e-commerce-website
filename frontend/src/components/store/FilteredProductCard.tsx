@@ -136,7 +136,6 @@ export function FilteredProductCard({ product, categorySlug }: FilteredProductCa
           stock: variant.stock || 10,
           quantity: 1
         });
-        setCartDrawerOpen(true);
       };
 
       performAdd();
