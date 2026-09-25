@@ -40,18 +40,18 @@ export function ProductSpecifications({
             const hideTitle = group.title === 'Thông số kỹ thuật' || !group.title;
             
             return (
-              <div key={groupIndex} className="flex flex-col md:flex-row gap-4 md:gap-8 items-start border-b border-neutral-100 pb-6 last:border-0 last:pb-0">
+              <div key={groupIndex} className="flex flex-col md:flex-row gap-4 md:gap-8 items-start border-b border-white pb-6 last:border-0 last:pb-0">
                 {!hideTitle && (
-                  <h3 className="font-semibold text-neutral-900 text-base md:w-[25%] md:shrink-0 md:sticky md:top-24">{group.title}</h3>
+                  <h3 className="font-semibold text-neutral-900 text-base md:w-1/2 md:shrink-0">{group.title}</h3>
                 )}
-                <div className={`flex flex-col gap-3 ${hideTitle ? 'w-full' : 'w-full md:w-[75%]'}`}>
+                <div className={`flex flex-col gap-3 ${hideTitle ? 'w-full' : 'w-full md:w-1/2'}`}>
                   {group.items?.map((item, itemIndex) => {
                     // Ignore items that just say "Thông tin" as a fallback label
                     if (item.label === 'Thông tin' && item.value === 'N/A') return null;
                     return (
-                      <div key={itemIndex} className="flex flex-col sm:flex-row gap-1 sm:gap-4 items-start sm:items-baseline">
-                        <span className="text-neutral-500 text-sm sm:w-[150px] shrink-0 font-medium">{item.label}{item.label.endsWith(':') ? '' : ':'}</span>
-                        <span className="font-medium text-neutral-900 text-sm whitespace-pre-line flex-1">{item.value}</span>
+                      <div key={itemIndex} className="text-sm flex flex-wrap gap-1">
+                        <span className="text-neutral-500 font-medium">{item.label}{item.label.endsWith(':') ? '' : ':'}</span>
+                        <span className="font-medium text-neutral-900 whitespace-pre-line">{item.value}</span>
                       </div>
                     );
                   })}
