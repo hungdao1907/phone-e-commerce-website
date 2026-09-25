@@ -42,7 +42,7 @@ export function ProductSpecifications({
             return (
               <div key={groupIndex} className="flex flex-col md:flex-row gap-4 md:gap-8 items-start border-b border-white pb-6 last:border-0 last:pb-0">
                 {!hideTitle && (
-                  <h3 className="font-semibold text-neutral-900 text-base md:w-1/2 md:shrink-0">{group.title}</h3>
+                  <h3 className="font-semibold text-neutral-900 text-base md:w-1/2 md:shrink-0 text-left md:text-right">{group.title}</h3>
                 )}
                 <div className={`flex flex-col gap-3 ${hideTitle ? 'w-full' : 'w-full md:w-1/2'}`}>
                   {group.items?.map((item, itemIndex) => {
