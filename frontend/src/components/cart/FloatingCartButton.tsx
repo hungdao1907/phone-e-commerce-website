@@ -1,5 +1,6 @@
 import React from 'react';
 import Lottie from 'lottie-react';
+import bagAnimation from '../../../public/lottie/bag.json';
 import { ShoppingBag } from 'lucide-react';
 import { useCartStore } from '../../store/useCartStore';
 import { useAppStore } from '../../store/useAppStore';
@@ -51,7 +52,7 @@ export function FloatingCartButton() {
       <div className="relative w-full h-full flex items-center justify-center pointer-events-none">
         <Lottie
           lottieRef={lottieRef}
-          animationData={require('../../../public/lottie/bag.json')}
+          animationData={bagAnimation}
           loop={false}
           autoplay={false}
           style={{ width: '42px', height: '42px' }}

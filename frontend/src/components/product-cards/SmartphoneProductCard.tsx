@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Lottie from 'lottie-react';
+import cardBagAnimation from '../../../public/lottie/cardBag.json';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { Smartphone, Cpu, Camera, Battery, ShoppingBag } from 'lucide-react';
@@ -324,7 +325,7 @@ export function BrandProductCard({ product, index = 0, accentColor }: BrandProdu
               ) : (
                 <div className="lottie-container w-full h-full flex items-center justify-center pointer-events-none absolute inset-0 pt-0.5">
                   <Lottie
-                    animationData={require('../../../public/lottie/cardBag.json')}
+                    animationData={cardBagAnimation}
                     loop={false}
                     autoplay={false}
                     style={{ width: '150%', height: '150%' }}
