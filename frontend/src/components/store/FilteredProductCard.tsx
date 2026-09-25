@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Lottie } from 'lottie-react';
+import React, { useState, useEffect } from 'react';
+import { LottieIcon } from '@/components/ui/LottieIcon';
 import cardBagAnimation from '../../../public/lottie/cardBag.json';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
@@ -18,7 +18,7 @@ export function FilteredProductCard({ product, categorySlug }: FilteredProductCa
   const addItem = useCartStore((state: any) => state.addItem);
   const { setCartDrawerOpen } = useAppStore();
   const [isAdding, setIsAdding] = useState(false);
-  const lottieRef = useRef<any>(null);
+  const [isHoveringLottie, setIsHoveringLottie] = useState(false);
 
   // Extract unique colors from variants
   const colors: { name: string, hex: string, image: string }[] = [];
@@ -292,30 +292,19 @@ export function FilteredProductCard({ product, categorySlug }: FilteredProductCa
               type="button"
               onClick={handleAddToCart}
               disabled={isAdding}
-              onMouseEnter={() => {
-                if (lottieRef.current) {
-                  lottieRef.current.setDirection(1);
-                  lottieRef.current.play();
-                }
-              }}
-              onMouseLeave={() => {
-                if (lottieRef.current) {
-                  lottieRef.current.stop();
-                }
-              }}
+              onMouseEnter={() => setIsHoveringLottie(true)}
+              onMouseLeave={() => setIsHoveringLottie(false)}
               className={`inline-flex items-center justify-center w-8 h-8 rounded-full ${isAdding ? 'bg-neutral-200 text-neutral-400' : 'bg-neutral-100 hover:bg-emerald-50 text-neutral-600 hover:text-emerald-600'} transition-colors duration-200 cursor-pointer shrink-0 overflow-hidden relative`}
               aria-label="Thêm vào giỏ hàng"
             >
               {isAdding ? (
                 <div className="w-4 h-4 border-2 border-neutral-400 border-t-transparent rounded-full animate-spin" />
               ) : (
-                <div className="lottie-container w-full h-full flex items-center justify-center pointer-events-none absolute inset-0 pt-0.5">
-                  <Lottie
-                    lottieRef={lottieRef}
+                <div className="lottie-container w-full h-full flex items-center justify-center pointer-events-none absolute inset-0 pt-0.5" style={{ width: '150%', height: '150%' }}>
+                  <LottieIcon
                     animationData={cardBagAnimation}
                     loop={false}
-                    autoplay={true}
-                    style={{ width: '150%', height: '150%' }}
+                    playing={isHoveringLottie}
                   />
                 </div>
               )}

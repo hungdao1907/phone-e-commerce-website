@@ -1,5 +1,5 @@
-import React from 'react';
-import { Lottie } from 'lottie-react';
+import React, { useState, useEffect } from 'react';
+import { LottieIcon } from '@/components/ui/LottieIcon';
 import bagAnimation from '../../../public/lottie/bag.json';
 import { ShoppingBag } from 'lucide-react';
 import { useCartStore } from '../../store/useCartStore';
@@ -20,22 +20,24 @@ export function FloatingCartButton() {
 
   if (isExplorePage || isHiddenPath) return null;
 
-  const lottieRef = React.useRef<any>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
 
-  React.useEffect(() => {
-    if (cartItemCount > 0 && lottieRef.current) {
-      lottieRef.current.stop();
-      lottieRef.current.play();
+  useEffect(() => {
+    if (cartItemCount > 0) {
+      setIsPlaying(true);
+      const timer = setTimeout(() => setIsPlaying(false), 1500);
+      return () => clearTimeout(timer);
     }
   }, [cartItemCount]);
 
   return (
     <button
       id="floating-cart-btn"
+      onMouseEnter={() => setIsPlaying(true)}
+      onMouseLeave={() => setIsPlaying(false)}
       onClick={() => {
-        if (lottieRef.current) {
-          lottieRef.current.goToAndPlay(0, true);
-        }
+        setIsPlaying(true);
+        setTimeout(() => setIsPlaying(false), 1500);
         setCartDrawerOpen(true);
       }}
       className="fixed right-6 bottom-10 md:bottom-auto md:top-1/2 md:-translate-y-1/2 z-40 w-[60px] h-[60px] rounded-full flex items-center justify-center hover:scale-110 active:scale-95 transition-all duration-300"
@@ -48,13 +50,11 @@ export function FloatingCartButton() {
       }}
       aria-label="Mở giỏ hàng"
     >
-      <div className="relative w-full h-full flex items-center justify-center pointer-events-none">
-        <Lottie
-          lottieRef={lottieRef}
+      <div className="relative w-full h-full flex items-center justify-center pointer-events-none" style={{ width: '42px', height: '42px' }}>
+        <LottieIcon
           animationData={bagAnimation}
           loop={false}
-          autoplay={false}
-          style={{ width: '42px', height: '42px' }}
+          playing={isPlaying}
         />
         {cartItemCount > 0 && (
           <span className="absolute top-1 right-1 w-5 h-5 bg-red-500 text-white text-[11px] font-bold rounded-full flex items-center justify-center shadow-[0_2px_8px_rgba(239,68,68,0.4)] border border-red-400">
