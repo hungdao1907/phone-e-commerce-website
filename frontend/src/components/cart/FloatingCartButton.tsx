@@ -1,5 +1,5 @@
 import React from 'react';
-import Lottie from 'lottie-react';
+import { Lottie } from 'lottie-react';
 import bagAnimation from '../../../public/lottie/bag.json';
 import { ShoppingBag } from 'lucide-react';
 import { useCartStore } from '../../store/useCartStore';
@@ -34,8 +34,7 @@ export function FloatingCartButton() {
       id="floating-cart-btn"
       onClick={() => {
         if (lottieRef.current) {
-          lottieRef.current.stop();
-          lottieRef.current.play();
+          lottieRef.current.goToAndPlay(0, true);
         }
         setCartDrawerOpen(true);
       }}
