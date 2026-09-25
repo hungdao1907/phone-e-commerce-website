@@ -44,7 +44,7 @@ export function ProductSpecifications({
       <div className={`relative transition-all duration-500 ease-in-out ${isExpanded ? 'max-h-[5000px]' : 'max-h-[400px] overflow-hidden'}`}>
         
         {specImage && (
-          <div className="hidden md:block absolute right-[50%] mr-8 top-0 h-full pointer-events-none">
+          <div className="hidden md:block absolute left-0 top-0 w-1/2 h-full pointer-events-none pr-[100px] lg:pr-[140px]">
             <div className="sticky top-24 pointer-events-auto flex justify-end">
               <img src={specImage} alt="Specifications" className="w-[180px] lg:w-[220px] h-auto max-h-[50vh] object-contain mix-blend-multiply" />
             </div>
