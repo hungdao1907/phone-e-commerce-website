@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import Lottie from 'lottie-react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { Smartphone, Cpu, Camera, Battery, ShoppingBag } from 'lucide-react';
@@ -88,7 +89,6 @@ export function BrandProductCard({ product, index = 0, accentColor }: BrandProdu
         return;
       }
       
-      const imageEl = card.querySelector('.product-image') as HTMLImageElement;
       const targetEl = document.getElementById('floating-cart-btn');
       
       const finalStorageLabel = variant.attributes?.['Dung lượng'] || 'Tiêu chuẩn';
@@ -113,41 +113,11 @@ export function BrandProductCard({ product, index = 0, accentColor }: BrandProdu
         setCartDrawerOpen(true);
       };
       
-      if (imageEl && targetEl) {
-        const rect = imageEl.getBoundingClientRect();
-        const targetRect = targetEl.getBoundingClientRect();
-        
-        const clone = imageEl.cloneNode(true) as HTMLImageElement;
-        clone.style.position = 'fixed';
-        clone.style.top = `${rect.top}px`;
-        clone.style.left = `${rect.left}px`;
-        clone.style.width = `${rect.width}px`;
-        clone.style.height = `${rect.height}px`;
-        clone.style.zIndex = '9999';
-        clone.style.transition = 'all 0.8s cubic-bezier(0.2, 1, 0.3, 1)';
-        clone.style.borderRadius = '20px';
-        
-        document.body.appendChild(clone);
-        
-        // Trigger animation
-        setTimeout(() => {
-          clone.style.top = `${targetRect.top + 10}px`;
-          clone.style.left = `${targetRect.left + 10}px`;
-          clone.style.width = '20px';
-          clone.style.height = '20px';
-          clone.style.opacity = '0.5';
-          clone.style.transform = 'scale(0.5)';
-        }, 50);
-        
-        setTimeout(() => {
-          if (document.body.contains(clone)) {
-            document.body.removeChild(clone);
-          }
-          
-          performAdd();
-          
-          // Pulse the cart button
-          if (targetEl) {
+      // Call performAdd immediately instead of flying animation
+      performAdd();
+      
+      // Pulse the floating cart button (now handled by Lottie inside it, but we can keep scale effect)
+      if (targetEl) {
             targetEl.classList.add('scale-125');
             setTimeout(() => targetEl.classList.remove('scale-125'), 300);
           }
@@ -333,13 +303,39 @@ export function BrandProductCard({ product, index = 0, accentColor }: BrandProdu
               type="button"
               onClick={handleAddToCart}
               disabled={isAdding}
-              className={`inline-flex items-center justify-center w-8 h-8 rounded-full ${isAdding ? 'bg-neutral-200 text-neutral-400' : 'bg-neutral-100 hover:bg-emerald-50 text-neutral-600 hover:text-emerald-600'} transition-colors duration-200 cursor-pointer shrink-0`}
+              onMouseEnter={(e) => {
+                const lottie = (e.currentTarget.querySelector('.lottie-container') as any)?._lottie;
+                if (lottie) {
+                  lottie.setDirection(1);
+                  lottie.play();
+                }
+              }}
+              onMouseLeave={(e) => {
+                const lottie = (e.currentTarget.querySelector('.lottie-container') as any)?._lottie;
+                if (lottie) {
+                  lottie.stop();
+                }
+              }}
+              className={`inline-flex items-center justify-center w-8 h-8 rounded-full ${isAdding ? 'bg-neutral-200 text-neutral-400' : 'bg-neutral-100 hover:bg-emerald-50 text-neutral-600 hover:text-emerald-600'} transition-colors duration-200 cursor-pointer shrink-0 overflow-hidden relative`}
               aria-label="Thêm vào giỏ hàng"
             >
               {isAdding ? (
                 <div className="w-4 h-4 border-2 border-neutral-400 border-t-transparent rounded-full animate-spin" />
               ) : (
-                <ShoppingBag className="w-4 h-4" />
+                <div className="lottie-container w-full h-full flex items-center justify-center pointer-events-none absolute inset-0 pt-0.5">
+                  <Lottie
+                    animationData={require('../../../public/lottie/cardBag.json')}
+                    loop={false}
+                    autoplay={false}
+                    style={{ width: '150%', height: '150%' }}
+                    lottieRef={(ref) => {
+                      if (ref && (ref as any).wrapper) {
+                        const container = (ref as any).wrapper.closest('.lottie-container');
+                        if (container) container._lottie = ref;
+                      }
+                    }}
+                  />
+                </div>
               )}
             </button>
             <button
