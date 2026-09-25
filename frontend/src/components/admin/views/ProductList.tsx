@@ -278,7 +278,7 @@ export function ProductList() {
   const [variantOptions, setVariantOptions] = useState<Record<string, VariantOption[]>>({});
   const [variantRows, setVariantRows] = useState<VariantFormRow[]>([]);
   const [specGroups, setSpecGroups] = useState<SpecGroup[]>([]);
-  const [specImage, setSpecImage] = useState<string>('');
+  const [specImages, setSpecImages] = useState<string[]>([]);
 
   // Input states for variant tags
   const [attrInputs, setAttrInputs] = useState<Record<string, string>>({});
@@ -437,29 +437,38 @@ export function ProductList() {
     });
   };
 
-  const handleUploadSpecImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const handleUploadSpecImages = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
 
     setIsUploading(true);
     try {
-      const uploadData = new FormData();
-      uploadData.append('image', file);
-      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/upload`, { method: 'POST', body: uploadData });
-      
-      if (!res.ok) throw new Error('Upload failed');
-      
-      const data = await res.json();
-      if (data.url || data.imageUrl) {
-        setSpecImage(data.url || data.imageUrl);
+      const newUrls: string[] = [];
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const uploadData = new FormData();
+        uploadData.append('image', file);
+        const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/upload`, { method: 'POST', body: uploadData });
+        
+        if (!res.ok) throw new Error('Upload failed');
+        
+        const data = await res.json();
+        if (data.url || data.imageUrl) {
+          newUrls.push(data.url || data.imageUrl);
+        }
       }
+      setSpecImages(prev => [...prev, ...newUrls]);
     } catch (err) {
-      console.error('Error uploading spec image', err);
+      console.error('Error uploading spec images', err);
       alert('Lỗi khi tải ảnh lên');
     } finally {
       setIsUploading(false);
       if (e.target) e.target.value = '';
     }
+  };
+
+  const removeSpecImage = (index: number) => {
+    setSpecImages(prev => prev.filter((_, i) => i !== index));
   };
 
   // Open Create
@@ -469,6 +478,7 @@ export function ProductList() {
     setVariantOptions({});
     setVariantRows([]);
     setSpecGroups([]);
+    setSpecImages([]);
     setErrorMsg('');
     setView('form');
   };
@@ -489,11 +499,11 @@ export function ProductList() {
     // Parse specifications: support both old flat format and new grouped format
     if (product.specifications) {
       const specs = product.specifications as any[];
-      const imageSpec = specs.find(s => s.type === 'specImage');
-      if (imageSpec) {
-        setSpecImage(imageSpec.url || '');
+      const imageSpecs = specs.filter(s => s.type === 'specImage');
+      if (imageSpecs.length > 0) {
+        setSpecImages(imageSpecs.map(s => s.url || '').filter(Boolean));
       } else {
-        setSpecImage('');
+        setSpecImages([]);
       }
 
       const realGroups = specs.filter(s => s.type !== 'specImage');
@@ -508,7 +518,7 @@ export function ProductList() {
       }
     } else {
       setSpecGroups([]);
-      setSpecImage('');
+      setSpecImages([]);
     }
 
     const existingOptions: Record<string, Map<string, VariantOption>> = {};
@@ -640,8 +650,8 @@ export function ProductList() {
 
       const finalSpecs = specGroups.filter(g => g.title || g.items.some(i => i.label));
       let specsToSave: any[] = finalSpecs;
-      if (specImage) {
-        specsToSave = [...finalSpecs, { type: 'specImage', url: specImage }];
+      if (specImages.length > 0) {
+        specsToSave = [...finalSpecs, ...specImages.map(url => ({ type: 'specImage', url }))];
       }
 
       const res = await fetch(url, {
@@ -934,19 +944,21 @@ export function ProductList() {
               <h3 className="text-sm font-semibold text-white/50 uppercase tracking-wider mb-4">THÔNG SỐ KỸ THUẬT</h3>
               <div className="mb-6 bg-black/20 p-4 rounded-xl border border-white/10">
                 <label className="block text-xs font-medium text-white/50 mb-3">Ảnh minh họa (Bên trái)</label>
-                <div className="flex items-center gap-4">
-                  {specImage ? (
-                    <div className="relative w-24 h-24 rounded-lg overflow-hidden border border-white/10 group flex-shrink-0 bg-white/5">
-                      <img src={resolveMediaUrl(specImage)} alt="Spec" className="w-full h-full object-contain" />
-                      <button type="button" onClick={() => setSpecImage('')} className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="flex items-start gap-4 flex-wrap">
+                  {specImages.map((img, idx) => (
+                    <div key={idx} className="relative w-24 h-24 rounded-lg overflow-hidden border border-white/10 group flex-shrink-0 bg-white/5">
+                      <img src={resolveMediaUrl(img)} alt="Spec" className="w-full h-full object-contain" />
+                      <button type="button" onClick={() => removeSpecImage(idx)} className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                         <X className="w-5 h-5 text-white" />
                       </button>
                     </div>
-                  ) : (
+                  ))}
+                  
+                  {specImages.length < 5 && (
                     <label className="w-24 h-24 rounded-lg border-2 border-dashed border-white/20 hover:border-emerald-500/50 flex flex-col items-center justify-center cursor-pointer transition-colors bg-white/5 flex-shrink-0">
                       <Upload className="w-5 h-5 text-white/40 mb-1" />
-                      <span className="text-[10px] text-white/40">Tải ảnh</span>
-                      <input type="file" className="hidden" accept="image/*" onChange={handleUploadSpecImage} disabled={isUploading} />
+                      <span className="text-[10px] text-white/40 text-center px-1">Thêm ảnh</span>
+                      <input type="file" className="hidden" accept="image/*" multiple onChange={handleUploadSpecImages} disabled={isUploading} />
                     </label>
                   )}
                   <div className="flex-1 text-xs text-white/40 leading-relaxed">

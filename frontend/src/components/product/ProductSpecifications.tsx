@@ -13,14 +13,14 @@ export function ProductSpecifications({
 }: ProductSpecificationsProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   
-  // Extract specImage if present
-  const specImageObj = specifications.find((s: any) => s.type === 'specImage');
+  // Extract specImages if present
+  const specImageObjs = specifications.filter((s: any) => s.type === 'specImage');
   const resolveImageUrl = (url: string | null) => {
     if (!url) return undefined;
     if (url.startsWith('/uploads')) return `${import.meta.env.VITE_API_URL || 'http://localhost:3001'}${url}`;
     return url;
   };
-  const specImage = specImageObj ? resolveImageUrl((specImageObj as any).url) : null;
+  const specImages = specImageObjs.map((s: any) => resolveImageUrl(s.url)).filter(Boolean);
   const groups = specifications.filter((s: any) => s.type !== 'specImage');
 
   // Flatten items count to determine if we should show expand button
@@ -43,10 +43,12 @@ export function ProductSpecifications({
 
       <div className={`relative transition-all duration-500 ease-in-out ${isExpanded ? 'max-h-[5000px]' : 'max-h-[400px] overflow-hidden'}`}>
         
-        {specImage && (
+        {specImages.length > 0 && (
           <div className="hidden md:block absolute left-0 top-0 w-1/2 h-full pointer-events-none pr-[100px] lg:pr-[140px]">
-            <div className="sticky top-24 pointer-events-auto flex justify-end">
-              <img src={specImage} alt="Specifications" className="w-[180px] lg:w-[220px] h-auto max-h-[50vh] object-contain mix-blend-multiply" />
+            <div className="sticky top-24 pointer-events-auto flex flex-col items-end gap-6 max-h-[80vh] overflow-y-auto no-scrollbar pb-8">
+              {specImages.map((img, idx) => (
+                <img key={idx} src={img} alt={`Specifications ${idx + 1}`} className="w-[180px] lg:w-[220px] h-auto object-contain mix-blend-multiply flex-shrink-0" />
+              ))}
             </div>
           </div>
         )}
