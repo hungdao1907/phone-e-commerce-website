@@ -8,7 +8,7 @@ const prisma = new PrismaClient();
 // GET /api/wishlist - Get current user's wishlist
 router.get('/', authenticateToken, async (req: AuthRequest, res) => {
   try {
-    const userId = req.user?.id || req.user?.customerId;
+    const userId = (req.user?.id || req.user?.customerId) as string;
     if (!userId) return res.status(401).json({ message: 'Unauthorized' });
 
     const items = await prisma.wishlist.findMany({
@@ -34,7 +34,7 @@ router.get('/', authenticateToken, async (req: AuthRequest, res) => {
 // GET /api/wishlist/ids - Get just product IDs in wishlist (lightweight)
 router.get('/ids', authenticateToken, async (req: AuthRequest, res) => {
   try {
-    const userId = req.user?.id || req.user?.customerId;
+    const userId = (req.user?.id || req.user?.customerId) as string;
     if (!userId) return res.status(401).json({ message: 'Unauthorized' });
 
     const items = await prisma.wishlist.findMany({
@@ -52,7 +52,7 @@ router.get('/ids', authenticateToken, async (req: AuthRequest, res) => {
 // POST /api/wishlist/toggle - Toggle a product in wishlist
 router.post('/toggle', authenticateToken, async (req: AuthRequest, res) => {
   try {
-    const userId = req.user?.id || req.user?.customerId;
+    const userId = (req.user?.id || req.user?.customerId) as string;
     if (!userId) return res.status(401).json({ message: 'Unauthorized' });
 
     const { productId } = req.body;
@@ -83,10 +83,10 @@ router.post('/toggle', authenticateToken, async (req: AuthRequest, res) => {
 // DELETE /api/wishlist/:productId - Remove specific product
 router.delete('/:productId', authenticateToken, async (req: AuthRequest, res) => {
   try {
-    const userId = req.user?.id || req.user?.customerId;
+    const userId = (req.user?.id || req.user?.customerId) as string;
     if (!userId) return res.status(401).json({ message: 'Unauthorized' });
 
-    const productId = req.params.productId;
+    const productId = req.params.productId as string;
 
     await prisma.wishlist.deleteMany({
       where: { customerId: userId, productId }
