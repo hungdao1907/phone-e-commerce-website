@@ -1,5 +1,4 @@
 import { motion, useReducedMotion } from 'motion/react';
-import { CategoryStarField } from '@/components/ui/CategoryStarField';
 import { ExpandingCards } from '@/components/ui/ExpandingCards';
 import type { CategoryCardItem } from '@/components/ui/ExpandingCards';
 
@@ -117,7 +116,7 @@ const categoriesData: readonly CategoryCardItem[] = [
   {
     id: 'xiaomi',
     title: 'Xiaomi',
-    eyebrow: 'ECOSYSTEM',
+    eyebrow: 'Xiaomi',
     description:
       'Khởi đầu năm 2010, Xiaomi phát triển nhanh với định hướng đưa công nghệ hiện đại đến nhiều người dùng hơn. Thương hiệu nổi bật nhờ tốc độ đổi mới, thiết kế trẻ và hệ sinh thái thiết bị thông minh.',
     ctaText: 'Khám phá Xiaomi',
@@ -157,12 +156,9 @@ export function CategoryShowcaseSection() {
 
   return (
     <section
-      className="category-showcase-section relative bg-[#060608] text-white py-20 sm:py-24 lg:py-28 xl:py-32 overflow-hidden border-t border-white/[0.06]"
+      className="category-showcase-section relative bg-white text-neutral-900 py-20 sm:py-24 lg:py-28 xl:py-32 overflow-hidden border-t border-neutral-200/80"
       aria-labelledby="category-showcase-title"
     >
-      {/* Animated Ambient Star Field */}
-      <CategoryStarField />
-
       <div className="relative z-10 mx-auto max-w-[1440px] px-5 sm:px-8 lg:px-12 xl:px-16">
         {/* Header */}
         <motion.div
@@ -172,7 +168,7 @@ export function CategoryShowcaseSection() {
           viewport={{ once: true, amount: 0.3 }}
         >
           <motion.p
-            className="text-[0.7rem] font-semibold tracking-[0.2em] text-[#86868b] uppercase sm:text-xs"
+            className="text-[0.7rem] font-semibold tracking-[0.2em] text-neutral-500 uppercase sm:text-xs"
             variants={{
               hidden: shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: 16 },
               visible: {
@@ -190,7 +186,7 @@ export function CategoryShowcaseSection() {
 
           <motion.h2
             id="category-showcase-title"
-            className="mt-3 text-[clamp(1.75rem,calc(1.25rem+2vw),3rem)] font-semibold leading-[1.15] tracking-[-0.03em] text-[#f5f5f7]"
+            className="mt-3 text-[clamp(1.75rem,calc(1.25rem+2vw),3rem)] font-semibold leading-[1.15] tracking-[-0.03em] text-neutral-900"
             variants={{
               hidden: shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: 24 },
               visible: {

@@ -1,18 +1,25 @@
-import { CategoryShowcaseSection } from '@/components/home/sections/CategoryShowcaseSection';
-import { EcosystemExperienceSection } from '@/components/home/sections/EcosystemExperienceSection';
-import { FeaturedProductsSection } from '@/components/home/sections/FeaturedProductsSection';
-import { HeroCinematicTransition } from '@/components/home/sections/HeroCinematicTransition';
-import { WaveGallery } from '@/components/home/sections/WaveGallery';
-import { TrustBenefitsSection } from '@/components/home/sections/TrustBenefitsSection';
-import { FinalCTASection } from '@/components/home/sections/FinalCTASection';
+import { useState } from 'react';
+import { FirstVisitHelloIntro, shouldShowIntro } from '@/components/ui/FirstVisitHelloIntro';
+import { CategoryShowcaseSection } from './sections/CategoryShowcaseSection';
+import { EcosystemExperienceSection } from './sections/EcosystemExperienceSection';
+import { FeaturedProductsSection } from './sections/FeaturedProductsSection';
+import { HeroCinematicTransition } from './sections/HeroCinematicTransition';
+import { WaveGallery } from './sections/WaveGallery';
+import { TrustBenefitsSection } from './sections/TrustBenefitsSection';
+import { FinalCTASection } from './sections/FinalCTASection';
 import '@/css/home.css';
 
 export function HomePage() {
+  const [isIntroPlaying, setIsIntroPlaying] = useState(shouldShowIntro);
+
   return (
     <div className="bg-white min-h-screen font-sans text-[#1d1d1f]">
+      {/* Màn hình chào mừng phong cách Apple khi lần đầu ghé thăm */}
+      <FirstVisitHelloIntro onFadeOutStart={() => setIsIntroPlaying(false)} />
+
       <main className="relative z-10 bg-white">
         {/* 1–2. Hero và phim thương hiệu chuyển cảnh chồng lớp theo native scroll */}
-        <HeroCinematicTransition />
+        <HeroCinematicTransition isIntroPlaying={isIntroPlaying} />
 
         {/* 3. Sản phẩm nổi bật */}
         <FeaturedProductsSection />

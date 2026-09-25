@@ -1,6 +1,6 @@
 # Phone E-Commerce Website — Cửa Hàng Công Nghệ Cao Cấp
 
-Dự án frontend thương mại điện tử công nghệ tiêu dùng cao cấp, tập trung vào trải nghiệm người dùng tinh tế, đồ họa điện ảnh và scrollytelling tương tác cho các dòng sản phẩm **iPhone 17 Pro Max** và **Apple Watch (SE 3, Series 11, Ultra 3)**.
+Dự án frontend thương mại điện tử công nghệ tiêu dùng cao cấp, tập trung vào trải nghiệm người dùng tinh tế, đồ họa điện ảnh và scrollytelling tương tác cho các dòng sản phẩm
 
 ---
 
@@ -77,10 +77,4 @@ phone-e-commerce-website/
 - **Hiệu ứng & Cuộn**: Framer Motion 12, Lenis Smooth Scroll, GSAP
 - **Đồ họa 3D**: Three.js, React Three Fiber, Drei
 
----
 
-## 📋 Tài liệu Kỹ thuật Chi tiết
-
-Để nắm bắt toàn diện lịch sử phát triển, các quyết định kiến trúc, quy chuẩn thiết kế và tài nguyên mock data, vui lòng tham khảo:
-- 📖 [AI_CLI_HANDOFF.md](file:///c:/Users/minh1/Downloads/phone-e-commerce-website/AI_CLI_HANDOFF.md)
-- ⚙️ [AI_CLI_HANDOFF.json](file:///c:/Users/minh1/Downloads/phone-e-commerce-website/AI_CLI_HANDOFF.json)

@@ -1,13 +1,17 @@
 import React, { useState, useRef, useEffect, useLayoutEffect, useMemo } from 'react';
-import { Search, ShoppingBag, Menu, X, User, ChevronDown } from 'lucide-react';
+import { MorphIcon } from 'morphicons/react';
+import { Menu, X, Search as SearchIcon } from 'lucide';
+import { ShoppingBag, User, ChevronDown } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
 import { useAuthStore } from '../../store/authStore';
 import { useCartStore } from '../../store/useCartStore';
 import { Link, useLocation } from 'react-router-dom';
+import { NavSearchModal } from './NavSearchModal';
 
 export function GlobalNav() {
   const { mobileMenuOpen, toggleMobileMenu } = useAppStore();
   const [activeMenu, setActiveMenu] = useState<any | null>(null);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const previousMenuRef = useRef<any | null>(null);
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -16,6 +20,12 @@ export function GlobalNav() {
     location.pathname === '/iphone' ||
     location.pathname === '/exploreIphone17promax' ||
     location.pathname === '/phone/exploreIphone17promax';
+
+  // Automatically close search and active menus on route change
+  useEffect(() => {
+    setIsSearchOpen(false);
+    setActiveMenu(null);
+  }, [location.pathname]);
 
   const items = useCartStore((state: any) => state.items);
   const cartItemCount = items.reduce((total: number, item: any) => total + item.quantity, 0);
@@ -54,6 +64,7 @@ export function GlobalNav() {
   const displayMenu = activeMenu || previousMenuRef.current;
 
   const handleMouseEnter = (item: any) => {
+    if (isSearchOpen) return; // Do not open mega menu while searching
     if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
     setActiveMenu(item);
   };
@@ -177,7 +188,7 @@ export function GlobalNav() {
     <>
       <nav
         className={`${isIphonePage ? 'fixed w-full' : 'sticky'} top-0 z-50 text-xs font-medium transition-colors duration-300 ${
-          activeMenu
+          activeMenu || isSearchOpen
             ? 'bg-white border-b border-neutral-200/60 text-[#1d1d1f]'
             : isIphonePage
               ? 'bg-transparent border-b border-transparent hover:bg-black/90 text-[#f5f5f7]'
@@ -186,7 +197,7 @@ export function GlobalNav() {
         onMouseLeave={handleMouseLeave}
       >
         <div className="max-w-[1300px] mx-auto px-4 lg:px-8 h-[52px] flex items-center justify-between">
-          <Link to="/" className="hover:opacity-80 transition-opacity flex-shrink-0" onClick={() => setActiveMenu(null)}>
+          <Link to="/" className="hover:opacity-80 transition-opacity flex-shrink-0" onClick={() => { setActiveMenu(null); setIsSearchOpen(false); }}>
             <img src="/images/logo.png" alt="Logo" className="h-7 w-auto object-contain" />
           </Link>
 
@@ -199,7 +210,7 @@ export function GlobalNav() {
                 <li key={item.id} className="h-full flex items-center" onMouseEnter={() => handleMouseEnter(item)}>
                   <Link
                     to={item.id === 'store' ? '/' : `/${item.slug}`}
-                    onClick={() => setActiveMenu(null)}
+                    onClick={() => { setActiveMenu(null); setIsSearchOpen(false); }}
                     className={`nav-glow-link h-full flex items-center relative transition-colors duration-300 ${
                       checkIsActive(item) ? 'text-[#22c55e]' : 'inherit'
                     }`}
@@ -219,8 +230,18 @@ export function GlobalNav() {
 
           {/* Icons & Mobile Toggle */}
           <div className="flex-shrink-0 flex items-center space-x-5">
-            <button className="nav-glow-link hover:text-[#22c55e] transition-colors" aria-label="Tìm kiếm">
-              <Search className="w-[18px] h-[18px]" />
+            <button
+              onClick={() => {
+                setActiveMenu(null);
+                setIsSearchOpen((prev) => !prev);
+              }}
+              className={`nav-glow-link transition-colors flex items-center justify-center ${
+                isSearchOpen ? 'text-[#22c55e]' : 'hover:text-[#22c55e]'
+              }`}
+              aria-label="Tìm kiếm"
+              aria-expanded={isSearchOpen}
+            >
+              <MorphIcon icon={isSearchOpen ? X : SearchIcon} size={18} strokeWidth={2} />
             </button>
             
             <div className="relative group">
@@ -266,10 +287,11 @@ export function GlobalNav() {
 
             <button
               onClick={toggleMobileMenu}
-              className="md:hidden hover:text-[#22c55e] transition-colors focus:outline-none"
+              className="md:hidden hover:text-[#22c55e] transition-colors focus:outline-none flex items-center justify-center p-1"
               aria-label="Toggle Navigation"
+              aria-expanded={mobileMenuOpen}
             >
-              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              <MorphIcon icon={mobileMenuOpen ? X : Menu} size={20} strokeWidth={2} />
             </button>
           </div>
         </div>
@@ -327,10 +349,12 @@ export function GlobalNav() {
             ))}
           </div>
         )}
+        {/* Search Modal Overlay */}
+        <NavSearchModal isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
       </nav>
 
-      {/* Backdrop overlay */}
-      {activeMenu && (
+      {/* Backdrop overlay for Mega Menu */}
+      {activeMenu && !isSearchOpen && (
         <div
           className="fixed inset-0 bg-black/40 z-40 transition-opacity duration-300"
           onClick={() => setActiveMenu(null)}

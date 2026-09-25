@@ -1,7 +1,6 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { DollarSign, ShoppingCart, Package, Users, User } from 'lucide-react';
-import { AppleHelloEnglishEffect } from '@/components/ui/AppleHelloEffect';
 import { AppleWatchWeatherFace } from '@/components/admin/widgets/AppleWatchWeatherFace';
 import { DoanhThuChart } from '@/components/admin/widgets/DoanhThuChart';
 import { KpiWidget } from '@/components/admin/widgets/KpiWidget';
@@ -14,7 +13,6 @@ import { useDashboardSummary } from '@/hooks/useDashboardSummary';
 import { useAuthStore } from '@/store/authStore';
 
 export const MainDashboardView = React.memo(function MainDashboardView({ onViewAll }: { onViewAll?: () => void }) {
-  const [showWelcomeText, setShowWelcomeText] = useState(false);
   const user = useAuthStore(state => state.user);
   const { data: summary, isLoading } = useDashboardSummary();
 

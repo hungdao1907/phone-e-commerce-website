@@ -1,18 +1,10 @@
-import { useReducedMotion } from 'motion/react';
-import { AppleHelloEnglishEffect } from '@/components/ui/AppleHelloEffect';
-
 type CinematicVideoSectionProps = {
-  helloReady?: boolean;
   id?: string;
 };
 
 export function CinematicVideoSection({
-  helloReady,
   id,
 }: CinematicVideoSectionProps) {
-  const shouldReduceMotion = useReducedMotion() === true;
-  const shouldShowHello = shouldReduceMotion || Boolean(helloReady);
-
   return (
     <section
       id={id}
@@ -31,18 +23,6 @@ export function CinematicVideoSection({
         <source src="/videos/qp_4928dbd3222df0c6.mp4" type="video/mp4" />
       </video>
       <div className="cinematic-video-section__overlay pointer-events-none absolute inset-0 z-[2]" />
-
-      <div
-        className="cinematic-video-section__hello-layer pointer-events-none absolute bottom-5 right-5 z-[3] sm:bottom-8 sm:right-8 lg:bottom-[clamp(1.75rem,3vw,3rem)] lg:right-[clamp(2rem,3vw,3.5rem)]"
-        aria-hidden="true"
-      >
-        {shouldShowHello && (
-          <AppleHelloEnglishEffect
-            className="block h-5 w-auto text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.42)]"
-            speed={shouldReduceMotion ? 0 : 0.8}
-          />
-        )}
-      </div>
     </section>
   );
 }

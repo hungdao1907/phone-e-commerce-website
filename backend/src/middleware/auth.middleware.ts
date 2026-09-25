@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'fallback_secret_key_for_development';
+import { JWT_SECRET } from '../config/auth';
 
 export interface AuthRequest extends Request {
   user?: any;
@@ -20,6 +20,6 @@ export const authenticateToken = (req: AuthRequest, res: Response, next: NextFun
     req.user = decoded;
     next();
   } catch (error) {
-    return res.status(403).json({ message: 'Token không hợp lệ hoặc đã hết hạn.' });
+    return res.status(401).json({ message: 'Token không hợp lệ hoặc đã hết hạn.' });
   }
 };
