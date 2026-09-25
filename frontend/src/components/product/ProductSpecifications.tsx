@@ -33,20 +33,32 @@ export function ProductSpecifications({
 
       <div className={`relative overflow-hidden transition-all duration-500 ease-in-out ${isExpanded ? 'max-h-[5000px]' : 'max-h-[400px]'}`}>
         
-        <div className="flex flex-col gap-8">
-          {specifications.map((group, groupIndex) => (
-            <div key={groupIndex} className="grid grid-cols-1 md:grid-cols-[200px_1fr] gap-4 md:gap-8 items-start border-b border-neutral-100 pb-8 last:border-0 last:pb-0">
-              <h3 className="font-semibold text-neutral-900 text-base md:sticky md:top-24">{group.title}</h3>
-              <div className="flex flex-col gap-4">
-                {group.items?.map((item, itemIndex) => (
-                  <div key={itemIndex} className="grid grid-cols-1 sm:grid-cols-[150px_1fr] gap-1 sm:gap-4">
-                    <span className="text-neutral-500 text-sm">{item.label}:</span>
-                    <span className="font-medium text-neutral-900 text-sm whitespace-pre-line">{item.value}</span>
-                  </div>
-                ))}
+        <div className="flex flex-col gap-6">
+          {specifications.map((group, groupIndex) => {
+            // Hide the group if there's no valid title (e.g. backward compatibility edge case where we don't want a generic title)
+            // But we still want to show the items. We can conditionally render the title.
+            const hideTitle = group.title === 'Thông số kỹ thuật' || !group.title;
+            
+            return (
+              <div key={groupIndex} className="flex flex-col md:flex-row gap-4 md:gap-8 items-start border-b border-neutral-100 pb-6 last:border-0 last:pb-0">
+                {!hideTitle && (
+                  <h3 className="font-semibold text-neutral-900 text-base md:w-[25%] md:shrink-0 md:sticky md:top-24">{group.title}</h3>
+                )}
+                <div className={`flex flex-col gap-3 ${hideTitle ? 'w-full' : 'w-full md:w-[75%]'}`}>
+                  {group.items?.map((item, itemIndex) => {
+                    // Ignore items that just say "Thông tin" as a fallback label
+                    if (item.label === 'Thông tin' && item.value === 'N/A') return null;
+                    return (
+                      <div key={itemIndex} className="flex flex-col sm:flex-row gap-1 sm:gap-4 items-start sm:items-baseline">
+                        <span className="text-neutral-500 text-sm sm:w-[150px] shrink-0 font-medium">{item.label}{item.label.endsWith(':') ? '' : ':'}</span>
+                        <span className="font-medium text-neutral-900 text-sm whitespace-pre-line flex-1">{item.value}</span>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         {!isExpanded && totalItemsCount > 5 && (
