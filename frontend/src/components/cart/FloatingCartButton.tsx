@@ -57,7 +57,7 @@ export function FloatingCartButton() {
           playing={isPlaying}
         />
         {cartItemCount > 0 && (
-          <span className={`absolute -top-2 -right-2 w-[22px] h-[22px] bg-red-500 text-white text-[11px] font-bold rounded-full flex items-center justify-center shadow-[0_2px_8px_rgba(239,68,68,0.4)] border border-red-400 transition-all duration-500 origin-bottom-left ${isPlaying ? 'scale-[1.3] -rotate-12' : 'scale-100 rotate-0'}`}>
+          <span className={`absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center shadow-[0_2px_8px_rgba(239,68,68,0.4)] border border-red-400 transition-all duration-300 origin-center ${isPlaying ? 'scale-110 -rotate-12' : 'scale-100 rotate-0'}`}>
             {cartItemCount}
           </span>
         )}
