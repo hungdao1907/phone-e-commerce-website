@@ -278,6 +278,7 @@ export function ProductList() {
   const [variantOptions, setVariantOptions] = useState<Record<string, VariantOption[]>>({});
   const [variantRows, setVariantRows] = useState<VariantFormRow[]>([]);
   const [specGroups, setSpecGroups] = useState<SpecGroup[]>([]);
+  const [specImage, setSpecImage] = useState<string>('');
 
   // Input states for variant tags
   const [attrInputs, setAttrInputs] = useState<Record<string, string>>({});
@@ -436,6 +437,31 @@ export function ProductList() {
     });
   };
 
+  const handleUploadSpecImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    try {
+      const uploadData = new FormData();
+      uploadData.append('image', file);
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/upload`, { method: 'POST', body: uploadData });
+      
+      if (!res.ok) throw new Error('Upload failed');
+      
+      const data = await res.json();
+      if (data.url || data.imageUrl) {
+        setSpecImage(data.url || data.imageUrl);
+      }
+    } catch (err) {
+      console.error('Error uploading spec image', err);
+      alert('Lỗi khi tải ảnh lên');
+    } finally {
+      setIsUploading(false);
+      if (e.target) e.target.value = '';
+    }
+  };
+
   // Open Create
   const handleOpenCreate = () => {
     setEditingProduct(null);
@@ -463,19 +489,26 @@ export function ProductList() {
     // Parse specifications: support both old flat format and new grouped format
     if (product.specifications) {
       const specs = product.specifications as any[];
-      if (specs.length > 0 && specs[0].title !== undefined) {
-        // New grouped format: [{title, items: [{label, value}]}]
-        setSpecGroups(specs.map((g: any) => ({
+      const imageSpec = specs.find(s => s.type === 'specImage');
+      if (imageSpec) {
+        setSpecImage(imageSpec.url || '');
+      } else {
+        setSpecImage('');
+      }
+
+      const realGroups = specs.filter(s => s.type !== 'specImage');
+      if (realGroups.length > 0 && realGroups[0].title !== undefined) {
+        setSpecGroups(realGroups.map((g: any) => ({
           title: g.title || '',
           items: (g.items || []).map((i: any) => ({ label: i.label || '', value: i.value || '' }))
         })));
       } else {
-        // Old flat format: [{key, value}] → convert to single group
-        const items = specs.map((s: any) => ({ label: s.key || s.label || '', value: s.value || '' }));
+        const items = realGroups.map((s: any) => ({ label: s.key || s.label || '', value: s.value || '' }));
         setSpecGroups(items.length > 0 ? [{ title: 'Thông số chung', items }] : []);
       }
     } else {
       setSpecGroups([]);
+      setSpecImage('');
     }
 
     const existingOptions: Record<string, Map<string, VariantOption>> = {};
@@ -605,10 +638,16 @@ export function ProductList() {
       const url = editingProduct ? `${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/products/${editingProduct.id}` : `${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/products`;
       const method = editingProduct ? 'PUT' : 'POST';
 
+      const finalSpecs = specGroups.filter(g => g.title || g.items.some(i => i.label));
+      let specsToSave: any[] = finalSpecs;
+      if (specImage) {
+        specsToSave = [...finalSpecs, { type: 'specImage', url: specImage }];
+      }
+
       const res = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({ ...formData, status: 'active', images: filteredImages, image: finalImage, specifications: specGroups.filter(g => g.title || g.items.some(i => i.label)), variants })
+        body: JSON.stringify({ ...formData, status: 'active', images: filteredImages, image: finalImage, specifications: specsToSave, variants })
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message);
@@ -893,6 +932,28 @@ export function ProductList() {
             {/* THÔNG SỐ KỸ THUẬT */}
             <div className="bg-[#1c1c1e] border border-white/10 rounded-2xl p-6 shadow-xl">
               <h3 className="text-sm font-semibold text-white/50 uppercase tracking-wider mb-4">THÔNG SỐ KỸ THUẬT</h3>
+              <div className="mb-6 bg-black/20 p-4 rounded-xl border border-white/10">
+                <label className="block text-xs font-medium text-white/50 mb-3">Ảnh minh họa (Bên trái)</label>
+                <div className="flex items-center gap-4">
+                  {specImage ? (
+                    <div className="relative w-24 h-24 rounded-lg overflow-hidden border border-white/10 group flex-shrink-0 bg-white/5">
+                      <img src={resolveMediaUrl(specImage)} alt="Spec" className="w-full h-full object-contain" />
+                      <button type="button" onClick={() => setSpecImage('')} className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                        <X className="w-5 h-5 text-white" />
+                      </button>
+                    </div>
+                  ) : (
+                    <label className="w-24 h-24 rounded-lg border-2 border-dashed border-white/20 hover:border-emerald-500/50 flex flex-col items-center justify-center cursor-pointer transition-colors bg-white/5 flex-shrink-0">
+                      <Upload className="w-5 h-5 text-white/40 mb-1" />
+                      <span className="text-[10px] text-white/40">Tải ảnh</span>
+                      <input type="file" className="hidden" accept="image/*" onChange={handleUploadSpecImage} disabled={isUploading} />
+                    </label>
+                  )}
+                  <div className="flex-1 text-xs text-white/40 leading-relaxed">
+                    Ảnh sẽ hiển thị ở khoảng trống bên trái của phần thông số trên giao diện người dùng. (Tỷ lệ dọc khuyên dùng).
+                  </div>
+                </div>
+              </div>
               <SpecificationGroupEditor
                 groups={specGroups}
                 onChange={setSpecGroups}

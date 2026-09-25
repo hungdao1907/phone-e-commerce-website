@@ -13,8 +13,13 @@ export function ProductSpecifications({
 }: ProductSpecificationsProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   
+  // Extract specImage if present
+  const specImageObj = specifications.find((s: any) => s.type === 'specImage');
+  const specImage = specImageObj ? (specImageObj as any).url : null;
+  const groups = specifications.filter((s: any) => s.type !== 'specImage');
+
   // Flatten items count to determine if we should show expand button
-  const totalItemsCount = specifications.reduce((acc, group) => acc + (group.items?.length || 0), 0);
+  const totalItemsCount = groups.reduce((acc, group) => acc + (group.items?.length || 0), 0);
 
   return (
     <section
@@ -31,10 +36,18 @@ export function ProductSpecifications({
         </h2>
       </div>
 
-      <div className={`relative overflow-hidden transition-all duration-500 ease-in-out ${isExpanded ? 'max-h-[5000px]' : 'max-h-[400px]'}`}>
+      <div className={`relative transition-all duration-500 ease-in-out ${isExpanded ? 'max-h-[5000px]' : 'max-h-[400px] overflow-hidden'}`}>
         
-        <div className="flex flex-col gap-6">
-          {specifications.map((group, groupIndex) => {
+        {specImage && (
+          <div className="hidden md:block absolute left-0 top-0 w-[45%] h-full pointer-events-none">
+            <div className="sticky top-24 pointer-events-auto">
+              <img src={specImage} alt="Specifications" className="w-full h-auto max-h-[60vh] rounded-2xl object-contain mix-blend-multiply" />
+            </div>
+          </div>
+        )}
+
+        <div className="flex flex-col gap-6 relative z-10">
+          {groups.map((group, groupIndex) => {
             // Hide the group if there's no valid title (e.g. backward compatibility edge case where we don't want a generic title)
             // But we still want to show the items. We can conditionally render the title.
             const hideTitle = group.title === 'Thông số kỹ thuật' || !group.title;
@@ -42,7 +55,7 @@ export function ProductSpecifications({
             return (
               <div key={groupIndex} className="flex flex-col md:flex-row gap-4 md:gap-8 items-start border-b border-white pb-6 last:border-0 last:pb-0">
                 {!hideTitle && (
-                  <h3 className="font-semibold text-neutral-900 text-base md:w-1/2 md:shrink-0 text-left md:text-right">{group.title}</h3>
+                  <h3 className="font-semibold text-neutral-900 text-base md:w-1/2 md:shrink-0 text-left md:text-right pr-4">{group.title}</h3>
                 )}
                 <div className={`flex flex-col gap-3 ${hideTitle ? 'w-full' : 'w-full md:w-1/2'}`}>
                   {group.items?.map((item, itemIndex) => {
