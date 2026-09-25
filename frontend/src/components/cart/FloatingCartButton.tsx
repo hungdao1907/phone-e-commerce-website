@@ -50,14 +50,14 @@ export function FloatingCartButton() {
       }}
       aria-label="Mở giỏ hàng"
     >
-      <div className="relative w-full h-full flex items-center justify-center pointer-events-none" style={{ width: '42px', height: '42px' }}>
+      <div className="relative flex items-center justify-center pointer-events-none w-8 h-8">
         <LottieIcon
           animationData={bagAnimation}
           loop={false}
           playing={isPlaying}
         />
         {cartItemCount > 0 && (
-          <span className="absolute top-1 right-1 w-5 h-5 bg-red-500 text-white text-[11px] font-bold rounded-full flex items-center justify-center shadow-[0_2px_8px_rgba(239,68,68,0.4)] border border-red-400">
+          <span className="absolute -top-2 -right-2 w-[22px] h-[22px] bg-red-500 text-white text-[11px] font-bold rounded-full flex items-center justify-center shadow-[0_2px_8px_rgba(239,68,68,0.4)] border border-red-400">
             {cartItemCount}
           </span>
         )}

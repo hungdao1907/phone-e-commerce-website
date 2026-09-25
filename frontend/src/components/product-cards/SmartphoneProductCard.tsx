@@ -302,13 +302,13 @@ export function BrandProductCard({ product, index = 0, accentColor }: BrandProdu
               disabled={isAdding}
               onMouseEnter={() => setIsHoveringLottie(true)}
               onMouseLeave={() => setIsHoveringLottie(false)}
-              className={`inline-flex items-center justify-center w-8 h-8 rounded-full ${isAdding ? 'bg-neutral-200 text-neutral-400' : 'bg-neutral-100 hover:bg-emerald-50 text-neutral-600 hover:text-emerald-600'} transition-colors duration-200 cursor-pointer shrink-0 overflow-hidden relative`}
+              className={`inline-flex items-center justify-center w-8 h-8 rounded-full ${isAdding ? 'bg-neutral-200 text-neutral-400' : 'bg-neutral-100 hover:bg-emerald-50 text-neutral-600 hover:text-emerald-600'} transition-colors duration-200 cursor-pointer shrink-0 relative`}
               aria-label="Thêm vào giỏ hàng"
             >
               {isAdding ? (
                 <div className="w-4 h-4 border-2 border-neutral-400 border-t-transparent rounded-full animate-spin" />
               ) : (
-                <div className="lottie-container w-full h-full flex items-center justify-center pointer-events-none absolute inset-0 pt-0.5" style={{ width: '150%', height: '150%' }}>
+                <div className="lottie-container w-5 h-5 flex items-center justify-center pointer-events-none">
                   <LottieIcon
                     animationData={cardBagAnimation}
                     loop={false}
