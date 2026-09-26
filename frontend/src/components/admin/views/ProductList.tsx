@@ -30,6 +30,7 @@ interface ProductVariant {
 interface Category {
   id: string;
   name: string;
+  slug?: string;
   children?: Category[];
 }
 
@@ -49,6 +50,7 @@ interface Product {
 }
 
 interface VariantFormRow {
+  id?: string;
   sku: string;
   price: string;
   salePrice: string;
@@ -90,8 +92,8 @@ const CATEGORY_CONFIGS: Record<string, { variants: string[], specifications: str
     specifications: ["CPU", "Mainboard", "RAM", "Ổ cứng", "VGA", "Nguồn", "Tản nhiệt", "Vỏ Case"]
   },
   watch: {
-    variants: ["Kích thước", "Màu sắc", "Dây đeo"],
-    specifications: ["Màn hình", "Chất liệu", "Đường kính mặt", "Pin", "Kết nối", "Kháng nước"]
+    variants: ["Màu sắc", "Kích thước", "Kết nối", "Chất liệu"],
+    specifications: ["Màn hình", "Chip", "Pin", "Chống nước", "Tương thích", "Tính năng sức khỏe"]
   },
   accessories: {
     variants: ["Loại", "Màu sắc"],
@@ -121,8 +123,9 @@ const PREDEFINED_OPTIONS: Record<string, string[]> = {
   "SSD": ["128GB", "256GB", "512GB", "1TB", "2TB"],
   "CPU": ["Core i3", "Core i5", "Core i7", "Core i9", "M1", "M2", "M3", "M4"],
   "VGA": ["RTX 3060", "RTX 4060", "RTX 4070", "RTX 4080", "RTX 4090"],
-  "Kết nối": ["Wi-Fi", "Wi-Fi + 5G", "Wi-Fi + Cellular", "Bluetooth"],
-  "Kích thước": ["40mm", "41mm", "44mm", "45mm", "49mm"]
+  "Kết nối": ["GPS", "Bluetooth", "LTE", "GPS + Cellular", "Wi-Fi"],
+  "Kích thước": ["40mm", "41mm", "42mm", "44mm", "45mm", "46mm", "47mm", "49mm"],
+  "Chất liệu": ["Nhôm", "Nhôm Armor", "Titan", "Thép không gỉ", "Hợp kim nhôm"]
 };
 
 export function ProductList() {
@@ -313,10 +316,10 @@ export function ProductList() {
   useEffect(() => { fetchProducts(); fetchCategories(); }, []);
 
   // Flatten Categories
-  const flattenCategories = (cats: Category[], depth = 0): { id: string; name: string; depth: number }[] => {
-    let result: { id: string; name: string; depth: number }[] = [];
+  const flattenCategories = (cats: Category[], depth = 0): { id: string; name: string; slug: string; depth: number }[] => {
+    let result: { id: string; name: string; slug: string; depth: number }[] = [];
     for (const cat of cats) {
-      result.push({ id: cat.id, name: cat.name, depth });
+      result.push({ id: cat.id, name: cat.name, slug: (cat as any).slug || '', depth });
       if (cat.children) {
         result = result.concat(flattenCategories(cat.children, depth + 1));
       }
@@ -329,17 +332,36 @@ export function ProductList() {
   // Category Configuration logic
   const currentCategoryConfigKey = useMemo(() => {
     if (!formData.categoryId) return 'default';
-    const catName = flatCats.find(c => c.id === formData.categoryId)?.name.toLowerCase() || '';
-    if (catName.includes('điện thoại') || catName.includes('iphone') || catName.includes('samsung')) return 'phone';
-    if (catName.includes('laptop') || catName.includes('macbook')) return 'laptop';
-    if (catName.includes('ipad') || catName.includes('máy tính bảng') || catName.includes('tablet')) return 'tablet';
-    if (catName.includes('pc') || catName.includes('máy tính để bàn')) return 'pc';
-    if (catName.includes('đồng hồ') || catName.includes('watch')) return 'watch';
-    if (catName.includes('phụ kiện') || catName.includes('tai nghe')) return 'accessories';
+    const cat = flatCats.find(c => c.id === formData.categoryId);
+    const catName = cat?.name.toLowerCase() || '';
+    const catSlug = cat?.slug.toLowerCase() || '';
+    if (catSlug === 'apple-watch' || catSlug === 'samsung-watch' || catSlug === 'xiaomi-watch' || catSlug.includes('watch') || catSlug.includes('dong-ho') || catSlug.includes('ong-ho') || catName.includes('đồng hồ') || catName.includes('watch')) return 'watch';
+    if (catName.includes('điện thoại') || catName.includes('iphone') || catName.includes('samsung') || catSlug.includes('phone') || catSlug.includes('iphone')) return 'phone';
+    if (catName.includes('laptop') || catName.includes('macbook') || catSlug.includes('laptop') || catSlug.includes('macbook')) return 'laptop';
+    if (catName.includes('ipad') || catName.includes('máy tính bảng') || catName.includes('tablet') || catSlug.includes('tablet') || catSlug.includes('ipad')) return 'tablet';
+    if (catName.includes('pc') || catName.includes('máy tính để bàn') || catSlug.includes('pc')) return 'pc';
+    if (catName.includes('phụ kiện') || catName.includes('tai nghe') || catSlug.includes('phu-kien')) return 'accessories';
     return 'default';
   }, [formData.categoryId, flatCats]);
 
   const currentConfig = CATEGORY_CONFIGS[currentCategoryConfigKey];
+
+  // Select category with intelligent brand suggestion
+  const handleSelectCategory = (catId: string) => {
+    const cat = flatCats.find(c => c.id === catId);
+    const catSlug = cat?.slug.toLowerCase() || '';
+    let autoBrand = formData.brand;
+    if (catSlug === 'apple-watch' || catSlug === 'iphone' || catSlug === 'ipad' || catSlug === 'macbook') {
+      if (!formData.brand || formData.brand.toLowerCase() !== 'apple') autoBrand = 'Apple';
+    } else if (catSlug === 'samsung-watch' || catSlug.includes('samsung')) {
+      if (!formData.brand || formData.brand.toLowerCase() !== 'samsung') autoBrand = 'Samsung';
+    } else if (catSlug === 'xiaomi-watch' || catSlug.includes('xiaomi')) {
+      if (!formData.brand || formData.brand.toLowerCase() !== 'xiaomi') autoBrand = 'Xiaomi';
+    }
+    setFormData(prev => ({ ...prev, categoryId: catId, brand: autoBrand }));
+    setIsCatDropdownOpen(false);
+    setCatSearch('');
+  };
 
   // Pre-fill Specifications & Reset Variants based on Category
   useEffect(() => {
@@ -524,14 +546,14 @@ export function ProductList() {
     const existingOptions: Record<string, Map<string, VariantOption>> = {};
     
     product.variants.forEach(v => {
-      Object.entries(v.attributes).forEach(([attrKey, attrValue]) => {
+      Object.entries(v.attributes || {}).forEach(([attrKey, attrValue]) => {
         if (!existingOptions[attrKey]) {
           existingOptions[attrKey] = new Map();
         }
         if (!existingOptions[attrKey].has(attrValue) || (attrKey === 'Màu sắc' && v.image)) {
            existingOptions[attrKey].set(attrValue, {
              name: attrValue,
-             price: attrKey === 'Dung lượng' ? v.price.toString() : undefined, // Keep price mapping for Dung lượng for backwards compatibility if needed
+             price: attrKey === 'Dung lượng' ? v.price.toString() : undefined,
              hex: attrKey === 'Màu sắc' ? (v.colorCode || '#ffffff') : undefined,
              image: attrKey === 'Màu sắc' ? (v.image || '') : undefined
            });
@@ -546,11 +568,12 @@ export function ProductList() {
     setVariantOptions(newVariantOptions);
 
     setVariantRows(product.variants.map(v => ({
+      id: v.id,
       sku: v.sku,
       price: v.price.toString(),
       salePrice: v.salePrice ? v.salePrice.toString() : '',
       stock: v.stock.toString(),
-      attributes: v.attributes as Record<string, string>,
+      attributes: (v.attributes || {}) as Record<string, string>,
       colorCode: v.colorCode || '',
       image: v.image || ''
     })));
@@ -572,7 +595,17 @@ export function ProductList() {
     const hasAnyOption = keys.some(key => variantOptions[key] && variantOptions[key].length > 0);
     
     if (!hasAnyOption) {
-      setVariantRows([{ sku: formData.name ? generateSkuPart(formData.name.substring(0, 8)) : 'DEFAULT', price: '0', salePrice: '', stock: '0', attributes: {}, colorCode: '', image: '' }]);
+      const defaultExisting = variantRows[0];
+      setVariantRows([{
+        id: defaultExisting?.id,
+        sku: defaultExisting?.sku || (formData.name ? generateSkuPart(formData.name.substring(0, 8)) : 'DEFAULT'),
+        price: defaultExisting?.price || '0',
+        salePrice: defaultExisting?.salePrice || '',
+        stock: defaultExisting?.stock || '0',
+        attributes: {},
+        colorCode: '',
+        image: ''
+      }]);
       return;
     }
 
@@ -593,8 +626,9 @@ export function ProductList() {
         const skuParts = [baseSku, ...Object.values(currentAttr).map(generateSkuPart)];
 
         return [{
+          id: existing?.id,
           sku: existing?.sku || skuParts.join('-'),
-          price: existing?.price || currentPriceMap.toString() || '0',
+          price: existing?.price || (currentPriceMap ? currentPriceMap.toString() : '0'),
           salePrice: existing?.salePrice || '',
           stock: existing?.stock || '0',
           attributes: currentAttr,
@@ -623,27 +657,75 @@ export function ProductList() {
     setVariantRows(newVariants);
   };
 
+  const handleAddManualVariant = () => {
+    const baseSku = formData.name ? generateSkuPart(formData.name.substring(0, 4)) : 'SKU';
+    const newSku = `${baseSku}-${Date.now().toString().slice(-4)}`;
+    setVariantRows(prev => [
+      ...prev,
+      {
+        sku: newSku,
+        price: '0',
+        salePrice: '',
+        stock: '0',
+        attributes: {},
+        colorCode: '',
+        image: ''
+      }
+    ]);
+  };
+
   // Submit Form
   const handleSubmit = async () => {
     setIsSubmitting(true);
     setErrorMsg('');
 
     try {
+      if (!formData.name.trim()) throw new Error("Vui lòng nhập tên sản phẩm.");
       if (!formData.categoryId) throw new Error("Vui lòng chọn danh mục.");
-      if (variantRows.length === 0) throw new Error("Vui lòng tạo ít nhất 1 biến thể sản phẩm.");
+      if (variantRows.length === 0) throw new Error("Sản phẩm cần ít nhất 1 biến thể.");
+
+      // Check variant uniqueness and fields
+      const skuSet = new Set<string>();
+      for (let i = 0; i < variantRows.length; i++) {
+        const v = variantRows[i];
+        const trimmedSku = v.sku.trim();
+        if (!trimmedSku) throw new Error(`Vui lòng nhập SKU cho biến thể dòng ${i + 1}.`);
+        if (skuSet.has(trimmedSku)) throw new Error(`Mã SKU "${trimmedSku}" bị trùng lặp.`);
+        skuSet.add(trimmedSku);
+
+        const price = Number(v.price);
+        if (isNaN(price) || price < 0) throw new Error(`Giá bán của biến thể "${trimmedSku}" không hợp lệ.`);
+        if (v.salePrice && v.salePrice.trim() !== '') {
+          const sp = Number(v.salePrice);
+          if (isNaN(sp) || sp < 0) throw new Error(`Giá khuyến mãi của biến thể "${trimmedSku}" không hợp lệ.`);
+          if (sp > price) throw new Error(`Giá khuyến mãi của biến thể "${trimmedSku}" không được lớn hơn giá bán.`);
+        }
+        const stock = parseInt(v.stock, 10);
+        if (isNaN(stock) || stock < 0) throw new Error(`Tồn kho của biến thể "${trimmedSku}" không hợp lệ.`);
+      }
 
       const filteredImages = formData.images.filter(img => img);
       const finalImage = filteredImages.length > 0 ? filteredImages[0] : '';
 
-      const variants = variantRows.map(v => ({
-        sku: v.sku,
-        price: Number(v.price),
-        salePrice: null,
-        stock: Number(v.stock),
-        attributes: v.attributes,
-        colorCode: v.colorCode || null,
-        image: v.image || null
-      }));
+      const variants = variantRows.map(v => {
+        const normalizedAttrs: Record<string, string> = {};
+        Object.entries(v.attributes || {}).forEach(([k, val]) => {
+          if (k && val !== undefined && val !== null && String(val).trim()) {
+            normalizedAttrs[k.trim()] = String(val).trim();
+          }
+        });
+
+        return {
+          id: v.id,
+          sku: v.sku.trim(),
+          price: Number(v.price),
+          salePrice: v.salePrice && v.salePrice.trim() !== '' ? Number(v.salePrice) : null,
+          stock: Math.max(0, parseInt(v.stock, 10) || 0),
+          attributes: normalizedAttrs,
+          colorCode: v.colorCode ? v.colorCode.trim() : null,
+          image: v.image || null
+        };
+      });
 
       const url = editingProduct ? `${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/products/${editingProduct.id}` : `${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/products`;
       const method = editingProduct ? 'PUT' : 'POST';
@@ -657,10 +739,20 @@ export function ProductList() {
       const res = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({ ...formData, status: 'active', images: filteredImages, image: finalImage, specifications: specsToSave, variants })
+        body: JSON.stringify({
+          ...formData,
+          name: formData.name.trim(),
+          brand: formData.brand.trim() || null,
+          description: formData.description.trim() || null,
+          status: formData.status || 'active',
+          images: filteredImages,
+          image: finalImage,
+          specifications: specsToSave,
+          variants
+        })
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.message);
+      if (!res.ok) throw new Error(data.message || 'Lỗi khi lưu sản phẩm');
 
       await fetchProducts();
       setView('list');
@@ -729,7 +821,7 @@ export function ProductList() {
                           </div>
                           <div className="overflow-y-auto custom-scrollbar p-1">
                             {filteredCats.map(c => (
-                              <div key={c.id} onClick={() => { setFormData({...formData, categoryId: c.id}); setIsCatDropdownOpen(false); setCatSearch(''); }} className={cn("px-3 py-2 text-sm rounded-lg cursor-pointer hover:bg-white/10 flex items-center gap-2", formData.categoryId === c.id ? "bg-emerald-500/10 text-emerald-400" : "text-white/80")} style={{ paddingLeft: `${(c.depth * 12) + 12}px` }}>
+                              <div key={c.id} onClick={() => handleSelectCategory(c.id)} className={cn("px-3 py-2 text-sm rounded-lg cursor-pointer hover:bg-white/10 flex items-center gap-2", formData.categoryId === c.id ? "bg-emerald-500/10 text-emerald-400" : "text-white/80")} style={{ paddingLeft: `${(c.depth * 12) + 12}px` }}>
                                 {c.depth > 0 && <ChevronRight className="w-3 h-3 text-white/30" />} {c.name}
                               </div>
                             ))}
@@ -793,7 +885,10 @@ export function ProductList() {
 
             {/* BIẾN THỂ (VARIANTS) */}
             <div className="bg-[#1c1c1e] border border-white/10 rounded-2xl p-6">
-              <h3 className="text-sm font-semibold text-white/50 uppercase tracking-wider mb-4">BIẾN THỂ</h3>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-sm font-semibold text-white/50 uppercase tracking-wider">BIẾN THỂ</h3>
+                <span className="text-xs text-emerald-400 font-medium">({variantRows.length} biến thể)</span>
+              </div>
               
               <div className="space-y-6">
                 {/* Dynamic Variant tags based on Category */}
@@ -896,10 +991,13 @@ export function ProductList() {
                   );
                 })}
 
-                {/* Generate Button */}
-                <div className="pt-2">
-                  <button type="button" onClick={handleGenerateVariants} className="h-10 px-4 rounded-xl font-medium bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 transition-colors flex items-center gap-2 border border-emerald-500/20 text-sm w-full justify-center shadow-sm">
+                {/* Generate and Add Buttons */}
+                <div className="pt-2 flex items-center gap-3">
+                  <button type="button" onClick={handleGenerateVariants} className="h-10 px-4 rounded-xl font-medium bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 transition-colors flex items-center gap-2 border border-emerald-500/20 text-sm flex-1 justify-center shadow-sm">
                     <Zap className="w-4 h-4 fill-emerald-400" /> Sinh biến thể tự động
+                  </button>
+                  <button type="button" onClick={handleAddManualVariant} className="h-10 px-4 rounded-xl font-medium bg-white/5 text-white/80 hover:bg-white/10 transition-colors flex items-center gap-2 border border-white/10 text-sm justify-center">
+                    <Plus className="w-4 h-4" /> Thêm biến thể
                   </button>
                 </div>
 
@@ -910,20 +1008,31 @@ export function ProductList() {
                       <thead className="bg-white/5 text-xs text-white/50 uppercase border-b border-white/10">
                         <tr>
                           <th className="px-4 py-3 font-medium">Variant</th>
-                          <th className="px-4 py-3 font-medium">SKU</th>
-                          <th className="px-4 py-3 font-medium">Giá bán (₫)</th>
-                          <th className="px-4 py-3 font-medium w-24">Tồn kho</th>
+                          <th className="px-4 py-3 font-medium">SKU *</th>
+                          <th className="px-4 py-3 font-medium">Giá bán (₫) *</th>
+                          <th className="px-4 py-3 font-medium">Giá KM (₫)</th>
+                          <th className="px-4 py-3 font-medium w-24">Tồn kho *</th>
                           <th className="px-2 py-3"></th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-white/5">
                         {variantRows.map((row, idx) => {
-                          const variantName = Object.values(row.attributes).filter(Boolean).join(' / ') || 'Mặc định';
+                          const variantName = Object.values(row.attributes || {}).filter(Boolean).join(' / ') || 'Mặc định';
                           return (
                             <tr key={idx} className="hover:bg-white/5 transition-colors">
-                              <td className="px-4 py-3 font-medium text-white/90">{variantName}</td>
+                              <td className="px-4 py-3 font-medium text-white/90">
+                                <div className="flex items-center gap-2">
+                                  {row.image ? (
+                                    <img src={resolveMediaUrl(row.image)} alt="v" className="w-6 h-6 object-cover rounded border border-white/10" />
+                                  ) : row.colorCode ? (
+                                    <span className="w-4 h-4 rounded-full border border-white/20 inline-block shrink-0" style={{ backgroundColor: row.colorCode }} />
+                                  ) : null}
+                                  <span>{variantName}</span>
+                                </div>
+                              </td>
                               <td className="px-4 py-2"><input type="text" value={row.sku} onChange={e => { const r = [...variantRows]; r[idx].sku = e.target.value; setVariantRows(r); }} className="w-full bg-transparent border-b border-transparent focus:border-emerald-500 px-1 outline-none text-white/80" placeholder="SKU" /></td>
                               <td className="px-4 py-2"><input type="number" value={row.price} onChange={e => { const r = [...variantRows]; r[idx].price = e.target.value; setVariantRows(r); }} className="w-24 bg-transparent border-b border-transparent focus:border-emerald-500 px-1 outline-none text-white/80" placeholder="0" /></td>
+                              <td className="px-4 py-2"><input type="number" value={row.salePrice || ''} onChange={e => { const r = [...variantRows]; r[idx].salePrice = e.target.value; setVariantRows(r); }} className="w-24 bg-transparent border-b border-transparent focus:border-emerald-500 px-1 outline-none text-emerald-400 placeholder:text-white/30" placeholder="Trống" /></td>
                               <td className="px-4 py-2"><input type="number" value={row.stock} onChange={e => { const r = [...variantRows]; r[idx].stock = e.target.value; setVariantRows(r); }} className="w-16 h-8 bg-white/5 border border-white/10 rounded px-2 outline-none focus:border-emerald-500" placeholder="0" /></td>
                               <td className="px-2 py-2 text-right"><button type="button" onClick={() => setVariantRows(variantRows.filter((_, i) => i !== idx))} className="p-1.5 text-white/30 hover:text-red-400 rounded"><Trash2 className="w-4 h-4" /></button></td>
                             </tr>

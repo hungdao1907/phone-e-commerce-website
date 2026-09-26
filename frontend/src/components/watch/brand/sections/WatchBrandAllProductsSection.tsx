@@ -1,5 +1,4 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { motion, useScroll, useTransform } from 'framer-motion';
 import {
   ArrowDownNarrowWide,
   ArrowUpNarrowWide,
@@ -7,7 +6,7 @@ import {
   Sparkles,
   Star,
   Filter,
-  AlertCircle
+  AlertCircle,
 } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 import { useQuery, keepPreviousData } from '@tanstack/react-query';
@@ -20,8 +19,14 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
 interface WatchBrandAllProductsSectionProps {
   config: WatchBrandConfig;
-  products: WatchBrandModel[]; // Kept for compatibility
+  products: WatchBrandModel[]; // Kept for prop contract
 }
+
+const BRAND_FILTER_MAPPING: Record<string, { categorySlug: string; brandName: string }> = {
+  'apple-watch': { categorySlug: 'apple-watch', brandName: 'Apple' },
+  'samsung': { categorySlug: 'samsung-watch', brandName: 'Samsung' },
+  'xiaomi': { categorySlug: 'xiaomi-watch', brandName: 'Xiaomi' },
+};
 
 const PRODUCT_FILTERS = [
   { id: 'popular', label: 'Phổ biến', icon: Star, sortValue: 'newest' },
@@ -35,21 +40,16 @@ export function WatchBrandAllProductsSection({ config }: WatchBrandAllProductsSe
   const [searchParams, setSearchParams] = useSearchParams();
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
-  const categorySlug = 'watch';
-  let brandSlug = config.id.toLowerCase();
-  if (brandSlug === 'ipad') brandSlug = 'apple';
-  else if (brandSlug === 'samsung-watch') brandSlug = 'samsung';
-  else if (brandSlug === 'xiaomi-watch') brandSlug = 'xiaomi';
+  const brandInfo = BRAND_FILTER_MAPPING[config.id] || { categorySlug: 'watch', brandName: config.label };
+  const categorySlug = brandInfo.categorySlug;
+  const brandName = brandInfo.brandName;
 
   const activeSort = searchParams.get('sort') || 'newest';
 
   const fetchFilters = async () => {
-    const params = new URLSearchParams(searchParams);
-    params.delete('page');
-    params.delete('limit');
-    params.delete('sort');
+    const params = new URLSearchParams();
     params.set('category', categorySlug);
-    params.set('brand', brandSlug);
+    params.set('brand', brandName);
     
     const res = await fetch(`${API_URL}/api/products/filters?${params.toString()}`);
     if (!res.ok) throw new Error('Failed to fetch filters');
@@ -59,7 +59,7 @@ export function WatchBrandAllProductsSection({ config }: WatchBrandAllProductsSe
   const fetchProducts = async () => {
     const params = new URLSearchParams(searchParams);
     params.set('category', categorySlug);
-    params.set('brand', brandSlug);
+    params.set('brand', brandName);
 
     const res = await fetch(`${API_URL}/api/products/search?${params.toString()}`);
     if (!res.ok) throw new Error('Failed to fetch products');
@@ -67,13 +67,13 @@ export function WatchBrandAllProductsSection({ config }: WatchBrandAllProductsSe
   };
 
   const { data: filtersData, isLoading: isLoadingFilters } = useQuery({
-    queryKey: ['productsFilters', categorySlug, brandSlug, searchParams.toString()],
+    queryKey: ['productsFilters', categorySlug, brandName],
     queryFn: fetchFilters,
     placeholderData: keepPreviousData,
   });
 
   const { data: productsData, isLoading: isLoadingProducts } = useQuery({
-    queryKey: ['productsSearch', categorySlug, brandSlug, searchParams.toString()],
+    queryKey: ['productsSearch', categorySlug, brandName, searchParams.toString()],
     queryFn: fetchProducts,
     placeholderData: keepPreviousData,
   });
@@ -87,10 +87,17 @@ export function WatchBrandAllProductsSection({ config }: WatchBrandAllProductsSe
   const handlePageChange = (page: number) => {
     searchParams.set('page', page.toString());
     if (containerRef.current) {
-       const topPos = containerRef.current.getBoundingClientRect().top + window.scrollY - 100;
-       window.scrollTo({ top: topPos, behavior: 'smooth' });
+      const topPos = containerRef.current.getBoundingClientRect().top + window.scrollY - 100;
+      window.scrollTo({ top: topPos, behavior: 'smooth' });
     }
     setSearchParams(searchParams);
+  };
+
+  const handleResetFilters = () => {
+    const params = new URLSearchParams();
+    const sort = searchParams.get('sort');
+    if (sort) params.set('sort', sort);
+    setSearchParams(params);
   };
 
   useEffect(() => {
@@ -98,6 +105,9 @@ export function WatchBrandAllProductsSection({ config }: WatchBrandAllProductsSe
     else document.body.style.overflow = '';
     return () => { document.body.style.overflow = ''; };
   }, [isMobileSidebarOpen]);
+
+  const totalPages = productsData?.totalPages || productsData?.pagination?.totalPages || 1;
+  const currentPage = productsData?.page || productsData?.pagination?.page || 1;
 
   return (
     <section
@@ -119,7 +129,7 @@ export function WatchBrandAllProductsSection({ config }: WatchBrandAllProductsSe
           <p className="mt-4 text-base leading-relaxed text-neutral-600 sm:text-lg">{config.allProductsDescription}</p>
         </header>
 
-        {/* Quick Filter Chips (Restored) */}
+        {/* Quick Filter Chips */}
         <div className="mt-12 mb-10 overflow-x-auto pb-2 no-scrollbar">
           <div
             className="flex w-max min-w-full justify-start gap-3 sm:justify-center items-center"
@@ -127,7 +137,7 @@ export function WatchBrandAllProductsSection({ config }: WatchBrandAllProductsSe
             aria-label={'Lọc sản phẩm ' + config.label}
           >
             <button
-              className="md:hidden flex items-center gap-2 bg-white px-5 py-3 rounded-full border border-neutral-200 text-base font-medium shadow-sm transition-all hover:border-neutral-300"
+              className="md:hidden flex items-center gap-2 bg-white px-5 py-3 rounded-full border border-neutral-200 text-base font-medium shadow-sm transition-all hover:border-neutral-300 cursor-pointer"
               onClick={() => setIsMobileSidebarOpen(true)}
             >
               <Filter className="w-5 h-5" />
@@ -144,7 +154,7 @@ export function WatchBrandAllProductsSection({ config }: WatchBrandAllProductsSe
                   aria-pressed={isActive}
                   onClick={() => handleSortChange(filter.sortValue)}
                   className={
-                    'inline-flex items-center gap-2.5 whitespace-nowrap rounded-full border px-5 py-3 text-base font-medium transition-all ' +
+                    'inline-flex items-center gap-2.5 whitespace-nowrap rounded-full border px-5 py-3 text-base font-medium transition-all cursor-pointer ' +
                     (isActive
                       ? 'border-[var(--watch-accent)] bg-white text-[var(--watch-accent)] shadow-[0_4px_14px_rgba(15,23,42,0.08)] font-bold'
                       : 'border-neutral-200 bg-white text-neutral-800 hover:border-neutral-300')
@@ -172,7 +182,7 @@ export function WatchBrandAllProductsSection({ config }: WatchBrandAllProductsSe
             `}>
               <div className="md:hidden flex items-center justify-between p-4 bg-white border-b border-neutral-200 sticky top-0 z-10">
                 <h2 className="font-bold text-lg">Bộ lọc sản phẩm</h2>
-                <button onClick={() => setIsMobileSidebarOpen(false)} className="p-2 bg-neutral-100 rounded-full">
+                <button onClick={() => setIsMobileSidebarOpen(false)} className="p-2 bg-neutral-100 rounded-full cursor-pointer">
                   <span className="sr-only">Close</span>
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
                 </button>
@@ -183,10 +193,11 @@ export function WatchBrandAllProductsSection({ config }: WatchBrandAllProductsSe
                   isLoading={isLoadingFilters} 
                   hideCategoryAndBrand={true} 
                   categorySlug={categorySlug}
+                  isWatch={true}
                 />
               </div>
               <div className="md:hidden sticky bottom-0 p-4 bg-white border-t border-neutral-200">
-                <button onClick={() => setIsMobileSidebarOpen(false)} className="w-full bg-[var(--watch-accent)] text-white font-bold py-3 rounded-xl">
+                <button onClick={() => setIsMobileSidebarOpen(false)} className="w-full bg-[var(--watch-accent)] text-white font-bold py-3 rounded-xl cursor-pointer">
                   Xem kết quả
                 </button>
               </div>
@@ -201,10 +212,10 @@ export function WatchBrandAllProductsSection({ config }: WatchBrandAllProductsSe
               <span className="text-xs sm:text-sm font-bold text-neutral-600">
                 {isLoadingProducts ? 'Đang tải...' : `Tìm thấy ${productsData?.total || 0} sản phẩm phù hợp`}
               </span>
-              {Array.from(searchParams.keys()).length > 0 && (
+              {Array.from(searchParams.keys()).some(k => !['page', 'limit', 'sort'].includes(k)) && (
                 <button
                   type="button"
-                  onClick={() => setSearchParams(new URLSearchParams())}
+                  onClick={handleResetFilters}
                   className="text-xs font-bold text-neutral-900 hover:underline cursor-pointer"
                 >
                   Đặt lại tất cả bộ lọc
@@ -225,62 +236,42 @@ export function WatchBrandAllProductsSection({ config }: WatchBrandAllProductsSe
                 </div>
                 <h3 className="text-xl font-bold text-neutral-900 mb-2">Không tìm thấy sản phẩm</h3>
                 <p className="text-neutral-500 max-w-md mx-auto mb-6">
-                  Rất tiếc, không có sản phẩm nào khớp với các bộ lọc bạn đã chọn. Vui lòng thử xóa bớt bộ lọc để xem thêm kết quả.
+                  Không có sản phẩm phù hợp với bộ lọc hiện tại. Vui lòng thử xóa bớt bộ lọc để xem thêm kết quả.
                 </p>
                 <button 
-                  onClick={() => setSearchParams(new URLSearchParams())}
-                  className="bg-neutral-900 text-white px-6 py-2.5 rounded-full font-semibold hover:bg-neutral-800 transition-colors"
+                  type="button"
+                  onClick={handleResetFilters}
+                  className="bg-[var(--watch-accent)] text-white text-sm font-bold px-6 py-2.5 rounded-full hover:opacity-90 transition-opacity cursor-pointer"
                 >
                   Xóa tất cả bộ lọc
                 </button>
               </div>
             ) : (
-              <>
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-                  {productsData?.data?.map((product: any) => (
-                    <FilteredProductCard 
-                      key={product.id} 
-                      product={product} 
-                      categorySlug={categorySlug} 
-                    />
-                  ))}
-                </div>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+                {productsData?.data?.map((product: any) => (
+                  <FilteredProductCard key={product.id} product={product} categorySlug={categorySlug} />
+                ))}
+              </div>
+            )}
 
-                {/* Pagination */}
-                {productsData?.totalPages > 1 && (
-                  <div className="flex justify-center items-center gap-2 mt-12">
-                    <button 
-                      disabled={productsData.page === 1}
-                      onClick={() => handlePageChange(productsData.page - 1)}
-                      className="px-4 py-2 border border-neutral-200 rounded-full text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed hover:bg-white transition-colors"
-                    >
-                      Trước
-                    </button>
-                    <div className="flex gap-1">
-                      {Array.from({ length: productsData.totalPages }).map((_, idx) => (
-                        <button
-                          key={idx}
-                          onClick={() => handlePageChange(idx + 1)}
-                          className={`w-10 h-10 rounded-full text-sm font-bold flex items-center justify-center transition-colors ${
-                            productsData.page === idx + 1 
-                              ? 'bg-[var(--watch-accent)] text-white' 
-                              : 'bg-transparent text-neutral-600 hover:bg-neutral-200'
-                          }`}
-                        >
-                          {idx + 1}
-                        </button>
-                      ))}
-                    </div>
-                    <button 
-                      disabled={productsData.page === productsData.totalPages}
-                      onClick={() => handlePageChange(productsData.page + 1)}
-                      className="px-4 py-2 border border-neutral-200 rounded-full text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed hover:bg-white transition-colors"
-                    >
-                      Sau
-                    </button>
-                  </div>
-                )}
-              </>
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="mt-12 flex items-center justify-center gap-2">
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                  <button
+                    key={page}
+                    type="button"
+                    onClick={() => handlePageChange(page)}
+                    className={`h-10 w-10 rounded-full text-sm font-bold transition-all cursor-pointer ${
+                      (currentPage === page)
+                        ? 'bg-[var(--watch-accent)] text-white shadow-sm'
+                        : 'bg-white text-neutral-700 hover:bg-neutral-100 border border-neutral-200'
+                    }`}
+                  >
+                    {page}
+                  </button>
+                ))}
+              </div>
             )}
           </div>
         </div>
@@ -288,3 +279,5 @@ export function WatchBrandAllProductsSection({ config }: WatchBrandAllProductsSe
     </section>
   );
 }
+
+export default WatchBrandAllProductsSection;

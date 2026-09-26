@@ -8,9 +8,10 @@ interface SidebarFilterProps {
   isLoading: boolean;
   hideCategoryAndBrand?: boolean;
   categorySlug?: string;
+  isWatch?: boolean;
 }
 
-export function SidebarFilter({ filters, isLoading, hideCategoryAndBrand, categorySlug }: SidebarFilterProps) {
+export function SidebarFilter({ filters, isLoading, hideCategoryAndBrand, categorySlug, isWatch }: SidebarFilterProps) {
   const [searchParams, setSearchParams] = useSearchParams();
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
     category: true,
@@ -22,7 +23,11 @@ export function SidebarFilter({ filters, isLoading, hideCategoryAndBrand, catego
     gpu: true,
     screenSize: true,
     colors: true,
+    color: true,
     camera: true,
+    size: true,
+    connectivity: true,
+    material: true,
   });
 
   const toggleSection = (section: string) => {
@@ -30,7 +35,11 @@ export function SidebarFilter({ filters, isLoading, hideCategoryAndBrand, catego
   };
 
   const handleFilterChange = (key: string, value: string) => {
-    const currentValues = searchParams.get(key)?.split(',') || [];
+    if (key === 'color' && searchParams.has('colors')) {
+      searchParams.delete('colors');
+    }
+
+    const currentValues = searchParams.get(key)?.split(',').filter(Boolean) || [];
     let newValues = [...currentValues];
     
     // For single select items like category
@@ -77,14 +86,17 @@ export function SidebarFilter({ filters, isLoading, hideCategoryAndBrand, catego
   };
 
   const clearFilters = () => {
-    // Keep category if it exists
+    // Keep category and sort if they exist
     const cat = searchParams.get('category');
-    searchParams.forEach((_, key) => searchParams.delete(key));
+    const sort = searchParams.get('sort');
+    Array.from(searchParams.keys()).forEach(key => searchParams.delete(key));
     if (cat) searchParams.set('category', cat);
+    if (sort) searchParams.set('sort', sort);
     setSearchParams(searchParams);
   };
 
   const currentCategory = categorySlug || searchParams.get('category') || '';
+  const isWatchMode = Boolean(isWatch || currentCategory.includes('watch') || currentCategory === 'dong-ho-thong-minh');
   const isPhone = ['phone', 'iphone', 'samsung', 'xiaomi', 'oppo'].includes(currentCategory);
   const isLaptop = ['laptop', 'macbook', 'asus', 'lenovo'].includes(currentCategory);
   
@@ -92,13 +104,16 @@ export function SidebarFilter({ filters, isLoading, hideCategoryAndBrand, catego
   const FilterSection = ({ title, sectionKey, options }: { title: string, sectionKey: string, options: string[] }) => {
     if (!options || options.length === 0) return null;
     const isExpanded = expandedSections[sectionKey] !== false;
-    const selectedValues = searchParams.get(sectionKey)?.split(',') || [];
+    const rawValues = searchParams.get(sectionKey)?.split(',') || [];
+    const legacyValues = sectionKey === 'color' ? (searchParams.get('colors')?.split(',') || []) : [];
+    const selectedValues = [...rawValues, ...legacyValues].filter(Boolean);
 
     return (
       <div className="border-b border-neutral-200 py-4">
         <button 
           className="flex items-center justify-between w-full text-left"
           onClick={() => toggleSection(sectionKey)}
+          type="button"
         >
           <span className="text-sm font-bold text-neutral-900">{title}</span>
           {isExpanded ? <ChevronUp className="w-4 h-4 text-neutral-500" /> : <ChevronDown className="w-4 h-4 text-neutral-500" />}
@@ -200,11 +215,15 @@ export function SidebarFilter({ filters, isLoading, hideCategoryAndBrand, catego
     );
   };
 
+  const minPriceBound = filters?.priceRange?.min !== undefined && filters?.priceRange?.min > 0 ? filters.priceRange.min : 0;
+  const maxPriceBound = filters?.priceRange?.max ? filters.priceRange.max : 50000000;
+
   return (
     <div className="w-full bg-white rounded-xl shadow-sm border border-neutral-100 p-5 sticky top-24">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-bold text-neutral-900">Bộ Lọc</h2>
         <button 
+          type="button"
           onClick={clearFilters}
           className="text-xs font-semibold text-blue-500 hover:text-blue-600"
         >
@@ -231,6 +250,7 @@ export function SidebarFilter({ filters, isLoading, hideCategoryAndBrand, catego
                   return (
                     <button
                       key={cat}
+                      type="button"
                       onClick={() => handleFilterChange('category', lowerCat)}
                       className={`px-3 py-1.5 text-xs font-semibold rounded-full border transition-colors ${
                         isActive 
@@ -253,6 +273,7 @@ export function SidebarFilter({ filters, isLoading, hideCategoryAndBrand, catego
           {/* Price Range Filter */}
           <div className="border-b border-neutral-200 py-4">
              <button 
+                type="button"
                 className="flex items-center justify-between w-full text-left"
                 onClick={() => toggleSection('price')}
               >
@@ -262,12 +283,12 @@ export function SidebarFilter({ filters, isLoading, hideCategoryAndBrand, catego
               {expandedSections['price'] !== false && (
                 <div className="mt-4 px-2">
                    <PriceRangeSlider 
-                     min={0}
-                     max={99000000}
+                     min={minPriceBound}
+                     max={maxPriceBound}
                      step={500000}
                      value={[
-                       Number(searchParams.get('minPrice')) || 0,
-                       Number(searchParams.get('maxPrice')) || 99000000
+                       Number(searchParams.get('minPrice')) || minPriceBound,
+                       Number(searchParams.get('maxPrice')) || maxPriceBound
                      ]}
                      onValueCommit={([min, max]) => {
                        handlePriceChange(min.toString(), max.toString());
@@ -281,23 +302,35 @@ export function SidebarFilter({ filters, isLoading, hideCategoryAndBrand, catego
               )}
           </div>
 
-          {/* Dynamic Specs Based on Category - with SHORT values */}
-          <FilterSection title="Màn Hình" sectionKey="screenSize" options={filters?.screenSize || []} />
-          <FilterSection title={isLaptop ? "Dung Lượng / Ổ Cứng" : "Dung Lượng"} sectionKey="storage" options={filters?.storage || []} />
-          <FilterSection title="RAM" sectionKey="ram" options={filters?.ram || []} />
-          
-          {(isPhone || !currentCategory) && (
-            <FilterSection title="Camera" sectionKey="camera" options={filters?.camera || []} />
-          )}
+          {/* Dynamic Specs Based on Mode/Category */}
+          {isWatchMode ? (
+            <>
+              <FilterSection title="Kích thước mặt" sectionKey="size" options={filters?.sizes || []} />
+              <FilterSection title="Kết nối" sectionKey="connectivity" options={filters?.connectivities || []} />
+              <FilterSection title="Chất liệu vỏ" sectionKey="material" options={filters?.materials || []} />
+              <ColorFilterSection />
+            </>
+          ) : (
+            <>
+              {/* Dynamic Specs Based on Category - with SHORT values */}
+              <FilterSection title="Màn Hình" sectionKey="screenSize" options={filters?.screenSize || []} />
+              <FilterSection title={isLaptop ? "Dung Lượng / Ổ Cứng" : "Dung Lượng"} sectionKey="storage" options={filters?.storage || []} />
+              <FilterSection title="RAM" sectionKey="ram" options={filters?.ram || []} />
 
-          <FilterSection title="Chip / CPU" sectionKey="cpu" options={filters?.cpu || []} />
-          
-          {(isLaptop || !currentCategory) && (
-            <FilterSection title="Card Đồ Họa (GPU)" sectionKey="gpu" options={filters?.gpu || []} />
-          )}
+              {(isPhone || !currentCategory) && (
+                <FilterSection title="Camera" sectionKey="camera" options={filters?.camera || []} />
+              )}
 
-          {/* Color Filter with circles */}
-          <ColorFilterSection />
+              <FilterSection title="Chip / CPU" sectionKey="cpu" options={filters?.cpu || []} />
+
+              {(isLaptop || !currentCategory) && (
+                <FilterSection title="Card Đồ Họa (GPU)" sectionKey="gpu" options={filters?.gpu || []} />
+              )}
+
+              {/* Color Filter with circles */}
+              <ColorFilterSection />
+            </>
+          )}
         </div>
       )}
     </div>

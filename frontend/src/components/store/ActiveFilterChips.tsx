@@ -32,9 +32,12 @@ export function ActiveFilterChips() {
       case 'cpu': return `Chip: ${value}`;
       case 'gpu': return `GPU: ${value}`;
       case 'screenSize': return `Màn hình: ${value}`;
+      case 'colors':
       case 'color': return `Màu: ${value}`;
-      case 'colors': return `Màu: ${value}`;
       case 'camera': return `Camera: ${value}`;
+      case 'size': return `Kích thước: ${value}`;
+      case 'connectivity': return `Kết nối: ${value}`;
+      case 'material': return `Chất liệu: ${value}`;
       case 'minPrice': return `Giá từ: ${Number(value).toLocaleString('vi-VN')}đ`;
       case 'maxPrice': return `Giá đến: ${Number(value).toLocaleString('vi-VN')}đ`;
       default: return value;
@@ -69,21 +72,25 @@ export function ActiveFilterChips() {
         >
           {chip.label}
           <button 
+            type="button"
             onClick={() => handleRemove(chip.key, chip.value)}
-            className="ml-2 text-neutral-400 hover:text-red-500 transition-colors"
+            className="ml-2 text-neutral-400 hover:text-red-500 transition-colors cursor-pointer"
           >
             <X className="w-3 h-3" />
           </button>
         </span>
       ))}
       <button 
+        type="button"
         onClick={() => {
           const params = new URLSearchParams();
           const cat = searchParams.get('category');
+          const sort = searchParams.get('sort');
           if (cat) params.set('category', cat);
+          if (sort) params.set('sort', sort);
           setSearchParams(params);
         }}
-        className="text-xs font-semibold text-blue-500 hover:text-blue-700 ml-2"
+        className="text-xs font-semibold text-blue-500 hover:text-blue-700 ml-2 cursor-pointer"
       >
         Xóa bộ lọc
       </button>
