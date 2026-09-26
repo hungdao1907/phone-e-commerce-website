@@ -9,6 +9,7 @@ import { OrdersTab } from '@/components/profile/OrdersTab';
 import { EmptyState } from '@/components/profile/EmptyState';
 import { MyComplaintsTab } from '@/components/profile/MyComplaintsTab';
 import { ComplaintModal } from '@/components/complaint/ComplaintModal';
+import { WishlistTab } from '@/components/profile/WishlistTab';
 
 export const CustomerProfile = () => {
   const { user, token } = useAuthStore();
@@ -115,19 +116,9 @@ export const CustomerProfile = () => {
   };
 
   const handleReview = async (orderId: string, productId: string) => {
-    const comment = prompt('Nhập đánh giá của bạn (Ví dụ: Sản phẩm rất tốt):');
-    if(!comment) return;
-    const ratingStr = prompt('Cho điểm (1-5):');
-    const rating = parseInt(ratingStr || '5', 10);
-    try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/reviews`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({ orderId, customerId: user?.id, rating, comment })
-      });
-      if (res.ok) alert('Đã gửi đánh giá!');
-      else alert('Gửi đánh giá thất bại');
-    } catch (e) { alert('Lỗi'); }
+    if (!productId) return;
+    // Chuyển hướng người dùng sang trang chi tiết sản phẩm để dùng Form đánh giá xịn
+    window.location.href = `/product/${productId}#reviews`;
   };
 
   const handleOpenComplaint = (item: any, order: any) => {
@@ -206,16 +197,7 @@ export const CustomerProfile = () => {
             )}
 
             {activeTab === 'wishlist' && (
-              <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-                <h2 className="text-xl font-bold text-neutral-900 mb-6">Sản phẩm yêu thích</h2>
-                <EmptyState 
-                  icon={Heart} 
-                  title="Chưa có sản phẩm yêu thích" 
-                  description="Bạn chưa lưu sản phẩm nào vào danh sách yêu thích. Khám phá ngay các sản phẩm nổi bật."
-                  actionLabel="Khám phá sản phẩm"
-                  onAction={() => window.location.href = '/'}
-                />
-              </div>
+              <WishlistTab />
             )}
 
             {activeTab === 'voucher' && (

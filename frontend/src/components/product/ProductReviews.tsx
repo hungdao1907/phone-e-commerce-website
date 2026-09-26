@@ -1,7 +1,8 @@
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Star, Upload, X, Loader2, Image as ImageIcon } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { useNavigate } from 'react-router-dom';
+import { getCriteriaForCategory, ExperienceCriterion } from '../../data/experienceCriteria';
 
 interface Review {
   id: string;
@@ -13,6 +14,7 @@ interface Review {
   adminReplyAt: string | null;
   customer: { id: string; fullName: string };
   variant: { attributes: any; colorCode?: string };
+  experienceRatings?: Record<string, number>;
   isVerifiedPurchase: boolean;
 }
 
@@ -26,6 +28,7 @@ interface RatingSummary {
     2: number;
     1: number;
   };
+  experienceRatings?: Record<string, number>;
 }
 
 interface EligibleItem {
@@ -37,8 +40,9 @@ interface EligibleItem {
   purchasedAt: string;
 }
 
-export function ProductReviews({ productId }: { productId?: string }) {
+export function ProductReviews({ productId, categorySlug }: { productId?: string, categorySlug?: string }) {
   const navigate = useNavigate();
+  const criteria = getCriteriaForCategory(categorySlug || '');
   const { user, token } = useAuthStore();
   const [reviews, setReviews] = useState<Review[]>([]);
   const [ratingSummary, setRatingSummary] = useState<RatingSummary | null>(null);
@@ -47,18 +51,24 @@ export function ProductReviews({ productId }: { productId?: string }) {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [ratingFilter, setRatingFilter] = useState<number>(0); // 0 = all
+  const [hasImageFilter, setHasImageFilter] = useState(false);
+  const [isVerifiedPurchaseFilter, setIsVerifiedPurchaseFilter] = useState(false);
+
+  // Modals state
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [isWriting, setIsWriting] = useState(false);
 
   // Eligibility state
   const [isEligible, setIsEligible] = useState(false);
   const [eligibleItems, setEligibleItems] = useState<EligibleItem[]>([]);
 
   // Form state
-  const [isWriting, setIsWriting] = useState(false);
   const [selectedItemIndex, setSelectedItemIndex] = useState(0);
   const [formRating, setFormRating] = useState(0);
   const [formHoverRating, setFormHoverRating] = useState(0);
   const [formComment, setFormComment] = useState('');
   const [formImages, setFormImages] = useState<string[]>([]);
+  const [formExperienceRatings, setFormExperienceRatings] = useState<Record<string, number>>({});
   const [isUploading, setIsUploading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
@@ -68,19 +78,20 @@ export function ProductReviews({ productId }: { productId?: string }) {
 
   useEffect(() => {
     if (!productId) return;
-    fetchReviews(1, ratingFilter, true);
-  }, [productId, ratingFilter]);
+    fetchReviews(1, ratingFilter, hasImageFilter, isVerifiedPurchaseFilter, true);
+  }, [productId, ratingFilter, hasImageFilter, isVerifiedPurchaseFilter]);
 
   useEffect(() => {
     if (!productId || !token) return;
     checkEligibility();
   }, [productId, token]);
 
-  const fetchReviews = async (pageNum: number, filter: number, reset = false) => {
+  const fetchReviews = async (pageNum: number, rFilter: number, imgFilter: boolean, vpFilter: boolean, reset = false) => {
     try {
       if (reset) setLoading(true);
       setError(false);
-      const res = await fetch(`${API_URL}/api/reviews/product/${productId}?page=${pageNum}&limit=5&rating=${filter}`);
+      const url = `${API_URL}/api/reviews/product/${productId}?page=${pageNum}&limit=5&rating=${rFilter}&hasImage=${imgFilter}&isVerifiedPurchase=${vpFilter}`;
+      const res = await fetch(url);
       if (!res.ok) throw new Error('Fetch failed');
       const data = await res.json();
       
@@ -120,12 +131,14 @@ export function ProductReviews({ productId }: { productId?: string }) {
 
   const handleWriteClick = () => {
     if (!user) {
-      navigate('/login');
+      setIsLoginModalOpen(true);
       return;
     }
-    if (isEligible) {
-      setIsWriting(true);
+    if (!isEligible || eligibleItems.length === 0) {
+      alert('Bạn cần mua và nhận sản phẩm này trước khi có thể đánh giá.');
+      return;
     }
+    setIsWriting(true);
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -164,7 +177,6 @@ export function ProductReviews({ productId }: { productId?: string }) {
       alert('Vui lòng chọn số sao đánh giá');
       return;
     }
-    if (!eligibleItems[selectedItemIndex]) return;
 
     setIsSubmitting(true);
     const item = eligibleItems[selectedItemIndex];
@@ -178,12 +190,13 @@ export function ProductReviews({ productId }: { productId?: string }) {
         },
         body: JSON.stringify({
           productId,
-          variantId: item.variantId,
-          orderId: item.orderId,
-          orderItemId: item.orderItemId,
+          variantId: item?.variantId,
+          orderId: item?.orderId,
+          orderItemId: item?.orderItemId,
           rating: formRating,
           comment: formComment,
-          images: formImages
+          images: formImages,
+          experienceRatings: formExperienceRatings
         })
       });
 
@@ -221,12 +234,14 @@ export function ProductReviews({ productId }: { productId?: string }) {
   }
 
   return (
+    <>
     <section className="mt-8 rounded-3xl border border-neutral-200 bg-white p-6 sm:p-8 lg:p-10 shadow-sm scroll-mt-24">
       <h2 className="text-xl font-bold text-neutral-900 mb-6 uppercase">Đánh giá sản phẩm</h2>
       
       {/* Rating Overview */}
       {ratingSummary && ratingSummary.reviewCount > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-[1fr_2fr] gap-8 mb-10 pb-10 border-b border-neutral-100">
+        <div className="grid grid-cols-1 md:grid-cols-[1fr_1.5fr_1.5fr] gap-8 lg:gap-12 mb-10 pb-10 border-b border-neutral-100">
+          {/* Main Average */}
           <div className="flex flex-col items-center justify-center">
             <div className="text-5xl font-black text-neutral-900">{ratingSummary.ratingAverage}</div>
             <div className="flex items-center gap-1 mt-2 text-yellow-500">
@@ -236,7 +251,7 @@ export function ProductReviews({ productId }: { productId?: string }) {
             </div>
             <div className="text-sm font-medium text-neutral-500 mt-2">Dựa trên {ratingSummary.reviewCount} đánh giá</div>
             
-            {!isWriting && (isEligible || !user) && (
+            {!isWriting && (
               <button 
                 onClick={handleWriteClick}
                 className="mt-6 rounded-full bg-blue-600 text-white px-8 py-3 text-sm font-semibold hover:bg-blue-700 transition-colors shadow-sm"
@@ -252,19 +267,39 @@ export function ProductReviews({ productId }: { productId?: string }) {
           </div>
           
           {/* Rating Bars */}
-          <div className="flex flex-col justify-center gap-3">
+          <div className="flex flex-col justify-center gap-3 border-t md:border-t-0 md:border-l border-neutral-100 pt-6 md:pt-0 md:pl-8 lg:pl-12">
             {[5, 4, 3, 2, 1].map((rating) => {
               const count = ratingSummary.ratingBreakdown[rating as keyof typeof ratingSummary.ratingBreakdown] || 0;
               const percent = ratingSummary.reviewCount > 0 ? Math.round((count / ratingSummary.reviewCount) * 100) : 0;
               return (
                 <div key={rating} className="flex items-center gap-4">
-                  <div className="flex items-center gap-1 w-12 text-sm font-semibold text-neutral-700">
+                  <div className="flex items-center gap-1 w-8 text-sm font-semibold text-neutral-700">
                     {rating} <Star className="w-3.5 h-3.5 text-neutral-400 fill-current" />
                   </div>
-                  <div className="flex-1 h-2.5 rounded-full bg-neutral-100 overflow-hidden">
+                  <div className="flex-1 h-2 rounded-full bg-neutral-100 overflow-hidden">
                     <div className="h-full bg-blue-500 rounded-full" style={{ width: `${percent}%` }}></div>
                   </div>
-                  <div className="w-10 text-sm font-medium text-neutral-500 text-right">{percent}%</div>
+                  <div className="w-10 text-xs font-medium text-neutral-500 text-right">{percent}%</div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Experience Ratings */}
+          <div className="flex flex-col justify-center gap-3 border-t md:border-t-0 md:border-l border-neutral-100 pt-6 md:pt-0 md:pl-8 lg:pl-12">
+            <h3 className="text-sm font-bold text-neutral-900 mb-2">Đánh giá theo trải nghiệm</h3>
+            {criteria.map(crit => {
+              const score = ratingSummary.experienceRatings?.[crit.id] || 0;
+              if (score === 0) return null; // Hide if no one rated this yet
+              return (
+                <div key={crit.id} className="flex items-center justify-between gap-4">
+                  <div className="text-sm font-medium text-neutral-700 truncate w-24 sm:w-32">{crit.label}</div>
+                  <div className="flex items-center gap-1 text-yellow-500 flex-1">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <Star key={star} className={`w-3.5 h-3.5 ${star <= Math.round(score) ? 'fill-current' : 'fill-current text-neutral-200'}`} />
+                    ))}
+                  </div>
+                  <div className="text-xs font-bold text-neutral-900">{score.toFixed(1)}</div>
                 </div>
               );
             })}
@@ -275,7 +310,7 @@ export function ProductReviews({ productId }: { productId?: string }) {
           <Star className="w-12 h-12 text-neutral-200 mx-auto mb-4" />
           <h3 className="text-lg font-bold text-neutral-900">Chưa có đánh giá nào</h3>
           <p className="text-neutral-500 mt-2">Hãy là người đầu tiên chia sẻ trải nghiệm của bạn.</p>
-          {!isWriting && (isEligible || !user) && (
+          {!isWriting && (
             <button 
               onClick={handleWriteClick}
               className="mt-6 rounded-full bg-neutral-900 text-white px-6 py-2 text-sm font-semibold hover:bg-black transition-colors"
@@ -283,44 +318,67 @@ export function ProductReviews({ productId }: { productId?: string }) {
               Viết đánh giá
             </button>
           )}
+          {submitSuccess && (
+            <div className="mt-6 inline-block text-sm font-medium text-green-600 bg-green-50 px-4 py-2 rounded-full text-center border border-green-200">
+              Đánh giá của bạn đã gửi và đang chờ duyệt
+            </div>
+          )}
         </div>
       )}
 
-      {/* Write Review Form */}
-      {isWriting && (
-        <div className="mb-10 p-6 bg-neutral-50 rounded-2xl border border-neutral-200">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-bold">Viết đánh giá của bạn</h3>
-            <button onClick={() => setIsWriting(false)} className="text-neutral-400 hover:text-neutral-900">
-              <X className="w-5 h-5" />
-            </button>
+      {/* Login Modal */}
+      {isLoginModalOpen && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-neutral-900/40 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl w-full max-w-md p-6 shadow-xl text-center">
+            <h3 className="text-xl font-bold mb-3">Đăng nhập để đánh giá</h3>
+            <p className="text-neutral-500 mb-6 text-sm">Vui lòng đăng nhập để chia sẻ trải nghiệm của bạn về sản phẩm này.</p>
+            <div className="flex justify-center gap-3">
+              <button onClick={() => setIsLoginModalOpen(false)} className="px-6 py-2 border border-neutral-200 rounded-full text-sm font-semibold text-neutral-600 hover:bg-neutral-50 transition-colors">Đóng</button>
+              <button onClick={() => navigate('/login')} className="px-6 py-2 rounded-full text-sm font-semibold bg-blue-600 text-white hover:bg-blue-700 transition-colors">Đăng nhập</button>
+            </div>
           </div>
+        </div>
+      )}
 
-          {eligibleItems.length > 1 && (
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-neutral-700 mb-2">Chọn sản phẩm đã mua:</label>
-              <select 
-                value={selectedItemIndex}
-                onChange={(e) => setSelectedItemIndex(Number(e.target.value))}
-                className="w-full rounded-lg border-neutral-300 py-2.5 px-3 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 bg-white"
-              >
-                {eligibleItems.map((item, idx) => (
-                  <option key={item.orderItemId} value={idx}>
-                    {item.variantInfo} (Đơn {item.orderCode} - {new Date(item.purchasedAt).toLocaleDateString('vi-VN')})
-                  </option>
-                ))}
-              </select>
+      {/* Write Review Form Modal */}
+      {isWriting && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-neutral-900/40 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white p-6 sm:p-8 rounded-3xl w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl animate-in zoom-in-95 duration-200">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-xl font-bold text-neutral-900">Đánh giá sản phẩm</h3>
+              <button onClick={() => setIsWriting(false)} className="text-neutral-400 hover:bg-neutral-100 hover:text-neutral-900 p-2 rounded-full transition-colors">
+                <X className="w-5 h-5" />
+              </button>
             </div>
-          )}
-          {eligibleItems.length === 1 && (
-            <div className="mb-6 text-sm text-neutral-600">
-              <span className="font-medium text-neutral-900">Đang đánh giá: </span>
-              {eligibleItems[0].variantInfo}
-            </div>
-          )}
+            
+            <p className="text-center font-medium text-neutral-600 mb-4">Bạn cảm thấy sản phẩm này thế nào?</p>
+
+            {eligibleItems.length > 1 && (
+              <div className="mb-6 bg-neutral-50 p-4 rounded-xl">
+                <label className="block text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-2">Chọn sản phẩm đã mua</label>
+                <select 
+                  value={selectedItemIndex}
+                  onChange={(e) => setSelectedItemIndex(Number(e.target.value))}
+                  className="w-full rounded-lg border-neutral-200 py-2.5 px-3 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 bg-white"
+                >
+                  {eligibleItems.map((item, idx) => (
+                    <option key={item.orderItemId} value={idx}>
+                      {item.variantInfo} (Đơn {item.orderCode})
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+            {eligibleItems.length === 1 && (
+              <div className="mb-6 bg-neutral-50 p-4 rounded-xl text-sm text-neutral-600">
+                <span className="font-semibold text-neutral-900">Đang đánh giá: </span>
+                {eligibleItems[0].variantInfo}
+              </div>
+            )}
 
           <div className="mb-6 flex flex-col items-center">
-            <div className="flex gap-2">
+            <h4 className="text-xs font-bold text-neutral-400 uppercase tracking-wider mb-3">Đánh giá tổng thể</h4>
+            <div className="flex gap-2 mb-2">
               {[1, 2, 3, 4, 5].map((star) => (
                 <button
                   key={star}
@@ -332,6 +390,30 @@ export function ProductReviews({ productId }: { productId?: string }) {
                 >
                   <Star className={`w-10 h-10 ${star <= (formHoverRating || formRating) ? 'fill-yellow-500 text-yellow-500' : 'fill-neutral-200 text-neutral-200'}`} />
                 </button>
+              ))}
+            </div>
+            <div className="text-sm font-semibold text-yellow-600">{formRating}/5</div>
+          </div>
+
+          <div className="mb-6 border-t border-neutral-100 pt-6">
+            <h4 className="text-sm font-bold text-neutral-900 mb-4">Đánh giá theo trải nghiệm (Tùy chọn)</h4>
+            <div className="space-y-4">
+              {criteria.map(crit => (
+                <div key={crit.id} className="flex items-center justify-between gap-4">
+                  <div className="text-sm font-medium text-neutral-700">{crit.label}</div>
+                  <div className="flex gap-1.5">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <button
+                        key={star}
+                        type="button"
+                        onClick={() => setFormExperienceRatings(prev => ({ ...prev, [crit.id]: star }))}
+                        className="focus:outline-none transition-transform hover:scale-110"
+                      >
+                        <Star className={`w-6 h-6 ${(formExperienceRatings[crit.id] || 0) >= star ? 'fill-yellow-500 text-yellow-500' : 'fill-neutral-200 text-neutral-200'}`} />
+                      </button>
+                    ))}
+                  </div>
+                </div>
               ))}
             </div>
           </div>
@@ -386,21 +468,44 @@ export function ProductReviews({ productId }: { productId?: string }) {
             </button>
           </div>
         </div>
+        </div>
       )}
 
       {/* Filters */}
       {ratingSummary && ratingSummary.reviewCount > 0 && (
         <div className="flex flex-wrap gap-2 mb-8">
           <button 
-            onClick={() => setRatingFilter(0)}
-            className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors border ${ratingFilter === 0 ? 'border-blue-600 text-blue-600 bg-blue-50' : 'border-neutral-200 text-neutral-600 hover:bg-neutral-50'}`}
+            onClick={() => {
+              setRatingFilter(0);
+              setHasImageFilter(false);
+              setIsVerifiedPurchaseFilter(false);
+            }}
+            className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors border ${ratingFilter === 0 && !hasImageFilter && !isVerifiedPurchaseFilter ? 'border-blue-600 text-blue-600 bg-blue-50' : 'border-neutral-200 text-neutral-600 hover:bg-neutral-50'}`}
           >
             Tất cả
           </button>
+          
+          <button 
+            onClick={() => setIsVerifiedPurchaseFilter(!isVerifiedPurchaseFilter)}
+            className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors border ${isVerifiedPurchaseFilter ? 'border-blue-600 text-blue-600 bg-blue-50' : 'border-neutral-200 text-neutral-600 hover:bg-neutral-50'}`}
+          >
+            Đã mua hàng
+          </button>
+          
+          <button 
+            onClick={() => setHasImageFilter(!hasImageFilter)}
+            className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors border ${hasImageFilter ? 'border-blue-600 text-blue-600 bg-blue-50' : 'border-neutral-200 text-neutral-600 hover:bg-neutral-50'}`}
+          >
+            Có hình ảnh
+          </button>
+
           {[5, 4, 3, 2, 1].map(star => (
             <button 
               key={star}
-              onClick={() => setRatingFilter(star)}
+              onClick={() => {
+                if (ratingFilter === star) setRatingFilter(0);
+                else setRatingFilter(star);
+              }}
               className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors border ${ratingFilter === star ? 'border-blue-600 text-blue-600 bg-blue-50' : 'border-neutral-200 text-neutral-600 hover:bg-neutral-50'}`}
             >
               {star} sao
@@ -445,6 +550,26 @@ export function ProductReviews({ productId }: { productId?: string }) {
                   )}
                 </div>
                 {review.comment && <p className="text-sm text-neutral-700 leading-relaxed mb-3">{review.comment}</p>}
+                
+                {/* Individual Experience Ratings */}
+                {review.experienceRatings && Object.keys(review.experienceRatings).length > 0 && (
+                  <div className="flex flex-wrap gap-x-4 gap-y-2 mb-3">
+                    {Object.entries(review.experienceRatings).map(([key, val]) => {
+                      const crit = criteria.find(c => c.id === key);
+                      if (!crit) return null;
+                      return (
+                        <div key={key} className="flex items-center gap-1.5 bg-neutral-50 px-2 py-1 rounded-md text-xs border border-neutral-100">
+                          <span className="text-neutral-600 font-medium">{crit.label}:</span>
+                          <div className="flex items-center text-yellow-500">
+                            {[1, 2, 3, 4, 5].map((star) => (
+                              <Star key={star} className={`w-2.5 h-2.5 ${star <= val ? 'fill-current' : 'fill-current text-neutral-200'}`} />
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
                 
                 {review.images && review.images.length > 0 && (
                   <div className="flex gap-2 flex-wrap mb-3">
@@ -492,5 +617,40 @@ export function ProductReviews({ productId }: { productId?: string }) {
         </div>
       )}
     </section>
+      
+      {/* Login Prompt Modal */}
+      {isLoginModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl animate-in fade-in zoom-in duration-200">
+            <div className="flex justify-between items-center p-4 border-b border-neutral-100">
+              <h3 className="font-bold text-lg text-neutral-900">Yêu cầu đăng nhập</h3>
+              <button onClick={() => setIsLoginModalOpen(false)} className="text-neutral-400 hover:text-neutral-900 transition-colors">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-6 text-center">
+              <p className="text-neutral-600 mb-6 text-sm">Bạn cần đăng nhập để có thể viết đánh giá cho sản phẩm này.</p>
+              <div className="flex gap-3 justify-center">
+                <button 
+                  onClick={() => setIsLoginModalOpen(false)}
+                  className="px-6 py-2.5 rounded-full text-sm font-semibold text-neutral-700 hover:bg-neutral-100 transition-colors"
+                >
+                  Hủy
+                </button>
+                <button 
+                  onClick={() => {
+                    setIsLoginModalOpen(false);
+                    navigate('/login', { state: { from: location.pathname } });
+                  }}
+                  className="px-6 py-2.5 rounded-full text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 transition-colors"
+                >
+                  Đăng nhập ngay
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }

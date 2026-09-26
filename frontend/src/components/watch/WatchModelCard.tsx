@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { LiquidMetalButton } from '@/components/ui/LiquidMetalButton';
-import type { WatchModel } from '@/pages/watch/types';
+import type { WatchModel } from '@/types/watch/types';
 
 export type { WatchModel };
 

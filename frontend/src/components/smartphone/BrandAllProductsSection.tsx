@@ -330,7 +330,7 @@ export function BrandAllProductsSection({ config, products }: BrandAllProductsSe
             </div>
 
             {isLoadingProducts ? (
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-5">
                 {[1, 2, 3, 4, 5, 6].map(i => (
                   <div key={i} className="bg-white rounded-2xl h-80 animate-pulse border border-neutral-100"></div>
                 ))}
@@ -420,7 +420,7 @@ export function BrandAllProductsSection({ config, products }: BrandAllProductsSe
                                 <span>{matching.length} sản phẩm</span>
                               </div>
                             </motion.div>
-                            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-5">
                               {matching.map((product: any) => (
                                 <FilteredProductCard 
                                   key={product.id} 
@@ -463,7 +463,7 @@ export function BrandAllProductsSection({ config, products }: BrandAllProductsSe
                                   <span>{unassigned.length} sản phẩm</span>
                                 </div>
                               </motion.div>
-                              <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
+                              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-5">
                                 {unassigned.map((product: any) => (
                                   <FilteredProductCard 
                                     key={product.id} 
@@ -480,7 +480,7 @@ export function BrandAllProductsSection({ config, products }: BrandAllProductsSe
                   </div>
                 ) : (
                   // Flattened grid
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-5">
                     {(productsData?.data || []).map((product: any) => (
                       <FilteredProductCard 
                         key={product.id} 

@@ -3,7 +3,10 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { PrismaClient } from '@prisma/client';
 import nodemailer from 'nodemailer';
+import dns from 'node:dns';
 
+// Fix IPv6 timeout issues on Render/Node 18+ by forcing IPv4 resolution first
+dns.setDefaultResultOrder('ipv4first');
 const router = express.Router();
 const prisma = new PrismaClient();
 

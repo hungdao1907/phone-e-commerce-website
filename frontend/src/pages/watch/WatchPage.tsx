@@ -9,7 +9,7 @@ import {
   WatchFacesSection,
   WatchEcosystemSection,
   WatchFinalCTASection,
-} from './sections';
+} from '../../components/watch/sections/index';
 import { WatchUltra3Page } from './ultra-3/WatchUltra3Page';
 import '@/css/watch.css';
 

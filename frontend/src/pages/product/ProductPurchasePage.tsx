@@ -7,7 +7,7 @@ import { ProductReviews } from '@/components/product/ProductReviews';
 import type { ProductVariant } from '@/types/product';
 import { useCartStore } from '../../store/useCartStore';
 import { useAppStore } from '../../store/useAppStore';
-import { SMARTPHONE_PRODUCTS } from '../smartphone/data/mockSmartphoneProducts';
+import { SMARTPHONE_PRODUCTS } from '../../data/smartphone/data/mockSmartphoneProducts';
 
 export function ProductPurchasePage() {
   const { slug } = useParams<{ slug: string }>();
@@ -106,10 +106,20 @@ export function ProductPurchasePage() {
           
           let parsedSpecs = [];
           if (Array.isArray(dbProduct.specifications)) {
-            parsedSpecs = dbProduct.specifications.map((s: any) => ({
-              label: s.name || s.label || 'Thông tin',
-              value: s.value || 'N/A'
-            }));
+            const specs = dbProduct.specifications;
+            if (specs.length > 0 && specs[0].title !== undefined) {
+              // It's already grouped format
+              parsedSpecs = specs;
+            } else {
+              // It's flat format, group it
+              parsedSpecs = [{
+                title: 'Thông số kỹ thuật',
+                items: specs.map((s: any) => ({
+                  label: s.name || s.label || s.key || 'Thông tin',
+                  value: s.value || 'N/A'
+                }))
+              }];
+            }
           }
 
           const resolveImageUrl = (url: string) => {
@@ -134,7 +144,7 @@ export function ProductPurchasePage() {
             galleryImages: [dbProduct.image, ...(dbProduct.images || [])].filter(Boolean).map(resolveImageUrl),
             colors,
             storageOptions,
-            specifications: parsedSpecs.length > 0 ? parsedSpecs : [{ label: 'Đang cập nhật', value: 'Chưa có thông số' }],
+            specifications: parsedSpecs.length > 0 ? parsedSpecs : [{ title: 'Thông số kỹ thuật', items: [{ label: 'Đang cập nhật', value: 'Chưa có thông số' }] }],
             variants,
             ratingAverage: dbProduct.ratingAverage || 0,
             reviewCount: dbProduct.reviewCount || 0
@@ -191,7 +201,15 @@ export function ProductPurchasePage() {
     setSelectedStorageId(defaultVariant?.storageId ?? '');
     setQuantity(1);
     document.title = product.name + ' | Cửa Hàng Công Nghệ';
-    window.scrollTo(0, 0);
+    
+    if (window.location.hash === '#reviews') {
+      setTimeout(() => {
+        const el = document.getElementById('reviews');
+        if (el) el.scrollIntoView({ behavior: 'smooth' });
+      }, 500);
+    } else {
+      window.scrollTo(0, 0);
+    }
   }, [product]);
 
   useEffect(() => {
@@ -342,8 +360,8 @@ export function ProductPurchasePage() {
         <div className="flex flex-col gap-8 w-full mx-auto mt-4">
           
           {/* Reviews Section */}
-          <div id="product-reviews-section">
-            <ProductReviews productId={product.id} />
+          <div id="reviews" className="scroll-mt-24">
+            <ProductReviews productId={product.id} categorySlug={product.categorySlug} />
           </div>
           
           {/* Related Products Demo */}

@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLenis } from 'lenis/react';
 import { X, Sparkles, ArrowRight, ShieldCheck } from 'lucide-react';
-import { ULTRA3_SPEC_GROUPS } from '@/pages/watch/ultra-3/data/ultra3Data';
+import { ULTRA3_SPEC_GROUPS } from '@/data/watch/ultra-3/data/ultra3Data';
 
 interface Ultra3SpecsModalProps {
   isOpen: boolean;

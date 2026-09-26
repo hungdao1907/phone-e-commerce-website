@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLenis } from 'lenis/react';
 import { X, Sparkles, ArrowRight } from 'lucide-react';
-import { SE3_SPEC_GROUPS } from '@/pages/watch/se-3/data/se3Data';
+import { SE3_SPEC_GROUPS } from '@/data/watch/se-3/data/se3Data';
 
 interface SE3SpecsModalProps {
   isOpen: boolean;

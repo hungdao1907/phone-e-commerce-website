@@ -50,6 +50,86 @@ export function normalizeKey(key: string): string {
 }
 
 /**
+ * Extract a short screen size value from raw spec string.
+ * e.g. "6.1 inch Super Retina XDR OLED, 2532 x 1170" → "6.1\""
+ */
+function extractShortScreenSize(raw: string): string {
+  const match = raw.match(/([\d,.]+)\s*(?:inch|inches|"|″)/i);
+  if (match) return match[1].replace(',', '.') + '"';
+  const numMatch = raw.match(/^([\d,.]+)/);
+  if (numMatch) return numMatch[1].replace(',', '.') + '"';
+  return raw.length > 15 ? raw.substring(0, 12) + '…' : raw;
+}
+
+/**
+ * Extract short chip name from raw spec string.
+ * e.g. "Apple A18, CPU 6 lõi" → "A18"
+ */
+function extractShortChipName(raw: string): string {
+  const aMatch = raw.match(/A(\d+)\s*(Pro|Bionic|Max)?/i);
+  if (aMatch) {
+    let r = 'A' + aMatch[1];
+    if (aMatch[2]) r += ' ' + aMatch[2].charAt(0).toUpperCase() + aMatch[2].slice(1).toLowerCase();
+    return r;
+  }
+  const snapMatch = raw.match(/Snapdragon\s+(\d+(?:\s+Gen\s+\d+)?)/i);
+  if (snapMatch) return 'Snapdragon ' + snapMatch[1];
+  const dimMatch = raw.match(/Dimensity\s+(\d+)/i);
+  if (dimMatch) return 'Dimensity ' + dimMatch[1];
+  const exyMatch = raw.match(/Exynos\s+(\d+)/i);
+  if (exyMatch) return 'Exynos ' + exyMatch[1];
+  // M-series chips for Mac
+  const mMatch = raw.match(/M(\d+)\s*(Pro|Max|Ultra)?/i);
+  if (mMatch) {
+    let r = 'M' + mMatch[1];
+    if (mMatch[2]) r += ' ' + mMatch[2];
+    return r;
+  }
+  const short = raw.split(/[,;]/)[0].trim();
+  return short.length > 20 ? short.substring(0, 18) + '…' : short;
+}
+
+/**
+ * Extract camera MP from raw spec string.
+ * e.g. "Sau: 48MP Fusion + 12MP Ultra Wide" → "48MP"
+ */
+function extractShortCamera(raw: string): string {
+  const matches = raw.match(/(\d+)\s*MP/gi);
+  if (matches && matches.length > 0) {
+    const mpValues = matches.map(m => {
+      const n = m.match(/(\d+)/);
+      return n ? parseInt(n[1]) : 0;
+    });
+    return Math.max(...mpValues) + 'MP';
+  }
+  const short = raw.split(/[,;]/)[0].trim();
+  return short.length > 20 ? short.substring(0, 18) + '…' : short;
+}
+
+/**
+ * Extract short RAM value.
+ * e.g. "12GB RAM" → "12GB"
+ */
+function extractShortRAM(raw: string): string {
+  const match = raw.match(/(\d+)\s*GB/i);
+  return match ? match[1] + 'GB' : raw.trim();
+}
+
+/**
+ * Shorten a spec value based on its normalized key.
+ */
+function shortenSpecValue(normKey: string, raw: string): string {
+  const trimmed = raw.trim();
+  switch (normKey) {
+    case 'screenSize': return extractShortScreenSize(trimmed);
+    case 'cpu': return extractShortChipName(trimmed);
+    case 'camera': return extractShortCamera(trimmed);
+    case 'ram': return extractShortRAM(trimmed);
+    default: return trimmed;
+  }
+}
+
+/**
  * Extract dynamic filters from a list of products
  */
 export function extractFiltersFromProducts(products: any[]) {
@@ -65,8 +145,12 @@ export function extractFiltersFromProducts(products: any[]) {
     camera: new Set()
   };
 
+  // Map to track: shortValue -> set of original raw values (for backend filtering)
   let minPrice = Infinity;
   let maxPrice = 0;
+
+  // Track color codes for the color filter
+  const colorCodesMap: Record<string, string> = {};
 
   for (const product of products) {
     if (product.brand) filters.brands.add(product.brand);
@@ -77,9 +161,10 @@ export function extractFiltersFromProducts(products: any[]) {
         if (!spec.key || !spec.value) continue;
         const normKey = normalizeKey(spec.key);
         
-        // Add to corresponding filter set if it's a known filter
+        // Add SHORTENED value to corresponding filter set
         if (filters[normKey]) {
-          filters[normKey].add(spec.value.trim());
+          const shortVal = shortenSpecValue(normKey, spec.value);
+          if (shortVal) filters[normKey].add(shortVal);
         }
       }
     }
@@ -100,8 +185,17 @@ export function extractFiltersFromProducts(products: any[]) {
             if (!value) continue;
             const normKey = normalizeKey(key);
             if (filters[normKey]) {
+              // Storage and colors from variants don't need shortening (already short values like "128GB", "Đen")
               filters[normKey].add((value as string).trim());
             }
+          }
+        }
+
+        // Track color codes
+        if (variant.colorCode && variant.attributes?.['Màu sắc']) {
+          const colorName = (variant.attributes['Màu sắc'] as string).trim();
+          if (!colorCodesMap[colorName]) {
+            colorCodesMap[colorName] = variant.colorCode;
           }
         }
       }
@@ -112,13 +206,26 @@ export function extractFiltersFromProducts(products: any[]) {
   return {
     brands: Array.from(filters.brands).sort(),
     ram: Array.from(filters.ram).sort(),
-    storage: Array.from(filters.storage).sort(),
+    storage: Array.from(filters.storage).sort((a, b) => {
+      const numA = parseInt(a) || 0;
+      const numB = parseInt(b) || 0;
+      return numA - numB;
+    }),
     cpu: Array.from(filters.cpu).sort(),
     gpu: Array.from(filters.gpu).sort(),
-    screenSize: Array.from(filters.screenSize).sort(),
+    screenSize: Array.from(filters.screenSize).sort((a, b) => {
+      const numA = parseFloat(a) || 0;
+      const numB = parseFloat(b) || 0;
+      return numA - numB;
+    }),
     colors: Array.from(filters.colors).sort(),
+    colorCodes: colorCodesMap,
     os: Array.from(filters.os).sort(),
-    camera: Array.from(filters.camera).sort(),
+    camera: Array.from(filters.camera).sort((a, b) => {
+      const numA = parseInt(a) || 0;
+      const numB = parseInt(b) || 0;
+      return numA - numB;
+    }),
     priceRange: {
       min: minPrice === Infinity ? 0 : minPrice,
       max: maxPrice
@@ -193,4 +300,3 @@ export function extractAdminFiltersFromProducts(products: any[]) {
 
   return result;
 }
-

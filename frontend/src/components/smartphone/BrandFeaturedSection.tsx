@@ -21,17 +21,40 @@ export function BrandFeaturedSection({ config, products }: BrandFeaturedSectionP
   const opacity = useTransform(scrollYProgress, [0, 0.15, 0.85, 1], [0, 1, 1, 0]);
   const y = useTransform(scrollYProgress, [0, 0.15], [80, 0]);
 
-  // Select top featured products (up to 4)
-  const featuredModels = (
-    products.filter((product) => product.featured).length > 0
-      ? products.filter((product) => product.featured)
-      : products
-  ).slice(0, 4);
+  let displayModels = [...products];
+
+  if (config.id.toLowerCase() === 'iphone') {
+    const parsePrice = (str?: string) => {
+      if (!str) return 0;
+      return parseInt(str.replace(/\D/g, ''), 10) || 0;
+    };
+    
+    const withDiscounts = products.map(p => {
+      const orig = parsePrice(p.originalPrice);
+      const curr = parsePrice(p.price);
+      let percent = 0;
+      let amount = 0;
+      if (orig > curr && orig > 0) {
+        percent = Math.round(((orig - curr) / orig) * 100);
+        amount = orig - curr;
+      }
+      return { ...p, discountPercent: percent, discountAmount: amount };
+    }).filter(p => p.discountPercent > 0);
+    
+    withDiscounts.sort((a, b) => b.discountPercent - a.discountPercent || b.discountAmount - a.discountAmount);
+    displayModels = withDiscounts.slice(0, 4);
+  } else {
+    displayModels = (
+      products.filter((product) => product.featured).length > 0
+        ? products.filter((product) => product.featured)
+        : products
+    ).slice(0, 4);
+  }
 
   // State to track selected color for each featured card
   const [selectedColors, setSelectedColors] = useState<Record<string, string>>(() => {
     const initial: Record<string, string> = {};
-    featuredModels.forEach((m) => {
+    displayModels.forEach((m) => {
       initial[m.id] = m.colors[0]?.name || '';
     });
     return initial;
@@ -48,10 +71,10 @@ export function BrandFeaturedSection({ config, products }: BrandFeaturedSectionP
     }
   };
 
-  if (featuredModels.length === 0) return null;
+  if (displayModels.length === 0) return null;
 
-  const topHeroModel = featuredModels[0];
-  const companionModels = featuredModels.slice(1, 3);
+  const topHeroModel = displayModels[0];
+  const companionModels = displayModels.slice(1, 3);
 
   return (
     <section
@@ -100,7 +123,7 @@ export function BrandFeaturedSection({ config, products }: BrandFeaturedSectionP
 
         {/* Products Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8 w-full justify-center">
-          {featuredModels.map((model, idx) => (
+          {displayModels.map((model, idx) => (
             <BrandProductCard
               key={model.id}
               product={model}
@@ -117,7 +140,7 @@ export function BrandFeaturedSection({ config, products }: BrandFeaturedSectionP
             onClick={scrollToAllProducts}
             className="group inline-flex items-center gap-2.5 px-8 py-4 rounded-full bg-neutral-950 text-white font-bold text-sm sm:text-base hover:bg-black transition-all shadow-lg hover:shadow-xl cursor-pointer hover:scale-105 active:scale-95"
           >
-            <span>Khám Phá Toàn Bộ Bộ Sưu Tập {config.brand}</span>
+            <span>{config.id.toLowerCase() === 'iphone' ? 'Xem tất cả Iphone' : `Khám Phá Toàn Bộ Bộ Sưu Tập ${config.brand}`}</span>
             <ArrowRight className="w-4 h-4 group-hover:translate-x-1.5 transition-transform" />
           </button>
         </div>

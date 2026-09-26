@@ -1,5 +1,5 @@
 import { useEffect, useState, type CSSProperties } from 'react';
-import { getTabletBrandConfig, getTabletProductsByBrand } from './data';
+import { getTabletBrandConfig, getTabletProductsByBrand } from '../../data/tablet/data/index';
 import {
   TabletAllProductsSection,
   TabletBrandExperienceSection,
@@ -7,8 +7,8 @@ import {
   TabletFinalCTASection,
   TabletHeroSection,
   TabletWhyBrandSection,
-} from './sections';
-import type { TabletBrandId, TabletModel } from './types';
+} from '../../components/tablet/sections/index';
+import type { TabletBrandId, TabletModel } from '../../types/tablet/types/index';
 import '@/css/tablet.css';
 
 interface TabletPageProps {
@@ -61,24 +61,31 @@ export function TabletPage({ brand }: TabletPageProps) {
               const getSpec = (keyword: string) => {
                 if (!ap.specifications || !Array.isArray(ap.specifications)) return '';
                 const kw = keyword.toLowerCase();
+
+                // Check Hùng's grouped specifications first (group.items)
+                for (const group of ap.specifications) {
+                  if (!group || typeof group !== 'object') continue;
+                  if (Array.isArray(group.items)) {
+                    const item = group.items.find((i: any) => {
+                      const itemLabel = (i?.label || i?.name || i?.key || '').toLowerCase();
+                      return itemLabel.includes(kw);
+                    });
+                    if (item && item.value !== undefined && item.value !== null) return String(item.value);
+                  }
+                }
+
+                // Check flat specifications (key/label/name) or group title fallback
                 for (const s of ap.specifications) {
                   if (!s || typeof s !== 'object') continue;
-                  const keyStr = (s.key || s.label || s.name || '');
-                  if (typeof keyStr === 'string' && keyStr.toLowerCase().includes(kw)) {
-                    if (s.value) return String(s.value);
+                  const keyStr = (s.key || s.label || s.name || '').toLowerCase();
+                  if (keyStr.includes(kw) && s.value !== undefined && s.value !== null) {
+                    return String(s.value);
                   }
                   if (Array.isArray(s.items)) {
-                    for (const item of s.items) {
-                      if (!item || typeof item !== 'object') continue;
-                      const itemKey = (item.label || item.name || item.key || '');
-                      if (typeof itemKey === 'string' && itemKey.toLowerCase().includes(kw)) {
-                        if (item.value) return String(item.value);
-                      }
-                    }
-                    const groupTitle = s.title || s.group || '';
-                    if (typeof groupTitle === 'string' && groupTitle.toLowerCase().includes(kw)) {
-                      const firstVal = s.items.find((i: any) => i?.value)?.value;
-                      if (firstVal) return String(firstVal);
+                    const groupTitle = (s.title || s.group || '').toLowerCase();
+                    if (groupTitle.includes(kw)) {
+                      const firstVal = s.items.find((i: any) => i?.value !== undefined && i?.value !== null)?.value;
+                      if (firstVal !== undefined && firstVal !== null) return String(firstVal);
                     }
                   }
                 }
@@ -135,6 +142,8 @@ export function TabletPage({ brand }: TabletPageProps) {
                 badge: idx === 0 ? 'MỚI' : (ap.badge || undefined),
                 price: finalPrice,
                 originalPrice: originalPrice,
+                reviewCount: ap.reviewCount || 0,
+                ratingAverage: ap.ratingAverage || 0,
                 colors: colors.length > 0 ? colors : [{ name: 'Space Gray', hex: '#4b5563' }],
                 specs: {
                   display: getSpec('màn hình') || 'Màn hình Liquid Retina',

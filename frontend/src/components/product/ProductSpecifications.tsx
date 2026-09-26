@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
-import type { ProductSpecification } from '@/types/product';
+import type { ProductSpecificationGroup } from '@/types/product';
 
 interface ProductSpecificationsProps {
   productName: string;
-  specifications: ProductSpecification[];
+  specifications: ProductSpecificationGroup[];
 }
 
 export function ProductSpecifications({
@@ -12,16 +12,27 @@ export function ProductSpecifications({
   specifications,
 }: ProductSpecificationsProps) {
   const [isExpanded, setIsExpanded] = useState(false);
-
-  // Helper to try grouping specs, but fallback to a single list if not clear
-  // We'll just render them in a clean list format first
   
+  // Extract specImages if present
+  const specImageObjs = specifications.filter((s: any) => s.type === 'specImage');
+  const resolveImageUrl = (url: string | null) => {
+    if (!url) return undefined;
+    if (url.startsWith('/uploads')) return `${import.meta.env.VITE_API_URL || 'http://localhost:3001'}${url}`;
+    return url;
+  };
+  const specImages = specImageObjs.map((s: any) => resolveImageUrl(s.url)).filter(Boolean);
+  const groups = specifications.filter((s: any) => s.type !== 'specImage');
+
+  // Flatten items count to determine if we should show expand button
+  const totalItemsCount = groups.reduce((acc, group) => acc + (group.items?.length || 0), 0);
+
   return (
     <section
       className="mt-4 rounded-3xl border border-neutral-200 bg-white shadow-sm p-6 sm:p-8 lg:p-10"
       aria-labelledby="product-specifications-title"
+      id="product-specifications"
     >
-      <div className="mb-6">
+      <div className="mb-8">
         <h2
           id="product-specifications-title"
           className="text-xl font-bold uppercase tracking-tight text-neutral-900"
@@ -30,29 +41,52 @@ export function ProductSpecifications({
         </h2>
       </div>
 
-      <div className={`relative overflow-hidden transition-all duration-500 ease-in-out ${isExpanded ? 'max-h-[5000px]' : 'max-h-[400px]'}`}>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4">
-          {specifications.map((specification, index) => (
-            <div 
-              key={specification.label + index}
-              className="flex items-start gap-4 p-4 rounded-2xl bg-neutral-50 border border-neutral-100 hover:border-blue-200 transition-colors"
-            >
-              <div className="w-[120px] shrink-0 font-semibold text-neutral-600 text-sm">
-                {specification.label}
-              </div>
-              <div className="flex-1 font-medium text-neutral-900 text-sm leading-relaxed">
-                {specification.value}
-              </div>
-            </div>
-          ))}
-        </div>
+      <div className={`relative transition-all duration-500 ease-in-out ${isExpanded ? 'max-h-[5000px]' : 'max-h-[400px] overflow-hidden'}`}>
         
-        {!isExpanded && specifications.length > 5 && (
-          <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-white to-transparent pointer-events-none" />
+        {specImages.length > 0 && (
+          <div className="hidden md:block absolute left-0 top-0 w-1/2 h-full pointer-events-none pr-[100px] lg:pr-[140px]">
+            <div className="sticky top-24 pointer-events-auto flex flex-col items-end gap-6 max-h-[80vh] overflow-y-auto no-scrollbar pb-8">
+              {specImages.map((img, idx) => (
+                <img key={idx} src={img} alt={`Specifications ${idx + 1}`} className="w-[180px] lg:w-[220px] h-auto object-contain mix-blend-multiply flex-shrink-0" />
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div className="flex flex-col gap-6 relative z-10">
+          {groups.map((group, groupIndex) => {
+            // Hide the group if there's no valid title (e.g. backward compatibility edge case where we don't want a generic title)
+            // But we still want to show the items. We can conditionally render the title.
+            const hideTitle = group.title === 'Thông số kỹ thuật' || !group.title;
+            
+            return (
+              <div key={groupIndex} className="flex flex-col md:flex-row gap-4 md:gap-8 items-start border-b border-white pb-6 last:border-0 last:pb-0">
+                {!hideTitle && (
+                  <h3 className="font-semibold text-neutral-900 text-base md:w-1/2 md:shrink-0 text-left md:text-right pr-4">{group.title}</h3>
+                )}
+                <div className={`flex flex-col gap-3 ${hideTitle ? 'w-full' : 'w-full md:w-1/2'}`}>
+                  {group.items?.map((item, itemIndex) => {
+                    // Ignore items that just say "Thông tin" as a fallback label
+                    if (item.label === 'Thông tin' && item.value === 'N/A') return null;
+                    return (
+                      <div key={itemIndex} className="text-sm flex flex-wrap gap-1">
+                        <span className="text-neutral-500 font-medium">{item.label}{item.label.endsWith(':') ? '' : ':'}</span>
+                        <span className="font-medium text-neutral-900 whitespace-pre-line">{item.value}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {!isExpanded && totalItemsCount > 5 && (
+          <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-white via-white/80 to-transparent pointer-events-none" />
         )}
       </div>
 
-      {specifications.length > 5 && (
+      {totalItemsCount > 5 && (
         <div className="mt-6 flex justify-center">
           <button
             onClick={() => setIsExpanded(!isExpanded)}

@@ -6,7 +6,7 @@ import {
   Ultra3OceanDepthSection,
   Ultra3HealthSafetyConnectivitySection,
   Ultra3BatteryCTASection,
-} from './sections';
+} from '../../../components/watch/ultra-3/sections/index';
 import { Ultra3SpecsModal } from '@/components/watch/Ultra3SpecsModal';
 import '@/css/watch.css';
 

@@ -1,2 +1,2 @@
-export * from '@/pages/smartphone/data';
+export * from '@/data/smartphone/data';
 

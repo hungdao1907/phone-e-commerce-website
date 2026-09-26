@@ -29,10 +29,12 @@ export function ActiveFilterChips() {
       case 'brand': return `Thương hiệu: ${value}`;
       case 'ram': return `RAM: ${value}`;
       case 'storage': return `Lưu trữ: ${value}`;
-      case 'cpu': return `CPU: ${value}`;
+      case 'cpu': return `Chip: ${value}`;
       case 'gpu': return `GPU: ${value}`;
       case 'screenSize': return `Màn hình: ${value}`;
+      case 'color': return `Màu: ${value}`;
       case 'colors': return `Màu: ${value}`;
+      case 'camera': return `Camera: ${value}`;
       case 'minPrice': return `Giá từ: ${Number(value).toLocaleString('vi-VN')}đ`;
       case 'maxPrice': return `Giá đến: ${Number(value).toLocaleString('vi-VN')}đ`;
       default: return value;

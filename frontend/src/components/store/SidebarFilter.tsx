@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ChevronDown, ChevronUp, Search, X } from 'lucide-react';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 import { PriceRangeSlider } from '@/components/ui/range-slider';
 
@@ -22,6 +22,7 @@ export function SidebarFilter({ filters, isLoading, hideCategoryAndBrand, catego
     gpu: true,
     screenSize: true,
     colors: true,
+    camera: true,
   });
 
   const toggleSection = (section: string) => {
@@ -87,9 +88,10 @@ export function SidebarFilter({ filters, isLoading, hideCategoryAndBrand, catego
   const isPhone = ['phone', 'iphone', 'samsung', 'xiaomi', 'oppo'].includes(currentCategory);
   const isLaptop = ['laptop', 'macbook', 'asus', 'lenovo'].includes(currentCategory);
   
+  // Standard checkbox filter section
   const FilterSection = ({ title, sectionKey, options }: { title: string, sectionKey: string, options: string[] }) => {
     if (!options || options.length === 0) return null;
-    const isExpanded = expandedSections[sectionKey];
+    const isExpanded = expandedSections[sectionKey] !== false;
     const selectedValues = searchParams.get(sectionKey)?.split(',') || [];
 
     return (
@@ -102,18 +104,96 @@ export function SidebarFilter({ filters, isLoading, hideCategoryAndBrand, catego
           {isExpanded ? <ChevronUp className="w-4 h-4 text-neutral-500" /> : <ChevronDown className="w-4 h-4 text-neutral-500" />}
         </button>
         {isExpanded && (
-          <div className="mt-3 space-y-2 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
-            {options.map((option, idx) => (
-              <label key={idx} className="flex items-center group cursor-pointer">
-                <input 
-                  type="checkbox" 
-                  className="w-4 h-4 rounded border-neutral-300 text-blue-500 focus:ring-blue-500 cursor-pointer"
-                  checked={selectedValues.includes(option)}
-                  onChange={() => handleFilterChange(sectionKey, option)}
-                />
-                <span className="ml-2 text-sm text-neutral-600 group-hover:text-neutral-900">{option}</span>
-              </label>
-            ))}
+          <div className="mt-3 flex flex-wrap gap-2 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
+            {options.map((option, idx) => {
+              const isSelected = selectedValues.includes(option);
+              return (
+                <button
+                  key={idx}
+                  onClick={() => handleFilterChange(sectionKey, option)}
+                  className={`px-3 py-1.5 text-sm font-medium rounded-full border transition-colors ${
+                    isSelected
+                      ? 'bg-green-50 text-green-600 border-green-500'
+                      : 'bg-white text-neutral-600 border-neutral-300 hover:border-neutral-900 hover:text-neutral-900'
+                  }`}
+                >
+                  {option}
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  // Color filter with circle swatches
+  const ColorFilterSection = () => {
+    const colorOptions: string[] = filters?.colors || [];
+    const colorCodes: Record<string, string> = filters?.colorCodes || {};
+    if (!colorOptions || colorOptions.length === 0) return null;
+    
+    const isExpanded = expandedSections['colors'] !== false;
+    const selectedValues = searchParams.get('color')?.split(',') || [];
+
+    // Map color names to hex codes (using colorCodes from backend, or fallback)
+    const fallbackColorMap: Record<string, string> = {
+      'đen': '#1c1c1e', 'black': '#1c1c1e',
+      'trắng': '#f5f5f0', 'white': '#f5f5f0',
+      'xanh': '#3478F6', 'blue': '#3478F6',
+      'đỏ': '#c82333', 'red': '#c82333',
+      'vàng': '#e3c6a4', 'gold': '#e3c6a4',
+      'hồng': '#e8d1cf', 'pink': '#e8d1cf',
+      'tím': '#8B5CF6', 'purple': '#8B5CF6',
+      'bạc': '#c0c0c0', 'silver': '#c0c0c0',
+      'titan': '#878681',
+      'xám': '#808080', 'gray': '#808080', 'grey': '#808080',
+    };
+
+    const getColorHex = (name: string) => {
+      // First check backend colorCodes
+      if (colorCodes[name]) return colorCodes[name];
+      // Fallback
+      const lower = name.toLowerCase();
+      for (const [key, hex] of Object.entries(fallbackColorMap)) {
+        if (lower.includes(key)) return hex;
+      }
+      return '#cccccc';
+    };
+
+    return (
+      <div className="border-b border-neutral-200 py-4">
+        <button 
+          className="flex items-center justify-between w-full text-left"
+          onClick={() => toggleSection('colors')}
+        >
+          <span className="text-sm font-bold text-neutral-900">Màu Sắc</span>
+          {isExpanded ? <ChevronUp className="w-4 h-4 text-neutral-500" /> : <ChevronDown className="w-4 h-4 text-neutral-500" />}
+        </button>
+        {isExpanded && (
+          <div className="mt-3 space-y-2.5 max-h-52 overflow-y-auto pr-2 custom-scrollbar">
+            {colorOptions.map((colorName, idx) => {
+              const isSelected = selectedValues.includes(colorName);
+              const hex = getColorHex(colorName);
+              const isLight = ['#f5f5f0', '#ffffff', '#e3e4e5', '#e8d1cf', '#e3c6a4', '#c0c0c0'].some(
+                light => hex.toLowerCase() === light.toLowerCase()
+              ) || hex.toLowerCase() > '#cccccc';
+              return (
+                <button
+                  key={idx}
+                  onClick={() => handleFilterChange('color', colorName)}
+                  className={`flex items-center gap-2.5 w-full text-left px-1 py-0.5 rounded-lg transition-colors ${isSelected ? '' : 'hover:bg-neutral-50'}`}
+                >
+                  <span
+                    className={`w-5 h-5 rounded-full shrink-0 transition-all duration-200 ${isLight ? 'border border-neutral-300' : 'border border-transparent'} ${isSelected ? 'ring-2 ring-offset-1 ring-neutral-900 scale-110' : ''}`}
+                    style={{ backgroundColor: hex }}
+                  />
+                  <span className={`text-sm ${isSelected ? 'text-neutral-900 font-semibold' : 'text-neutral-600'}`}>
+                    {colorName}
+                  </span>
+                </button>
+              );
+            })}
           </div>
         )}
       </div>
@@ -177,9 +257,9 @@ export function SidebarFilter({ filters, isLoading, hideCategoryAndBrand, catego
                 onClick={() => toggleSection('price')}
               >
                 <span className="text-sm font-bold text-neutral-900">Mức Giá</span>
-                {expandedSections['price'] ? <ChevronUp className="w-4 h-4 text-neutral-500" /> : <ChevronDown className="w-4 h-4 text-neutral-500" />}
+                {expandedSections['price'] !== false ? <ChevronUp className="w-4 h-4 text-neutral-500" /> : <ChevronDown className="w-4 h-4 text-neutral-500" />}
               </button>
-              {expandedSections['price'] && (
+              {expandedSections['price'] !== false && (
                 <div className="mt-4 px-2">
                    <PriceRangeSlider 
                      min={0}
@@ -193,7 +273,6 @@ export function SidebarFilter({ filters, isLoading, hideCategoryAndBrand, catego
                        handlePriceChange(min.toString(), max.toString());
                      }}
                      data={Array.from({ length: 60 }, (_, i) => {
-                       // Create a smooth ascending curve (exponential-like)
                        const normalized = i / 59;
                        return 0.05 + Math.pow(normalized, 1.5) * 0.95;
                      })}
@@ -202,27 +281,23 @@ export function SidebarFilter({ filters, isLoading, hideCategoryAndBrand, catego
               )}
           </div>
 
-          {/* Dynamic Specs Based on Category */}
-          <FilterSection title={isPhone ? "RAM" : "RAM"} sectionKey="ram" options={filters?.ram || []} />
+          {/* Dynamic Specs Based on Category - with SHORT values */}
+          <FilterSection title="Màn Hình" sectionKey="screenSize" options={filters?.screenSize || []} />
           <FilterSection title={isLaptop ? "Dung Lượng / Ổ Cứng" : "Dung Lượng"} sectionKey="storage" options={filters?.storage || []} />
+          <FilterSection title="RAM" sectionKey="ram" options={filters?.ram || []} />
           
-          {(isLaptop || !currentCategory) && (
-            <>
-              <FilterSection title="CPU / Chip" sectionKey="cpu" options={filters?.cpu || []} />
-              <FilterSection title="Card Đồ Họa (GPU)" sectionKey="gpu" options={filters?.gpu || []} />
-            </>
-          )}
-
           {(isPhone || !currentCategory) && (
             <FilterSection title="Camera" sectionKey="camera" options={filters?.camera || []} />
           )}
 
-          {(isPhone || isLaptop || !currentCategory) && (
-            <FilterSection title="Màn Hình" sectionKey="screenSize" options={filters?.screenSize || []} />
-          )}
+          <FilterSection title="Chip / CPU" sectionKey="cpu" options={filters?.cpu || []} />
           
-          <FilterSection title="Màu Sắc" sectionKey="colors" options={filters?.colors || []} />
+          {(isLaptop || !currentCategory) && (
+            <FilterSection title="Card Đồ Họa (GPU)" sectionKey="gpu" options={filters?.gpu || []} />
+          )}
 
+          {/* Color Filter with circles */}
+          <ColorFilterSection />
         </div>
       )}
     </div>

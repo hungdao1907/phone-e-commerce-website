@@ -6,7 +6,7 @@ import {
   Series11LifestyleSection,
   Series11SafetySection,
   Series11FinalCTASection,
-} from './sections';
+} from '../../../components/watch/series-11/sections/index';
 import '@/css/watch-series11.css';
 
 export function WatchSeries11Page() {

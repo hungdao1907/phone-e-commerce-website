@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { LottieIcon } from '@/components/ui/LottieIcon';
+import cardBagAnimation from '../../../public/lottie/cardBag.json';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { Smartphone, Cpu, Camera, Battery, ShoppingBag } from 'lucide-react';
@@ -22,6 +24,7 @@ export function BrandProductCard({ product, index = 0, accentColor }: BrandProdu
   const addItem = useCartStore((state: any) => state.addItem);
   const { setCartDrawerOpen } = useAppStore();
   const [isAdding, setIsAdding] = useState(false);
+  const [isHoveringLottie, setIsHoveringLottie] = useState(false);
 
   // Update selected color if the current one is no longer in the list (e.g. after API load)
   useEffect(() => {
@@ -88,7 +91,6 @@ export function BrandProductCard({ product, index = 0, accentColor }: BrandProdu
         return;
       }
       
-      const imageEl = card.querySelector('.product-image') as HTMLImageElement;
       const targetEl = document.getElementById('floating-cart-btn');
       
       const finalStorageLabel = variant.attributes?.['Dung lượng'] || 'Tiêu chuẩn';
@@ -110,53 +112,17 @@ export function BrandProductCard({ product, index = 0, accentColor }: BrandProdu
           stock: variant.stock || 10,
           quantity: 1
         });
-        setCartDrawerOpen(true);
       };
       
-      if (imageEl && targetEl) {
-        const rect = imageEl.getBoundingClientRect();
-        const targetRect = targetEl.getBoundingClientRect();
-        
-        const clone = imageEl.cloneNode(true) as HTMLImageElement;
-        clone.style.position = 'fixed';
-        clone.style.top = `${rect.top}px`;
-        clone.style.left = `${rect.left}px`;
-        clone.style.width = `${rect.width}px`;
-        clone.style.height = `${rect.height}px`;
-        clone.style.zIndex = '9999';
-        clone.style.transition = 'all 0.8s cubic-bezier(0.2, 1, 0.3, 1)';
-        clone.style.borderRadius = '20px';
-        
-        document.body.appendChild(clone);
-        
-        // Trigger animation
-        setTimeout(() => {
-          clone.style.top = `${targetRect.top + 10}px`;
-          clone.style.left = `${targetRect.left + 10}px`;
-          clone.style.width = '20px';
-          clone.style.height = '20px';
-          clone.style.opacity = '0.5';
-          clone.style.transform = 'scale(0.5)';
-        }, 50);
-        
-        setTimeout(() => {
-          if (document.body.contains(clone)) {
-            document.body.removeChild(clone);
-          }
-          
-          performAdd();
-          
-          // Pulse the cart button
-          if (targetEl) {
-            targetEl.classList.add('scale-125');
-            setTimeout(() => targetEl.classList.remove('scale-125'), 300);
-          }
-          setIsAdding(false);
-        }, 800);
-      } else {
-        performAdd();
-        setIsAdding(false);
+      // Call performAdd immediately instead of flying animation
+      performAdd();
+      
+      // Pulse the floating cart button (now handled by Lottie inside it, but we can keep scale effect)
+      if (targetEl) {
+        targetEl.classList.add('scale-125');
+        setTimeout(() => targetEl.classList.remove('scale-125'), 300);
       }
+      setIsAdding(false);
       
     } catch (err: any) {
       console.error(err);
@@ -175,13 +141,28 @@ export function BrandProductCard({ product, index = 0, accentColor }: BrandProdu
     >
       {/* Top Badge & Series */}
       <div className="p-6 pb-2 flex items-start justify-between gap-2 z-10">
-        {product.badge ? (
-          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold tracking-wide bg-neutral-100 text-neutral-800 border border-neutral-200/60 group-hover:bg-neutral-900 group-hover:text-white transition-colors duration-300">
-            {product.badge}
-          </span>
-        ) : (
-          <span />
-        )}
+        {(() => {
+          let discountBadge = '';
+          if (product.originalPrice && product.price) {
+            const orig = parseInt(product.originalPrice.replace(/\D/g, '')) || 0;
+            const curr = parseInt(product.price.replace(/\D/g, '')) || 0;
+            if (orig > curr && orig > 0) {
+              const pct = Math.round(((orig - curr) / orig) * 100);
+              discountBadge = `-${pct}%`;
+            }
+          }
+          return discountBadge ? (
+            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold tracking-wide bg-red-500 text-white shadow-sm transition-colors duration-300">
+              {discountBadge}
+            </span>
+          ) : product.badge ? (
+            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold tracking-wide bg-neutral-100 text-neutral-800 border border-neutral-200/60 group-hover:bg-neutral-900 group-hover:text-white transition-colors duration-300">
+              {product.badge}
+            </span>
+          ) : (
+            <span />
+          );
+        })()}
 
         <span className="text-[11px] font-medium text-neutral-400 uppercase tracking-wider">
           {product.series}
@@ -240,7 +221,7 @@ export function BrandProductCard({ product, index = 0, accentColor }: BrandProdu
             <div className="flex items-center gap-1.5 mt-2.5">
               <span className="text-yellow-500 text-xs">★</span>
               <span className="text-xs font-bold text-neutral-900">{product.ratingAverage}</span>
-              <span className="text-[11px] text-neutral-500">({product.reviewCount})</span>
+              <span className="text-[11px] text-neutral-500">({product.reviewCount} lượt đánh giá)</span>
             </div>
           ) : (
             <div className="flex items-center gap-1.5 mt-2.5">
@@ -318,13 +299,21 @@ export function BrandProductCard({ product, index = 0, accentColor }: BrandProdu
               type="button"
               onClick={handleAddToCart}
               disabled={isAdding}
-              className={`inline-flex items-center justify-center w-8 h-8 rounded-full ${isAdding ? 'bg-neutral-200 text-neutral-400' : 'bg-neutral-100 hover:bg-emerald-50 text-neutral-600 hover:text-emerald-600'} transition-colors duration-200 cursor-pointer shrink-0`}
+              onMouseEnter={() => setIsHoveringLottie(true)}
+              onMouseLeave={() => setIsHoveringLottie(false)}
+              className={`inline-flex items-center justify-center w-8 h-8 rounded-full ${isAdding ? 'bg-neutral-200 text-neutral-400' : 'bg-neutral-100 hover:bg-emerald-50 text-neutral-600 hover:text-emerald-600'} transition-colors duration-200 cursor-pointer shrink-0 relative`}
               aria-label="Thêm vào giỏ hàng"
             >
               {isAdding ? (
                 <div className="w-4 h-4 border-2 border-neutral-400 border-t-transparent rounded-full animate-spin" />
               ) : (
-                <ShoppingBag className="w-4 h-4" />
+                <div className="lottie-container w-5 h-5 flex items-center justify-center pointer-events-none">
+                  <LottieIcon
+                    animationData={cardBagAnimation}
+                    loop={false}
+                    playing={isHoveringLottie}
+                  />
+                </div>
               )}
             </button>
             <button
