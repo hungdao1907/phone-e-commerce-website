@@ -4,7 +4,7 @@ import path from 'path';
 import fs from 'fs';
 import { v2 as cloudinary } from 'cloudinary';
 import streamifier from 'streamifier';
-import env from '../env';
+import '../env';
 
 const router = express.Router();
 
