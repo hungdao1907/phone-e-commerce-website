@@ -169,7 +169,7 @@ export function ProductConfigurator({
             );
           })}
         </div>
-      </fieldset>
+      </div>
 
       {/* Promotion Demo Section */}
       <div className="mt-6 rounded-xl border border-red-200 bg-red-50/50 overflow-hidden">
