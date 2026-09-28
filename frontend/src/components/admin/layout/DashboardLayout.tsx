@@ -67,7 +67,7 @@ export function DashboardLayout() {
         <VerticalDock activeView={activeView} onNavigate={handleNavigate} />
 
         {/* Right Area (Navbar + Main Workspace) */}
-        <div className="flex-1 flex flex-col h-full bg-[#0D1F16]/70 backdrop-blur-md border border-white/10 rounded-3xl shadow-lg overflow-hidden">
+        <div className="flex-1 flex flex-col h-full overflow-hidden">
           {/* Top Navbar */}
           <header className="relative z-50 h-[80px] shrink-0 flex items-center px-8">
 
