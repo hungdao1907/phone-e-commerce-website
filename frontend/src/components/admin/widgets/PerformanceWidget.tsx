@@ -8,7 +8,7 @@ export function PerformanceWidget() {
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ delay: 0.3, duration: 0.5 }}
-      className="bg-white/[0.04] backdrop-blur-sm border border-white/[0.08] rounded-2xl p-5 flex flex-col justify-between h-full"
+      className="bg-[#17201D]  border border-white/[0.08] rounded-2xl p-5 flex flex-col justify-between h-full"
     >
       {/* Header */}
       <div className="flex items-center justify-between">

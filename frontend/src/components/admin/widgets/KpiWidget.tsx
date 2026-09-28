@@ -21,7 +21,7 @@ export function KpiWidget({ title, value, change, changeType = 'up', changeLabel
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.08, duration: 0.5, ease: 'easeOut' }}
-      className="bg-white/[0.04] backdrop-blur-sm border border-white/[0.08] rounded-2xl p-5 flex flex-col gap-3 hover:bg-white/[0.06] transition-colors duration-300"
+      className="bg-[#17201D]  border border-white/[0.08] rounded-2xl p-5 flex flex-col gap-3 hover:bg-[#1E2925] transition-colors duration-300"
     >
       {/* Header */}
       <div className="flex items-center justify-between">

@@ -250,7 +250,7 @@ export function NotificationCenter({ isOpen, onClose }: NotificationCenterProps)
                     'px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all',
                     activeFilter === f.type
                       ? 'bg-white/15 text-white border border-white/20'
-                      : 'bg-white/[0.04] text-white/40 border border-transparent hover:bg-white/[0.08] hover:text-white/60',
+                      : 'bg-[#17201D] text-white/40 border border-transparent hover:bg-white/[0.08] hover:text-white/60',
                   )}
                 >
                   {f.label}

@@ -36,7 +36,7 @@ export const MainDashboardView = React.memo(function MainDashboardView({ onViewA
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, ease: 'easeOut' }}
-          className="bg-white/[0.04] backdrop-blur-sm border border-white/[0.08] rounded-2xl p-5 flex items-center gap-3 overflow-hidden relative"
+          className="bg-[#17201D]  border border-white/[0.08] rounded-2xl p-5 flex items-center gap-3 overflow-hidden relative"
         >
           <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center shrink-0 shadow-lg">
             <User className="w-5 h-5 text-white" />
@@ -113,7 +113,7 @@ export const MainDashboardView = React.memo(function MainDashboardView({ onViewA
 
         {/* Sales Overview — BIG WIDGET */}
         <div className="relative h-full">
-          <div className="absolute inset-0 bg-white/[0.04] backdrop-blur-sm border border-white/[0.08] rounded-2xl overflow-hidden">
+          <div className="absolute inset-0 bg-[#17201D]  border border-white/[0.08] rounded-2xl overflow-hidden">
             <DoanhThuChart />
           </div>
         </div>
@@ -127,7 +127,7 @@ export const MainDashboardView = React.memo(function MainDashboardView({ onViewA
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.25, duration: 0.5 }}
-              className="bg-white/[0.04] backdrop-blur-sm border border-white/[0.08] overflow-hidden drop-shadow-2xl aspect-[180/220]"
+              className="bg-[#17201D]  border border-white/[0.08] overflow-hidden drop-shadow-2xl aspect-[180/220]"
               style={{ borderRadius: '40px' }}
             >
               <div className="w-full h-full">
