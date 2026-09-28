@@ -132,7 +132,7 @@ export function ProductConfigurator({
         <div className="flex w-full items-center justify-between text-sm font-semibold text-neutral-950 mb-3">
           <span>Màu sắc: <span className="font-normal ml-1">{selectedColor?.name}</span></span>
         </div>
-        <div className="grid grid-cols-3 gap-2">
+        <div className="flex flex-wrap gap-3">
           {product.colors.map((color) => {
             const isSelected = color.id === selectedColorId;
 
@@ -143,7 +143,7 @@ export function ProductConfigurator({
                 onClick={() => onColorChange(color.id)}
                 aria-label={'Chọn màu ' + color.name}
                 aria-pressed={isSelected}
-                className={'flex flex-row items-center justify-between px-3 h-14 rounded-2xl border transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 ' + (
+                className={'flex flex-row items-center justify-between px-3 w-24 h-14 rounded-2xl border transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 ' + (
                   isSelected
                     ? 'border-red-500 bg-red-50 shadow-sm'
                     : 'border-neutral-200 bg-white hover:border-neutral-300'
