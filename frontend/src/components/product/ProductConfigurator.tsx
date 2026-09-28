@@ -95,11 +95,11 @@ export function ProductConfigurator({
         </div>
       </header>
 
-      <fieldset className="border-b border-neutral-200 py-4">
-        <legend className="text-sm font-semibold text-neutral-950">
+      <div className="border-t border-neutral-200 py-5">
+        <div className="text-sm font-semibold text-neutral-950 mb-3">
           Dung lượng: <span className="font-normal ml-1">{product.storageOptions.find(s => s.id === selectedStorageId)?.label}</span>
-        </legend>
-        <div className="mt-2 grid grid-cols-3 gap-3">
+        </div>
+        <div className="grid grid-cols-3 gap-3">
           {product.storageOptions.map((storage) => {
             const storageVariant = getStorageVariant(storage.id);
             const isSelected = storage.id === selectedStorageId;
@@ -126,13 +126,13 @@ export function ProductConfigurator({
             );
           })}
         </div>
-      </fieldset>
+      </div>
 
-      <fieldset className="border-b border-neutral-200 py-4">
-        <legend className="flex w-full items-center justify-between text-sm font-semibold text-neutral-950">
+      <div className="border-t border-b border-neutral-200 py-5">
+        <div className="flex w-full items-center justify-between text-sm font-semibold text-neutral-950 mb-3">
           <span>Màu sắc: <span className="font-normal ml-1">{selectedColor?.name}</span></span>
-        </legend>
-        <div className="mt-2 grid grid-cols-3 gap-2">
+        </div>
+        <div className="grid grid-cols-3 gap-2">
           {product.colors.map((color) => {
             const isSelected = color.id === selectedColorId;
 
