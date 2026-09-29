@@ -60,8 +60,8 @@ export function AdminChatWidget() {
   const messagesContainerRef = useRef<HTMLDivElement>(null);
 
   const getNewSessionId = () => {
-    return crypto.randomUUID 
-      ? crypto.randomUUID() 
+    return crypto.randomUUID
+      ? crypto.randomUUID()
       : `admin-session-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
   };
 
@@ -230,7 +230,7 @@ export function AdminChatWidget() {
                 >
                   <Sparkles className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" />
                   <span>Cần hỗ trợ quản trị? Nhắn trợ lý nhé!</span>
-                  <button 
+                  <button
                     onClick={(e) => {
                       e.stopPropagation();
                       setShowTooltip(false);
@@ -259,8 +259,8 @@ export function AdminChatWidget() {
               aria-label="Mở trợ lý ảo quản trị"
             >
               <div className="w-16 h-20 sm:w-[68px] sm:h-[85px] drop-shadow-[0_10px_25px_rgba(16,185,129,0.45)] group-hover:drop-shadow-[0_16px_32px_rgba(16,185,129,0.65)] transition-all duration-300">
-                <MeshGradientSVG 
-                  className="w-full h-full" 
+                <MeshGradientSVG
+                  className="w-full h-full"
                   colors={[
                     "#A7F3D0", // Emerald light
                     "#34D399", // Emerald
@@ -268,7 +268,7 @@ export function AdminChatWidget() {
                     "#047857", // Deep teal
                     "#064E3B", // Forest
                   ]}
-                  speed={1.2} 
+                  speed={1.2}
                 />
               </div>
             </motion.button>
@@ -344,7 +344,7 @@ export function AdminChatWidget() {
                 }).format(new Date(msg.createdAt));
 
                 return (
-                  <motion.div 
+                  <motion.div
                     key={msg.id}
                     initial={{ opacity: 0, y: 8, scale: 0.98 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -371,8 +371,8 @@ export function AdminChatWidget() {
                         {msg.text && (
                           <div className={cn(
                             "px-4 py-3 rounded-2xl text-[13.5px] leading-relaxed break-words whitespace-pre-wrap shadow-xs",
-                            isUser 
-                              ? "bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-600 text-white rounded-br-xs shadow-emerald-500/15" 
+                            isUser
+                              ? "bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-600 text-white rounded-br-xs shadow-emerald-500/15"
                               : msg.isError
                               ? "bg-rose-50 text-rose-700 border border-rose-200/80 rounded-bl-xs"
                               : "bg-white/95 backdrop-blur-md border border-neutral-200/90 text-neutral-800 rounded-bl-xs shadow-[0_2px_8px_rgba(0,0,0,0.03)]"
@@ -407,7 +407,7 @@ export function AdminChatWidget() {
 
               {/* Quick Prompts Hub (shown when starting a conversation) */}
               {isOnlyWelcomeMessage && (
-                <motion.div 
+                <motion.div
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.15 }}

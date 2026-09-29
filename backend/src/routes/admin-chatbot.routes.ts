@@ -10,41 +10,41 @@ router.post('/message', authenticateToken, async (req: AuthRequest, res) => {
     const ADMIN_DASHBOARD_ROLES = new Set(['superadmin', 'admin', 'manager', 'user']);
     const role = req.user?.role;
     if (!role || !ADMIN_DASHBOARD_ROLES.has(role)) {
-      return res.status(403).json({ 
-        result_type: 'error', 
-        response_type: 'text', 
-        success: false, 
-        response: 'Bạn không có quyền sử dụng trợ lý quản trị.' 
+      return res.status(403).json({
+        result_type: 'error',
+        response_type: 'text',
+        success: false,
+        response: 'Bạn không có quyền sử dụng trợ lý quản trị.'
       });
     }
 
     // 1. Validate 'message'
     const { message } = req.body;
     if (!message || typeof message !== 'string') {
-      return res.status(400).json({ 
-        result_type: 'error', 
-        response_type: 'text', 
-        success: false, 
-        response: 'Nội dung tin nhắn không được để trống.' 
+      return res.status(400).json({
+        result_type: 'error',
+        response_type: 'text',
+        success: false,
+        response: 'Nội dung tin nhắn không được để trống.'
       });
     }
-    
+
     const trimmedMessage = message.trim();
     if (trimmedMessage.length === 0) {
-      return res.status(400).json({ 
-        result_type: 'error', 
-        response_type: 'text', 
-        success: false, 
-        response: 'Nội dung tin nhắn không được để trống.' 
+      return res.status(400).json({
+        result_type: 'error',
+        response_type: 'text',
+        success: false,
+        response: 'Nội dung tin nhắn không được để trống.'
       });
     }
-    
+
     if (trimmedMessage.length > 2000) {
-      return res.status(400).json({ 
-        result_type: 'error', 
-        response_type: 'text', 
-        success: false, 
-        response: 'Tin nhắn không được vượt quá 2000 ký tự.' 
+      return res.status(400).json({
+        result_type: 'error',
+        response_type: 'text',
+        success: false,
+        response: 'Tin nhắn không được vượt quá 2000 ký tự.'
       });
     }
 
@@ -67,12 +67,12 @@ router.post('/message', authenticateToken, async (req: AuthRequest, res) => {
     const n8nUrl = process.env.N8N_ADMIN_CHAT_WEBHOOK_URL;
     if (!n8nUrl) {
       console.error('[Admin Chatbot Route] N8N_ADMIN_CHAT_WEBHOOK_URL is not configured.');
-      return res.status(503).json({ 
-        result_type: 'error', 
-        response_type: 'text', 
-        success: false, 
-        response: 'Dịch vụ Admin Chat hiện không khả dụng.', 
-        sessionId 
+      return res.status(503).json({
+        result_type: 'error',
+        response_type: 'text',
+        success: false,
+        response: 'Dịch vụ Admin Chat hiện không khả dụng.',
+        sessionId
       });
     }
 
@@ -101,24 +101,24 @@ router.post('/message', authenticateToken, async (req: AuthRequest, res) => {
       clearTimeout(timeoutId);
       if (fetchError.name === 'AbortError') {
         console.error('[Admin Chatbot Route] n8n request timed out.');
-        return res.status(504).json({ 
-          result_type: 'error', 
-          response_type: 'text', 
-          success: false, 
-          response: 'Kết nối đến dịch vụ Admin Chat bị quá hạn.', 
-          sessionId 
+        return res.status(504).json({
+          result_type: 'error',
+          response_type: 'text',
+          success: false,
+          response: 'Kết nối đến dịch vụ Admin Chat bị quá hạn.',
+          sessionId
         });
       }
       console.error('[Admin Chatbot Route] Network error calling n8n:', fetchError.message);
-      return res.status(502).json({ 
-        result_type: 'error', 
-        response_type: 'text', 
-        success: false, 
-        response: 'Không thể kết nối đến dịch vụ Admin Chat.', 
-        sessionId 
+      return res.status(502).json({
+        result_type: 'error',
+        response_type: 'text',
+        success: false,
+        response: 'Không thể kết nối đến dịch vụ Admin Chat.',
+        sessionId
       });
     }
-    
+
     clearTimeout(timeoutId);
 
     // Read the body once
@@ -143,11 +143,11 @@ router.post('/message', authenticateToken, async (req: AuthRequest, res) => {
     // 5. Handle non-2xx Response
     if (!n8nResponse.ok) {
       console.error(`[Admin Chatbot Route] n8n returned status ${n8nResponse.status} ${n8nResponse.statusText}`);
-      return res.status(502).json({ 
-        result_type: 'error', 
-        response_type: 'text', 
-        success: false, 
-        response: 'Dịch vụ Admin Chat gặp lỗi phản hồi.', 
+      return res.status(502).json({
+        result_type: 'error',
+        response_type: 'text',
+        success: false,
+        response: 'Dịch vụ Admin Chat gặp lỗi phản hồi.',
         sessionId
       });
     }
@@ -155,17 +155,17 @@ router.post('/message', authenticateToken, async (req: AuthRequest, res) => {
     // 6. Handle JSON Response errors
     if (parseError || !isValidResponse) {
       console.error('[Admin Chatbot Route] Failed to parse n8n JSON response or invalid payload');
-      return res.status(502).json({ 
-        result_type: 'error', 
-        response_type: 'text', 
-        success: false, 
-        response: 'Dữ liệu trả về từ Admin Chat không hợp lệ.', 
-        sessionId 
+      return res.status(502).json({
+        result_type: 'error',
+        response_type: 'text',
+        success: false,
+        response: 'Dữ liệu trả về từ Admin Chat không hợp lệ.',
+        sessionId
       });
     }
 
 
-    
+
     // Fallback to inject sessionId if missing
     if (typeof responseData === 'object' && responseData !== null && !Array.isArray(responseData)) {
       if (!responseData.sessionId) {
@@ -177,11 +177,11 @@ router.post('/message', authenticateToken, async (req: AuthRequest, res) => {
 
   } catch (err: any) {
     console.error('[Admin Chatbot Route] Unexpected error:', err.message);
-    return res.status(500).json({ 
-      result_type: 'error', 
-      response_type: 'text', 
-      success: false, 
-      response: 'Lỗi server nội bộ.' 
+    return res.status(500).json({
+      result_type: 'error',
+      response_type: 'text',
+      success: false,
+      response: 'Lỗi server nội bộ.'
     });
   }
 });

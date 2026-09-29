@@ -8,14 +8,14 @@ import { cn } from '../../lib/utils';
 
 export function ChatMessageItem({ message }: { message: ChatMessage }) {
   const isUser = message.role === 'user';
-  
+
   const timeFormatted = message.timeString || new Intl.DateTimeFormat('vi-VN', {
     hour: '2-digit',
     minute: '2-digit',
   }).format(new Date(message.createdAt));
 
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0, y: 8, scale: 0.98 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ duration: 0.22, ease: 'easeOut' }}
@@ -41,8 +41,8 @@ export function ChatMessageItem({ message }: { message: ChatMessage }) {
           {message.text && (
             <div className={cn(
               "px-4 py-3 rounded-2xl text-[13.5px] leading-relaxed break-words shadow-xs",
-              isUser 
-                ? "bg-gradient-to-r from-blue-600 via-blue-600 to-indigo-600 text-white rounded-br-xs shadow-blue-500/15" 
+              isUser
+                ? "bg-gradient-to-r from-blue-600 via-blue-600 to-indigo-600 text-white rounded-br-xs shadow-blue-500/15"
                 : "bg-white/95 backdrop-blur-md border border-neutral-200/90 text-neutral-800 rounded-bl-xs shadow-[0_2px_8px_rgba(0,0,0,0.03)]"
             )}>
               {message.text}
@@ -115,9 +115,9 @@ export function ChatMessageItem({ message }: { message: ChatMessage }) {
                 </div>
               </div>
 
-              <a 
-                href={resolveBackendUrl(message.quotation.downloadUrl)} 
-                target="_blank" 
+              <a
+                href={resolveBackendUrl(message.quotation.downloadUrl)}
+                target="_blank"
                 rel="noopener noreferrer"
                 className="group flex items-center justify-center gap-2 w-full py-2.5 px-4 bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-700 hover:to-indigo-800 text-white text-xs font-semibold rounded-xl shadow-md shadow-blue-500/20 hover:shadow-lg hover:shadow-blue-500/30 transition-all duration-200"
               >

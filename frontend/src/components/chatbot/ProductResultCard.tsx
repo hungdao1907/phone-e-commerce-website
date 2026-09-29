@@ -12,14 +12,14 @@ export function ProductResultCard({ product }: ProductResultCardProps) {
   const imageUrl = resolveBackendUrl(product.image_url);
   const formattedPrice = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(product.price || 0);
   const formattedOriginalPrice = product.original_price ? new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(product.original_price) : null;
-  
+
   const discountPercent = (product.original_price && product.price && product.original_price > product.price)
     ? Math.round(((product.original_price - product.price) / product.original_price) * 100)
     : null;
 
   return (
-    <Link 
-      to={`/product/${product.id}`} 
+    <Link
+      to={`/product/${product.id}`}
       className="group relative flex flex-col w-64 flex-shrink-0 bg-white rounded-2xl border border-neutral-200/90 shadow-[0_2px_10px_rgba(0,0,0,0.04)] hover:shadow-[0_10px_25px_rgba(0,0,0,0.1)] hover:border-blue-400/60 transition-all duration-300 overflow-hidden text-left"
     >
       {/* Product Image Area */}
@@ -50,7 +50,7 @@ export function ProductResultCard({ product }: ProductResultCardProps) {
           </div>
         )}
       </div>
-      
+
       {/* Product Information */}
       <div className="p-3.5 flex flex-col flex-1 justify-between bg-white">
         <div>
@@ -61,7 +61,7 @@ export function ProductResultCard({ product }: ProductResultCardProps) {
           <h4 className="text-[13px] font-semibold text-neutral-900 line-clamp-2 leading-snug group-hover:text-blue-600 transition-colors">
             {product.name}
           </h4>
-          
+
           {/* Price */}
           <div className="mt-2.5 flex items-baseline gap-2">
             <span className="text-[15px] font-bold text-rose-600 tracking-tight">

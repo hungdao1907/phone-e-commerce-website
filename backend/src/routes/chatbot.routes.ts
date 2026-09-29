@@ -30,7 +30,7 @@ const quotationStorage = multer.diskStorage({
         safeName = sanitized;
       }
     }
-    
+
     const randomHex = crypto.randomBytes(4).toString('hex');
     cb(null, `${safeName}-${randomHex}.pdf`);
   }
@@ -55,12 +55,12 @@ router.post('/message', async (req, res) => {
     if (!message || typeof message !== 'string') {
       return res.status(400).json({ result_type: 'error', response_type: 'text', success: false, response: 'Nội dung tin nhắn không được để trống.' });
     }
-    
+
     const trimmedMessage = message.trim();
     if (trimmedMessage.length === 0) {
       return res.status(400).json({ result_type: 'error', response_type: 'text', success: false, response: 'Nội dung tin nhắn không được để trống.' });
     }
-    
+
     if (trimmedMessage.length > 2000) {
       return res.status(400).json({ result_type: 'error', response_type: 'text', success: false, response: 'Tin nhắn không được vượt quá 2000 ký tự.' });
     }
@@ -109,7 +109,7 @@ router.post('/message', async (req, res) => {
       console.error('[Chatbot Route] Network error calling n8n:', fetchError.message);
       return res.status(502).json({ result_type: 'error', response_type: 'text', success: false, response: 'Failed to communicate with chat service.', sessionId });
     }
-    
+
     clearTimeout(timeoutId);
 
     // 5. Handle non-2xx Response
@@ -120,22 +120,22 @@ router.post('/message', async (req, res) => {
 
     // 6. Check Content-Type for Binary/PDF
     const contentType = n8nResponse.headers.get('content-type') || '';
-    
+
     if (contentType.includes('application/pdf') || contentType.includes('application/octet-stream') || contentType.includes('application/vnd.')) {
       // Proxy binary response
       res.setHeader('Content-Type', contentType);
-      
+
       const contentDisposition = n8nResponse.headers.get('content-disposition');
       if (contentDisposition) {
         res.setHeader('Content-Disposition', contentDisposition);
       }
-      
+
       res.setHeader('X-Chat-Session-Id', sessionId);
-      
+
       // Convert web stream to node stream or send buffer
       const arrayBuffer = await n8nResponse.arrayBuffer();
       const buffer = Buffer.from(arrayBuffer);
-      
+
       return res.send(buffer);
     }
 
@@ -152,7 +152,7 @@ router.post('/message', async (req, res) => {
     if (Array.isArray(responseData) && responseData.length === 1) {
       responseData = responseData[0];
     }
-    
+
     // Fallback if somehow it's still an array or weird object without sessionId
     if (typeof responseData === 'object' && responseData !== null && !Array.isArray(responseData)) {
       if (!responseData.sessionId) {
@@ -181,7 +181,7 @@ router.post('/quotation-files', (req, res) => {
 
   const authHeader = req.headers.authorization || '';
   const token = authHeader.replace(/^Bearer\s+/, '').trim();
-  
+
   if (token !== expectedToken) {
     return res.status(401).json({ result_type: 'error', response_type: 'text', success: false, response: 'Unauthorized.' });
   }
@@ -216,7 +216,7 @@ router.post('/quotation-files', (req, res) => {
 // Client downloads PDF
 router.get('/quotation-files/:fileName', (req, res) => {
   const fileName = req.params.fileName;
-  
+
   // Basic sanitization
   if (!fileName || fileName.includes('/') || fileName.includes('\\') || fileName.includes('..')) {
     return res.status(400).json({ result_type: 'error', response_type: 'text', success: false, response: 'Invalid file name.' });
@@ -235,7 +235,7 @@ router.get('/quotation-files/:fileName', (req, res) => {
 
   res.setHeader('Content-Type', 'application/pdf');
   res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
-  
+
   const stream = fs.createReadStream(filePath);
   stream.on('error', (err) => {
     console.error('[Chatbot Route] Error streaming quotation file:', err);

@@ -111,4 +111,3 @@ export function retrieveAdminKnowledge(question: string, maxPages = 3) {
     statusContext ? `\nStatus mappings:\n${statusContext}` : '',
   ].filter(Boolean).join('\n\n');
 }
-

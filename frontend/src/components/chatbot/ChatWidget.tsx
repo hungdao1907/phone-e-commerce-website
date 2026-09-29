@@ -60,8 +60,8 @@ export function ChatWidget() {
   };
 
   const getNewSessionId = () => {
-    return crypto.randomUUID 
-      ? crypto.randomUUID() 
+    return crypto.randomUUID
+      ? crypto.randomUUID()
       : `session-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
   };
 
@@ -143,7 +143,7 @@ export function ChatWidget() {
 
     try {
       const response = await sendChatMessage(text, sessionId);
-      
+
       // Update session if backend sent a new one
       if (response.sessionId && response.sessionId !== sessionId) {
         sessionStorage.setItem(SESSION_KEY, response.sessionId);
@@ -226,7 +226,7 @@ export function ChatWidget() {
                 >
                   <Sparkles className="w-3.5 h-3.5 text-blue-600 flex-shrink-0" />
                   <span>Cần tư vấn mua sắm? Nhắn trợ lý nhé!</span>
-                  <button 
+                  <button
                     onClick={(e) => {
                       e.stopPropagation();
                       setShowTooltip(false);
@@ -332,7 +332,7 @@ export function ChatWidget() {
 
               {/* Quick Prompts Hub (shown when starting a conversation) */}
               {isOnlyWelcomeMessage && (
-                <motion.div 
+                <motion.div
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.15 }}

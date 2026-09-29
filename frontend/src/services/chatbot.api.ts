@@ -6,11 +6,11 @@ export async function sendChatMessage(message: string, sessionId: string) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ message, sessionId }),
   });
-  
+
   if (!response.ok) {
     throw new Error('Failed to send message');
   }
-  
+
   return response.json();
 }
 
