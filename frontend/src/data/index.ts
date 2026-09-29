@@ -1,1 +1,1 @@
-export * from './mockPurchaseProducts';
+export * from './product/data/mockPurchaseProducts';
