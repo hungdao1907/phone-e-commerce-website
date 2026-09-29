@@ -99,7 +99,7 @@ export function DashboardLayout() {
               <LeadManager />
             ) : activeView === 'planned' ? (
               <InteractiveCalendar />
-            ) : activeView === 'product' || activeView === 'product-list' ? (
+            ) : activeView === 'product' || activeView === 'product-list' || activeView === 'products' ? (
               <ProductList />
             ) : activeView === 'inventory' ? (
               <Inventory />
