@@ -23,13 +23,22 @@ import leadRoutes from './routes/lead.routes';
 import dashboardRoutes from './routes/dashboard.routes';
 import notificationRoutes from './routes/notification.routes';
 import wishlistRoutes from './routes/wishlist.routes';
+import bankRoutes from './routes/bank.routes';
 
 const app = express();
 const port = process.env.PORT || 3001;
 
 // Middleware
 app.use(cors());
-app.use(express.json());
+
+// SePay webhook needs raw body for HMAC verification
+app.use((req, res, next) => {
+  if (req.originalUrl === '/api/bank/webhook') {
+    express.text({ type: 'application/json' })(req, res, next);
+  } else {
+    express.json()(req, res, next);
+  }
+});
 
 // Serve static files from uploads folder (reliably resolves to backend/uploads)
 const uploadsDir = path.resolve(__dirname, '..', 'uploads');
@@ -69,6 +78,7 @@ app.use('/api/leads', leadRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/wishlist', wishlistRoutes);
+app.use('/api/bank', bankRoutes);
 
 app.get('/', (req, res) => {
   res.status(200).json({ message: 'Welcome to Phone E-Commerce API', status: 'live' });

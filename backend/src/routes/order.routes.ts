@@ -15,6 +15,39 @@ type PreparedOrderItem = {
   unitPrice: number;
 };
 
+// GET payment status polling endpoint
+router.get('/:orderCode/payment-status', authenticateToken, async (req, res) => {
+  try {
+    const orderCode = getRouteParam(req.params.orderCode);
+    const order = await prisma.order.findUnique({
+      where: { orderCode },
+      select: { id: true, orderCode: true, status: true, paymentStatus: true }
+    });
+    
+    if (!order) return res.status(404).json({ message: 'Order not found' });
+    
+    // Check if there are any BankTransactions for this order code
+    const latestTx = await prisma.bankTransaction.findFirst({
+      where: { orderCode },
+      orderBy: { createdAt: 'desc' }
+    });
+    
+    res.json({
+      orderId: order.id,
+      orderCode: order.orderCode,
+      orderStatus: order.status,
+      paymentStatus: order.paymentStatus,
+      transaction: latestTx ? {
+        transactionId: latestTx.transactionId,
+        amount: latestTx.amount,
+        status: latestTx.status
+      } : null
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error fetching payment status' });
+  }
+});
+
 // GET all orders
 router.get('/', authenticateToken, async (req, res) => {
   try {
@@ -183,7 +216,7 @@ router.post('/', authenticateToken, async (req, res) => {
         const bankId = process.env.VIETQR_BANK_ID || 'MB';
         const accountNo = process.env.VIETQR_ACCOUNT_NO || '0123456789';
         const accountName = process.env.VIETQR_ACCOUNT_NAME || 'APPLEWEB';
-        const transferContent = `THANHTOAN ${orderCode}`;
+        const transferContent = `SEVQR ${orderCode}`;
         
         // Use VietQR Quick Link API
         const qrUrl = `https://img.vietqr.io/image/${bankId}-${accountNo}-compact.png?amount=${finalTotal}&addInfo=${encodeURIComponent(transferContent)}&accountName=${encodeURIComponent(accountName)}`;

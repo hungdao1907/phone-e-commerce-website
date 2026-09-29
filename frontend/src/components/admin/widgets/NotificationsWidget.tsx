@@ -99,7 +99,7 @@ export function NotificationsWidget({ onViewAll }: NotificationsWidgetProps) {
     >
       {/* Inner stacked container */}
       <motion.div
-        className="w-full rounded-2xl bg-[#17201D] border border-white/[0.08] p-4 flex flex-col gap-3"
+        className="w-full rounded-2xl bg-gradient-to-br from-[#5A827E]/90 to-[#26667F]/90 backdrop-blur-md border border-white/[0.08] p-4 flex flex-col gap-3"
       >
         {/* Card stack */}
         <div>

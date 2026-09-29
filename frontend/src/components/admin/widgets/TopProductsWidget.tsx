@@ -37,7 +37,7 @@ export function TopProductsWidget() {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.55, duration: 0.5 }}
-      className="bg-[#17201D]  border border-white/[0.08] rounded-2xl flex flex-col h-full overflow-hidden"
+      className="bg-gradient-to-br from-[#5A827E]/90 to-[#26667F]/90 backdrop-blur-md  border border-white/[0.08] rounded-2xl flex flex-col h-full overflow-hidden"
     >
       {/* Header */}
       <div className="px-5 pt-5 pb-3 flex items-center justify-between shrink-0">

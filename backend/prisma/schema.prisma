@@ -288,7 +288,7 @@ model PromoCode {
 model Banner {
   id        String    @id @default(uuid())
   title     String
-  image     String
+  image     String?
   link      String?
   position  String
   sortOrder Int       @default(0)
@@ -402,4 +402,27 @@ model Wishlist {
 
   @@unique([customerId, productId])
   @@index([customerId])
+}
+
+// ========== BANK TRANSACTIONS ==========
+model BankTransaction {
+  id              String   @id @default(uuid())
+  transactionId   String   @unique
+  amount          Int
+  description     String
+  transactionDate DateTime
+  bankName        String?
+  accountNumber   String?
+  transactionType String   @default("IN") // IN, OUT
+  status          String   @default("UNMATCHED") // UNMATCHED, MATCHED, INVALID_AMOUNT, INVALID_CONTENT, MANUAL_REVIEW
+  orderId         String?  // Reference to Order if matched
+  orderCode       String?  // The extracted order code
+  matchedAt       DateTime?
+  matchedBy       String?  // SYSTEM, ADMIN
+  rawData         Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([transactionId])
+  @@index([status])
 }

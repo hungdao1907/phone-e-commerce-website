@@ -58,7 +58,7 @@ export function DashboardLayout() {
   const handleOpenNotifCenter = useCallback(() => setIsNotifCenterOpen(true), []);
 
   return (
-    <div className="relative min-h-screen w-full overflow-hidden bg-gradient-to-br from-[#183D61] via-[#ACD99C] to-[#E0CD39] text-white font-sans">
+    <div className="relative min-h-screen w-full overflow-hidden bg-gradient-to-br from-[#183D61] to-[#ACD99C] text-white font-sans">
 
 
       {/* Main Content Area */}

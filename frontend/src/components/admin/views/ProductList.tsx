@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Plus, Edit2, Trash2, X, Package, RefreshCw, ChevronDown, ChevronRight, ArrowLeft, Image as ImageIcon, Zap, Upload } from 'lucide-react';
+import { Search, Plus, Edit2, Trash2, X, Package, RefreshCw, ChevronDown, ChevronRight, ArrowLeft, Image as ImageIcon, Zap, Upload, LayoutGrid, List } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 import { AdminProductFilterSidebar } from './products/AdminProductFilterSidebar';
@@ -30,6 +30,7 @@ interface ProductVariant {
 interface Category {
   id: string;
   name: string;
+  slug: string;
   children?: Category[];
 }
 
@@ -138,6 +139,11 @@ export function ProductList() {
   const [pagination, setPagination] = useState({ page: 1, limit: 12, total: 0, totalPages: 0 });
   const [listFilters, setListFilters] = useState<Record<string, string[]>>({});
   const [adminFilters, setAdminFilters] = useState<Record<string, any>>({});
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>(() => (localStorage.getItem('product-list-view-mode') as 'grid' | 'list') || 'grid');
+
+  useEffect(() => {
+    localStorage.setItem('product-list-view-mode', viewMode);
+  }, [viewMode]);
   const [listCategory, setListCategory] = useState('');
   const [listStatus, setListStatus] = useState('');
   const [listStock, setListStock] = useState('');
@@ -313,10 +319,10 @@ export function ProductList() {
   useEffect(() => { fetchProducts(); fetchCategories(); }, []);
 
   // Flatten Categories
-  const flattenCategories = (cats: Category[], depth = 0): { id: string; name: string; depth: number }[] => {
-    let result: { id: string; name: string; depth: number }[] = [];
+  const flattenCategories = (cats: Category[], depth = 0): { id: string; name: string; slug: string; depth: number }[] => {
+    let result: { id: string; name: string; slug: string; depth: number }[] = [];
     for (const cat of cats) {
-      result.push({ id: cat.id, name: cat.name, depth });
+      result.push({ id: cat.id, name: cat.name, slug: cat.slug, depth });
       if (cat.children) {
         result = result.concat(flattenCategories(cat.children, depth + 1));
       }
@@ -982,7 +988,7 @@ export function ProductList() {
   return (
     <div className="flex flex-col h-full gap-4 text-white w-full relative">
       {/* HEADER */}
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shrink-0 bg-[#1c1c1e] p-4 rounded-2xl border border-white/10">
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shrink-0 bg-[#A4CE95]/70 backdrop-blur-md p-4 rounded-2xl border border-white/10">
         <div>
           <h1 className="text-xl font-bold tracking-tight text-white">Sản phẩm</h1>
           <p className="text-xs text-white/50 mt-1">Quản lý {pagination.total} sản phẩm</p>
@@ -1026,6 +1032,30 @@ export function ProductList() {
             <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40 pointer-events-none" />
           </div>
 
+          {/* View Toggle */}
+          <div className="flex items-center bg-black/20 border border-white/10 rounded-xl p-1 h-10 shrink-0">
+            <button
+              onClick={() => setViewMode('grid')}
+              aria-label="Chuyển sang dạng lưới"
+              className={cn(
+                "p-1.5 rounded-lg flex items-center justify-center transition-all duration-200 w-9 h-full",
+                viewMode === 'grid' ? "bg-white/10 text-white shadow-sm" : "text-white/40 hover:text-white/80 hover:bg-white/5"
+              )}
+            >
+              <LayoutGrid className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => setViewMode('list')}
+              aria-label="Chuyển sang dạng danh sách"
+              className={cn(
+                "p-1.5 rounded-lg flex items-center justify-center transition-all duration-200 w-9 h-full",
+                viewMode === 'list' ? "bg-white/10 text-white shadow-sm" : "text-white/40 hover:text-white/80 hover:bg-white/5"
+              )}
+            >
+              <List className="w-4 h-4" />
+            </button>
+          </div>
+
           <button onClick={() => setIsImportModalOpen(true)} className="h-10 px-4 rounded-xl bg-white/10 hover:bg-white/20 text-white flex items-center gap-2 transition-colors text-sm font-semibold whitespace-nowrap border border-white/10">
             <Upload className="w-4 h-4" /> Import
           </button>
@@ -1056,7 +1086,7 @@ export function ProductList() {
         </div>
 
         {/* GRID VIEW */}
-        <div className="flex-1 flex flex-col min-h-0 bg-[#1c1c1e]/50 border border-white/5 rounded-2xl p-4 overflow-hidden">
+        <div className="flex-1 flex flex-col min-h-0 bg-gradient-to-br from-[#5A827E]/90 to-[#26667F]/90 backdrop-blur-md border border-white/[0.08] rounded-2xl p-4 overflow-hidden">
           
           <div className="flex items-center justify-between mb-4 text-xs font-semibold text-white/50 px-2 shrink-0">
             <div className="flex items-center">
@@ -1086,8 +1116,8 @@ export function ProductList() {
                 <Package className="w-12 h-12 mb-3 opacity-20" />
                 <p>Không tìm thấy sản phẩm nào</p>
               </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4 p-2">
+            ) : viewMode === 'grid' ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-2">
                 {listData.map((product) => (
                   <AdminProductCard
                     key={product.id}
@@ -1104,8 +1134,47 @@ export function ProductList() {
                       setTimeout(() => handleBulkAction('delete'), 0);
                     }}
                     onManageVariants={() => setShowVariantModalFor(product)}
+                    viewMode="grid"
                   />
                 ))}
+              </div>
+            ) : (
+              <div className="w-full overflow-x-auto p-2">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="text-[11px] font-bold text-white/40 uppercase tracking-wider border-b border-white/10">
+                      <th className="p-3 w-10"></th>
+                      <th className="p-3 min-w-[250px]">Sản phẩm</th>
+                      <th className="p-3">Danh mục</th>
+                      <th className="p-3">Giá</th>
+                      <th className="p-3 text-center">Tồn kho</th>
+                      <th className="p-3 text-center">Biến thể</th>
+                      <th className="p-3 text-center">Trạng thái</th>
+                      <th className="p-3 w-12 text-right">Thao tác</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {listData.map((product) => (
+                      <AdminProductCard
+                        key={product.id}
+                        product={product}
+                        isSelected={selectedProductIds.includes(product.id)}
+                        onSelect={() => {
+                          setSelectedProductIds(prev => 
+                            prev.includes(product.id) ? prev.filter(id => id !== product.id) : [...prev, product.id]
+                          );
+                        }}
+                        onEdit={() => handleOpenEdit(product)}
+                        onDelete={() => {
+                          setSelectedProductIds([product.id]);
+                          setTimeout(() => handleBulkAction('delete'), 0);
+                        }}
+                        onManageVariants={() => setShowVariantModalFor(product)}
+                        viewMode="list"
+                      />
+                    ))}
+                  </tbody>
+                </table>
               </div>
             )}
           </div>
