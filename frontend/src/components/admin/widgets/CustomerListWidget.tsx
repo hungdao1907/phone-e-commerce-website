@@ -43,7 +43,7 @@ export function CustomerListWidget() {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.5, duration: 0.5 }}
-      className="bg-white/[0.04] backdrop-blur-sm border border-white/[0.08] rounded-2xl flex flex-col h-full overflow-hidden"
+      className="bg-gradient-to-br from-[#5A827E]/90 to-[#26667F]/90 backdrop-blur-md  border border-white/[0.08] rounded-2xl flex flex-col h-full overflow-hidden"
     >
       {/* Header */}
       <div className="px-6 pt-5 pb-4 flex items-center justify-between shrink-0 border-b border-white/[0.04]">
@@ -101,7 +101,7 @@ export function CustomerListWidget() {
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.1 + i * 0.08 }}
               onClick={() => navigate(`/dashboard/orders?search=${order.orderCode}`)}
-              className="grid grid-cols-[1.8fr_2fr_1.2fr] gap-4 items-center px-3 py-3 rounded-xl hover:bg-white/[0.06] transition-colors cursor-pointer mb-1"
+              className="grid grid-cols-[1.8fr_2fr_1.2fr] gap-4 items-center px-3 py-3 rounded-xl hover:brightness-110 transition-colors cursor-pointer mb-1"
             >
               {/* Customer */}
               <div className="flex items-center gap-3 min-w-0">

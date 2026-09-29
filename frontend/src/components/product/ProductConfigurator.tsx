@@ -95,11 +95,11 @@ export function ProductConfigurator({
         </div>
       </header>
 
-      <fieldset className="border-b border-neutral-200 py-6">
-        <legend className="text-sm font-semibold text-neutral-950">
+      <div className="border-t border-neutral-200 py-5">
+        <div className="text-sm font-semibold text-neutral-950 mb-3">
           Dung lượng: <span className="font-normal ml-1">{product.storageOptions.find(s => s.id === selectedStorageId)?.label}</span>
-        </legend>
-        <div className="mt-3 grid grid-cols-3 gap-3">
+        </div>
+        <div className="grid grid-cols-3 gap-3">
           {product.storageOptions.map((storage) => {
             const storageVariant = getStorageVariant(storage.id);
             const isSelected = storage.id === selectedStorageId;
@@ -126,13 +126,13 @@ export function ProductConfigurator({
             );
           })}
         </div>
-      </fieldset>
+      </div>
 
-      <fieldset className="border-b border-neutral-200 py-6">
-        <legend className="flex w-full items-center justify-between text-sm font-semibold text-neutral-950">
+      <div className="border-t border-b border-neutral-200 py-5">
+        <div className="flex w-full items-center justify-between text-sm font-semibold text-neutral-950 mb-3">
           <span>Màu sắc: <span className="font-normal ml-1">{selectedColor?.name}</span></span>
-        </legend>
-        <div className="mt-3 grid grid-cols-3 gap-2">
+        </div>
+        <div className="flex flex-wrap gap-3">
           {product.colors.map((color) => {
             const isSelected = color.id === selectedColorId;
 
@@ -143,34 +143,33 @@ export function ProductConfigurator({
                 onClick={() => onColorChange(color.id)}
                 aria-label={'Chọn màu ' + color.name}
                 aria-pressed={isSelected}
-                className={'flex flex-row items-center justify-between pl-3 pr-3 h-16 rounded-2xl border transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 ' + (
+                className={'flex flex-row items-center justify-between px-3 w-24 h-14 rounded-2xl border transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 ' + (
                   isSelected
-                    ? 'border-red-500 bg-red-50 text-red-700 shadow-sm'
-                    : 'border-neutral-200 bg-white text-neutral-700 hover:border-neutral-300'
+                    ? 'border-red-500 bg-red-50 shadow-sm'
+                    : 'border-neutral-200 bg-white hover:border-neutral-300'
                 )}
               >
                 {/* Ảnh thiết bị bên trái */}
-                <div className="h-full w-12 flex items-center justify-center shrink-0 p-0.5">
+                <div className="h-full w-10 flex items-center justify-start shrink-0 py-1.5">
                   {color.images && color.images[0] ? (
-                    <img src={color.images[0]} alt={color.name} className="h-full object-contain mix-blend-multiply" />
+                    <img src={color.images[0]} alt="" className="h-full object-contain mix-blend-multiply" />
                   ) : (
-                    <div className="text-[10px] text-neutral-400">No Image</div>
+                    <div className="text-[10px] text-neutral-400">N/A</div>
                   )}
                 </div>
 
-                {/* Hình tròn màu và tên bên phải */}
-                <div className="flex-1 flex flex-col items-center justify-center ml-2 pl-1 relative z-10">
+                {/* Hình tròn màu bên phải */}
+                <div className="flex shrink-0 items-center justify-center pl-1">
                   <div
-                    className={'h-6 w-6 rounded-full border shadow-sm mb-1.5 shrink-0 ' + (isSelected ? 'border-red-200' : 'border-neutral-200')}
+                    className={'h-5 w-5 rounded-full border shadow-sm ' + (isSelected ? 'border-red-300 ring-2 ring-red-100 ring-offset-1' : 'border-neutral-200')}
                     style={{ backgroundColor: color.hex }}
                   />
-                  <span className="text-[11px] font-medium text-center whitespace-nowrap leading-tight">{color.name}</span>
                 </div>
               </button>
             );
           })}
         </div>
-      </fieldset>
+      </div>
 
       {/* Promotion Demo Section */}
       <div className="mt-6 rounded-xl border border-red-200 bg-red-50/50 overflow-hidden">

@@ -62,7 +62,7 @@ export function ActivityWidget() {
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ delay: 0.4, duration: 0.5 }}
-      className="bg-white/[0.04] backdrop-blur-sm border border-white/[0.08] rounded-2xl flex flex-col h-full overflow-hidden"
+      className="bg-gradient-to-br from-[#5A827E]/90 to-[#26667F]/90 backdrop-blur-md  border border-white/[0.08] rounded-2xl flex flex-col h-full overflow-hidden"
     >
       {/* Header */}
       <div className="px-5 pt-5 pb-3 flex items-center justify-between shrink-0">
