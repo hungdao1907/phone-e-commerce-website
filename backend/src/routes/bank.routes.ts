@@ -10,12 +10,15 @@ const prisma = new PrismaClient();
 // In production, this would be secured by provider-specific IP allowlists, signatures, or secret tokens.
 router.post('/webhook', async (req, res) => {
   try {
-    const rawBody = typeof req.body === 'string' ? req.body : JSON.stringify(req.body);
     const signature = req.headers['x-sepay-signature'] as string;
     const timestampStr = req.headers['x-sepay-timestamp'] as string;
     
     // 1. Verify SePay Webhook Signature & Timestamp
     if (signature && timestampStr) {
+      if (typeof req.body !== 'string') {
+        return res.status(400).json({ success: false, message: 'Webhook body must be a raw string' });
+      }
+      const rawBody = req.body;
       const secret = process.env.SEPAY_WEBHOOK_SECRET;
       if (!secret) return res.status(500).json({ success: false, message: 'Server config error' });
       
@@ -25,14 +28,14 @@ router.post('/webhook', async (req, res) => {
         return res.status(401).json({ success: false, message: 'Expired request' });
       }
 
-      // Verify HMAC-SHA256
-      const expectedSignature = crypto.createHmac('sha256', secret)
+      // Verify HMAC-SHA256 (Must include sha256= prefix)
+      const expectedSignature = 'sha256=' + crypto.createHmac('sha256', secret)
         .update(timestampStr + '.' + rawBody)
         .digest('hex');
       
       try {
-        const sigBuffer = Buffer.from(signature, 'hex');
-        const expectedBuffer = Buffer.from(expectedSignature, 'hex');
+        const sigBuffer = Buffer.from(signature, 'utf8');
+        const expectedBuffer = Buffer.from(expectedSignature, 'utf8');
         if (sigBuffer.length !== expectedBuffer.length || !crypto.timingSafeEqual(sigBuffer, expectedBuffer)) {
           return res.status(401).json({ success: false, message: 'Invalid signature' });
         }
