@@ -1,4 +1,4 @@
-import type { ProductVariant, PurchaseProduct, PurchaseProductColor, PurchaseProductOption } from '../../../types/product/types/index';
+import type { ProductVariant, PurchaseProduct, PurchaseProductColor, PurchaseProductOption } from '@/types/product';
 import { getAllSmartphoneProducts } from '../../smartphone/data/index';
 import { getAllTabletProducts } from '../../tablet/data/index';
 import { getAllLaptopProducts } from '../../laptop/data/index';

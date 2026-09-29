@@ -1,5 +1,5 @@
 import { Camera, Zap, RefreshCw, Sparkles } from 'lucide-react';
-import type { BrandConfig, BrandProductGroupDefinition, BrandPillar } from '../../../types/smartphone/types/index';
+import type { BrandConfig, BrandProductGroupDefinition, BrandPillar } from '@/types/smartphone';
 
 /* ─── Product Group Definitions ─── */
 const XIAOMI_PRODUCT_GROUPS: BrandProductGroupDefinition[] = [

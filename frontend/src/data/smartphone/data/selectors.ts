@@ -3,7 +3,7 @@ import { SAMSUNG_BRAND_CONFIG } from './samsungData';
 import { XIAOMI_BRAND_CONFIG } from './xiaomiData';
 import { OPPO_BRAND_CONFIG } from './oppoData';
 import { SMARTPHONE_PRODUCTS } from './mockSmartphoneProducts';
-import type { BrandConfig, BrandModel, SmartphoneBrandId } from '../../../types/smartphone/types/smartphone';
+import type { BrandConfig, BrandModel, SmartphoneBrandId } from '@/types/smartphone';
 
 export type { SmartphoneBrandId };
 

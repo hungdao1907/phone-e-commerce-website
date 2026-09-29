@@ -1,5 +1,5 @@
 import { Sparkles, ShieldCheck, RefreshCw, Headphones } from 'lucide-react';
-import type { BrandConfig, BrandProductGroupDefinition, BrandPillar } from '../../../types/smartphone/types/index';
+import type { BrandConfig, BrandProductGroupDefinition, BrandPillar } from '@/types/smartphone';
 
 /* ─── Product Group Definitions ─── */
 const SAMSUNG_PRODUCT_GROUPS: BrandProductGroupDefinition[] = [
