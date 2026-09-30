@@ -385,6 +385,24 @@ router.patch('/:id/status', authenticateToken, async (req, res) => {
   }
 });
 
+const handleDeleteAllBanners = async (_req: express.Request, res: express.Response) => {
+  try {
+    const result = await prisma.banner.deleteMany({});
+    return res.json({
+      success: true,
+      message: `Đã xóa tất cả ${result.count} banner thành công.`,
+      count: result.count,
+      deletedCount: result.count,
+    });
+  } catch (error) {
+    console.error('Error deleting all banners:', error);
+    return res.status(500).json({ message: 'Lỗi server khi xóa tất cả banner.' });
+  }
+};
+
+router.delete('/all', authenticateToken, handleDeleteAllBanners);
+router.delete('/', authenticateToken, handleDeleteAllBanners);
+
 router.delete('/:id', authenticateToken, async (req, res) => {
   try {
     const id = getRouteParam(req.params.id);

@@ -177,6 +177,7 @@ export function Banners() {
   const [editingBanner, setEditingBanner] = useState<Banner | null>(null);
   const [previewBanner, setPreviewBanner] = useState<Banner | null>(null);
   const [bannerPendingDelete, setBannerPendingDelete] = useState<Banner | null>(null);
+  const [isDeleteAllModalOpen, setIsDeleteAllModalOpen] = useState(false);
   const [form, setForm] = useState<BannerFormState>(createEmptyForm);
   const [formError, setFormError] = useState('');
   const [feedback, setFeedback] = useState<Feedback>(null);
@@ -240,14 +241,14 @@ export function Banners() {
   useEffect(() => { void fetchBanners(); void fetchDestinationData(); }, [token]);
 
   useEffect(() => {
-    if (!isModalOpen && !previewBanner && !bannerPendingDelete) return undefined;
+    if (!isModalOpen && !previewBanner && !bannerPendingDelete && !isDeleteAllModalOpen) return undefined;
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key !== 'Escape' || isSubmitting) return;
-      setIsModalOpen(false); setPreviewBanner(null); setBannerPendingDelete(null);
+      setIsModalOpen(false); setPreviewBanner(null); setBannerPendingDelete(null); setIsDeleteAllModalOpen(false);
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [bannerPendingDelete, isModalOpen, isSubmitting, previewBanner]);
+  }, [bannerPendingDelete, isDeleteAllModalOpen, isModalOpen, isSubmitting, previewBanner]);
 
   const visibleBanners = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -600,6 +601,20 @@ export function Banners() {
     } finally { setIsSubmitting(false); }
   };
 
+  const deleteAllBanners = async () => {
+    setIsSubmitting(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/banners`, { method: 'DELETE', headers: authHeaders });
+      if (!response.ok) throw new Error(await getErrorMessage(response, 'Không thể xóa tất cả banner.'));
+      const data = (await response.json()) as { message?: string };
+      setBanners([]);
+      setIsDeleteAllModalOpen(false);
+      setFeedback({ tone: 'success', message: data.message || 'Đã xóa tất cả banner thành công.' });
+    } catch (error) {
+      setFeedback({ tone: 'error', message: error instanceof Error ? error.message : 'Không thể xóa tất cả banner.' });
+    } finally { setIsSubmitting(false); }
+  };
+
   const filteredProducts = products.filter((product) => product.name.toLowerCase().includes(productSearch.trim().toLowerCase())).slice(0, 6);
   const finalLink = getFinalLink();
 
@@ -611,9 +626,25 @@ export function Banners() {
           <h1 className="text-2xl font-bold tracking-tight text-white">Quản lý Banner</h1>
           <p className="mt-1 text-sm text-white/50">Quản lý và cập nhật hình ảnh quảng cáo trên website.</p>
         </div>
-        <button type="button" onClick={openCreate} className="inline-flex items-center justify-center gap-2 rounded-2xl bg-lime-400 px-5 py-2.5 text-sm font-bold text-black shadow-[0_12px_28px_rgba(163,230,53,0.2)] transition-all hover:bg-lime-300 hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-lime-300 cursor-pointer">
-          <Plus className="h-4 w-4" aria-hidden="true" /> Thêm Banner Mới
-        </button>
+        <div className="flex flex-wrap items-center gap-3">
+          {banners.length > 0 && (
+            <button
+              type="button"
+              onClick={() => setIsDeleteAllModalOpen(true)}
+              disabled={isSubmitting || isLoading}
+              className="inline-flex items-center justify-center gap-2 rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-2.5 text-sm font-bold text-red-300 transition-all hover:bg-red-500/20 hover:border-red-500/50 hover:text-red-200 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer"
+            >
+              <Trash2 className="h-4 w-4 text-red-400" aria-hidden="true" /> Xóa Tất Cả Banner
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={openCreate}
+            className="inline-flex items-center justify-center gap-2 rounded-2xl bg-lime-400 px-5 py-2.5 text-sm font-bold text-black shadow-[0_12px_28px_rgba(163,230,53,0.2)] transition-all hover:bg-lime-300 hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-lime-300 cursor-pointer"
+          >
+            <Plus className="h-4 w-4" aria-hidden="true" /> Thêm Banner Mới
+          </button>
+        </div>
       </header>
 
       <div className="relative z-30 grid gap-3 rounded-2xl border border-white/10 bg-black/30 p-3 backdrop-blur-md sm:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_220px_180px_180px]">
@@ -1232,6 +1263,44 @@ export function Banners() {
                 <button type="button" disabled={isSubmitting} onClick={() => void deleteBanner()} className="inline-flex items-center gap-2 rounded-xl bg-red-500 px-5 py-2.5 text-sm font-bold text-white hover:bg-red-400 disabled:opacity-50 cursor-pointer">
                   {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
                   Xóa Banner
+                </button>
+              </div>
+            </div>
+          </ModalShell>
+        )}
+      </AnimatePresence>
+
+      {/* Delete All Confirmation Modal */}
+      <AnimatePresence>
+        {isDeleteAllModalOpen && (
+          <ModalShell onClose={() => !isSubmitting && setIsDeleteAllModalOpen(false)} maxWidth="max-w-md" className="max-h-[90vh]">
+            <div role="alertdialog" aria-modal="true" aria-labelledby="delete-all-banners-title" className="w-full rounded-2xl sm:rounded-3xl border border-red-500/30 bg-neutral-950 p-6 shadow-2xl backdrop-blur-2xl">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-red-500/15 text-red-400 border border-red-500/30 shadow-[0_0_20px_rgba(239,68,68,0.2)]">
+                <Trash2 className="h-6 w-6" />
+              </div>
+              <h2 id="delete-all-banners-title" className="mt-4 text-xl font-bold text-white">
+                Xóa tất cả {banners.length} banner?
+              </h2>
+              <p className="mt-2 text-sm leading-6 text-white/60">
+                Bạn có chắc chắn muốn xóa toàn bộ <span className="font-semibold text-red-300">{banners.length} banner</span> hiện có? Mọi banner trên tất cả các vị trí storefront sẽ bị xóa vĩnh viễn khỏi hệ thống. Hành động này không thể hoàn tác.
+              </p>
+              <div className="mt-6 flex justify-end gap-3">
+                <button
+                  type="button"
+                  disabled={isSubmitting}
+                  onClick={() => setIsDeleteAllModalOpen(false)}
+                  className="rounded-xl px-4 py-2.5 text-sm font-semibold text-white/70 hover:bg-white/10 hover:text-white border border-white/10 cursor-pointer disabled:opacity-40"
+                >
+                  Hủy Bỏ
+                </button>
+                <button
+                  type="button"
+                  disabled={isSubmitting}
+                  onClick={() => void deleteAllBanners()}
+                  className="inline-flex items-center gap-2 rounded-xl bg-red-600 px-5 py-2.5 text-sm font-bold text-white hover:bg-red-500 shadow-[0_0_20px_rgba(239,68,68,0.4)] disabled:opacity-50 cursor-pointer active:scale-95 transition-all"
+                >
+                  {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
+                  {isSubmitting ? 'Đang xóa...' : 'Xác Nhận Xóa Tất Cả'}
                 </button>
               </div>
             </div>
