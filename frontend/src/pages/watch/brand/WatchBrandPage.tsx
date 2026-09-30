@@ -2,11 +2,8 @@ import { useEffect, useState, type CSSProperties } from 'react';
 import { getWatchBrandConfig, getWatchBrandProductsByBrand } from '../../../data/watch/brand/data/index';
 import {
   WatchBrandAllProductsSection,
-  WatchBrandExperienceSection,
   WatchBrandFeaturedProductsSection,
-  WatchBrandFinalCTASection,
   WatchBrandHeroSection,
-  WatchWhyBrandSection,
 } from '../../../components/watch/brand/sections/index';
 import type { WatchBrandId, WatchBrandModel } from '../../../types/watch/brand/types/index';
 import '@/css/watch.css';
@@ -248,9 +245,6 @@ export function WatchBrandPage({ brand }: WatchBrandPageProps) {
         <WatchBrandHeroSection config={config} />
         <WatchBrandFeaturedProductsSection config={config} products={products} />
         <WatchBrandAllProductsSection config={config} products={products} />
-        <WatchBrandExperienceSection config={config} products={products} />
-        <WatchWhyBrandSection config={config} />
-        <WatchBrandFinalCTASection config={config} />
       </main>
     </div>
   );
