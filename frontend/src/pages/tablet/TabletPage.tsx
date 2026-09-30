@@ -2,11 +2,8 @@ import { useEffect, useState, type CSSProperties } from 'react';
 import { getTabletBrandConfig, getTabletProductsByBrand } from '../../data/tablet/data/index';
 import {
   TabletAllProductsSection,
-  TabletBrandExperienceSection,
   TabletFeaturedProductsSection,
-  TabletFinalCTASection,
   TabletHeroSection,
-  TabletWhyBrandSection,
 } from '../../components/tablet/sections/index';
 import type { TabletBrandId, TabletModel } from '../../types/tablet/types/index';
 import '@/css/tablet.css';
@@ -178,9 +175,6 @@ export function TabletPage({ brand }: TabletPageProps) {
         <TabletHeroSection config={config} />
         <TabletFeaturedProductsSection config={config} products={products} />
         <TabletAllProductsSection config={config} products={products} />
-        <TabletBrandExperienceSection config={config} products={products} />
-        <TabletWhyBrandSection config={config} />
-        <TabletFinalCTASection config={config} />
       </main>
     </div>
   );
