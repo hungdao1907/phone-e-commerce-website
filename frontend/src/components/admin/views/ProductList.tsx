@@ -105,6 +105,18 @@ const CATEGORY_CONFIGS: Record<string, { variants: string[], specifications: str
   }
 };
 
+// Keep the product form aligned with the category families currently exposed by GlobalNav.
+// Values are stable category slugs, never translated display labels or route text.
+const NAVBAR_CATEGORY_FAMILY_BY_SLUG: Record<string, keyof typeof CATEGORY_CONFIGS> = {
+  'dien-thoai': 'phone', 'ien-thoai': 'phone', phone: 'phone',
+  iphone: 'phone', samsung: 'phone', xiaomi: 'phone', oppo: 'phone',
+  'may-tinh-bang': 'tablet', tablet: 'tablet',
+  ipad: 'tablet', 'samsung-galaxy-tab': 'tablet', 'xiaomi-pad': 'tablet',
+  laptop: 'laptop', macbook: 'laptop', asus: 'laptop', 'lenovo-6xfo': 'laptop',
+  'dong-ho-thong-minh': 'watch', 'ong-ho-thong-minh': 'watch', watch: 'watch',
+  'apple-watch': 'watch', 'samsung-watch': 'watch', 'xiaomi-watch': 'watch',
+};
+
 const PREDEFINED_COLORS = [
   { name: 'Đen', hex: '#1c1c1e' },
   { name: 'Trắng', hex: '#f5f5f0' },
@@ -332,7 +344,12 @@ export function ProductList() {
     return result;
   };
   const flatCats = flattenCategories(categories);
-  const filteredCats = flatCats.filter(c => c.name.toLowerCase().includes(catSearch.toLowerCase()));
+  const selectableFormCategories = flatCats.filter((category) => (
+    Boolean(NAVBAR_CATEGORY_FAMILY_BY_SLUG[category.slug.toLowerCase()])
+  ));
+  const filteredCats = selectableFormCategories.filter((category) => (
+    category.name.toLowerCase().includes(catSearch.toLowerCase())
+  ));
 
   // Category Configuration logic
   const currentCategoryConfigKey = useMemo(() => {
@@ -340,6 +357,8 @@ export function ProductList() {
     const cat = flatCats.find(c => c.id === formData.categoryId);
     const catName = cat?.name.toLowerCase() || '';
     const catSlug = cat?.slug.toLowerCase() || '';
+    const navbarFamily = NAVBAR_CATEGORY_FAMILY_BY_SLUG[catSlug];
+    if (navbarFamily) return navbarFamily;
     if (catSlug === 'apple-watch' || catSlug === 'samsung-watch' || catSlug === 'xiaomi-watch' || catSlug.includes('watch') || catSlug.includes('dong-ho') || catSlug.includes('ong-ho') || catName.includes('đồng hồ') || catName.includes('watch')) return 'watch';
     if (catName.includes('điện thoại') || catName.includes('iphone') || catName.includes('samsung') || catSlug.includes('phone') || catSlug.includes('iphone')) return 'phone';
     if (catName.includes('laptop') || catName.includes('macbook') || catSlug.includes('laptop') || catSlug.includes('macbook')) return 'laptop';
