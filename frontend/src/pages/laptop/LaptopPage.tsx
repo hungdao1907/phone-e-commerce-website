@@ -2,11 +2,8 @@ import { useEffect, useState, type CSSProperties } from 'react';
 import { getLaptopBrandConfig, getLaptopProductsByBrand } from '../../data/laptop/data/index';
 import {
   LaptopAllProductsSection,
-  LaptopBrandExperienceSection,
   LaptopFeaturedSection,
-  LaptopFinalCTASection,
   LaptopHeroSection,
-  LaptopWhySection,
 } from '../../components/laptop/sections/index';
 import type { LaptopBrandId, LaptopModel } from '../../types/laptop/types/index';
 import '@/css/laptop.css';
@@ -189,9 +186,6 @@ export function LaptopPage({ brand }: LaptopPageProps) {
         <LaptopHeroSection config={config} />
         <LaptopFeaturedSection config={config} products={products} />
         <LaptopAllProductsSection config={config} products={products} />
-        <LaptopBrandExperienceSection config={config} products={products} />
-        <LaptopWhySection config={config} />
-        <LaptopFinalCTASection config={config} />
       </main>
     </div>
   );
