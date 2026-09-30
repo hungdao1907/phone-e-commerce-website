@@ -36,7 +36,7 @@ const HERO_PRODUCTS: HeroProductCard[] = [
     name: 'iPhone 16 Pro Max',
     brand: 'Apple',
     category: 'Phone',
-    image: '/images/hero-products/apple-iphone-16-pro.jpg',
+    image: '/images/hero-products/apple-iphone-16-pro.png',
   },
   // 1. Col 1 Bottom: Samsung Galaxy Z Fold6
   {
@@ -44,7 +44,7 @@ const HERO_PRODUCTS: HeroProductCard[] = [
     name: 'Galaxy Z Fold6',
     brand: 'Samsung',
     category: 'Phone',
-    image: '/images/hero-products/samsung-z-fold6.jpg',
+    image: '/images/hero-products/samsung-z-fold6.png',
   },
   // 2. Col 2 Top: Xiaomi 15 Ultra
   {
@@ -52,7 +52,7 @@ const HERO_PRODUCTS: HeroProductCard[] = [
     name: 'Xiaomi 15 Ultra',
     brand: 'Xiaomi',
     category: 'Phone',
-    image: '/images/hero-products/xiaomi-15-ultra.jpg',
+    image: '/images/hero-products/xiaomi-15-ultra.png',
   },
   // 3. Col 2 Bottom: Apple iPad Pro M4
   {
@@ -60,7 +60,7 @@ const HERO_PRODUCTS: HeroProductCard[] = [
     name: 'iPad Pro M4',
     brand: 'Apple',
     category: 'Tablet',
-    image: '/images/hero-products/apple-ipad-pro.jpg',
+    image: '/images/hero-products/apple-ipad-pro.png',
   },
   // 4. Col 3 (Dipped): Samsung Galaxy Book4 Pro 360
   {
@@ -68,7 +68,7 @@ const HERO_PRODUCTS: HeroProductCard[] = [
     name: 'Galaxy Book4 Pro',
     brand: 'Samsung',
     category: 'Laptop',
-    image: '/images/hero-products/samsung-galaxy-book.jpg',
+    image: '/images/hero-products/samsung-galaxy-book.png',
   },
   // 5. Col 4 (Center-Left Top): Xiaomi RedmiBook Pro 16
   {
@@ -76,7 +76,7 @@ const HERO_PRODUCTS: HeroProductCard[] = [
     name: 'RedmiBook Pro 16',
     brand: 'Xiaomi',
     category: 'Laptop',
-    image: '/images/hero-products/xiaomi-redmibook.jpg',
+    image: '/images/hero-products/xiaomi-redmibook.png',
   },
   // 6. Col 5 (Center Top): Apple MacBook Pro M4
   {
@@ -84,7 +84,7 @@ const HERO_PRODUCTS: HeroProductCard[] = [
     name: 'MacBook Pro M4',
     brand: 'Apple',
     category: 'Laptop',
-    image: '/images/hero-products/apple-macbook-pro.jpg',
+    image: '/images/hero-products/apple-macbook-pro.png',
   },
   // 7. Col 6 (Center-Right Top): Samsung Galaxy Tab S10 Ultra
   {
@@ -92,7 +92,7 @@ const HERO_PRODUCTS: HeroProductCard[] = [
     name: 'Galaxy Tab S10 Ultra',
     brand: 'Samsung',
     category: 'Tablet',
-    image: '/images/hero-products/samsung-tab-s10.jpg',
+    image: '/images/hero-products/samsung-tab-s10.png',
   },
   // 8. Col 7 (Dipped): Xiaomi 15 Pro
   {
@@ -100,7 +100,7 @@ const HERO_PRODUCTS: HeroProductCard[] = [
     name: 'Xiaomi 15 Pro',
     brand: 'Xiaomi',
     category: 'Phone',
-    image: '/images/hero-products/xiaomi-15-pro.jpg',
+    image: '/images/hero-products/xiaomi-15-pro.png',
   },
   // 9. Col 8 Top: Apple MacBook Air 15
   {
@@ -108,7 +108,7 @@ const HERO_PRODUCTS: HeroProductCard[] = [
     name: 'MacBook Air 15',
     brand: 'Apple',
     category: 'Laptop',
-    image: '/images/hero-products/apple-macbook-air.jpg',
+    image: '/images/hero-products/apple-macbook-air.png',
   },
   // 10. Col 8 Bottom: Xiaomi Pad 7 Pro (3D tilted + pointer cursor)
   {
@@ -116,7 +116,7 @@ const HERO_PRODUCTS: HeroProductCard[] = [
     name: 'Xiaomi Pad 7 Pro',
     brand: 'Xiaomi',
     category: 'Tablet',
-    image: '/images/hero-products/xiaomi-pad-7.jpg',
+    image: '/images/hero-products/xiaomi-pad-7.png',
   },
   // 11. Col 9 Top: Samsung Galaxy S25 Ultra
   {
@@ -124,7 +124,7 @@ const HERO_PRODUCTS: HeroProductCard[] = [
     name: 'Galaxy S25 Ultra',
     brand: 'Samsung',
     category: 'Phone',
-    image: '/images/hero-products/samsung-s25-ultra.jpg',
+    image: '/images/hero-products/samsung-s25-ultra.png',
   },
   // 12. Col 9 Bottom: Samsung Galaxy Z Flip6
   {
@@ -132,7 +132,7 @@ const HERO_PRODUCTS: HeroProductCard[] = [
     name: 'Galaxy Z Flip6',
     brand: 'Samsung',
     category: 'Phone',
-    image: '/images/hero-products/samsung-z-flip6.jpg',
+    image: '/images/hero-products/samsung-z-flip6.png',
   },
 ];
 
@@ -146,10 +146,7 @@ interface SlotConfig {
   positionStyle: React.CSSProperties;
   className: string;
   sizeClass: string;
-  hasHangingLine: boolean;
-  lineHeight?: string;
-  hasDashedGuideBelow?: boolean;
-  is3DTilted?: boolean;
+  curveTransform?: string;
   idleY?: [number, number, number];
   duration?: number;
   idleDelay?: number;
@@ -157,26 +154,24 @@ interface SlotConfig {
 }
 
 /**
- * Exact 9-Column Hanging Layout from Reference:
- * - Col 1: Far-left top & bottom
- * - Col 2: Left top & bottom (dashed orange line drops below)
- * - Col 3: Left-center (dipped lower with skyline background)
- * - Col 4: Center-left top
- * - Col 5: Center top (suit & tie)
- * - Col 6: Center-right top
- * - Col 7: Right-center (dipped lower, woman with laptop)
- * - Col 8: Right top & bottom (3D tilted + mouse pointer icon + dashed orange line drops below)
- * - Col 9: Far-right top & bottom
+ * Exact 9-Column Staggered Canopy Layout from Reference Image:
+ * - Col 1 (Far-Left): 2 cards stacked (Top: 16%, Bottom: 48%)
+ * - Col 2 (Left): 2 cards stacked (Top: 9%, Bottom: 40%)
+ * - Col 3 (Left-Center): 1 card dipped down (Top: 26%)
+ * - Col 4 (Center-Left): 1 card (Top: 11%)
+ * - Col 5 (Center Apex): 1 card centered (Top: 16%)
+ * - Col 6 (Center-Right): 1 card (Top: 10%)
+ * - Col 7 (Right-Center): 1 card dipped down (Top: 24%)
+ * - Col 8 (Right): 2 cards stacked (Top: 9%, Bottom: 38% with 3D perspective tilt)
+ * - Col 9 (Far-Right): 2 cards stacked (Top: 16%, Bottom: 48%)
  */
 const REFERENCE_SLOTS: SlotConfig[] = [
   // 0. Col 1 Top (Far Left Top)
   {
     id: 'col1-top',
-    positionStyle: { left: '1.2%', top: '11%' },
+    positionStyle: { left: '1.2%', top: '16%' },
     className: 'hidden 2xl:block',
-    sizeClass: 'w-[125px] 2xl:w-[145px]',
-    hasHangingLine: true,
-    lineHeight: '70px',
+    sizeClass: 'w-[100px] sm:w-[125px] lg:w-[145px] xl:w-[158px] 2xl:w-[168px]',
     idleY: [-4, 3, -4],
     duration: 5.4,
     idleDelay: 0.1,
@@ -185,10 +180,9 @@ const REFERENCE_SLOTS: SlotConfig[] = [
   // 1. Col 1 Bottom (Far Left Bottom)
   {
     id: 'col1-bottom',
-    positionStyle: { left: '1.2%', top: '38%' },
+    positionStyle: { left: '1.2%', top: '48%' },
     className: 'hidden 2xl:block',
-    sizeClass: 'w-[125px] 2xl:w-[145px]',
-    hasHangingLine: false,
+    sizeClass: 'w-[100px] sm:w-[125px] lg:w-[145px] xl:w-[158px] 2xl:w-[168px]',
     idleY: [3, -4, 3],
     duration: 5.8,
     idleDelay: 0.3,
@@ -197,24 +191,20 @@ const REFERENCE_SLOTS: SlotConfig[] = [
   // 2. Col 2 Top (Left Top)
   {
     id: 'col2-top',
-    positionStyle: { left: '10.5%', top: '7%' },
+    positionStyle: { left: '11.5%', top: '9%' },
     className: 'hidden lg:block',
-    sizeClass: 'w-[130px] lg:w-[150px] xl:w-[160px]',
-    hasHangingLine: true,
-    lineHeight: '50px',
+    sizeClass: 'w-[100px] sm:w-[125px] lg:w-[145px] xl:w-[158px] 2xl:w-[168px]',
     idleY: [-4, 4, -4],
     duration: 5.2,
     idleDelay: 0.2,
     parallaxFactor: 0.7,
   },
-  // 3. Col 2 Bottom (Left Middle - Dashed orange line drops below into white space)
+  // 3. Col 2 Bottom (Left Middle - Mobile Visible)
   {
     id: 'col2-bottom',
     positionStyle: {},
-    className: 'block left-3 top-[10%] sm:left-[10.5%] sm:top-[34%]',
-    sizeClass: 'w-[92px] sm:w-[130px] lg:w-[150px] xl:w-[160px]',
-    hasHangingLine: false,
-    hasDashedGuideBelow: true,
+    className: 'block left-3 top-[10%] sm:left-[11.5%] sm:top-[40%]',
+    sizeClass: 'w-[95px] sm:w-[125px] lg:w-[145px] xl:w-[158px] 2xl:w-[168px]',
     idleY: [4, -4, 4],
     duration: 5.9,
     idleDelay: 0.4,
@@ -223,11 +213,9 @@ const REFERENCE_SLOTS: SlotConfig[] = [
   // 4. Col 3 (Left-Center - Dipped Lower)
   {
     id: 'col3-mid',
-    positionStyle: { left: '21.5%', top: '18%' },
+    positionStyle: { left: '22.5%', top: '26%' },
     className: 'hidden md:block',
-    sizeClass: 'w-[135px] lg:w-[155px] xl:w-[165px]',
-    hasHangingLine: true,
-    lineHeight: '120px',
+    sizeClass: 'w-[100px] sm:w-[125px] lg:w-[145px] xl:w-[158px] 2xl:w-[168px]',
     idleY: [-4, 4, -4],
     duration: 6.3,
     idleDelay: 0.5,
@@ -236,24 +224,20 @@ const REFERENCE_SLOTS: SlotConfig[] = [
   // 5. Col 4 (Center-Left Top)
   {
     id: 'col4-top',
-    positionStyle: { left: '33%', top: '5%' },
+    positionStyle: { left: '33.5%', top: '11%' },
     className: 'hidden xl:block',
-    sizeClass: 'w-[120px] lg:w-[140px] xl:w-[150px]',
-    hasHangingLine: true,
-    lineHeight: '35px',
+    sizeClass: 'w-[100px] sm:w-[125px] lg:w-[145px] xl:w-[158px] 2xl:w-[168px]',
     idleY: [3, -4, 3],
     duration: 5.1,
     idleDelay: 0.25,
     parallaxFactor: 0.4,
   },
-  // 6. Col 5 (Center Top - Executive Suit & Tie)
+  // 6. Col 5 (Center Top - Executive Top Center)
   {
     id: 'col5-top',
-    positionStyle: { left: '44.8%', top: '8%' },
+    positionStyle: { left: '44.8%', top: '16%' },
     className: 'hidden xl:block',
-    sizeClass: 'w-[125px] lg:w-[145px] xl:w-[155px]',
-    hasHangingLine: true,
-    lineHeight: '55px',
+    sizeClass: 'w-[100px] sm:w-[125px] lg:w-[145px] xl:w-[158px] 2xl:w-[168px]',
     idleY: [-3, 4, -3],
     duration: 5.7,
     idleDelay: 0.6,
@@ -262,24 +246,20 @@ const REFERENCE_SLOTS: SlotConfig[] = [
   // 7. Col 6 (Center-Right Top)
   {
     id: 'col6-top',
-    positionStyle: { right: '33%', top: '5%' },
+    positionStyle: { right: '33.5%', top: '10%' },
     className: 'hidden xl:block',
-    sizeClass: 'w-[120px] lg:w-[140px] xl:w-[150px]',
-    hasHangingLine: true,
-    lineHeight: '35px',
+    sizeClass: 'w-[100px] sm:w-[125px] lg:w-[145px] xl:w-[158px] 2xl:w-[168px]',
     idleY: [4, -3, 4],
     duration: 5.3,
     idleDelay: 0.35,
     parallaxFactor: 0.4,
   },
-  // 8. Col 7 (Right-Center - Dipped Lower, Woman with Laptop)
+  // 8. Col 7 (Right-Center - Dipped Lower)
   {
     id: 'col7-mid',
-    positionStyle: { right: '21.5%', top: '18%' },
+    positionStyle: { right: '22.5%', top: '24%' },
     className: 'hidden md:block',
-    sizeClass: 'w-[135px] lg:w-[155px] xl:w-[165px]',
-    hasHangingLine: true,
-    lineHeight: '120px',
+    sizeClass: 'w-[100px] sm:w-[125px] lg:w-[145px] xl:w-[158px] 2xl:w-[168px]',
     idleY: [-4, 4, -4],
     duration: 6.1,
     idleDelay: 0.45,
@@ -288,25 +268,21 @@ const REFERENCE_SLOTS: SlotConfig[] = [
   // 9. Col 8 Top (Right Top)
   {
     id: 'col8-top',
-    positionStyle: { right: '10.5%', top: '7%' },
+    positionStyle: { right: '11.5%', top: '9%' },
     className: 'hidden lg:block',
-    sizeClass: 'w-[130px] lg:w-[150px] xl:w-[160px]',
-    hasHangingLine: true,
-    lineHeight: '50px',
+    sizeClass: 'w-[100px] sm:w-[125px] lg:w-[145px] xl:w-[158px] 2xl:w-[168px]',
     idleY: [-4, 4, -4],
     duration: 5.5,
     idleDelay: 0.15,
     parallaxFactor: 0.7,
   },
-  // 10. Col 8 Bottom (Right Middle - 3D Tilted Card + Pointer Cursor + Dashed Line!)
+  // 10. Col 8 Bottom (Right Middle - 3D Tilted Card!)
   {
     id: 'col8-bottom',
     positionStyle: {},
-    className: 'block right-3 top-[10%] sm:right-[10.5%] sm:top-[34%]',
-    sizeClass: 'w-[92px] sm:w-[130px] lg:w-[150px] xl:w-[160px]',
-    hasHangingLine: false,
-    hasDashedGuideBelow: true,
-    is3DTilted: true,
+    className: 'block right-3 top-[10%] sm:right-[11.5%] sm:top-[38%]',
+    sizeClass: 'w-[95px] sm:w-[125px] lg:w-[145px] xl:w-[158px] 2xl:w-[168px]',
+    curveTransform: 'perspective(900px) rotateY(-13deg) rotateX(4deg)',
     idleY: [3, -4, 3],
     duration: 6.0,
     idleDelay: 0.3,
@@ -315,11 +291,9 @@ const REFERENCE_SLOTS: SlotConfig[] = [
   // 11. Col 9 Top (Far Right Top)
   {
     id: 'col9-top',
-    positionStyle: { right: '1.2%', top: '11%' },
+    positionStyle: { right: '1.2%', top: '16%' },
     className: 'hidden 2xl:block',
-    sizeClass: 'w-[125px] 2xl:w-[145px]',
-    hasHangingLine: true,
-    lineHeight: '70px',
+    sizeClass: 'w-[100px] sm:w-[125px] lg:w-[145px] xl:w-[158px] 2xl:w-[168px]',
     idleY: [4, -4, 4],
     duration: 5.6,
     idleDelay: 0.2,
@@ -328,10 +302,9 @@ const REFERENCE_SLOTS: SlotConfig[] = [
   // 12. Col 9 Bottom (Far Right Bottom)
   {
     id: 'col9-bottom',
-    positionStyle: { right: '1.2%', top: '38%' },
+    positionStyle: { right: '1.2%', top: '48%' },
     className: 'hidden 2xl:block',
-    sizeClass: 'w-[125px] 2xl:w-[145px]',
-    hasHangingLine: false,
+    sizeClass: 'w-[100px] sm:w-[125px] lg:w-[145px] xl:w-[158px] 2xl:w-[168px]',
     idleY: [-4, 3, -4],
     duration: 5.8,
     idleDelay: 0.5,
@@ -339,33 +312,7 @@ const REFERENCE_SLOTS: SlotConfig[] = [
   },
 ];
 
-/**
- * Top ghost rail cards (translucent header slots peeking in from top border as in reference)
- */
-const TOP_GHOST_CARDS = [
-  { left: '2.5%' },
-  { left: '11.5%' },
-  { left: '23%' },
-  { left: '34.5%' },
-  { left: '46%' },
-  { left: '57.5%' },
-  { left: '69%' },
-  { left: '80%' },
-  { left: '90%' },
-];
 
-/**
- * Faint vertical column guides running across the background (as seen in reference)
- */
-const VERTICAL_GUIDE_LINES = [
-  '12%',
-  '23%',
-  '34.5%',
-  '46%',
-  '57.5%',
-  '69%',
-  '80%',
-];
 
 interface FloatingCardProps {
   product: HeroProductCard;
@@ -399,7 +346,7 @@ function FloatingCard({
 
   return (
     <motion.div
-      className={cn('absolute z-10 select-none', slot.className)}
+      className={cn('absolute z-10 select-none [transform-style:preserve-3d]', slot.className)}
       style={{
         ...slot.positionStyle,
         x: reducedMotion ? 0 : parallaxX,
@@ -423,28 +370,8 @@ function FloatingCard({
             : { opacity: 0, y: -24, scale: 0.94 }
       }
     >
-      {/* Delicate Hanging Line from Top Viewport Edge */}
-      {slot.hasHangingLine && (
-        <div
-          className="pointer-events-none absolute bottom-full left-1/2 w-px -translate-x-1/2"
-          style={{
-            height: slot.lineHeight || '50px',
-            background:
-              'linear-gradient(to bottom, transparent 0%, rgba(255, 255, 255, 0.22) 100%)',
-          }}
-          aria-hidden="true"
-        />
-      )}
 
-      {/* Dashed Accent Vertical Guide Line Below */}
-      {slot.hasDashedGuideBelow && (
-        <div
-          className="pointer-events-none absolute left-1/2 top-full hidden h-28 w-px -translate-x-1/2 border-l border-dashed border-amber-400/50 lg:block xl:h-36"
-          aria-hidden="true"
-        />
-      )}
-
-      {/* Floating & Hover Wrapper */}
+      {/* Floating & Hover Wrapper with Curved Screen Perspective */}
       <motion.div
         animate={
           reducedMotion
@@ -464,49 +391,31 @@ function FloatingCard({
             ? {}
             : {
               y: -6,
-              scale: 1.025,
+              scale: 1.03,
               transition: { duration: 0.22, ease: [0.16, 1, 0.3, 1] },
             }
         }
-        className={cn('group relative', slot.sizeClass)}
+        className={cn('group relative [transform-style:preserve-3d]', slot.sizeClass)}
         style={
-          slot.is3DTilted && !reducedMotion
+          !reducedMotion && slot.curveTransform
             ? {
-              transform: 'perspective(900px) rotateY(-11deg) rotateX(3deg)',
+              transform: slot.curveTransform,
               transformOrigin: 'center center',
             }
             : undefined
         }
       >
-        {/* Full-Bleed Product Card (Pure image, glassmorphism border & depth) */}
-        <div className="relative aspect-[4/4.5] w-full overflow-hidden rounded-[20px] bg-neutral-900/70 shadow-[0_16px_36px_-6px_rgba(0,0,0,0.6),0_0_20px_rgba(255,255,255,0.04)] ring-1 ring-white/15 backdrop-blur-md transition-all duration-300 group-hover:shadow-[0_24px_48px_-8px_rgba(0,0,0,0.8),0_0_30px_rgba(99,102,241,0.25)] group-hover:ring-white/30 sm:rounded-[24px]">
+        {/* Full-Bleed Product Card (Transparent wrapper with soft realistic studio shadow) */}
+        <div className="relative aspect-[4/4.5] w-full bg-transparent border-0 shadow-none">
           <img
             src={product.image}
             alt={product.name}
             loading={index < 4 ? 'eager' : 'lazy'}
-            className="h-full w-full object-cover object-center transition-transform duration-500 group-hover:scale-[1.04]"
+            className="h-full w-full object-contain object-center transition-transform duration-300 drop-shadow-[0_12px_24px_rgba(0,0,0,0.08)] drop-shadow-[0_2px_6px_rgba(0,0,0,0.04)]"
           />
         </div>
 
-        {/* Decorative Mouse Pointer Cursor on 3D Card (Exact detail from reference image!) */}
-        {slot.is3DTilted && (
-          <div
-            className="pointer-events-none absolute -right-2 top-1/2 z-30 -translate-y-1/2 drop-shadow-[0_2px_4px_rgba(0,0,0,0.25)]"
-            aria-hidden="true"
-          >
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="black"
-              stroke="white"
-              strokeWidth="1.5"
-              strokeLinejoin="round"
-            >
-              <path d="M3 3l7 18 3-7 7-3L3 3z" />
-            </svg>
-          </div>
-        )}
+
       </motion.div>
     </motion.div>
   );
@@ -591,51 +500,17 @@ export function HeroSection({
       aria-labelledby="home-hero-title"
       onPointerMove={handlePointerMove}
       onPointerLeave={handlePointerLeave}
-      className="relative z-0 -mt-[44px] flex min-h-[100svh] w-full flex-col justify-end overflow-hidden bg-[#030712] pt-[44px] text-white"
+      className="relative z-0 -mt-[44px] flex min-h-[100svh] w-full flex-col justify-end overflow-hidden bg-white pt-[44px] text-neutral-900"
     >
-      {/* Three.js Aurora WebGL Shader Background */}
-      <HeroAuroraBackground reducedMotion={reducedMotion} />
-
-      {/* Atmospheric Vignette & Contrast Depth Gradients */}
+      {/* Bottom Subtle Gray Fade & Mist Layer — Enhanced Depth */}
       <div
-        className="pointer-events-none absolute inset-0 z-0 bg-[radial-gradient(circle_at_center,transparent_25%,rgba(3,7,18,0.55)_100%)]"
-        aria-hidden="true"
-      />
-      <div
-        className="pointer-events-none absolute inset-x-0 bottom-0 z-0 h-36 bg-gradient-to-t from-[#0b0f12] via-[#0b0f12]/50 to-transparent"
+        className="pointer-events-none absolute inset-x-0 bottom-0 z-0 h-64 sm:h-80 bg-gradient-to-t from-neutral-200/90 via-neutral-100/60 to-transparent"
         aria-hidden="true"
       />
 
-      {/* Subtle Background Vertical Guide Lines */}
-      <div className="pointer-events-none absolute inset-0 z-0 hidden lg:block" aria-hidden="true">
-        <div className="relative mx-auto h-full w-full max-w-[1760px]">
-          {VERTICAL_GUIDE_LINES.map((leftPos, idx) => (
-            <div
-              key={`guide-${idx}`}
-              className="absolute inset-y-0 w-px border-r border-white/[0.06]"
-              style={{ left: leftPos }}
-            />
-          ))}
-        </div>
-      </div>
-
-      {/* Top Ghost Rail Cards (translucent ceiling slots peeking in below the navbar) */}
-      <div className="pointer-events-none absolute inset-x-0 top-[48px] sm:top-[56px] lg:top-[62px] z-[5] hidden h-12 overflow-hidden sm:block">
-        <div className="relative mx-auto h-full w-full max-w-[1760px]">
-          {TOP_GHOST_CARDS.map((ghost, i) => (
-            <div
-              key={`ghost-${i}`}
-              className="absolute -top-5 h-[64px] w-[105px] rounded-[16px] border border-white/10 bg-white/[0.04] backdrop-blur-xs shadow-2xs md:w-[125px] lg:w-[135px]"
-              style={{ left: ghost.left }}
-              aria-hidden="true"
-            />
-          ))}
-        </div>
-      </div>
-
-      {/* 13-Card Floating Gallery Canopy — Offset comfortably below navbar */}
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 top-[52px] sm:top-[64px] lg:top-[74px] z-10 overflow-hidden">
-        <div className="pointer-events-auto relative mx-auto h-full w-full max-w-[1760px]">
+      {/* 13-Card Floating Gallery Canopy — 9-Column Reference Perspective */}
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 top-[52px] sm:top-[64px] lg:top-[74px] z-10 overflow-hidden [perspective:1400px]">
+        <div className="pointer-events-auto relative mx-auto h-full w-full max-w-[1760px] [transform-style:preserve-3d]">
           {HERO_PRODUCTS.map((product, idx) => (
             <FloatingCard
               key={product.id}
@@ -651,15 +526,17 @@ export function HeroSection({
         </div>
       </div>
 
-      {/* Central Editorial Content — Positioned in the Lower-Middle Zone for Perfect Visual Harmony */}
+      {/* Central Editorial Content — Positioned in the Lower-Middle Zone Exactly like Reference */}
       <motion.div
         style={{
           opacity: heroOpacity,
           y: heroTranslateY,
         }}
-        className="relative z-20 mx-auto flex w-full max-w-[700px] flex-col items-center px-6 pb-12 pt-[40vh] text-center sm:pb-16 sm:pt-[40vh] lg:pb-20 lg:pt-[40vh]"
+        className="relative z-20 mx-auto flex w-full max-w-[700px] flex-col items-center px-6 pb-12 pt-[42vh] text-center sm:pb-16 sm:pt-[44vh] lg:pb-20 lg:pt-[45vh]"
       >
-        {/* Hero Liquid Headline Title */}
+
+
+        {/* Hero Liquid Headline Title in Crisp Dark Typography */}
         <motion.div
           initial={reducedMotion ? false : { opacity: 0, scale: 0.96, y: 14 }}
           animate={
@@ -668,44 +545,44 @@ export function HeroSection({
               : { opacity: 0, scale: 0.96, y: 14 }
           }
           transition={{ duration: 0.75, delay: reducedMotion ? 0 : 0.2, ease: [0.16, 1, 0.3, 1] }}
-          className="my-2 flex flex-col items-center sm:my-3"
+          className="my-1 flex flex-col items-center sm:my-2"
         >
           <h1
             id="home-hero-title"
-            className="relative flex w-full items-center justify-center font-['SF_Pro_Display',-apple-system,BlinkMacSystemFont,'Helvetica_Neue',sans-serif] text-center whitespace-nowrap"
+            className="relative flex w-full items-center justify-center font-['SF_Pro_Display',-apple-system,BlinkMacSystemFont,'Helvetica_Neue',sans-serif] text-center whitespace-nowrap text-neutral-900"
           >
             <LiquidText
               texts={HERO_LIQUID_WORDS}
               isReady={isReady}
               morphTime={1.25}
               cooldownTime={1.4}
+              className="text-neutral-900"
             />
           </h1>
         </motion.div>
 
-        {/* Supporting Description with Hyperiux Glowing Text Reveal */}
-        <GlowingText
-          text={HERO_DESCRIPTION_TEXT}
-          highlightWords={['công', 'việc,', 'việc', 'sáng', 'tạo', 'cuộc', 'sống']}
-          delay={reducedMotion ? 0 : 0.38}
-          staggerDelay={0.038}
-          isReady={isReady}
-          replayKey={helloReplayKey}
-          className="mt-3.5 max-w-[490px] drop-shadow-[0_2px_12px_rgba(0,0,0,0.8)] sm:mt-4"
-        />
+        {/* Supporting Description in High-End Neutral Typography */}
+        <motion.p
+          initial={reducedMotion ? false : { opacity: 0, y: 10 }}
+          animate={isReady ? { opacity: 1, y: 0 } : { opacity: 0, y: 10 }}
+          transition={{ duration: 0.55, delay: reducedMotion ? 0 : 0.35, ease: [0.16, 1, 0.3, 1] }}
+          className="mt-2 max-w-[490px] text-center text-sm sm:text-[15px] leading-relaxed text-neutral-600 font-normal select-none"
+        >
+          {HERO_DESCRIPTION_TEXT}
+        </motion.p>
 
-        {/* Minimal CTA Button — Glowing white pill design for striking contrast */}
+        {/* Minimal Black CTA Button — Matching Reference Design */}
         <motion.div
           key={`cta-${helloReplayKey}`}
           initial={reducedMotion ? false : { opacity: 0, y: 12, scale: 0.96 }}
           animate={isReady ? { opacity: 1, y: 0, scale: 1 } : { opacity: 0, y: 12, scale: 0.96 }}
-          transition={{ duration: 0.55, delay: reducedMotion ? 0 : 1.1, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ duration: 0.55, delay: reducedMotion ? 0 : 0.5, ease: [0.16, 1, 0.3, 1] }}
           className="mt-6 sm:mt-7"
         >
           <a
             href="#home-experience"
             onClick={handleCtaClick}
-            className="group inline-flex h-[42px] items-center justify-center gap-2 rounded-full bg-white px-6 text-[13px] font-semibold text-black shadow-[0_0_25px_rgba(255,255,255,0.3)] transition-all duration-200 hover:scale-[1.03] hover:bg-neutral-100 hover:shadow-[0_0_35px_rgba(255,255,255,0.5)] active:scale-[0.98] sm:h-[44px] sm:px-7 sm:text-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
+            className="group inline-flex h-[42px] items-center justify-center gap-2 rounded-full bg-black px-6 text-[13px] font-semibold text-white shadow-[0_4px_16px_rgba(0,0,0,0.12)] transition-all duration-200 hover:scale-[1.03] hover:bg-neutral-800 hover:shadow-[0_6px_24px_rgba(0,0,0,0.18)] active:scale-[0.98] sm:h-[44px] sm:px-7 sm:text-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-black"
           >
             <span>Khám phá sản phẩm</span>
             <ArrowRight className="h-3.5 w-3.5 transition-transform duration-200 group-hover:translate-x-1 sm:h-4 sm:w-4" />

@@ -239,9 +239,9 @@ export function FinalCTAVisual({
             animate={{ x: parallaxField.x, y: parallaxField.y }}
             transition={{ duration: 0.2, ease: 'linear' }}
           >
-            <line x1="170" y1="16" x2="170" y2="324" stroke="rgba(255, 255, 255, 0.04)" strokeDasharray="3 4" />
-            <line x1="16" y1="170" x2="324" y2="170" stroke="rgba(255, 255, 255, 0.04)" strokeDasharray="3 4" />
-            <circle cx="170" cy="170" r="154" stroke="rgba(255, 255, 255, 0.03)" strokeDasharray="4 6" />
+            <line x1="170" y1="16" x2="170" y2="324" stroke="rgba(0, 0, 0, 0.08)" strokeDasharray="3 4" />
+            <line x1="16" y1="170" x2="324" y2="170" stroke="rgba(0, 0, 0, 0.08)" strokeDasharray="3 4" />
+            <circle cx="170" cy="170" r="154" stroke="rgba(0, 0, 0, 0.06)" strokeDasharray="4 6" />
           </motion.g>
 
           {/* Layer 5: Perimeter Data Nodes */}
@@ -251,9 +251,9 @@ export function FinalCTAVisual({
               cx={node.cx}
               cy={node.cy}
               r={node.r}
-              fill="#ffffff"
+              fill="#1d1d1f"
               animate={{
-                opacity: pulseActive ? 0.6 : 0.15,
+                opacity: pulseActive ? 0.4 : 0.12,
                 scale: pulseActive ? 1.3 : 1,
               }}
               transition={{ duration: 0.3 }}
@@ -267,7 +267,7 @@ export function FinalCTAVisual({
             transition={{ duration: 0.2, ease: 'linear' }}
           >
             {/* Outer Subtle Boundary Ring */}
-            <circle cx="170" cy="170" r="148" stroke="rgba(255, 255, 255, 0.04)" />
+            <circle cx="170" cy="170" r="148" stroke="rgba(0, 0, 0, 0.08)" />
 
             {/* Orbit Track A: Usage Ellipse (Tilted -28deg) */}
             <ellipse
@@ -280,7 +280,7 @@ export function FinalCTAVisual({
               strokeWidth="1.2"
               strokeDasharray="4 6"
               fill="none"
-              opacity={usage ? 0.45 : 0.2}
+              opacity={usage ? 0.55 : 0.25}
             />
 
             {/* Orbit Track B: Priority Ellipse (Tilted +36deg) */}
@@ -290,18 +290,18 @@ export function FinalCTAVisual({
               rx={RX_B}
               ry={RY_B}
               transform="rotate(36, 170, 170)"
-              stroke="rgba(255, 255, 255, 0.25)"
+              stroke="rgba(0, 0, 0, 0.25)"
               strokeWidth="1.2"
               strokeDasharray="3 5"
               fill="none"
-              opacity={priority ? 0.4 : 0.18}
+              opacity={priority ? 0.5 : 0.22}
             />
 
             {/* Precision Crosshair Lines (Subtle reference) */}
-            <line x1="170" y1="124" x2="170" y2="138" stroke="rgba(255, 255, 255, 0.4)" strokeWidth="1" />
-            <line x1="170" y1="202" x2="170" y2="216" stroke="rgba(255, 255, 255, 0.4)" strokeWidth="1" />
-            <line x1="124" y1="170" x2="138" y2="170" stroke="rgba(255, 255, 255, 0.4)" strokeWidth="1" />
-            <line x1="202" y1="170" x2="216" y2="170" stroke="rgba(255, 255, 255, 0.4)" strokeWidth="1" />
+            <line x1="170" y1="124" x2="170" y2="138" stroke="rgba(0, 0, 0, 0.3)" strokeWidth="1" />
+            <line x1="170" y1="202" x2="170" y2="216" stroke="rgba(0, 0, 0, 0.3)" strokeWidth="1" />
+            <line x1="124" y1="170" x2="138" y2="170" stroke="rgba(0, 0, 0, 0.3)" strokeWidth="1" />
+            <line x1="202" y1="170" x2="216" y2="170" stroke="rgba(0, 0, 0, 0.3)" strokeWidth="1" />
           </motion.g>
 
           {/* Layer 3: Central User Core (Thin Animated Halo & Fixed Anchor) */}
@@ -329,7 +329,7 @@ export function FinalCTAVisual({
               cx="170"
               cy="170"
               r="47"
-              stroke="rgba(255, 255, 255, 0.08)"
+              stroke="rgba(0, 0, 0, 0.1)"
               strokeWidth="0.8"
               strokeDasharray="2 4"
               fill="none"
@@ -340,7 +340,7 @@ export function FinalCTAVisual({
               cx="170"
               cy="170"
               r="47"
-              stroke="rgba(255, 255, 255, 0.4)"
+              stroke="rgba(0, 0, 0, 0.3)"
               strokeWidth="1.2"
               strokeLinecap="round"
               strokeDasharray="48 247"
@@ -359,7 +359,7 @@ export function FinalCTAVisual({
               cx="170"
               cy="170"
               r="39"
-              stroke="rgba(255, 255, 255, 0.15)"
+              stroke="rgba(0, 0, 0, 0.15)"
               strokeWidth="1"
               fill="none"
             />
