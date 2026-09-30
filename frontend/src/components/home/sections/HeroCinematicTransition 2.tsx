@@ -83,7 +83,6 @@ export function HeroCinematicTransition() {
       >
         <CinematicVideoSection
           id="home-experience"
-          helloReady={helloReady}
         />
       </div>
     </section>

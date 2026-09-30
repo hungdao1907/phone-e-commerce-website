@@ -1,5 +1,5 @@
 import React from 'react';
-import { ShoppingBag, CheckCircle, Package, Truck, Home } from 'lucide-react';
+import { ShoppingBag, CheckCircle, Package, Truck, Home, type LucideIcon } from 'lucide-react';
 
 export type OrderStatus = 'pending' | 'confirmed' | 'processing' | 'shipping' | 'delivered' | 'cancelled' | 'returned';
 
@@ -8,7 +8,7 @@ interface OrderDeliveryTimelineProps {
   history?: { status: OrderStatus; timestamp: string }[];
 }
 
-const TIMELINE_STEPS: { id: OrderStatus; label: string; icon: React.ElementType }[] = [
+const TIMELINE_STEPS: { id: OrderStatus; label: string; icon: LucideIcon }[] = [
   { id: 'pending', label: 'Đã đặt hàng', icon: ShoppingBag },
   { id: 'confirmed', label: 'Đã xác nhận', icon: CheckCircle },
   { id: 'processing', label: 'Đang chuẩn bị hàng', icon: Package },

@@ -291,7 +291,6 @@ export function ProductConfigurator({
       <CrossSellSection
         currentProductId={product.id}
         brand={product.brand}
-        categoryId={product.categoryId}
       />
 
     </section>
