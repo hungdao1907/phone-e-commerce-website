@@ -80,6 +80,15 @@ export function BrandHeroSection({ config }: BrandHeroSectionProps) {
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
+      const target = event.target;
+      if (
+        target instanceof HTMLInputElement ||
+        target instanceof HTMLTextAreaElement ||
+        (target instanceof HTMLElement && target.isContentEditable)
+      ) {
+        return;
+      }
+
       if (event.key === 'ArrowLeft') paginate(-1);
       if (event.key === 'ArrowRight') paginate(1);
       if (event.key === ' ' && bannerCount > 1) {
