@@ -21,42 +21,34 @@ export function MeshGradientSVG({
   ],
   speed = 1,
 }: MeshGradientSVGProps) {
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
   const [eyeOffset, setEyeOffset] = useState({ x: 0, y: 0 })
   const svgRef = useRef<SVGSVGElement>(null)
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
-      setMousePosition(prev => 
-        prev.x === e.clientX && prev.y === e.clientY
-          ? prev
-          : { x: e.clientX, y: e.clientY }
-      )
+      const rect = svgRef.current?.getBoundingClientRect() || document.querySelector("svg")?.getBoundingClientRect()
+      if (rect) {
+        const centerX = rect.left + rect.width / 2
+        const centerY = rect.top + rect.height / 2
+
+        const deltaX = (e.clientX - centerX) * 0.08
+        const deltaY = (e.clientY - centerY) * 0.08
+
+        const maxOffset = 8
+        const nextX = Math.max(-maxOffset, Math.min(maxOffset, deltaX))
+        const nextY = Math.max(-maxOffset, Math.min(maxOffset, deltaY))
+        
+        setEyeOffset(prev =>
+          prev.x === nextX && prev.y === nextY
+            ? prev
+            : { x: nextX, y: nextY }
+        )
+      }
     }
 
     window.addEventListener("mousemove", handleMouseMove)
     return () => window.removeEventListener("mousemove", handleMouseMove)
   }, [])
-
-  useEffect(() => {
-    const rect = svgRef.current?.getBoundingClientRect() || document.querySelector("svg")?.getBoundingClientRect()
-    if (rect) {
-      const centerX = rect.left + rect.width / 2
-      const centerY = rect.top + rect.height / 2
-
-      const deltaX = (mousePosition.x - centerX) * 0.08
-      const deltaY = (mousePosition.y - centerY) * 0.08
-
-      const maxOffset = 8
-      const nextX = Math.max(-maxOffset, Math.min(maxOffset, deltaX))
-      const nextY = Math.max(-maxOffset, Math.min(maxOffset, deltaY))
-      setEyeOffset(prev =>
-        prev.x === nextX && prev.y === nextY
-          ? prev
-          : { x: nextX, y: nextY }
-      )
-    }
-  }, [mousePosition])
 
   return (
     <motion.div
