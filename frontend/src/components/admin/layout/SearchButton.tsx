@@ -397,6 +397,7 @@ export const SearchButton = ({ onNavigate }: SearchButtonProps) => {
       >
         <AnimatePresence mode="popLayout">
           <motion.div
+            key="search-input-container"
             layoutId="search-input-container"
             transition={{ layout: { duration: 0.5, type: 'spring', bounce: 0.2 } }}
             style={{ transformOrigin: 'left center', borderRadius: 9999 }}
@@ -432,7 +433,7 @@ export const SearchButton = ({ onNavigate }: SearchButtonProps) => {
           </motion.div>
 
           {/* ─── Dropdown ─── */}
-          <AnimatePresence>
+          <AnimatePresence key="search-dropdown-presence">
             {isDropdownVisible && (
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
