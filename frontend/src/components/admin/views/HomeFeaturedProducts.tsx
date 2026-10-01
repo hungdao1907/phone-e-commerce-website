@@ -44,7 +44,7 @@ export function HomeFeaturedProducts() {
   const [editing, setEditing] = useState<HomeFeaturedProduct | null>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [productId, setProductId] = useState('');
-  const [sortOrder, setSortOrder] = useState('0');
+  const [sortOrder, setSortOrder] = useState('1');
   const [isActive, setIsActive] = useState(true);
 
   const load = async () => {
@@ -77,7 +77,7 @@ export function HomeFeaturedProducts() {
 
   const resetForm = () => {
     setProductId('');
-    setSortOrder(String(featuredProducts.length));
+    setSortOrder(String(featuredProducts.length + 1));
     setIsActive(true);
     setEditing(null);
     setSearch('');
@@ -102,8 +102,8 @@ export function HomeFeaturedProducts() {
 
   const save = async () => {
     const numericSortOrder = Number(sortOrder);
-    if (!Number.isInteger(numericSortOrder) || numericSortOrder < 0) {
-      setFeedback({ tone: 'error', message: 'Thứ tự hiển thị phải là số nguyên không âm.' });
+    if (!Number.isInteger(numericSortOrder) || numericSortOrder < 1) {
+      setFeedback({ tone: 'error', message: 'Vị trí hiển thị phải là số nguyên dương.' });
       return;
     }
     if (!editing && !productId) {
@@ -171,13 +171,13 @@ export function HomeFeaturedProducts() {
           ) : (
             <div className="mt-5"><label className="text-sm font-semibold">Chọn sản phẩm</label><div className="relative mt-2"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/40" /><input value={search} onChange={(event) => setSearch(event.target.value)} className="w-full rounded-xl border border-white/10 bg-black/30 py-2.5 pl-10 pr-3 text-sm outline-none focus:border-lime-400" placeholder="Tìm theo tên hoặc thương hiệu" /></div><select value={productId} onChange={(event) => setProductId(event.target.value)} className="mt-2 w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2.5 text-sm outline-none focus:border-lime-400"><option value="">Chọn sản phẩm</option>{availableProducts.map((product) => <option key={product.id} value={product.id}>{productLabel(product)} · {formatFeaturedProductPrice(product)}</option>)}</select></div>
           )}
-          <div className="mt-5 grid gap-4 sm:grid-cols-[minmax(0,180px)_1fr]"><div><label className="text-sm font-semibold">Thứ tự hiển thị</label><input type="number" min="0" step="1" value={sortOrder} onChange={(event) => setSortOrder(event.target.value)} className="mt-2 w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2.5 text-sm outline-none focus:border-lime-400" /></div><label className="flex cursor-pointer items-center gap-3 self-end rounded-xl border border-white/10 bg-black/20 px-3 py-2.5 text-sm"><input type="checkbox" checked={isActive} onChange={(event) => setIsActive(event.target.checked)} className="h-4 w-4 accent-lime-400" /> Hiển thị trên trang chủ</label></div>
+          <div className="mt-5 grid gap-4 sm:grid-cols-[minmax(0,180px)_1fr]"><div><label className="text-sm font-semibold">Vị trí hiển thị</label><select value={sortOrder} onChange={(event) => setSortOrder(event.target.value)} className="mt-2 w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2.5 text-sm outline-none focus:border-lime-400">{Array.from({ length: editing ? featuredProducts.length : featuredProducts.length + 1 }, (_, i) => i + 1).map((pos) => <option key={pos} value={pos}>{pos}{pos === 1 ? ' — Đầu tiên' : pos === (editing ? featuredProducts.length : featuredProducts.length + 1) ? ' — Cuối cùng' : ''}</option>)}</select></div><label className="flex cursor-pointer items-center gap-3 self-end rounded-xl border border-white/10 bg-black/20 px-3 py-2.5 text-sm"><input type="checkbox" checked={isActive} onChange={(event) => setIsActive(event.target.checked)} className="h-4 w-4 accent-lime-400" /> Hiển thị trên trang chủ</label></div>
           <div className="mt-5 flex justify-end"><button type="button" disabled={isSaving} onClick={() => void save()} className="inline-flex items-center gap-2 rounded-xl bg-lime-400 px-4 py-2.5 text-sm font-bold text-black disabled:opacity-60">{isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}{editing ? 'Lưu thay đổi' : 'Thêm vào trang chủ'}</button></div>
         </div>
       )}
 
       <div className="overflow-hidden rounded-3xl border border-white/10 bg-black/25 backdrop-blur-xl">
-        {isLoading ? <div className="flex min-h-52 items-center justify-center text-white/50"><Loader2 className="mr-2 h-5 w-5 animate-spin" />Đang tải…</div> : featuredProducts.length === 0 ? <div className="p-10 text-center"><p className="font-semibold">Chưa có sản phẩm nổi bật.</p><p className="mt-2 text-sm text-white/50">Thêm một sản phẩm để hiển thị trong carousel trang chủ.</p></div> : <div className="divide-y divide-white/10">{featuredProducts.map((item) => <article key={item.id} className="flex flex-wrap items-center gap-4 p-4 sm:flex-nowrap"><ProductThumbnail product={item.product} /><div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-2"><h2 className="truncate font-bold">{item.product.name}</h2><span className={`rounded-full border px-2 py-0.5 text-xs font-semibold ${item.isActive ? 'border-lime-300/30 bg-lime-400/10 text-lime-200' : 'border-white/10 bg-white/5 text-white/45'}`}>{item.isActive ? 'Đang hiển thị' : 'Đã tắt'}</span></div><p className="mt-1 text-sm text-white/50">{productLabel(item.product)} · {formatFeaturedProductPrice(item.product)}</p></div><p className="text-sm text-white/50">Thứ tự: <span className="font-semibold text-white">{item.sortOrder}</span></p><div className="flex gap-2"><button type="button" onClick={() => openEdit(item)} className="rounded-xl border border-white/10 p-2.5 text-white/70 hover:bg-white/10" aria-label={`Sửa ${item.product.name}`}><Edit3 className="h-4 w-4" /></button><button type="button" onClick={() => void remove(item)} className="rounded-xl border border-red-300/20 p-2.5 text-red-300 hover:bg-red-400/10" aria-label={`Gỡ ${item.product.name} khỏi nổi bật`}><Trash2 className="h-4 w-4" /></button></div></article>)}</div>}
+        {isLoading ? <div className="flex min-h-52 items-center justify-center text-white/50"><Loader2 className="mr-2 h-5 w-5 animate-spin" />Đang tải…</div> : featuredProducts.length === 0 ? <div className="p-10 text-center"><p className="font-semibold">Chưa có sản phẩm nổi bật.</p><p className="mt-2 text-sm text-white/50">Thêm một sản phẩm để hiển thị trong carousel trang chủ.</p></div> : <div className="divide-y divide-white/10">{featuredProducts.map((item) => <article key={item.id} className="flex flex-wrap items-center gap-4 p-4 sm:flex-nowrap"><ProductThumbnail product={item.product} /><div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-2"><h2 className="truncate font-bold">{item.product.name}</h2><span className={`rounded-full border px-2 py-0.5 text-xs font-semibold ${item.isActive ? 'border-lime-300/30 bg-lime-400/10 text-lime-200' : 'border-white/10 bg-white/5 text-white/45'}`}>{item.isActive ? 'Đang hiển thị' : 'Đã tắt'}</span></div><p className="mt-1 text-sm text-white/50">{productLabel(item.product)} · {formatFeaturedProductPrice(item.product)}</p></div><p className="text-sm text-white/50">Vị trí: <span className="font-semibold text-white">{item.sortOrder}</span></p><div className="flex gap-2"><button type="button" onClick={() => openEdit(item)} className="rounded-xl border border-white/10 p-2.5 text-white/70 hover:bg-white/10" aria-label={`Sửa ${item.product.name}`}><Edit3 className="h-4 w-4" /></button><button type="button" onClick={() => void remove(item)} className="rounded-xl border border-red-300/20 p-2.5 text-red-300 hover:bg-red-400/10" aria-label={`Gỡ ${item.product.name} khỏi nổi bật`}><Trash2 className="h-4 w-4" /></button></div></article>)}</div>}
       </div>
     </section>
   );
