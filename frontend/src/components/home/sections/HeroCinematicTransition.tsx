@@ -22,7 +22,7 @@ export function CinematicVideoSection({ id }: CinematicVideoSectionProps) {
         className="cinematic-video-section__video pointer-events-none absolute inset-0 z-[1] h-full w-full object-cover object-center"
         aria-hidden="true"
       >
-        <source src="/videos/qp_4928dbd3222df0c6.mp4" type="video/mp4" />
+        <source src="/videos/Video%20Project%202.mp4" type="video/mp4" />
       </video>
       <div className="cinematic-video-section__overlay pointer-events-none absolute inset-0 z-[2]" />
     </section>

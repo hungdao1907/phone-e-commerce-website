@@ -96,11 +96,17 @@ function makeRevealVariants({ y = 24, delay, duration, reduceMotion }: RevealOpt
 
 function ProductCard({ product, index }: { product: FeaturedProduct; index: number }) {
   const rememberReturn = useHomeSectionReturn(HOME_SECTION_IDS.featuredProducts);
-  const cardStyle = { '--product-accent': product.accent, '--product-glow': product.glow } as CSSProperties;
+  const cardStyle = {
+    '--product-accent': product.accent,
+    '--product-glow': product.glow,
+    backgroundColor: '#ffffff',
+  } as CSSProperties;
 
   return (
     <article className="featured-product-card bg-white" style={cardStyle}>
-      <div className="featured-product-card__stage" aria-hidden="true"><span className="featured-product-card__accent" /></div>
+      <div className="featured-product-card__stage bg-white" aria-hidden="true">
+        <span className="featured-product-card__accent" />
+      </div>
       <div className="featured-product-card__media">
         {product.image ? (
           <img className={`featured-product-card__image ${product.imageClassName}`} src={product.image} alt={`${product.brand} ${product.fullName}`} loading={index < 2 ? 'eager' : 'lazy'} decoding="async" draggable={false} />
