@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { FirstVisitHelloIntro, shouldShowIntro } from '@/components/ui/FirstVisitHelloIntro';
-import { CategoryShowcaseSection } from '@/components/home/sections/CategoryShowcaseSection';
-import { EcosystemExperienceSection } from '@/components/home/sections/EcosystemExperienceSection';
-import { FeaturedProductsSection } from '@/components/home/sections/FeaturedProductsSection';
-import { HeroCinematicTransition } from '@/components/home/sections/HeroCinematicTransition';
-import { WaveGallery } from '@/components/home/sections/WaveGallery';
-import { TrustBenefitsSection } from '@/components/home/sections/TrustBenefitsSection';
-import { FinalCTASection } from '@/components/home/sections/FinalCTASection';
+import {
+  HeroCinematicTransition,
+  FeaturedProductsSection,
+  FinalCTASection,
+  EcosystemExperienceSection,
+  WaveGallery,
+  TrustBenefitsSection,
+} from '@/components/home/sections';
 import '@/css/home.css';
 
 export function HomePage() {
@@ -24,19 +25,16 @@ export function HomePage() {
         {/* 3. Sản phẩm nổi bật */}
         <FeaturedProductsSection />
 
-        {/* 4. Danh mục sản phẩm công nghệ (Expanding Cards) */}
-        <CategoryShowcaseSection />
-
-        {/* 5. Hướng dẫn chọn thiết bị & Kêu gọi hành động */}
+        {/* 4. Hướng dẫn chọn thiết bị & Kêu gọi hành động */}
         <FinalCTASection />
 
-        {/* 6. Trải nghiệm hệ sinh thái kết nối (Ecosystem Experience) */}
+        {/* 5. Trải nghiệm hệ sinh thái kết nối (Ecosystem Experience) */}
         <EcosystemExperienceSection />
 
-        {/* 7. Bộ sưu tập ảnh 3D Wave */}
+        {/* 6. Bộ sưu tập ảnh 3D Wave */}
         <WaveGallery />
 
-        {/* 8. Trải nghiệm mua sắm & Lợi ích an tâm */}
+        {/* 7. Trải nghiệm mua sắm & Lợi ích an tâm */}
         <TrustBenefitsSection />
       </main>
     </div>
