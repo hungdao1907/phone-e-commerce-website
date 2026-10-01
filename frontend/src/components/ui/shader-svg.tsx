@@ -27,7 +27,11 @@ export function MeshGradientSVG({
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
-      setMousePosition({ x: e.clientX, y: e.clientY })
+      setMousePosition(prev => 
+        prev.x === e.clientX && prev.y === e.clientY
+          ? prev
+          : { x: e.clientX, y: e.clientY }
+      )
     }
 
     window.addEventListener("mousemove", handleMouseMove)
@@ -44,10 +48,13 @@ export function MeshGradientSVG({
       const deltaY = (mousePosition.y - centerY) * 0.08
 
       const maxOffset = 8
-      setEyeOffset({
-        x: Math.max(-maxOffset, Math.min(maxOffset, deltaX)),
-        y: Math.max(-maxOffset, Math.min(maxOffset, deltaY)),
-      })
+      const nextX = Math.max(-maxOffset, Math.min(maxOffset, deltaX))
+      const nextY = Math.max(-maxOffset, Math.min(maxOffset, deltaY))
+      setEyeOffset(prev =>
+        prev.x === nextX && prev.y === nextY
+          ? prev
+          : { x: nextX, y: nextY }
+      )
     }
   }, [mousePosition])
 
