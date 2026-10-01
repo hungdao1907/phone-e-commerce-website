@@ -80,8 +80,13 @@ router.get('/', authenticateToken, async (req, res) => {
 // GET single order
 router.get('/:id', authenticateToken, async (req, res) => {
   try {
+    const param = getRouteParam(req.params.id);
+    const user = (req as any).user;
+    
+    const whereClause = param.startsWith('DH') ? { orderCode: param } : { id: param };
+    
     const order = await prisma.order.findUnique({
-      where: { id: getRouteParam(req.params.id) },
+      where: whereClause as any,
       include: {
         customer: {
           select: { fullName: true, email: true, phone: true }
@@ -89,14 +94,31 @@ router.get('/:id', authenticateToken, async (req, res) => {
         items: {
           include: {
             variant: {
-              include: { product: { select: { id: true, name: true, image: true } } }
+              include: { product: { select: { id: true, name: true, image: true, brand: true, status: true } } }
             }
           }
         },
       }
     });
+
     if (!order) return res.status(404).json({ message: 'Không tìm thấy đơn hàng' });
-    res.json(order);
+
+    // Security: Customers can only view their own orders
+    if (user.role === 'customer' && order.customerId !== user.id) {
+      return res.status(403).json({ message: 'Bạn không có quyền truy cập đơn hàng này' });
+    }
+
+    // Fetch BankTransaction if PAID and BANK_TRANSFER
+    let bankTransaction = null;
+    if (order.paymentMethod === 'BANK_TRANSFER' && order.paymentStatus === 'PAID') {
+      bankTransaction = await prisma.bankTransaction.findFirst({
+        where: { orderId: order.id, status: 'MATCHED' },
+        orderBy: { matchedAt: 'desc' },
+        select: { transactionId: true, amount: true, transactionDate: true, matchedAt: true }
+      });
+    }
+
+    res.json({ ...order, bankTransaction });
   } catch (error) {
     console.error('Error fetching order:', error);
     res.status(500).json({ message: 'Lỗi server' });
@@ -364,12 +386,14 @@ router.put('/:id/status', authenticateToken, async (req, res) => {
   }
 });
 
-// DELETE order (Cancel)
-router.delete('/:id', authenticateToken, async (req, res) => {
+// PATCH order (Cancel)
+router.patch('/:id/cancel', authenticateToken, async (req, res) => {
   try {
-    // Find order to restore stock
+    const orderId = getRouteParam(req.params.id);
+    const { reason, note } = req.body;
+
     const order = await prisma.order.findUnique({
-      where: { id: getRouteParam(req.params.id) },
+      where: { id: orderId },
       include: { items: true }
     });
 
@@ -377,28 +401,50 @@ router.delete('/:id', authenticateToken, async (req, res) => {
       return res.status(404).json({ message: 'Không tìm thấy đơn hàng' });
     }
 
+    // Auth check
+    const user = (req as any).user;
+    if (user.role === 'customer' && order.customerId !== user.id) {
+      return res.status(403).json({ message: 'Không có quyền truy cập' });
+    }
+
+    // Security: Block cancel if PAID
+    if (['paid', 'PAID'].includes(order.paymentStatus)) {
+      return res.status(400).json({ message: 'Đơn hàng đã thanh toán. Không thể hủy tự động.' });
+    }
+
+    // Status check
+    if (!['pending', 'confirmed', 'processing'].includes(order.status)) {
+      return res.status(400).json({ message: 'Đơn hàng đang giao hoặc đã hoàn thành, không thể hủy.' });
+    }
+
     await prisma.$transaction(async (tx) => {
       // Restore stock
       for (const item of order.items) {
-        await tx.productVariant.update({
-          where: { id: item.variantId },
-          data: {
-            stock: {
-              increment: item.quantity
+        if (item.variantId) {
+          await tx.productVariant.update({
+            where: { id: item.variantId },
+            data: {
+              stock: {
+                increment: item.quantity
+              }
             }
-          }
-        });
+          });
+        }
       }
 
-      // Delete order
-      await tx.order.delete({
-        where: { id: getRouteParam(req.params.id) }
+      // Soft cancel
+      await tx.order.update({
+        where: { id: orderId },
+        data: {
+          status: 'cancelled',
+          note: note ? `${order.note ? order.note + '\n' : ''}Lý do hủy: ${reason} - ${note}` : `${order.note ? order.note + '\n' : ''}Lý do hủy: ${reason}`
+        }
       });
     });
 
     res.json({ message: 'Hủy đơn hàng thành công' });
   } catch (error) {
-    console.error('Error deleting order:', error);
+    console.error('Error cancelling order:', error);
     res.status(500).json({ message: 'Lỗi server' });
   }
 });

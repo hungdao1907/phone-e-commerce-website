@@ -18,8 +18,6 @@ export function FloatingCartButton() {
   const isHiddenPath = hideCartPaths.includes(location.pathname) || 
                        hideCartPaths.some(p => p !== '/' && location.pathname.startsWith(p + '/'));
 
-  if (isExplorePage || isHiddenPath) return null;
-
   const [isPlaying, setIsPlaying] = useState(false);
 
   useEffect(() => {
@@ -29,6 +27,8 @@ export function FloatingCartButton() {
       return () => clearTimeout(timer);
     }
   }, [cartItemCount]);
+
+  if (isExplorePage || isHiddenPath) return null;
 
   return (
     <button

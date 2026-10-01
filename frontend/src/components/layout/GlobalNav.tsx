@@ -8,6 +8,13 @@ import { useCartStore } from '../../store/useCartStore';
 import { Link, useLocation } from 'react-router-dom';
 import { NavSearchModal } from './NavSearchModal';
 
+export const getCategoryPrefix = (slug: string) => {
+  if (slug === 'ien-thoai' || slug === 'dien-thoai') return 'phone';
+  if (slug === 'may-tinh-bang' || slug === 'tablet') return 'tablet';
+  if (slug === 'ong-ho-thong-minh' || slug === 'dong-ho-thong-minh' || slug === 'watch') return 'watch';
+  return slug;
+};
+
 export function GlobalNav() {
   const { mobileMenuOpen, toggleMobileMenu } = useAppStore();
   const [activeMenu, setActiveMenu] = useState<any | null>(null);
@@ -49,7 +56,10 @@ export function GlobalNav() {
 
     const visible = [
       { id: 'store', name: 'Cửa Hàng', slug: '', isStatic: true },
-      ...rootCats.filter(c => TARGET_SLUGS.includes(c.slug.toLowerCase())),
+      ...rootCats.filter(c => TARGET_SLUGS.includes(c.slug.toLowerCase())).map(c => ({
+        ...c,
+        slug: getCategoryPrefix(c.slug.toLowerCase())
+      })),
       { id: 'support', name: 'Hỗ Trợ', slug: 'support', isStatic: true }
     ];
 
@@ -75,12 +85,7 @@ export function GlobalNav() {
     }, 150);
   };
 
-  const getCategoryPrefix = (slug: string) => {
-    if (slug === 'ien-thoai' || slug === 'dien-thoai') return 'phone';
-    if (slug === 'may-tinh-bang' || slug === 'tablet') return 'tablet';
-    if (slug === 'ong-ho-thong-minh' || slug === 'watch') return 'watch';
-    return slug;
-  };
+
 
   const getMegaMenuGroups = (item: any) => {
     if (!item) return [];
@@ -245,27 +250,45 @@ export function GlobalNav() {
             </button>
             
             <div className="relative group">
-              <Link 
-                to={useAuthStore.getState().user ? "/profile" : "/login"} 
-                className="nav-glow-link hover:text-[#22c55e] transition-colors block" 
-                aria-label="Tài khoản" 
-              >
-                <User className="w-[18px] h-[18px]" />
-              </Link>
+              {useAuthStore((state) => state.user) ? (
+                <Link 
+                  to="/profile"
+                  className="flex items-center gap-2 pl-1 pr-3 py-1 bg-neutral-100 hover:bg-neutral-200 border border-neutral-200 rounded-full transition-colors cursor-pointer"
+                >
+                  <div className="w-7 h-7 bg-white rounded-full flex items-center justify-center shrink-0 border border-neutral-200 shadow-sm overflow-hidden">
+                    {useAuthStore((state) => state.user)?.avatar ? (
+                      <img src={useAuthStore((state) => state.user)?.avatar} alt="Avatar" className="w-full h-full rounded-full object-cover" />
+                    ) : (
+                      <User className="w-4 h-4 text-neutral-500" />
+                    )}
+                  </div>
+                  <span className="text-[13px] font-bold text-neutral-700 max-w-[120px] truncate">
+                    {useAuthStore((state) => state.user)?.fullName || useAuthStore((state) => state.user)?.username}
+                  </span>
+                </Link>
+              ) : (
+                <Link 
+                  to="/login" 
+                  className="nav-glow-link hover:text-[#22c55e] transition-colors block p-1" 
+                  aria-label="Tài khoản" 
+                >
+                  <User className="w-[18px] h-[18px]" />
+                </Link>
+              )}
               
-              {useAuthStore.getState().user && (
-                <div className="absolute right-0 top-full pt-4 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
-                  <div className="w-56 bg-white border border-neutral-100 rounded-2xl shadow-xl overflow-hidden">
+              {useAuthStore((state) => state.user) && (
+                <div className="absolute right-0 top-full pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                  <div className="w-56 bg-white border border-neutral-100 rounded-2xl shadow-xl overflow-hidden mt-1">
                     <div className="px-5 py-3 border-b border-neutral-100 bg-neutral-50/80">
                       <p className="text-[13px] font-semibold text-neutral-900 truncate">
-                        {useAuthStore.getState().user?.username}
+                        {useAuthStore((state) => state.user)?.username}
                       </p>
                     </div>
                     <div className="py-2">
                       <Link to="/profile" className="block px-5 py-2.5 text-[13px] font-medium text-neutral-700 hover:bg-neutral-50 hover:text-[#22c55e]">
                         Hồ sơ của tôi
                       </Link>
-                      {useAuthStore.getState().user?.role !== 'customer' && (
+                      {useAuthStore((state) => state.user)?.role !== 'customer' && (
                         <Link to="/dashboard" className="block px-5 py-2.5 text-[13px] font-medium text-neutral-700 hover:bg-neutral-50 hover:text-[#22c55e]">
                           Vào Dashboard
                         </Link>

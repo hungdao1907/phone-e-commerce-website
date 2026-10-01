@@ -96,10 +96,13 @@ function MainLayout() {
   );
 }
 
+import { ErrorBoundary } from './ErrorBoundary';
+
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
+        <ErrorBoundary>
           <Suspense
             fallback={(
               <div
@@ -182,6 +185,7 @@ export default function App() {
               </Route>
             </Routes>
           </Suspense>
+        </ErrorBoundary>
         </BrowserRouter>
     </QueryClientProvider>
   );
