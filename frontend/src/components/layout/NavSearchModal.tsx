@@ -186,21 +186,21 @@ export function NavSearchModal({ isOpen, onClose }: NavSearchModalProps) {
     <>
       {/* Backdrop overlay */}
       <div
-        className="fixed inset-0 top-[52px] bg-black/45 backdrop-blur-sm z-40 transition-opacity duration-300"
+        className="fixed inset-0 top-[54px] bg-black/45 backdrop-blur-sm z-40 transition-opacity duration-300"
         onClick={onClose}
         aria-hidden="true"
       />
 
       {/* Search Dropdown Container */}
       <div
-        className="fixed left-0 right-0 top-[52px] z-50 bg-white/95 backdrop-blur-2xl border-b border-neutral-200/80 shadow-2xl transition-all duration-300 transform animate-in fade-in slide-in-from-top-3"
+        className="fixed left-0 right-0 top-[54px] z-50 bg-white/95 backdrop-blur-2xl border-b border-neutral-200/80 shadow-2xl transition-all duration-300 transform animate-in fade-in slide-in-from-top-3"
         role="dialog"
         aria-modal="true"
         aria-label="Khung tìm kiếm sản phẩm"
       >
         <div className="max-w-[900px] mx-auto px-4 sm:px-6 lg:px-8 py-5">
           {/* Main Search Input Bar */}
-          <div className="relative flex items-center bg-neutral-100/90 hover:bg-neutral-100 focus-within:bg-white focus-within:ring-2 focus-within:ring-[#22c55e]/40 focus-within:border-[#22c55e] border border-neutral-200/80 rounded-2xl px-4 py-3 transition-all duration-200 shadow-inner">
+          <div className="relative flex items-center bg-neutral-100/90 hover:bg-neutral-100 focus-within:bg-white focus-within:ring-2 focus-within:ring-black/20 focus-within:border-black border border-neutral-200/80 rounded-2xl px-4 py-3 transition-all duration-200 shadow-inner">
             <Search className="w-5 h-5 text-neutral-400 shrink-0 mr-3.5" aria-hidden="true" />
             <input
               ref={inputRef}
@@ -265,7 +265,7 @@ export function NavSearchModal({ isOpen, onClose }: NavSearchModalProps) {
                         <div
                           key={product.id}
                           onClick={() => handleProductClick(product)}
-                          className="group flex items-center gap-3.5 p-2.5 rounded-xl border border-neutral-100 hover:border-[#22c55e]/30 bg-white hover:bg-neutral-50/80 hover:shadow-md transition-all duration-200 cursor-pointer text-left"
+                          className="group flex items-center gap-3.5 p-2.5 rounded-xl border border-neutral-100 hover:border-black/30 bg-white hover:bg-neutral-50/80 hover:shadow-md transition-all duration-200 cursor-pointer text-left"
                         >
                           <div className="w-14 h-14 rounded-lg bg-neutral-100/60 p-1 flex items-center justify-center shrink-0 border border-neutral-200/50 group-hover:scale-105 transition-transform duration-200">
                             <img
@@ -291,12 +291,12 @@ export function NavSearchModal({ isOpen, onClose }: NavSearchModalProps) {
                                 </span>
                               )}
                             </div>
-                            <h4 className="text-xs sm:text-sm font-semibold text-neutral-900 truncate group-hover:text-[#22c55e] transition-colors">
+                            <h4 className="text-xs sm:text-sm font-semibold text-neutral-900 truncate group-hover:text-black transition-colors">
                               {product.name}
                             </h4>
                             {priceInfo && priceInfo.minPrice > 0 ? (
                               <div className="flex items-center gap-2 mt-0.5">
-                                <span className="text-xs font-bold text-emerald-600">
+                                <span className="text-xs font-bold text-neutral-900">
                                   {formatVND(priceInfo.minSalePrice || priceInfo.minPrice)}
                                 </span>
                                 {priceInfo.minSalePrice && priceInfo.minPrice > priceInfo.minSalePrice && (
@@ -310,7 +310,7 @@ export function NavSearchModal({ isOpen, onClose }: NavSearchModalProps) {
                             )}
                           </div>
 
-                          <ChevronRight className="w-4 h-4 text-neutral-300 group-hover:text-[#22c55e] group-hover:translate-x-0.5 transition-all shrink-0" />
+                          <ChevronRight className="w-4 h-4 text-neutral-300 group-hover:text-black group-hover:translate-x-0.5 transition-all shrink-0" />
                         </div>
                       );
                     })}
@@ -344,7 +344,7 @@ export function NavSearchModal({ isOpen, onClose }: NavSearchModalProps) {
                 {/* Trending searches */}
                 <div>
                   <div className="flex items-center gap-1.5 text-xs font-bold text-neutral-400 uppercase tracking-wider mb-3">
-                    <TrendingUp className="w-3.5 h-3.5 text-[#22c55e]" />
+                    <TrendingUp className="w-3.5 h-3.5 text-neutral-900" />
                     <span>TÌM KIẾM PHỔ BIẾN</span>
                   </div>
                   <div className="flex flex-wrap gap-2">
@@ -352,9 +352,9 @@ export function NavSearchModal({ isOpen, onClose }: NavSearchModalProps) {
                       <button
                         key={idx}
                         onClick={() => setQuery(term)}
-                        className="group flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-neutral-100 hover:bg-emerald-50 text-xs font-medium text-neutral-700 hover:text-emerald-700 border border-neutral-200/60 hover:border-emerald-200 transition-all duration-200"
+                        className="group flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-neutral-100 hover:bg-neutral-200 text-xs font-medium text-neutral-700 hover:text-black border border-neutral-200/60 hover:border-neutral-300 transition-all duration-200"
                       >
-                        <Sparkles className="w-3 h-3 text-neutral-400 group-hover:text-emerald-600" />
+                        <Sparkles className="w-3 h-3 text-neutral-400 group-hover:text-neutral-700" />
                         <span>{term}</span>
                       </button>
                     ))}
@@ -364,7 +364,7 @@ export function NavSearchModal({ isOpen, onClose }: NavSearchModalProps) {
                 {/* Quick Categories */}
                 <div>
                   <div className="flex items-center gap-1.5 text-xs font-bold text-neutral-400 uppercase tracking-wider mb-3">
-                    <Tag className="w-3.5 h-3.5 text-blue-500" />
+                    <Tag className="w-3.5 h-3.5 text-neutral-700" />
                     <span>DANH MỤC NỔI BẬT</span>
                   </div>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -375,7 +375,7 @@ export function NavSearchModal({ isOpen, onClose }: NavSearchModalProps) {
                           key={idx}
                           to={`/${cat.slug}`}
                           onClick={onClose}
-                          className="flex items-center gap-3 p-3 rounded-xl bg-neutral-50 hover:bg-white border border-neutral-200/70 hover:border-[#22c55e]/40 hover:shadow-md transition-all duration-200 group text-left"
+                          className="flex items-center gap-3 p-3 rounded-xl bg-neutral-50 hover:bg-white border border-neutral-200/70 hover:border-black/30 hover:shadow-md transition-all duration-200 group text-left"
                         >
                           <div
                             className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${cat.color} group-hover:scale-110 transition-transform duration-200`}
@@ -383,7 +383,7 @@ export function NavSearchModal({ isOpen, onClose }: NavSearchModalProps) {
                             <Icon className="w-4 h-4" />
                           </div>
                           <div className="min-w-0">
-                            <p className="text-xs font-semibold text-neutral-900 group-hover:text-[#22c55e] transition-colors truncate">
+                            <p className="text-xs font-semibold text-neutral-900 group-hover:text-black transition-colors truncate">
                               {cat.name}
                             </p>
                             <span className="text-[10px] text-neutral-400 flex items-center gap-0.5">

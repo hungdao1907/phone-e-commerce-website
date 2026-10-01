@@ -27,17 +27,17 @@ export function HomePage() {
         {/* 4. Danh mục sản phẩm công nghệ (Expanding Cards) */}
         <CategoryShowcaseSection />
 
-        {/* 5. Trải nghiệm hệ sinh thái kết nối (Ecosystem Experience) */}
+        {/* 5. Hướng dẫn chọn thiết bị & Kêu gọi hành động */}
+        <FinalCTASection />
+
+        {/* 6. Trải nghiệm hệ sinh thái kết nối (Ecosystem Experience) */}
         <EcosystemExperienceSection />
 
-        {/* 6. Bộ sưu tập ảnh 3D Wave */}
+        {/* 7. Bộ sưu tập ảnh 3D Wave */}
         <WaveGallery />
 
-        {/* 7. Trải nghiệm mua sắm & Lợi ích an tâm */}
+        {/* 8. Trải nghiệm mua sắm & Lợi ích an tâm */}
         <TrustBenefitsSection />
-
-        {/* 8. Hướng dẫn chọn thiết bị & Kêu gọi hành động cuối trang */}
-        <FinalCTASection />
       </main>
     </div>
   );

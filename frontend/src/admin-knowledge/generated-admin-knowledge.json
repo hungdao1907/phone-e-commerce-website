@@ -1,0 +1,2512 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-09-29T06:55:52.248Z",
+  "sourceOfTruth": "frontend/src/components/admin plus App.tsx and service calls used by Admin views",
+  "security": {
+    "includesLiveBusinessData": false,
+    "includesSecrets": false,
+    "includesCustomerRecords": false
+  },
+  "navigation": [
+    {
+      "section": "Tổng quan",
+      "pages": [
+        {
+          "id": "dashboard",
+          "label": "Tổng quan",
+          "route": "/dashboard"
+        }
+      ]
+    },
+    {
+      "section": "Nội dung & Marketing",
+      "pages": [
+        {
+          "id": "planned",
+          "label": "Lịch kế hoạch",
+          "route": "/dashboard/planned"
+        }
+      ]
+    },
+    {
+      "section": "Sản phẩm",
+      "pages": [
+        {
+          "id": "product",
+          "label": "Danh sách",
+          "route": "/dashboard/product"
+        },
+        {
+          "id": "inventory",
+          "label": "Kho hàng",
+          "route": "/dashboard/inventory"
+        },
+        {
+          "id": "categories",
+          "label": "Danh mục & phân loại",
+          "route": "/dashboard/categories"
+        }
+      ]
+    },
+    {
+      "section": "Đơn hàng",
+      "pages": [
+        {
+          "id": "orders-list",
+          "label": "Danh sách đơn hàng",
+          "route": "/dashboard/orders-list"
+        },
+        {
+          "id": "orders-reviews",
+          "label": "Đánh giá sản phẩm",
+          "route": "/dashboard/orders-reviews"
+        },
+        {
+          "id": "orders-complaints",
+          "label": "Khiếu nại / Hỗ trợ",
+          "route": "/dashboard/orders-complaints"
+        },
+        {
+          "id": "orders-invoices",
+          "label": "Hóa đơn & Chứng từ",
+          "route": "/dashboard/orders-invoices"
+        }
+      ]
+    },
+    {
+      "section": "CRM",
+      "pages": [
+        {
+          "id": "crm-customers",
+          "label": "Khách hàng",
+          "route": "/dashboard/crm-customers"
+        },
+        {
+          "id": "crm-leads",
+          "label": "Khách hàng tiềm năng",
+          "route": "/dashboard/crm-leads"
+        }
+      ]
+    },
+    {
+      "section": "Nhân sự",
+      "pages": [
+        {
+          "id": "user-staff",
+          "label": "Quản lý Nhân sự",
+          "route": "/dashboard/user-staff"
+        }
+      ]
+    },
+    {
+      "section": "Marketing",
+      "pages": [
+        {
+          "id": "marketing",
+          "label": "Chiến dịch Marketing",
+          "route": "/dashboard/marketing"
+        },
+        {
+          "id": "banners",
+          "label": "Quản lý Banner",
+          "route": "/dashboard/banners"
+        }
+      ]
+    },
+    {
+      "section": "Hệ thống",
+      "pages": [
+        {
+          "id": "settings",
+          "label": "Cài đặt",
+          "route": "/dashboard/settings"
+        }
+      ]
+    }
+  ],
+  "routes": [
+    {
+      "route": "/dashboard",
+      "viewId": "dashboard",
+      "section": "Tổng quan",
+      "label": "Tổng quan",
+      "pageTitle": "Tổng quan",
+      "component": "MainDashboardView",
+      "sourceFile": "src/components/admin/views/MainDashboardView.tsx"
+    },
+    {
+      "route": "/dashboard/planned",
+      "viewId": "planned",
+      "section": "Nội dung & Marketing",
+      "label": "Lịch kế hoạch",
+      "pageTitle": "Lịch kế hoạch",
+      "component": "InteractiveCalendar",
+      "sourceFile": "src/components/admin/widgets/InteractiveCalendar.tsx"
+    },
+    {
+      "route": "/dashboard/product",
+      "viewId": "product",
+      "section": "Sản phẩm",
+      "label": "Danh sách",
+      "pageTitle": "Sản phẩm",
+      "component": "ProductList",
+      "sourceFile": "src/components/admin/views/ProductList.tsx"
+    },
+    {
+      "route": "/dashboard/inventory",
+      "viewId": "inventory",
+      "section": "Sản phẩm",
+      "label": "Kho hàng",
+      "pageTitle": "Quản lý Kho hàng",
+      "component": "Inventory",
+      "sourceFile": "src/components/admin/views/Inventory.tsx"
+    },
+    {
+      "route": "/dashboard/categories",
+      "viewId": "categories",
+      "section": "Sản phẩm",
+      "label": "Danh mục & phân loại",
+      "pageTitle": "Danh mục",
+      "component": "Categories",
+      "sourceFile": "src/components/admin/views/Categories.tsx"
+    },
+    {
+      "route": "/dashboard/orders-list",
+      "viewId": "orders-list",
+      "section": "Đơn hàng",
+      "label": "Danh sách đơn hàng",
+      "pageTitle": "Quản lý Đơn hàng",
+      "component": "Orders",
+      "sourceFile": "src/components/admin/views/Orders.tsx"
+    },
+    {
+      "route": "/dashboard/orders-reviews",
+      "viewId": "orders-reviews",
+      "section": "Đơn hàng",
+      "label": "Đánh giá sản phẩm",
+      "pageTitle": "Đánh giá Sản phẩm",
+      "component": "Reviews",
+      "sourceFile": "src/components/admin/views/Reviews.tsx"
+    },
+    {
+      "route": "/dashboard/orders-complaints",
+      "viewId": "orders-complaints",
+      "section": "Đơn hàng",
+      "label": "Khiếu nại / Hỗ trợ",
+      "pageTitle": "Quản lý Khiếu nại",
+      "component": "Complaints",
+      "sourceFile": "src/components/admin/views/Complaints.tsx"
+    },
+    {
+      "route": "/dashboard/orders-invoices",
+      "viewId": "orders-invoices",
+      "section": "Đơn hàng",
+      "label": "Hóa đơn & Chứng từ",
+      "pageTitle": "Hóa đơn & Chứng từ",
+      "component": "Invoices",
+      "sourceFile": "src/components/admin/views/Invoices.tsx"
+    },
+    {
+      "route": "/dashboard/crm-customers",
+      "viewId": "crm-customers",
+      "section": "CRM",
+      "label": "Khách hàng",
+      "pageTitle": "Danh Sách Khách Hàng (Customers)",
+      "component": "CustomerManager",
+      "sourceFile": "src/components/admin/views/CustomerManager.tsx"
+    },
+    {
+      "route": "/dashboard/crm-leads",
+      "viewId": "crm-leads",
+      "section": "CRM",
+      "label": "Khách hàng tiềm năng",
+      "pageTitle": "Khách Hàng Tiềm Năng (Leads)",
+      "component": "LeadManager",
+      "sourceFile": "src/components/admin/views/LeadManager.tsx"
+    },
+    {
+      "route": "/dashboard/user-staff",
+      "viewId": "user-staff",
+      "section": "Nhân sự",
+      "label": "Quản lý Nhân sự",
+      "pageTitle": "Quản Lý Nhân Sự",
+      "component": "StaffManager",
+      "sourceFile": "src/components/admin/views/StaffManager.tsx"
+    },
+    {
+      "route": "/dashboard/marketing",
+      "viewId": "marketing",
+      "section": "Marketing",
+      "label": "Chiến dịch Marketing",
+      "pageTitle": "Chiến dịch Marketing (Săn Deal)",
+      "component": "Marketing",
+      "sourceFile": "src/components/admin/views/Marketing.tsx"
+    },
+    {
+      "route": "/dashboard/banners",
+      "viewId": "banners",
+      "section": "Marketing",
+      "label": "Quản lý Banner",
+      "pageTitle": "Quản lý Banner",
+      "component": "Banners",
+      "sourceFile": "src/components/admin/views/Banners.tsx"
+    },
+    {
+      "route": "/dashboard/settings",
+      "viewId": "settings",
+      "section": "Hệ thống",
+      "label": "Cài đặt",
+      "pageTitle": "Cài đặt",
+      "component": "SettingsManager",
+      "sourceFile": "src/components/admin/views/SettingsManager.tsx"
+    }
+  ],
+  "pages": [
+    {
+      "id": "dashboard",
+      "route": "/dashboard",
+      "section": "Tổng quan",
+      "label": "Tổng quan",
+      "pageTitle": "Tổng quan",
+      "component": "MainDashboardView",
+      "sourceFile": "src/components/admin/views/MainDashboardView.tsx",
+      "keywords": [
+        "dashboard",
+        "doanh thu",
+        "tổng quan"
+      ],
+      "actions": [],
+      "fields": [
+        {
+          "label": null,
+          "placeholder": "Doanh thu thuần"
+        },
+        {
+          "label": null,
+          "placeholder": "Đơn hàng"
+        },
+        {
+          "label": null,
+          "placeholder": "Sản phẩm"
+        },
+        {
+          "label": null,
+          "placeholder": "AOV"
+        }
+      ],
+      "labels": [
+        "Welcome back",
+        "[ PENDING ]"
+      ],
+      "messages": [],
+      "validations": [],
+      "statuses": [],
+      "apiCalls": []
+    },
+    {
+      "id": "planned",
+      "route": "/dashboard/planned",
+      "section": "Nội dung & Marketing",
+      "label": "Lịch kế hoạch",
+      "pageTitle": "Lịch kế hoạch",
+      "component": "InteractiveCalendar",
+      "sourceFile": "src/components/admin/widgets/InteractiveCalendar.tsx",
+      "keywords": [
+        "lịch",
+        "kế hoạch"
+      ],
+      "actions": [
+        "Xem các sự kiện, kế hoạch sắp tới và đã hoàn thành của bạn.",
+        "Sửa kế hoạch",
+        "Thêm kế hoạch",
+        "Cập nhật kế hoạch",
+        "Lưu kế hoạch"
+      ],
+      "fields": [
+        {
+          "label": null,
+          "placeholder": "Ví dụ: Họp team Marketing"
+        },
+        {
+          "label": null,
+          "placeholder": "Ví dụ: Phòng họp A, Zoom Meeting..."
+        },
+        {
+          "label": null,
+          "placeholder": "Ví dụ: Nguyễn Văn A, Trần Thị B..."
+        },
+        {
+          "label": "Tên kế hoạch",
+          "type": "text",
+          "placeholder": null
+        },
+        {
+          "label": "Ngày",
+          "type": "date",
+          "placeholder": null
+        },
+        {
+          "label": "Thời gian",
+          "type": "time",
+          "placeholder": null
+        },
+        {
+          "label": "Địa điểm",
+          "type": "text",
+          "placeholder": null
+        },
+        {
+          "label": "Người tham gia",
+          "type": "text",
+          "placeholder": null
+        }
+      ],
+      "labels": [
+        "Tên kế hoạch",
+        "Ngày",
+        "Thời gian",
+        "Địa điểm",
+        "Người tham gia",
+        "Kế hoạch"
+      ],
+      "messages": [],
+      "validations": [],
+      "statuses": [],
+      "apiCalls": []
+    },
+    {
+      "id": "product",
+      "route": "/dashboard/product",
+      "section": "Sản phẩm",
+      "label": "Danh sách",
+      "pageTitle": "Sản phẩm",
+      "component": "ProductList",
+      "sourceFile": "src/components/admin/views/ProductList.tsx",
+      "keywords": [
+        "sản phẩm",
+        "sku",
+        "biến thể"
+      ],
+      "actions": [
+        "Tải ảnh",
+        "Sinh biến thể tự động",
+        "Thêm biến thể",
+        "Thêm ảnh",
+        "Thêm mới",
+        "Lưu trữ",
+        "Lỗi khi thực hiện thao tác.",
+        "Lỗi kết nối máy chủ.",
+        "Lỗi tải danh mục:",
+        "Lỗi tải ảnh",
+        "Lỗi khi tải ảnh lên",
+        "Vui lòng nhập SKU cho biến thể dòng ${i + 1}.",
+        "Mã SKU",
+        "Giá bán của biến thể",
+        "Tồn kho của biến thể",
+        "Lỗi khi lưu sản phẩm",
+        "Xóa sản phẩm",
+        "Lỗi khi xóa",
+        "Sửa sản phẩm",
+        "Thêm sản phẩm mới",
+        "Thêm ${attrKey}...",
+        "Lưu sản phẩm"
+      ],
+      "fields": [
+        {
+          "label": null,
+          "placeholder": "VD: iPhone 15 Pro Max"
+        },
+        {
+          "label": null,
+          "placeholder": "Tìm..."
+        },
+        {
+          "label": null,
+          "placeholder": "VD: Apple, Samsung..."
+        },
+        {
+          "label": null,
+          "placeholder": "Nhập mô tả chi tiết..."
+        },
+        {
+          "label": null,
+          "placeholder": "Giá..."
+        },
+        {
+          "label": null,
+          "placeholder": "SKU"
+        },
+        {
+          "label": null,
+          "placeholder": "0"
+        },
+        {
+          "label": null,
+          "placeholder": "Trống"
+        },
+        {
+          "label": null,
+          "placeholder": "Tìm tên, SKU..."
+        },
+        {
+          "label": null,
+          "placeholder": "Chuyển sang dạng lưới"
+        },
+        {
+          "label": null,
+          "placeholder": "Chuyển sang dạng danh sách"
+        },
+        {
+          "label": "Tên sản phẩm *",
+          "type": "text",
+          "placeholder": null
+        },
+        {
+          "label": "Danh mục * {isCatDropdownOpen && ( {filteredCats.map(c => ( ))} )} Thương hiệu",
+          "type": "text",
+          "placeholder": null
+        }
+      ],
+      "labels": [
+        "THÔNG TIN CƠ BẢN",
+        "Tên sản phẩm *",
+        "Danh mục *",
+        "Thương hiệu",
+        "Mô tả sản phẩm",
+        "HÌNH ẢNH SẢN PHẨM",
+        "BIẾN THỂ",
+        "( biến thể)",
+        "THÔNG SỐ KỸ THUẬT",
+        "Ảnh minh họa (Bên trái)",
+        "Sản phẩm",
+        "Quản lý sản phẩm",
+        "Đã chọn",
+        "Không tìm thấy sản phẩm nào"
+      ],
+      "messages": [
+        "Lỗi kết nối máy chủ.",
+        "Ảnh vượt quá 5MB",
+        "Upload failed",
+        "Lỗi khi tải ảnh lên",
+        "Vui lòng nhập tên sản phẩm.",
+        "Vui lòng chọn danh mục.",
+        "Sản phẩm cần ít nhất 1 biến thể.",
+        "Vui lòng nhập SKU cho biến thể dòng ${i + 1}.",
+        "Mã SKU",
+        "Giá bán của biến thể",
+        "Giá khuyến mãi của biến thể",
+        "Tồn kho của biến thể",
+        "Lỗi khi xóa"
+      ],
+      "validations": [
+        {
+          "message": "Lỗi kết nối máy chủ."
+        },
+        {
+          "message": "Ảnh vượt quá 5MB"
+        },
+        {
+          "message": "Lỗi khi tải ảnh lên"
+        },
+        {
+          "message": "Vui lòng nhập tên sản phẩm."
+        },
+        {
+          "message": "Vui lòng chọn danh mục."
+        },
+        {
+          "message": "Sản phẩm cần ít nhất 1 biến thể."
+        },
+        {
+          "message": "Vui lòng nhập SKU cho biến thể dòng ${i + 1}."
+        },
+        {
+          "message": "Lỗi khi xóa"
+        }
+      ],
+      "statuses": [],
+      "apiCalls": [
+        "/api/products/admin/bulk-action",
+        "/api/upload"
+      ]
+    },
+    {
+      "id": "inventory",
+      "route": "/dashboard/inventory",
+      "section": "Sản phẩm",
+      "label": "Kho hàng",
+      "pageTitle": "Quản lý Kho hàng",
+      "component": "Inventory",
+      "sourceFile": "src/components/admin/views/Inventory.tsx",
+      "keywords": [
+        "kho",
+        "tồn kho",
+        "sku",
+        "nhập xuất"
+      ],
+      "actions": [
+        "Tạo phiếu Nhập/Xuất",
+        "Tạo phiếu nhập",
+        "Tạo phiếu xuất",
+        "Lỗi tải dữ liệu kho:",
+        "Lỗi cập nhật tồn kho:"
+      ],
+      "fields": [
+        {
+          "label": null,
+          "placeholder": "Tìm theo SKU, tên sản phẩm, biến thể..."
+        },
+        {
+          "label": null,
+          "placeholder": "Copy SKU"
+        }
+      ],
+      "labels": [
+        "Kiểm soát tồn kho theo sản phẩm và biến thể.",
+        "Tổng giá trị tồn kho",
+        "Tổng sản phẩm / biến thể",
+        "biến thể từ sản phẩm",
+        "Còn hàng:",
+        "Sắp hết:",
+        "Hết hàng:",
+        "Đã chọn",
+        "Hết hàng",
+        "Sắp hết",
+        "Còn hàng",
+        "Hiển thị:"
+      ],
+      "messages": [],
+      "validations": [],
+      "statuses": [],
+      "apiCalls": []
+    },
+    {
+      "id": "categories",
+      "route": "/dashboard/categories",
+      "section": "Sản phẩm",
+      "label": "Danh mục & phân loại",
+      "pageTitle": "Danh mục",
+      "component": "Categories",
+      "sourceFile": "src/components/admin/views/Categories.tsx",
+      "keywords": [
+        "danh mục",
+        "phân loại"
+      ],
+      "actions": [
+        "Ẩn",
+        "Lỗi tải danh mục:",
+        "Xóa danh mục",
+        "Lỗi khi xóa danh mục",
+        "Lỗi toggle active:",
+        "Sửa danh mục",
+        "Tạo danh mục mới"
+      ],
+      "fields": [
+        {
+          "label": null,
+          "placeholder": "VD: Điện thoại di động"
+        },
+        {
+          "label": "Tên danh mục *",
+          "type": "text",
+          "placeholder": null
+        }
+      ],
+      "labels": [
+        "Danh mục",
+        "Quản lý cấu trúc cây phân loại sản phẩm.",
+        "Cây Danh Mục",
+        "Chưa có danh mục nào",
+        "Hãy tạo danh mục đầu tiên!",
+        "Trạng thái hiển thị",
+        "Danh mục này sẽ hiển thị trên menu chính của website",
+        "Chưa chọn Danh mục",
+        "Hãy chọn một danh mục trên cây thư mục bên trái để xem và chỉnh sửa.",
+        "Tên danh mục *",
+        "Icon"
+      ],
+      "messages": [
+        "Lỗi khi xóa danh mục"
+      ],
+      "validations": [
+        {
+          "message": "Lỗi khi xóa danh mục"
+        }
+      ],
+      "statuses": [],
+      "apiCalls": []
+    },
+    {
+      "id": "orders-list",
+      "route": "/dashboard/orders-list",
+      "section": "Đơn hàng",
+      "label": "Danh sách đơn hàng",
+      "pageTitle": "Quản lý Đơn hàng",
+      "component": "Orders",
+      "sourceFile": "src/components/admin/views/Orders.tsx",
+      "keywords": [
+        "đơn hàng",
+        "mã đơn",
+        "trạng thái"
+      ],
+      "actions": [
+        "Đang giao",
+        "Hoàn thành",
+        "Xác nhận thao tác này.",
+        "Đang giao hàng",
+        "Lỗi tải đơn hàng:",
+        "Lỗi cập nhật trạng thái",
+        "Xác nhận đơn hàng",
+        "Hủy đơn hàng",
+        "hủy"
+      ],
+      "fields": [
+        {
+          "label": null,
+          "placeholder": "Mã đơn, tên, email, SĐT..."
+        }
+      ],
+      "labels": [
+        "Đã đặt hàng",
+        "Đã hủy",
+        "Quản lý Đơn hàng",
+        "Theo dõi, cập nhật trạng thái và quản lý giao dịch.",
+        "Tổng đơn hàng",
+        "Chờ xác nhận",
+        "Doanh thu hoàn thành",
+        "Đã chọn đơn hàng",
+        "Xuất dữ liệu",
+        "Hiển thị:",
+        "Chi tiết đơn hàng",
+        "Tiến trình đơn hàng",
+        "Thông tin khách hàng",
+        "Thanh toán & Giao hàng",
+        "Phương thức thanh toán",
+        "Khách hàng đã báo cáo thanh toán (đã upload bill).",
+        "Đã xác nhận nhận tiền.",
+        "Đã từ chối bill. Đang chờ khách gửi lại.",
+        "Chưa nhận được bill từ khách.",
+        "Ghi chú của khách hàng",
+        "Sản phẩm đã đặt ( )",
+        "Tạm tính",
+        "Giảm giá",
+        "Phí vận chuyển",
+        "Tổng cộng",
+        "Chưa thể duyệt đơn",
+        "Phải xác nhận đã thanh toán trước"
+      ],
+      "messages": [
+        "Có lỗi xảy ra khi cập nhật.",
+        "Lỗi cập nhật trạng thái"
+      ],
+      "validations": [
+        {
+          "message": "Có lỗi xảy ra khi cập nhật."
+        },
+        {
+          "message": "Lỗi cập nhật trạng thái"
+        }
+      ],
+      "statuses": [
+        {
+          "value": "pending",
+          "label": "Chờ xác nhận"
+        },
+        {
+          "value": "confirmed",
+          "label": "Đã xác nhận"
+        },
+        {
+          "value": "shipping",
+          "label": "Đang giao hàng"
+        },
+        {
+          "value": "delivered",
+          "label": "Đã giao"
+        },
+        {
+          "value": "completed",
+          "label": "Hoàn thành"
+        },
+        {
+          "value": "cancelled",
+          "label": "Đã hủy"
+        },
+        {
+          "value": "returned",
+          "label": "Đã trả hàng"
+        },
+        {
+          "value": "unpaid",
+          "label": "Chưa thanh toán"
+        },
+        {
+          "value": "paid",
+          "label": "Đã thanh toán"
+        },
+        {
+          "value": "refunded",
+          "label": "Đã hoàn tiền"
+        }
+      ],
+      "apiCalls": []
+    },
+    {
+      "id": "orders-reviews",
+      "route": "/dashboard/orders-reviews",
+      "section": "Đơn hàng",
+      "label": "Đánh giá sản phẩm",
+      "pageTitle": "Đánh giá Sản phẩm",
+      "component": "Reviews",
+      "sourceFile": "src/components/admin/views/Reviews.tsx",
+      "keywords": [
+        "đánh giá"
+      ],
+      "actions": [],
+      "fields": [],
+      "labels": [
+        "Đánh giá Sản phẩm",
+        "Quản lý phản hồi từ khách hàng.",
+        "( )"
+      ],
+      "messages": [],
+      "validations": [],
+      "statuses": [],
+      "apiCalls": []
+    },
+    {
+      "id": "orders-complaints",
+      "route": "/dashboard/orders-complaints",
+      "section": "Đơn hàng",
+      "label": "Khiếu nại / Hỗ trợ",
+      "pageTitle": "Quản lý Khiếu nại",
+      "component": "Complaints",
+      "sourceFile": "src/components/admin/views/Complaints.tsx",
+      "keywords": [
+        "khiếu nại",
+        "hỗ trợ"
+      ],
+      "actions": [
+        "Đang xử lý"
+      ],
+      "fields": [],
+      "labels": [
+        "Quản lý Khiếu nại",
+        "Xử lý các vấn đề và khiếu nại từ khách hàng."
+      ],
+      "messages": [],
+      "validations": [],
+      "statuses": [],
+      "apiCalls": []
+    },
+    {
+      "id": "orders-invoices",
+      "route": "/dashboard/orders-invoices",
+      "section": "Đơn hàng",
+      "label": "Hóa đơn & Chứng từ",
+      "pageTitle": "Hóa đơn & Chứng từ",
+      "component": "Invoices",
+      "sourceFile": "src/components/admin/views/Invoices.tsx",
+      "keywords": [
+        "hóa đơn",
+        "chứng từ"
+      ],
+      "actions": [],
+      "fields": [
+        {
+          "label": null,
+          "placeholder": "Tìm theo mã HĐ, mã đơn, tên khách..."
+        }
+      ],
+      "labels": [
+        "Hóa đơn & Chứng từ",
+        "Quản lý hóa đơn được tự động sinh ra từ các đơn hàng đã hoàn thành.",
+        "Không có hóa đơn nào",
+        "INVOICE",
+        "Mã HĐ:",
+        "Ngày lập:",
+        "HM STORE",
+        "123 Apple Street, Cupertino, CA",
+        "hello@hmstore.com | 1900 1234",
+        "Thông tin khách hàng",
+        "Chi tiết thanh toán",
+        "Mã đơn hàng:",
+        "PTTT:",
+        "Đã thanh toán",
+        "Tạm tính:",
+        "Phí vận chuyển:",
+        "Thuế VAT:",
+        "Tổng cộng:",
+        "Cảm ơn quý khách đã mua sắm tại HM Store!",
+        "Hóa đơn này được tạo tự động bởi hệ thống."
+      ],
+      "messages": [],
+      "validations": [],
+      "statuses": [],
+      "apiCalls": []
+    },
+    {
+      "id": "crm-customers",
+      "route": "/dashboard/crm-customers",
+      "section": "CRM",
+      "label": "Khách hàng",
+      "pageTitle": "Danh Sách Khách Hàng (Customers)",
+      "component": "CustomerManager",
+      "sourceFile": "src/components/admin/views/CustomerManager.tsx",
+      "keywords": [
+        "khách hàng",
+        "email",
+        "số điện thoại"
+      ],
+      "actions": [
+        "Thêm khách hàng thất bại",
+        "Xóa thất bại",
+        "Lỗi xóa khách hàng",
+        "Xóa khách hàng"
+      ],
+      "fields": [
+        {
+          "label": null,
+          "placeholder": "Nhập họ tên đầy đủ..."
+        },
+        {
+          "label": null,
+          "placeholder": "Nhập email..."
+        },
+        {
+          "label": null,
+          "placeholder": "Nhập số điện thoại..."
+        },
+        {
+          "label": null,
+          "placeholder": "Nhập địa chỉ nhận hàng..."
+        },
+        {
+          "label": null,
+          "placeholder": "Xóa khách hàng"
+        },
+        {
+          "label": "Họ và Tên",
+          "type": "text",
+          "placeholder": null
+        },
+        {
+          "label": "Email",
+          "type": "email",
+          "placeholder": null
+        },
+        {
+          "label": "Số điện thoại",
+          "type": "text",
+          "placeholder": null
+        },
+        {
+          "label": "Địa chỉ",
+          "type": "text",
+          "placeholder": null
+        }
+      ],
+      "labels": [
+        "Danh Sách Khách Hàng (Customers)",
+        "Dữ liệu người dùng hệ thống và lịch sử mua sắm",
+        "Nhập Thông Tin Khách Hàng",
+        "Họ và Tên",
+        "Email",
+        "Số điện thoại",
+        "Địa chỉ",
+        "Trống"
+      ],
+      "messages": [
+        "Failed to fetch customers",
+        ");\r\n    setIsSubmitting(true);\r\n\r\n    try {\r\n      const res = await fetch(",
+        "Xóa thất bại",
+        "Lỗi xóa khách hàng"
+      ],
+      "validations": [
+        {
+          "message": "Xóa thất bại"
+        },
+        {
+          "message": "Lỗi xóa khách hàng"
+        }
+      ],
+      "statuses": [],
+      "apiCalls": []
+    },
+    {
+      "id": "crm-leads",
+      "route": "/dashboard/crm-leads",
+      "section": "CRM",
+      "label": "Khách hàng tiềm năng",
+      "pageTitle": "Khách Hàng Tiềm Năng (Leads)",
+      "component": "LeadManager",
+      "sourceFile": "src/components/admin/views/LeadManager.tsx",
+      "keywords": [
+        "lead",
+        "tiềm năng"
+      ],
+      "actions": [
+        "Đang tư vấn",
+        "Đang cân nhắc",
+        "Thêm Lead",
+        "Xóa Lead này?"
+      ],
+      "fields": [
+        {
+          "label": null,
+          "placeholder": "Tìm kiếm theo tên, SĐT, email..."
+        }
+      ],
+      "labels": [
+        "Mới",
+        "Đã liên hệ",
+        "Báo giá",
+        "Chuyển đổi",
+        "Không nhu cầu",
+        "(Hot)",
+        "(Warm)",
+        "(Cold)",
+        "Khách Hàng Tiềm Năng (Leads)",
+        "Quản lý và theo dõi các cơ hội bán hàng",
+        "Tổng Lead",
+        "Lead mới",
+        "Đã chuyển đổi",
+        "Lọc"
+      ],
+      "messages": [
+        "Đã chuyển thành khách hàng!",
+        "Có lỗi xảy ra",
+        "Đã xóa Lead"
+      ],
+      "validations": [
+        {
+          "message": "Có lỗi xảy ra"
+        }
+      ],
+      "statuses": [],
+      "apiCalls": []
+    },
+    {
+      "id": "user-staff",
+      "route": "/dashboard/user-staff",
+      "section": "Nhân sự",
+      "label": "Quản lý Nhân sự",
+      "pageTitle": "Quản Lý Nhân Sự",
+      "component": "StaffManager",
+      "sourceFile": "src/components/admin/views/StaffManager.tsx",
+      "keywords": [
+        "nhân sự",
+        "tài khoản",
+        "vai trò"
+      ],
+      "actions": [
+        "Tạo Tài Khoản Nhân Sự",
+        "Thêm nhân sự thất bại"
+      ],
+      "fields": [
+        {
+          "label": null,
+          "placeholder": "Nhập tên đăng nhập..."
+        },
+        {
+          "label": null,
+          "placeholder": "Nhập mật khẩu..."
+        },
+        {
+          "label": "Tên đăng nhập",
+          "type": "text",
+          "placeholder": null
+        },
+        {
+          "label": "Mật khẩu",
+          "type": "password",
+          "placeholder": null
+        }
+      ],
+      "labels": [
+        "Quản Lý Nhân Sự",
+        "Danh sách tài khoản quản trị và nhân viên hệ thống",
+        "Tên đăng nhập",
+        "Mật khẩu"
+      ],
+      "messages": [
+        "Failed to fetch users",
+        ");\r\n    setIsSubmitting(true);\r\n\r\n    try {\r\n      const res = await fetch("
+      ],
+      "validations": [],
+      "statuses": [],
+      "apiCalls": []
+    },
+    {
+      "id": "marketing",
+      "route": "/dashboard/marketing",
+      "section": "Marketing",
+      "label": "Chiến dịch Marketing",
+      "pageTitle": "Chiến dịch Marketing (Săn Deal)",
+      "component": "Marketing",
+      "sourceFile": "src/components/admin/views/Marketing.tsx",
+      "keywords": [
+        "chiến dịch",
+        "khuyến mãi",
+        "flash sale"
+      ],
+      "actions": [
+        "Preview Giá Sau Giảm",
+        "Lưu chiến dịch",
+        "Chọn sản phẩm",
+        "Chọn tất cả kết quả",
+        "Vui lòng chọn ít nhất một sản phẩm.",
+        "Lỗi lưu chiến dịch",
+        "Lỗi xóa chiến dịch",
+        "Lỗi cập nhật trạng thái",
+        "Đang chạy",
+        "Tạo chiến dịch"
+      ],
+      "fields": [
+        {
+          "label": null,
+          "placeholder": "Tìm kiếm chiến dịch..."
+        },
+        {
+          "label": null,
+          "placeholder": "Tìm kiếm sản phẩm..."
+        },
+        {
+          "label": "Tên chiến dịch",
+          "type": "text",
+          "placeholder": null
+        },
+        {
+          "label": "Mô tả (tùy chọn)",
+          "type": "text",
+          "placeholder": null
+        },
+        {
+          "label": "Phạm vi áp dụng",
+          "type": "text",
+          "placeholder": null
+        },
+        {
+          "label": "Mức giảm",
+          "type": "number",
+          "placeholder": null
+        },
+        {
+          "label": "Kết thúc",
+          "type": "datetime-local",
+          "placeholder": null
+        }
+      ],
+      "labels": [
+        "Chiến dịch Marketing (Săn Deal)",
+        "Quản lý các chương trình Săn Deal Giá Sốc, Flash Sale.",
+        "Không có chiến dịch nào",
+        "ÁP DỤNG CHO SẢN PHẨM",
+        "Áp dụng toàn cửa hàng",
+        "Tên chiến dịch",
+        "Mô tả (tùy chọn)",
+        "Phạm vi áp dụng",
+        "Sản phẩm áp dụng",
+        "Đã chọn sản phẩm",
+        "Chưa có sản phẩm nào được chọn.",
+        "Loại giảm giá",
+        "Mức giảm",
+        "Bắt đầu",
+        "Kết thúc",
+        "Bỏ chọn kết quả"
+      ],
+      "messages": [
+        "Vui lòng chọn ít nhất một sản phẩm.",
+        "Mức giảm phần trăm phải lớn hơn 0 và nhỏ hơn hoặc bằng 100.",
+        "Mức giảm cố định phải lớn hơn 0.",
+        "Lỗi lưu chiến dịch",
+        "Lỗi xóa chiến dịch",
+        "Lỗi cập nhật trạng thái"
+      ],
+      "validations": [
+        {
+          "message": "Vui lòng chọn ít nhất một sản phẩm."
+        },
+        {
+          "message": "Mức giảm phần trăm phải lớn hơn 0 và nhỏ hơn hoặc bằng 100."
+        },
+        {
+          "message": "Mức giảm cố định phải lớn hơn 0."
+        },
+        {
+          "message": "Lỗi lưu chiến dịch"
+        },
+        {
+          "message": "Lỗi xóa chiến dịch"
+        },
+        {
+          "message": "Lỗi cập nhật trạng thái"
+        }
+      ],
+      "statuses": [],
+      "apiCalls": []
+    },
+    {
+      "id": "banners",
+      "route": "/dashboard/banners",
+      "section": "Marketing",
+      "label": "Quản lý Banner",
+      "pageTitle": "Quản lý Banner",
+      "component": "Banners",
+      "sourceFile": "src/components/admin/views/Banners.tsx",
+      "keywords": [
+        "banner",
+        "hình ảnh",
+        "điều hướng"
+      ],
+      "actions": [
+        "Thêm Banner Mới",
+        "Xem trước hiển thị (Live Preview)",
+        "Xóa banner này?",
+        "Tạo banner đầu tiên để bắt đầu hiển thị nội dung quảng cáo trên storefront.",
+        "Tạo Banner Mới",
+        "Xóa bộ lọc",
+        "Đang chạy",
+        "Xem mọi trạng thái",
+        "Đang hiển thị công khai",
+        "Ảnh vượt quá dung lượng 5MB cho phép.",
+        "Vui lòng nhập tiêu đề banner.",
+        "Vui lòng chọn vị trí hiển thị.",
+        "Vui lòng tải ảnh lên hoặc nhập Public URL.",
+        "Vui lòng chọn đích đến hoặc nhập URL tùy chỉnh.",
+        "Đóng biểu mẫu banner",
+        "Tải ảnh lên từ thiết bị (tối đa 5MB) hoặc dán Public URL bên dưới.",
+        "Xem trước ảnh banner đã tải lên",
+        "Chọn trang storefront điều hướng đến khi người dùng click vào banner.",
+        "Chọn sản phẩm đích",
+        "Đang kích hoạt trên web",
+        "Đang tắt / ẩn",
+        "Tắt",
+        "Bật",
+        "Xóa ${banner.title}"
+      ],
+      "fields": [
+        {
+          "label": null,
+          "placeholder": "Tìm banner, vị trí hoặc đường dẫn..."
+        },
+        {
+          "label": null,
+          "placeholder": "Tìm kiếm banner"
+        },
+        {
+          "label": null,
+          "placeholder": "Xóa tìm kiếm"
+        },
+        {
+          "label": null,
+          "placeholder": "Đóng biểu mẫu banner"
+        },
+        {
+          "label": null,
+          "placeholder": "1. Thông tin cơ bản & Hình ảnh"
+        },
+        {
+          "label": null,
+          "placeholder": "Ví dụ: Galaxy S26 Ultra Launching Banner"
+        },
+        {
+          "label": null,
+          "placeholder": "https://res.cloudinary.com/.../image/upload/.../banner.webp"
+        },
+        {
+          "label": null,
+          "placeholder": "2. Đích đến khi click (Navigation Link)"
+        },
+        {
+          "label": null,
+          "placeholder": "Tìm kiếm sản phẩm theo tên..."
+        },
+        {
+          "label": null,
+          "placeholder": "/category/smartphone"
+        },
+        {
+          "label": null,
+          "placeholder": "/khuyen-mai hoặc https://..."
+        },
+        {
+          "label": null,
+          "placeholder": "3. Trạng thái & Lịch chạy"
+        },
+        {
+          "label": null,
+          "placeholder": "Hiển thị banner"
+        },
+        {
+          "label": null,
+          "placeholder": "0"
+        },
+        {
+          "label": null,
+          "placeholder": "Đóng preview banner"
+        },
+        {
+          "label": null,
+          "placeholder": "Click để chọn hoặc lăn chuột để thay đổi nhanh vị trí"
+        },
+        {
+          "label": null,
+          "placeholder": "Cuộn chuột để đổi lựa chọn nhanh"
+        },
+        {
+          "label": null,
+          "placeholder": "Xóa bộ lọc này"
+        },
+        {
+          "label": null,
+          "placeholder": "Xóa bộ lọc"
+        },
+        {
+          "label": null,
+          "placeholder": "Đưa banner lên trước"
+        },
+        {
+          "label": null,
+          "placeholder": "Đưa banner xuống sau"
+        }
+      ],
+      "labels": [
+        "Quản lý Banner",
+        "Quản lý và cập nhật hình ảnh quảng cáo trên website.",
+        "Banner Management",
+        "Kéo thả hoặc click để chọn ảnh tải lên",
+        "Hỗ trợ PNG, JPG, WEBP (tối đa 5MB)",
+        "✓ Đã tải lên ảnh local",
+        "ℹ️",
+        "Không thể tải ảnh xem trước.",
+        "Vui lòng kiểm tra lại URL hoặc kết nối mạng.",
+        "Chưa có ảnh banner",
+        "Không tìm thấy sản phẩm phù hợp.",
+        "Đường dẫn click:",
+        "Hiển thị banner",
+        "Storefront preview",
+        "Banner",
+        "Trang chủ",
+        "Smartphone",
+        "Laptop",
+        "Danh mục",
+        "Khác",
+        "Chưa có banner nào",
+        "Không thể tải danh sách banner",
+        "Thử lại",
+        "Không tìm thấy banner phù hợp"
+      ],
+      "messages": [
+        ");\r\n      const response = await fetch(",
+        "Không thể tải danh sách banner.",
+        ");\r\n    setProductSearch(",
+        "); return; }\r\n    if (file.size > MAX_IMAGE_SIZE) { setFormError(",
+        ");\r\n    try {\r\n      const uploadData = new FormData();\r\n      uploadData.append(",
+        "Server không trả về đường dẫn ảnh.",
+        "Không thể tải ảnh lên.",
+        ");\r\n      return;\r\n    }\r\n    if (!form.position) {\r\n      setFormError(",
+        ");\r\n      return;\r\n    }\r\n    if (trimmedPublicUrl && !/^https?:\\/\\//i.test(trimmedPublicUrl)) {\r\n      setFormError(",
+        ");\r\n      return;\r\n    }\r\n    if (finalLink && !isValidCustomLink(finalLink)) {\r\n      setFormError(",
+        ");\r\n      return;\r\n    }\r\n    if (startDate && endDate && endDate <= startDate) {\r\n      setFormError(",
+        "Không thể lưu banner.",
+        "Không thể cập nhật trạng thái banner.",
+        "Đã cập nhật thứ tự banner.",
+        "Không thể cập nhật thứ tự.",
+        "Đã xóa banner.",
+        "Không thể xóa banner."
+      ],
+      "validations": [
+        {
+          "message": "Không thể tải danh sách banner."
+        },
+        {
+          "message": "Không thể tải ảnh lên."
+        },
+        {
+          "message": "Không thể lưu banner."
+        },
+        {
+          "message": "Không thể cập nhật trạng thái banner."
+        },
+        {
+          "message": "Không thể cập nhật thứ tự."
+        },
+        {
+          "message": "Không thể xóa banner."
+        }
+      ],
+      "statuses": [
+        {
+          "value": "active",
+          "label": "Đang chạy"
+        },
+        {
+          "value": "disabled",
+          "label": "Đã tắt"
+        }
+      ],
+      "apiCalls": [
+        "/api/banners",
+        "/api/products",
+        "/api/categories",
+        "/api/upload",
+        "/api/banners/:id",
+        "/api/banners/:id/status",
+        "/api/banners/:id/move"
+      ]
+    },
+    {
+      "id": "settings",
+      "route": "/dashboard/settings",
+      "section": "Hệ thống",
+      "label": "Cài đặt",
+      "pageTitle": "Cài đặt",
+      "component": "SettingsManager",
+      "sourceFile": "src/components/admin/views/SettingsManager.tsx",
+      "keywords": [
+        "cài đặt",
+        "hệ thống"
+      ],
+      "actions": [],
+      "fields": [],
+      "labels": [
+        "Settings"
+      ],
+      "messages": [],
+      "validations": [],
+      "statuses": [],
+      "apiCalls": []
+    }
+  ],
+  "forms": [
+    {
+      "page": "Tổng quan",
+      "route": "/dashboard",
+      "fields": [
+        {
+          "label": null,
+          "placeholder": "Doanh thu thuần"
+        },
+        {
+          "label": null,
+          "placeholder": "Đơn hàng"
+        },
+        {
+          "label": null,
+          "placeholder": "Sản phẩm"
+        },
+        {
+          "label": null,
+          "placeholder": "AOV"
+        }
+      ],
+      "submitActions": [],
+      "validationMessages": []
+    },
+    {
+      "page": "Lịch kế hoạch",
+      "route": "/dashboard/planned",
+      "fields": [
+        {
+          "label": null,
+          "placeholder": "Ví dụ: Họp team Marketing"
+        },
+        {
+          "label": null,
+          "placeholder": "Ví dụ: Phòng họp A, Zoom Meeting..."
+        },
+        {
+          "label": null,
+          "placeholder": "Ví dụ: Nguyễn Văn A, Trần Thị B..."
+        },
+        {
+          "label": "Tên kế hoạch",
+          "type": "text",
+          "placeholder": null
+        },
+        {
+          "label": "Ngày",
+          "type": "date",
+          "placeholder": null
+        },
+        {
+          "label": "Thời gian",
+          "type": "time",
+          "placeholder": null
+        },
+        {
+          "label": "Địa điểm",
+          "type": "text",
+          "placeholder": null
+        },
+        {
+          "label": "Người tham gia",
+          "type": "text",
+          "placeholder": null
+        }
+      ],
+      "submitActions": [
+        "Thêm kế hoạch",
+        "Cập nhật kế hoạch",
+        "Lưu kế hoạch"
+      ],
+      "validationMessages": []
+    },
+    {
+      "page": "Sản phẩm",
+      "route": "/dashboard/product",
+      "fields": [
+        {
+          "label": null,
+          "placeholder": "VD: iPhone 15 Pro Max"
+        },
+        {
+          "label": null,
+          "placeholder": "Tìm..."
+        },
+        {
+          "label": null,
+          "placeholder": "VD: Apple, Samsung..."
+        },
+        {
+          "label": null,
+          "placeholder": "Nhập mô tả chi tiết..."
+        },
+        {
+          "label": null,
+          "placeholder": "Giá..."
+        },
+        {
+          "label": null,
+          "placeholder": "SKU"
+        },
+        {
+          "label": null,
+          "placeholder": "0"
+        },
+        {
+          "label": null,
+          "placeholder": "Trống"
+        },
+        {
+          "label": null,
+          "placeholder": "Tìm tên, SKU..."
+        },
+        {
+          "label": null,
+          "placeholder": "Chuyển sang dạng lưới"
+        },
+        {
+          "label": null,
+          "placeholder": "Chuyển sang dạng danh sách"
+        },
+        {
+          "label": "Tên sản phẩm *",
+          "type": "text",
+          "placeholder": null
+        },
+        {
+          "label": "Danh mục * {isCatDropdownOpen && ( {filteredCats.map(c => ( ))} )} Thương hiệu",
+          "type": "text",
+          "placeholder": null
+        }
+      ],
+      "submitActions": [
+        "Thêm biến thể",
+        "Thêm ảnh",
+        "Thêm mới",
+        "Lưu trữ",
+        "Lỗi khi lưu sản phẩm",
+        "Thêm sản phẩm mới",
+        "Thêm ${attrKey}...",
+        "Lưu sản phẩm"
+      ],
+      "validationMessages": [
+        "Lỗi kết nối máy chủ.",
+        "Ảnh vượt quá 5MB",
+        "Lỗi khi tải ảnh lên",
+        "Vui lòng nhập tên sản phẩm.",
+        "Vui lòng chọn danh mục.",
+        "Sản phẩm cần ít nhất 1 biến thể.",
+        "Vui lòng nhập SKU cho biến thể dòng ${i + 1}.",
+        "Lỗi khi xóa"
+      ]
+    },
+    {
+      "page": "Quản lý Kho hàng",
+      "route": "/dashboard/inventory",
+      "fields": [
+        {
+          "label": null,
+          "placeholder": "Tìm theo SKU, tên sản phẩm, biến thể..."
+        },
+        {
+          "label": null,
+          "placeholder": "Copy SKU"
+        }
+      ],
+      "submitActions": [
+        "Tạo phiếu Nhập/Xuất",
+        "Tạo phiếu nhập",
+        "Tạo phiếu xuất",
+        "Lỗi cập nhật tồn kho:"
+      ],
+      "validationMessages": []
+    },
+    {
+      "page": "Danh mục",
+      "route": "/dashboard/categories",
+      "fields": [
+        {
+          "label": null,
+          "placeholder": "VD: Điện thoại di động"
+        },
+        {
+          "label": "Tên danh mục *",
+          "type": "text",
+          "placeholder": null
+        }
+      ],
+      "submitActions": [
+        "Tạo danh mục mới"
+      ],
+      "validationMessages": [
+        "Lỗi khi xóa danh mục"
+      ]
+    },
+    {
+      "page": "Quản lý Đơn hàng",
+      "route": "/dashboard/orders-list",
+      "fields": [
+        {
+          "label": null,
+          "placeholder": "Mã đơn, tên, email, SĐT..."
+        }
+      ],
+      "submitActions": [
+        "Xác nhận thao tác này.",
+        "Lỗi cập nhật trạng thái",
+        "Xác nhận đơn hàng"
+      ],
+      "validationMessages": [
+        "Có lỗi xảy ra khi cập nhật.",
+        "Lỗi cập nhật trạng thái"
+      ]
+    },
+    {
+      "page": "Hóa đơn & Chứng từ",
+      "route": "/dashboard/orders-invoices",
+      "fields": [
+        {
+          "label": null,
+          "placeholder": "Tìm theo mã HĐ, mã đơn, tên khách..."
+        }
+      ],
+      "submitActions": [],
+      "validationMessages": []
+    },
+    {
+      "page": "Danh Sách Khách Hàng (Customers)",
+      "route": "/dashboard/crm-customers",
+      "fields": [
+        {
+          "label": null,
+          "placeholder": "Nhập họ tên đầy đủ..."
+        },
+        {
+          "label": null,
+          "placeholder": "Nhập email..."
+        },
+        {
+          "label": null,
+          "placeholder": "Nhập số điện thoại..."
+        },
+        {
+          "label": null,
+          "placeholder": "Nhập địa chỉ nhận hàng..."
+        },
+        {
+          "label": null,
+          "placeholder": "Xóa khách hàng"
+        },
+        {
+          "label": "Họ và Tên",
+          "type": "text",
+          "placeholder": null
+        },
+        {
+          "label": "Email",
+          "type": "email",
+          "placeholder": null
+        },
+        {
+          "label": "Số điện thoại",
+          "type": "text",
+          "placeholder": null
+        },
+        {
+          "label": "Địa chỉ",
+          "type": "text",
+          "placeholder": null
+        }
+      ],
+      "submitActions": [
+        "Thêm khách hàng thất bại"
+      ],
+      "validationMessages": [
+        "Xóa thất bại",
+        "Lỗi xóa khách hàng"
+      ]
+    },
+    {
+      "page": "Khách Hàng Tiềm Năng (Leads)",
+      "route": "/dashboard/crm-leads",
+      "fields": [
+        {
+          "label": null,
+          "placeholder": "Tìm kiếm theo tên, SĐT, email..."
+        }
+      ],
+      "submitActions": [
+        "Thêm Lead"
+      ],
+      "validationMessages": [
+        "Có lỗi xảy ra"
+      ]
+    },
+    {
+      "page": "Quản Lý Nhân Sự",
+      "route": "/dashboard/user-staff",
+      "fields": [
+        {
+          "label": null,
+          "placeholder": "Nhập tên đăng nhập..."
+        },
+        {
+          "label": null,
+          "placeholder": "Nhập mật khẩu..."
+        },
+        {
+          "label": "Tên đăng nhập",
+          "type": "text",
+          "placeholder": null
+        },
+        {
+          "label": "Mật khẩu",
+          "type": "password",
+          "placeholder": null
+        }
+      ],
+      "submitActions": [
+        "Tạo Tài Khoản Nhân Sự",
+        "Thêm nhân sự thất bại"
+      ],
+      "validationMessages": []
+    },
+    {
+      "page": "Chiến dịch Marketing (Săn Deal)",
+      "route": "/dashboard/marketing",
+      "fields": [
+        {
+          "label": null,
+          "placeholder": "Tìm kiếm chiến dịch..."
+        },
+        {
+          "label": null,
+          "placeholder": "Tìm kiếm sản phẩm..."
+        },
+        {
+          "label": "Tên chiến dịch",
+          "type": "text",
+          "placeholder": null
+        },
+        {
+          "label": "Mô tả (tùy chọn)",
+          "type": "text",
+          "placeholder": null
+        },
+        {
+          "label": "Phạm vi áp dụng",
+          "type": "text",
+          "placeholder": null
+        },
+        {
+          "label": "Mức giảm",
+          "type": "number",
+          "placeholder": null
+        },
+        {
+          "label": "Kết thúc",
+          "type": "datetime-local",
+          "placeholder": null
+        }
+      ],
+      "submitActions": [
+        "Lưu chiến dịch",
+        "Lỗi lưu chiến dịch",
+        "Lỗi cập nhật trạng thái",
+        "Tạo chiến dịch"
+      ],
+      "validationMessages": [
+        "Vui lòng chọn ít nhất một sản phẩm.",
+        "Mức giảm phần trăm phải lớn hơn 0 và nhỏ hơn hoặc bằng 100.",
+        "Mức giảm cố định phải lớn hơn 0.",
+        "Lỗi lưu chiến dịch",
+        "Lỗi xóa chiến dịch",
+        "Lỗi cập nhật trạng thái"
+      ]
+    },
+    {
+      "page": "Quản lý Banner",
+      "route": "/dashboard/banners",
+      "fields": [
+        {
+          "label": null,
+          "placeholder": "Tìm banner, vị trí hoặc đường dẫn..."
+        },
+        {
+          "label": null,
+          "placeholder": "Tìm kiếm banner"
+        },
+        {
+          "label": null,
+          "placeholder": "Xóa tìm kiếm"
+        },
+        {
+          "label": null,
+          "placeholder": "Đóng biểu mẫu banner"
+        },
+        {
+          "label": null,
+          "placeholder": "1. Thông tin cơ bản & Hình ảnh"
+        },
+        {
+          "label": null,
+          "placeholder": "Ví dụ: Galaxy S26 Ultra Launching Banner"
+        },
+        {
+          "label": null,
+          "placeholder": "https://res.cloudinary.com/.../image/upload/.../banner.webp"
+        },
+        {
+          "label": null,
+          "placeholder": "2. Đích đến khi click (Navigation Link)"
+        },
+        {
+          "label": null,
+          "placeholder": "Tìm kiếm sản phẩm theo tên..."
+        },
+        {
+          "label": null,
+          "placeholder": "/category/smartphone"
+        },
+        {
+          "label": null,
+          "placeholder": "/khuyen-mai hoặc https://..."
+        },
+        {
+          "label": null,
+          "placeholder": "3. Trạng thái & Lịch chạy"
+        },
+        {
+          "label": null,
+          "placeholder": "Hiển thị banner"
+        },
+        {
+          "label": null,
+          "placeholder": "0"
+        },
+        {
+          "label": null,
+          "placeholder": "Đóng preview banner"
+        },
+        {
+          "label": null,
+          "placeholder": "Click để chọn hoặc lăn chuột để thay đổi nhanh vị trí"
+        },
+        {
+          "label": null,
+          "placeholder": "Cuộn chuột để đổi lựa chọn nhanh"
+        },
+        {
+          "label": null,
+          "placeholder": "Xóa bộ lọc này"
+        },
+        {
+          "label": null,
+          "placeholder": "Xóa bộ lọc"
+        },
+        {
+          "label": null,
+          "placeholder": "Đưa banner lên trước"
+        },
+        {
+          "label": null,
+          "placeholder": "Đưa banner xuống sau"
+        }
+      ],
+      "submitActions": [
+        "Thêm Banner Mới",
+        "Tạo banner đầu tiên để bắt đầu hiển thị nội dung quảng cáo trên storefront.",
+        "Tạo Banner Mới"
+      ],
+      "validationMessages": [
+        "Không thể tải danh sách banner.",
+        "Không thể tải ảnh lên.",
+        "Không thể lưu banner.",
+        "Không thể cập nhật trạng thái banner.",
+        "Không thể cập nhật thứ tự.",
+        "Không thể xóa banner."
+      ]
+    }
+  ],
+  "workflows": [
+    {
+      "page": "Tổng quan",
+      "route": "/dashboard",
+      "entry": "Tổng quan → Tổng quan",
+      "confirmedActions": [],
+      "note": "Source chưa xác nhận đầy đủ quy trình thao tác."
+    },
+    {
+      "page": "Lịch kế hoạch",
+      "route": "/dashboard/planned",
+      "entry": "Nội dung & Marketing → Lịch kế hoạch",
+      "confirmedActions": [
+        "Xem các sự kiện, kế hoạch sắp tới và đã hoàn thành của bạn.",
+        "Sửa kế hoạch",
+        "Thêm kế hoạch",
+        "Cập nhật kế hoạch",
+        "Lưu kế hoạch"
+      ],
+      "note": "Chỉ sử dụng các thao tác được trích xuất từ source UI."
+    },
+    {
+      "page": "Sản phẩm",
+      "route": "/dashboard/product",
+      "entry": "Sản phẩm → Danh sách",
+      "confirmedActions": [
+        "Tải ảnh",
+        "Sinh biến thể tự động",
+        "Thêm biến thể",
+        "Thêm ảnh",
+        "Thêm mới",
+        "Lưu trữ",
+        "Lỗi khi thực hiện thao tác.",
+        "Lỗi kết nối máy chủ.",
+        "Lỗi tải danh mục:",
+        "Lỗi tải ảnh",
+        "Lỗi khi tải ảnh lên",
+        "Vui lòng nhập SKU cho biến thể dòng ${i + 1}.",
+        "Mã SKU",
+        "Giá bán của biến thể",
+        "Tồn kho của biến thể",
+        "Lỗi khi lưu sản phẩm",
+        "Xóa sản phẩm",
+        "Lỗi khi xóa",
+        "Sửa sản phẩm",
+        "Thêm sản phẩm mới",
+        "Thêm ${attrKey}...",
+        "Lưu sản phẩm"
+      ],
+      "note": "Chỉ sử dụng các thao tác được trích xuất từ source UI."
+    },
+    {
+      "page": "Quản lý Kho hàng",
+      "route": "/dashboard/inventory",
+      "entry": "Sản phẩm → Kho hàng",
+      "confirmedActions": [
+        "Tạo phiếu Nhập/Xuất",
+        "Tạo phiếu nhập",
+        "Tạo phiếu xuất",
+        "Lỗi tải dữ liệu kho:",
+        "Lỗi cập nhật tồn kho:"
+      ],
+      "note": "Chỉ sử dụng các thao tác được trích xuất từ source UI."
+    },
+    {
+      "page": "Danh mục",
+      "route": "/dashboard/categories",
+      "entry": "Sản phẩm → Danh mục & phân loại",
+      "confirmedActions": [
+        "Ẩn",
+        "Lỗi tải danh mục:",
+        "Xóa danh mục",
+        "Lỗi khi xóa danh mục",
+        "Lỗi toggle active:",
+        "Sửa danh mục",
+        "Tạo danh mục mới"
+      ],
+      "note": "Chỉ sử dụng các thao tác được trích xuất từ source UI."
+    },
+    {
+      "page": "Quản lý Đơn hàng",
+      "route": "/dashboard/orders-list",
+      "entry": "Đơn hàng → Danh sách đơn hàng",
+      "confirmedActions": [
+        "Đang giao",
+        "Hoàn thành",
+        "Xác nhận thao tác này.",
+        "Đang giao hàng",
+        "Lỗi tải đơn hàng:",
+        "Lỗi cập nhật trạng thái",
+        "Xác nhận đơn hàng",
+        "Hủy đơn hàng",
+        "hủy"
+      ],
+      "note": "Chỉ sử dụng các thao tác được trích xuất từ source UI."
+    },
+    {
+      "page": "Đánh giá Sản phẩm",
+      "route": "/dashboard/orders-reviews",
+      "entry": "Đơn hàng → Đánh giá sản phẩm",
+      "confirmedActions": [],
+      "note": "Source chưa xác nhận đầy đủ quy trình thao tác."
+    },
+    {
+      "page": "Quản lý Khiếu nại",
+      "route": "/dashboard/orders-complaints",
+      "entry": "Đơn hàng → Khiếu nại / Hỗ trợ",
+      "confirmedActions": [
+        "Đang xử lý"
+      ],
+      "note": "Chỉ sử dụng các thao tác được trích xuất từ source UI."
+    },
+    {
+      "page": "Hóa đơn & Chứng từ",
+      "route": "/dashboard/orders-invoices",
+      "entry": "Đơn hàng → Hóa đơn & Chứng từ",
+      "confirmedActions": [],
+      "note": "Source chưa xác nhận đầy đủ quy trình thao tác."
+    },
+    {
+      "page": "Danh Sách Khách Hàng (Customers)",
+      "route": "/dashboard/crm-customers",
+      "entry": "CRM → Khách hàng",
+      "confirmedActions": [
+        "Thêm khách hàng thất bại",
+        "Xóa thất bại",
+        "Lỗi xóa khách hàng",
+        "Xóa khách hàng"
+      ],
+      "note": "Chỉ sử dụng các thao tác được trích xuất từ source UI."
+    },
+    {
+      "page": "Khách Hàng Tiềm Năng (Leads)",
+      "route": "/dashboard/crm-leads",
+      "entry": "CRM → Khách hàng tiềm năng",
+      "confirmedActions": [
+        "Đang tư vấn",
+        "Đang cân nhắc",
+        "Thêm Lead",
+        "Xóa Lead này?"
+      ],
+      "note": "Chỉ sử dụng các thao tác được trích xuất từ source UI."
+    },
+    {
+      "page": "Quản Lý Nhân Sự",
+      "route": "/dashboard/user-staff",
+      "entry": "Nhân sự → Quản lý Nhân sự",
+      "confirmedActions": [
+        "Tạo Tài Khoản Nhân Sự",
+        "Thêm nhân sự thất bại"
+      ],
+      "note": "Chỉ sử dụng các thao tác được trích xuất từ source UI."
+    },
+    {
+      "page": "Chiến dịch Marketing (Săn Deal)",
+      "route": "/dashboard/marketing",
+      "entry": "Marketing → Chiến dịch Marketing",
+      "confirmedActions": [
+        "Preview Giá Sau Giảm",
+        "Lưu chiến dịch",
+        "Chọn sản phẩm",
+        "Chọn tất cả kết quả",
+        "Vui lòng chọn ít nhất một sản phẩm.",
+        "Lỗi lưu chiến dịch",
+        "Lỗi xóa chiến dịch",
+        "Lỗi cập nhật trạng thái",
+        "Đang chạy",
+        "Tạo chiến dịch"
+      ],
+      "note": "Chỉ sử dụng các thao tác được trích xuất từ source UI."
+    },
+    {
+      "page": "Quản lý Banner",
+      "route": "/dashboard/banners",
+      "entry": "Marketing → Quản lý Banner",
+      "confirmedActions": [
+        "Thêm Banner Mới",
+        "Xem trước hiển thị (Live Preview)",
+        "Xóa banner này?",
+        "Tạo banner đầu tiên để bắt đầu hiển thị nội dung quảng cáo trên storefront.",
+        "Tạo Banner Mới",
+        "Xóa bộ lọc",
+        "Đang chạy",
+        "Xem mọi trạng thái",
+        "Đang hiển thị công khai",
+        "Ảnh vượt quá dung lượng 5MB cho phép.",
+        "Vui lòng nhập tiêu đề banner.",
+        "Vui lòng chọn vị trí hiển thị.",
+        "Vui lòng tải ảnh lên hoặc nhập Public URL.",
+        "Vui lòng chọn đích đến hoặc nhập URL tùy chỉnh.",
+        "Đóng biểu mẫu banner",
+        "Tải ảnh lên từ thiết bị (tối đa 5MB) hoặc dán Public URL bên dưới.",
+        "Xem trước ảnh banner đã tải lên",
+        "Chọn trang storefront điều hướng đến khi người dùng click vào banner.",
+        "Chọn sản phẩm đích",
+        "Đang kích hoạt trên web",
+        "Đang tắt / ẩn",
+        "Tắt",
+        "Bật",
+        "Xóa ${banner.title}"
+      ],
+      "note": "Chỉ sử dụng các thao tác được trích xuất từ source UI."
+    },
+    {
+      "page": "Cài đặt",
+      "route": "/dashboard/settings",
+      "entry": "Hệ thống → Cài đặt",
+      "confirmedActions": [],
+      "note": "Source chưa xác nhận đầy đủ quy trình thao tác."
+    }
+  ],
+  "validations": [
+    {
+      "message": "Lỗi kết nối máy chủ.",
+      "page": "Sản phẩm",
+      "route": "/dashboard/product"
+    },
+    {
+      "message": "Ảnh vượt quá 5MB",
+      "page": "Sản phẩm",
+      "route": "/dashboard/product"
+    },
+    {
+      "message": "Lỗi khi tải ảnh lên",
+      "page": "Sản phẩm",
+      "route": "/dashboard/product"
+    },
+    {
+      "message": "Vui lòng nhập tên sản phẩm.",
+      "page": "Sản phẩm",
+      "route": "/dashboard/product"
+    },
+    {
+      "message": "Vui lòng chọn danh mục.",
+      "page": "Sản phẩm",
+      "route": "/dashboard/product"
+    },
+    {
+      "message": "Sản phẩm cần ít nhất 1 biến thể.",
+      "page": "Sản phẩm",
+      "route": "/dashboard/product"
+    },
+    {
+      "message": "Vui lòng nhập SKU cho biến thể dòng ${i + 1}.",
+      "page": "Sản phẩm",
+      "route": "/dashboard/product"
+    },
+    {
+      "message": "Lỗi khi xóa",
+      "page": "Sản phẩm",
+      "route": "/dashboard/product"
+    },
+    {
+      "message": "Lỗi khi xóa danh mục",
+      "page": "Danh mục",
+      "route": "/dashboard/categories"
+    },
+    {
+      "message": "Có lỗi xảy ra khi cập nhật.",
+      "page": "Quản lý Đơn hàng",
+      "route": "/dashboard/orders-list"
+    },
+    {
+      "message": "Lỗi cập nhật trạng thái",
+      "page": "Quản lý Đơn hàng",
+      "route": "/dashboard/orders-list"
+    },
+    {
+      "message": "Xóa thất bại",
+      "page": "Danh Sách Khách Hàng (Customers)",
+      "route": "/dashboard/crm-customers"
+    },
+    {
+      "message": "Lỗi xóa khách hàng",
+      "page": "Danh Sách Khách Hàng (Customers)",
+      "route": "/dashboard/crm-customers"
+    },
+    {
+      "message": "Có lỗi xảy ra",
+      "page": "Khách Hàng Tiềm Năng (Leads)",
+      "route": "/dashboard/crm-leads"
+    },
+    {
+      "message": "Vui lòng chọn ít nhất một sản phẩm.",
+      "page": "Chiến dịch Marketing (Săn Deal)",
+      "route": "/dashboard/marketing"
+    },
+    {
+      "message": "Mức giảm phần trăm phải lớn hơn 0 và nhỏ hơn hoặc bằng 100.",
+      "page": "Chiến dịch Marketing (Săn Deal)",
+      "route": "/dashboard/marketing"
+    },
+    {
+      "message": "Mức giảm cố định phải lớn hơn 0.",
+      "page": "Chiến dịch Marketing (Săn Deal)",
+      "route": "/dashboard/marketing"
+    },
+    {
+      "message": "Lỗi lưu chiến dịch",
+      "page": "Chiến dịch Marketing (Săn Deal)",
+      "route": "/dashboard/marketing"
+    },
+    {
+      "message": "Lỗi xóa chiến dịch",
+      "page": "Chiến dịch Marketing (Săn Deal)",
+      "route": "/dashboard/marketing"
+    },
+    {
+      "message": "Lỗi cập nhật trạng thái",
+      "page": "Chiến dịch Marketing (Săn Deal)",
+      "route": "/dashboard/marketing"
+    },
+    {
+      "message": "Không thể tải danh sách banner.",
+      "page": "Quản lý Banner",
+      "route": "/dashboard/banners"
+    },
+    {
+      "message": "Không thể tải ảnh lên.",
+      "page": "Quản lý Banner",
+      "route": "/dashboard/banners"
+    },
+    {
+      "message": "Không thể lưu banner.",
+      "page": "Quản lý Banner",
+      "route": "/dashboard/banners"
+    },
+    {
+      "message": "Không thể cập nhật trạng thái banner.",
+      "page": "Quản lý Banner",
+      "route": "/dashboard/banners"
+    },
+    {
+      "message": "Không thể cập nhật thứ tự.",
+      "page": "Quản lý Banner",
+      "route": "/dashboard/banners"
+    },
+    {
+      "message": "Không thể xóa banner.",
+      "page": "Quản lý Banner",
+      "route": "/dashboard/banners"
+    }
+  ],
+  "statuses": [
+    {
+      "value": "pending",
+      "label": "Chờ xác nhận",
+      "page": "Quản lý Đơn hàng",
+      "route": "/dashboard/orders-list"
+    },
+    {
+      "value": "confirmed",
+      "label": "Đã xác nhận",
+      "page": "Quản lý Đơn hàng",
+      "route": "/dashboard/orders-list"
+    },
+    {
+      "value": "shipping",
+      "label": "Đang giao hàng",
+      "page": "Quản lý Đơn hàng",
+      "route": "/dashboard/orders-list"
+    },
+    {
+      "value": "delivered",
+      "label": "Đã giao",
+      "page": "Quản lý Đơn hàng",
+      "route": "/dashboard/orders-list"
+    },
+    {
+      "value": "completed",
+      "label": "Hoàn thành",
+      "page": "Quản lý Đơn hàng",
+      "route": "/dashboard/orders-list"
+    },
+    {
+      "value": "cancelled",
+      "label": "Đã hủy",
+      "page": "Quản lý Đơn hàng",
+      "route": "/dashboard/orders-list"
+    },
+    {
+      "value": "returned",
+      "label": "Đã trả hàng",
+      "page": "Quản lý Đơn hàng",
+      "route": "/dashboard/orders-list"
+    },
+    {
+      "value": "unpaid",
+      "label": "Chưa thanh toán",
+      "page": "Quản lý Đơn hàng",
+      "route": "/dashboard/orders-list"
+    },
+    {
+      "value": "paid",
+      "label": "Đã thanh toán",
+      "page": "Quản lý Đơn hàng",
+      "route": "/dashboard/orders-list"
+    },
+    {
+      "value": "refunded",
+      "label": "Đã hoàn tiền",
+      "page": "Quản lý Đơn hàng",
+      "route": "/dashboard/orders-list"
+    },
+    {
+      "value": "active",
+      "label": "Đang chạy",
+      "page": "Quản lý Banner",
+      "route": "/dashboard/banners"
+    },
+    {
+      "value": "disabled",
+      "label": "Đã tắt",
+      "page": "Quản lý Banner",
+      "route": "/dashboard/banners"
+    }
+  ],
+  "troubleshooting": [
+    {
+      "page": "Sản phẩm",
+      "route": "/dashboard/product",
+      "symptom": "Lỗi kết nối máy chủ.",
+      "whereToCheck": "Sản phẩm → Danh sách",
+      "recommendedAction": "Kiểm tra lại trường hoặc điều kiện được hiển thị trong source UI trước khi lưu."
+    },
+    {
+      "page": "Sản phẩm",
+      "route": "/dashboard/product",
+      "symptom": "Ảnh vượt quá 5MB",
+      "whereToCheck": "Sản phẩm → Danh sách",
+      "recommendedAction": "Kiểm tra lại trường hoặc điều kiện được hiển thị trong source UI trước khi lưu."
+    },
+    {
+      "page": "Sản phẩm",
+      "route": "/dashboard/product",
+      "symptom": "Lỗi khi tải ảnh lên",
+      "whereToCheck": "Sản phẩm → Danh sách",
+      "recommendedAction": "Kiểm tra lại trường hoặc điều kiện được hiển thị trong source UI trước khi lưu."
+    },
+    {
+      "page": "Sản phẩm",
+      "route": "/dashboard/product",
+      "symptom": "Vui lòng nhập tên sản phẩm.",
+      "whereToCheck": "Sản phẩm → Danh sách",
+      "recommendedAction": "Kiểm tra lại trường hoặc điều kiện được hiển thị trong source UI trước khi lưu."
+    },
+    {
+      "page": "Sản phẩm",
+      "route": "/dashboard/product",
+      "symptom": "Vui lòng chọn danh mục.",
+      "whereToCheck": "Sản phẩm → Danh sách",
+      "recommendedAction": "Kiểm tra lại trường hoặc điều kiện được hiển thị trong source UI trước khi lưu."
+    },
+    {
+      "page": "Sản phẩm",
+      "route": "/dashboard/product",
+      "symptom": "Sản phẩm cần ít nhất 1 biến thể.",
+      "whereToCheck": "Sản phẩm → Danh sách",
+      "recommendedAction": "Kiểm tra lại trường hoặc điều kiện được hiển thị trong source UI trước khi lưu."
+    },
+    {
+      "page": "Sản phẩm",
+      "route": "/dashboard/product",
+      "symptom": "Vui lòng nhập SKU cho biến thể dòng ${i + 1}.",
+      "whereToCheck": "Sản phẩm → Danh sách",
+      "recommendedAction": "Kiểm tra lại trường hoặc điều kiện được hiển thị trong source UI trước khi lưu."
+    },
+    {
+      "page": "Sản phẩm",
+      "route": "/dashboard/product",
+      "symptom": "Lỗi khi xóa",
+      "whereToCheck": "Sản phẩm → Danh sách",
+      "recommendedAction": "Kiểm tra lại trường hoặc điều kiện được hiển thị trong source UI trước khi lưu."
+    },
+    {
+      "page": "Danh mục",
+      "route": "/dashboard/categories",
+      "symptom": "Lỗi khi xóa danh mục",
+      "whereToCheck": "Sản phẩm → Danh mục & phân loại",
+      "recommendedAction": "Kiểm tra lại trường hoặc điều kiện được hiển thị trong source UI trước khi lưu."
+    },
+    {
+      "page": "Quản lý Đơn hàng",
+      "route": "/dashboard/orders-list",
+      "symptom": "Có lỗi xảy ra khi cập nhật.",
+      "whereToCheck": "Đơn hàng → Danh sách đơn hàng",
+      "recommendedAction": "Kiểm tra lại trường hoặc điều kiện được hiển thị trong source UI trước khi lưu."
+    },
+    {
+      "page": "Quản lý Đơn hàng",
+      "route": "/dashboard/orders-list",
+      "symptom": "Lỗi cập nhật trạng thái",
+      "whereToCheck": "Đơn hàng → Danh sách đơn hàng",
+      "recommendedAction": "Kiểm tra lại trường hoặc điều kiện được hiển thị trong source UI trước khi lưu."
+    },
+    {
+      "page": "Danh Sách Khách Hàng (Customers)",
+      "route": "/dashboard/crm-customers",
+      "symptom": "Xóa thất bại",
+      "whereToCheck": "CRM → Khách hàng",
+      "recommendedAction": "Kiểm tra lại trường hoặc điều kiện được hiển thị trong source UI trước khi lưu."
+    },
+    {
+      "page": "Danh Sách Khách Hàng (Customers)",
+      "route": "/dashboard/crm-customers",
+      "symptom": "Lỗi xóa khách hàng",
+      "whereToCheck": "CRM → Khách hàng",
+      "recommendedAction": "Kiểm tra lại trường hoặc điều kiện được hiển thị trong source UI trước khi lưu."
+    },
+    {
+      "page": "Khách Hàng Tiềm Năng (Leads)",
+      "route": "/dashboard/crm-leads",
+      "symptom": "Có lỗi xảy ra",
+      "whereToCheck": "CRM → Khách hàng tiềm năng",
+      "recommendedAction": "Kiểm tra lại trường hoặc điều kiện được hiển thị trong source UI trước khi lưu."
+    },
+    {
+      "page": "Chiến dịch Marketing (Săn Deal)",
+      "route": "/dashboard/marketing",
+      "symptom": "Vui lòng chọn ít nhất một sản phẩm.",
+      "whereToCheck": "Marketing → Chiến dịch Marketing",
+      "recommendedAction": "Kiểm tra lại trường hoặc điều kiện được hiển thị trong source UI trước khi lưu."
+    },
+    {
+      "page": "Chiến dịch Marketing (Săn Deal)",
+      "route": "/dashboard/marketing",
+      "symptom": "Mức giảm phần trăm phải lớn hơn 0 và nhỏ hơn hoặc bằng 100.",
+      "whereToCheck": "Marketing → Chiến dịch Marketing",
+      "recommendedAction": "Kiểm tra lại trường hoặc điều kiện được hiển thị trong source UI trước khi lưu."
+    },
+    {
+      "page": "Chiến dịch Marketing (Săn Deal)",
+      "route": "/dashboard/marketing",
+      "symptom": "Mức giảm cố định phải lớn hơn 0.",
+      "whereToCheck": "Marketing → Chiến dịch Marketing",
+      "recommendedAction": "Kiểm tra lại trường hoặc điều kiện được hiển thị trong source UI trước khi lưu."
+    },
+    {
+      "page": "Chiến dịch Marketing (Săn Deal)",
+      "route": "/dashboard/marketing",
+      "symptom": "Lỗi lưu chiến dịch",
+      "whereToCheck": "Marketing → Chiến dịch Marketing",
+      "recommendedAction": "Kiểm tra lại trường hoặc điều kiện được hiển thị trong source UI trước khi lưu."
+    },
+    {
+      "page": "Chiến dịch Marketing (Săn Deal)",
+      "route": "/dashboard/marketing",
+      "symptom": "Lỗi xóa chiến dịch",
+      "whereToCheck": "Marketing → Chiến dịch Marketing",
+      "recommendedAction": "Kiểm tra lại trường hoặc điều kiện được hiển thị trong source UI trước khi lưu."
+    },
+    {
+      "page": "Chiến dịch Marketing (Săn Deal)",
+      "route": "/dashboard/marketing",
+      "symptom": "Lỗi cập nhật trạng thái",
+      "whereToCheck": "Marketing → Chiến dịch Marketing",
+      "recommendedAction": "Kiểm tra lại trường hoặc điều kiện được hiển thị trong source UI trước khi lưu."
+    },
+    {
+      "page": "Quản lý Banner",
+      "route": "/dashboard/banners",
+      "symptom": "Không thể tải danh sách banner.",
+      "whereToCheck": "Marketing → Quản lý Banner",
+      "recommendedAction": "Kiểm tra lại trường hoặc điều kiện được hiển thị trong source UI trước khi lưu."
+    },
+    {
+      "page": "Quản lý Banner",
+      "route": "/dashboard/banners",
+      "symptom": "Không thể tải ảnh lên.",
+      "whereToCheck": "Marketing → Quản lý Banner",
+      "recommendedAction": "Kiểm tra lại trường hoặc điều kiện được hiển thị trong source UI trước khi lưu."
+    },
+    {
+      "page": "Quản lý Banner",
+      "route": "/dashboard/banners",
+      "symptom": "Không thể lưu banner.",
+      "whereToCheck": "Marketing → Quản lý Banner",
+      "recommendedAction": "Kiểm tra lại trường hoặc điều kiện được hiển thị trong source UI trước khi lưu."
+    },
+    {
+      "page": "Quản lý Banner",
+      "route": "/dashboard/banners",
+      "symptom": "Không thể cập nhật trạng thái banner.",
+      "whereToCheck": "Marketing → Quản lý Banner",
+      "recommendedAction": "Kiểm tra lại trường hoặc điều kiện được hiển thị trong source UI trước khi lưu."
+    },
+    {
+      "page": "Quản lý Banner",
+      "route": "/dashboard/banners",
+      "symptom": "Không thể cập nhật thứ tự.",
+      "whereToCheck": "Marketing → Quản lý Banner",
+      "recommendedAction": "Kiểm tra lại trường hoặc điều kiện được hiển thị trong source UI trước khi lưu."
+    },
+    {
+      "page": "Quản lý Banner",
+      "route": "/dashboard/banners",
+      "symptom": "Không thể xóa banner.",
+      "whereToCheck": "Marketing → Quản lý Banner",
+      "recommendedAction": "Kiểm tra lại trường hoặc điều kiện được hiển thị trong source UI trước khi lưu."
+    }
+  ],
+  "sourceFiles": [
+    "src/components/admin/chat/AdminChatWidget.tsx",
+    "src/components/admin/editors/RichTextEditor.tsx",
+    "src/components/admin/editors/SpecificationGroupEditor.tsx",
+    "src/components/admin/layout/DashboardLayout.tsx",
+    "src/components/admin/layout/NotificationDropdown.tsx",
+    "src/components/admin/layout/SearchButton.tsx",
+    "src/components/admin/layout/VerticalDock.tsx",
+    "src/components/admin/settings/CartRewardsSetting.tsx",
+    "src/components/admin/settings/PromoCodesSetting.tsx",
+    "src/components/admin/settings/RecommendationsSetting.tsx",
+    "src/components/admin/views/BankHistoryPanel.tsx",
+    "src/components/admin/views/Banners.tsx",
+    "src/components/admin/views/Categories.tsx",
+    "src/components/admin/views/ComplaintDetail.tsx",
+    "src/components/admin/views/Complaints.tsx",
+    "src/components/admin/views/CustomerManager.tsx",
+    "src/components/admin/views/FooterManagement.tsx",
+    "src/components/admin/views/Inventory.tsx",
+    "src/components/admin/views/Invoices.tsx",
+    "src/components/admin/views/LeadManager.tsx",
+    "src/components/admin/views/MainDashboardView.tsx",
+    "src/components/admin/views/Marketing.tsx",
+    "src/components/admin/views/Orders.tsx",
+    "src/components/admin/views/ProductList.tsx",
+    "src/components/admin/views/Reviews.tsx",
+    "src/components/admin/views/SettingsManager.tsx",
+    "src/components/admin/views/StaffManager.tsx",
+    "src/components/admin/views/products/AdminProductCard.tsx",
+    "src/components/admin/views/products/AdminProductFilterSidebar.tsx",
+    "src/components/admin/views/products/ProductImportModal.tsx",
+    "src/components/admin/views/products/VariantManagementModal.tsx",
+    "src/components/admin/widgets/ActivityWidget.tsx",
+    "src/components/admin/widgets/AppleWatchWeatherFace.tsx",
+    "src/components/admin/widgets/CustomerListWidget.tsx",
+    "src/components/admin/widgets/DoanhThuChart.tsx",
+    "src/components/admin/widgets/InteractiveCalendar.tsx",
+    "src/components/admin/widgets/KpiWidget.tsx",
+    "src/components/admin/widgets/NotificationCenter.tsx",
+    "src/components/admin/widgets/NotificationsWidget.tsx",
+    "src/components/admin/widgets/PerformanceWidget.tsx",
+    "src/components/admin/widgets/PlanScheduleWidget.tsx",
+    "src/components/admin/widgets/SalesFunnelChart.tsx",
+    "src/components/admin/widgets/TopProductsWidget.tsx",
+    "src/components/admin/widgets/donut-chart.tsx",
+    "src/components/admin/widgets/funnel-chart.tsx"
+  ]
+}

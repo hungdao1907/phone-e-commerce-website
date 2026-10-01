@@ -112,7 +112,7 @@ export function ProductGallery({ productId, images = [], productName }: ProductG
                   alt={productName + ' - góc nhìn ' + (selectedIndex + 1)}
                   className="h-full w-full object-contain absolute inset-0"
                   style={{ willChange: 'transform, opacity' }}
-                  fetchpriority="high"
+                  fetchPriority="high"
                   decoding="async"
                   initial={
                     shouldReduceMotion

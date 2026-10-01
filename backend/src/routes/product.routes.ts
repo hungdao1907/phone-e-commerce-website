@@ -168,6 +168,18 @@ router.get('/', async (req, res) => {
   }
 });
 
+function getVariantAttrMap(attributes: unknown): Record<string, string> {
+  const map: Record<string, string> = {};
+  if (attributes && typeof attributes === 'object' && !Array.isArray(attributes)) {
+    for (const [k, v] of Object.entries(attributes as Record<string, unknown>)) {
+      if (typeof v === 'string' && v.trim()) {
+        map[normalizeKey(k)] = v.trim();
+      }
+    }
+  }
+  return map;
+}
+
 // GET /filters - Returns dynamic filter options
 router.get('/filters', async (req, res) => {
   try {
@@ -179,11 +191,11 @@ router.get('/filters', async (req, res) => {
       if (catSlug === 'phone' || catSlug === 'ien-thoai' || catSlug === 'dien-thoai') {
         whereClause.category = { slug: { in: ['iphone', 'samsung', 'xiaomi', 'oppo', 'ien-thoai', 'dien-thoai', 'phone'] } };
       } else if (catSlug === 'laptop') {
-        whereClause.category = { slug: { in: ['macbook', 'asus', 'lenovo'] } };
+        whereClause.category = { slug: { in: ['macbook', 'asus', 'lenovo', 'laptop'] } };
       } else if (catSlug === 'tablet') {
-        whereClause.category = { slug: { in: ['ipad', 'samsung-tablet', 'xiaomi-tablet'] } };
-      } else if (catSlug === 'watch') {
-        whereClause.category = { slug: { in: ['apple-watch', 'samsung-watch'] } }; // Adjust based on real slugs
+        whereClause.category = { slug: { in: ['ipad', 'samsung-tablet', 'xiaomi-tablet', 'tablet'] } };
+      } else if (catSlug === 'watch' || catSlug === 'dong-ho-thong-minh' || catSlug === 'ong-ho-thong-minh') {
+        whereClause.category = { slug: { in: ['apple-watch', 'samsung-watch', 'xiaomi-watch', 'dong-ho-thong-minh', 'ong-ho-thong-minh'] } };
       } else {
         whereClause.category = { slug: catSlug };
       }
@@ -226,8 +238,8 @@ router.get('/admin/filters', authenticateToken, async (req, res) => {
         whereClause.category = { slug: { in: ['macbook', 'asus', 'lenovo', 'laptop'] } };
       } else if (catSlug === 'tablet') {
         whereClause.category = { slug: { in: ['ipad', 'samsung-tablet', 'xiaomi-tablet', 'tablet'] } };
-      } else if (catSlug === 'watch') {
-        whereClause.category = { slug: { in: ['apple-watch', 'samsung-watch', 'dong-ho-thong-minh'] } };
+      } else if (catSlug === 'watch' || catSlug === 'dong-ho-thong-minh' || catSlug === 'ong-ho-thong-minh') {
+        whereClause.category = { slug: { in: ['apple-watch', 'samsung-watch', 'xiaomi-watch', 'dong-ho-thong-minh', 'ong-ho-thong-minh'] } };
       } else {
         whereClause.category = { slug: catSlug };
       }
@@ -286,8 +298,8 @@ router.get('/admin/search', authenticateToken, async (req, res) => {
         whereClause.category = { slug: { in: ['macbook', 'asus', 'lenovo', 'laptop'] } };
       } else if (catSlug === 'tablet') {
         whereClause.category = { slug: { in: ['ipad', 'samsung-tablet', 'xiaomi-tablet', 'tablet'] } };
-      } else if (catSlug === 'watch') {
-        whereClause.category = { slug: { in: ['apple-watch', 'samsung-watch', 'dong-ho-thong-minh'] } };
+      } else if (catSlug === 'watch' || catSlug === 'dong-ho-thong-minh' || catSlug === 'ong-ho-thong-minh') {
+        whereClause.category = { slug: { in: ['apple-watch', 'samsung-watch', 'xiaomi-watch', 'dong-ho-thong-minh', 'ong-ho-thong-minh'] } };
       } else {
         whereClause.category = { slug: catSlug };
       }
@@ -480,6 +492,7 @@ router.get('/search', async (req, res) => {
     const { 
       category, brand, minPrice, maxPrice, 
       ram, storage, cpu, gpu, screenSize, color, 
+      size, connectivity, material,
       sort, page = '1', limit = '12' 
     } = req.query;
 
@@ -497,8 +510,8 @@ router.get('/search', async (req, res) => {
         whereClause.category = { slug: { in: ['macbook', 'asus', 'lenovo', 'laptop'] } };
       } else if (catSlug === 'tablet') {
         whereClause.category = { slug: { in: ['ipad', 'samsung-tablet', 'xiaomi-tablet', 'tablet'] } };
-      } else if (catSlug === 'watch') {
-        whereClause.category = { slug: { in: ['apple-watch', 'samsung-watch', 'dong-ho-thong-minh'] } };
+      } else if (catSlug === 'watch' || catSlug === 'dong-ho-thong-minh' || catSlug === 'ong-ho-thong-minh') {
+        whereClause.category = { slug: { in: ['apple-watch', 'samsung-watch', 'xiaomi-watch', 'dong-ho-thong-minh', 'ong-ho-thong-minh'] } };
       } else {
         whereClause.category = { slug: catSlug };
       }
@@ -508,10 +521,6 @@ router.get('/search', async (req, res) => {
       whereClause.brand = { equals: brand as string, mode: 'insensitive' };
     }
 
-    // For simplicity, we'll fetch products matching basic criteria 
-    // and then filter in-memory if Prisma JSON filtering is too complex.
-    // In production, consider using PostgreSQL raw queries for JSON arrays.
-    
     let products = await prisma.product.findMany({
       where: whereClause,
       include: {
@@ -520,50 +529,42 @@ router.get('/search', async (req, res) => {
       }
     });
 
-    // In-memory filter for specifications and attributes
-    if (ram || storage || cpu || gpu || screenSize || color || minPrice || maxPrice) {
-      const ramArr = typeof ram === 'string' ? ram.split(',') : [];
-      const storageArr = typeof storage === 'string' ? storage.split(',') : [];
-      const cpuArr = typeof cpu === 'string' ? cpu.split(',') : [];
-      const gpuArr = typeof gpu === 'string' ? gpu.split(',') : [];
-      const screenArr = typeof screenSize === 'string' ? screenSize.split(',') : [];
-      const colorArr = typeof color === 'string' ? color.split(',') : [];
-      const minP = minPrice ? parseInt(minPrice as string) : 0;
-      const maxP = maxPrice ? parseInt(maxPrice as string) : Infinity;
+    const parseArrayParam = (val: unknown): string[] => {
+      if (typeof val !== 'string') return [];
+      return val.split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
+    };
 
+    const ramArr = parseArrayParam(ram);
+    const storageArr = parseArrayParam(storage);
+    const cpuArr = parseArrayParam(cpu);
+    const gpuArr = parseArrayParam(gpu);
+    const screenArr = parseArrayParam(screenSize);
+    const colorArr = parseArrayParam(color);
+    const sizeArr = parseArrayParam(size);
+    const connArr = parseArrayParam(connectivity);
+    const matArr = parseArrayParam(material);
+    const hasMinPrice = minPrice !== undefined && minPrice !== '';
+    const hasMaxPrice = maxPrice !== undefined && maxPrice !== '';
+    const minP = hasMinPrice ? parseInt(minPrice as string, 10) : 0;
+    const maxP = hasMaxPrice ? parseInt(maxPrice as string, 10) : Infinity;
+
+    const hasAnyFilter =
+      ramArr.length > 0 || storageArr.length > 0 || cpuArr.length > 0 ||
+      gpuArr.length > 0 || screenArr.length > 0 || colorArr.length > 0 ||
+      sizeArr.length > 0 || connArr.length > 0 || matArr.length > 0 ||
+      hasMinPrice || hasMaxPrice;
+
+    if (hasAnyFilter) {
       products = products.filter(p => {
-        // Build a normalized representation of the product's specs
+        // 1. Check Product Specifications (RAM, CPU, GPU, Screen Size, Specs Storage)
         const specs: Record<string, string> = {};
         if (Array.isArray(p.specifications)) {
           for (const s of (p.specifications as any[])) {
-            if (s && s.key && s.value) {
-              specs[normalizeKey(s.key)] = (s.value as string).trim();
+            if (s && s.key && typeof s.value === 'string' && s.value.trim()) {
+              specs[normalizeKey(s.key).toLowerCase()] = s.value.trim().toLowerCase();
             }
           }
         }
-
-        // Build normalized variant attributes
-        const varAttrs: Record<string, Set<string>> = { color: new Set(), storage: new Set() };
-        let minVariantPrice = Infinity;
-        let maxVariantPrice = 0;
-        
-        if (Array.isArray(p.variants)) {
-          for (const v of p.variants) {
-            const price = v.salePrice || v.price;
-            if (price < minVariantPrice) minVariantPrice = price;
-            if (price > maxVariantPrice) maxVariantPrice = price;
-            
-            if (v.attributes && typeof v.attributes === 'object') {
-              for (const [k, val] of Object.entries(v.attributes)) {
-                if (val) varAttrs[normalizeKey(k)]?.add((val as string).trim());
-              }
-            }
-          }
-        }
-        if (minVariantPrice === Infinity) minVariantPrice = 0;
-
-        // Price Filter (Match if product's price range overlaps or is within requested range)
-        if (minVariantPrice > maxP || maxVariantPrice < minP) return false;
 
         // RAM - extract short value for matching
         if (ramArr.length > 0) {
@@ -576,7 +577,6 @@ router.get('/search', async (req, res) => {
         // CPU/Chip - extract short value for matching
         if (cpuArr.length > 0) {
           const rawCpu = specs['cpu'] || '';
-          // Extract short chip name
           let shortCpu = rawCpu;
           const aMatch = rawCpu.match(/A(\d+)\s*(Pro|Bionic|Max)?/i);
           if (aMatch) {
@@ -615,18 +615,61 @@ router.get('/search', async (req, res) => {
           if (!cameraArr.includes(shortCamera) && !cameraArr.includes(rawCamera)) return false;
         }
 
-        // Storage (Could be in specs or variant attributes)
-        if (storageArr.length > 0) {
-          const specStorage = specs['storage'];
-          const hasVariantStorage = Array.from(varAttrs['storage'] || new Set()).some(s => storageArr.includes(s));
-          if (!storageArr.includes(specStorage) && !hasVariantStorage) return false;
-        }
+        // Storage spec match
+        const specStorageMatches = storageArr.length > 0 && specs['storage'] && storageArr.includes(specs['storage']);
+        const requiresVariantStorage = storageArr.length > 0 && !specStorageMatches;
 
-        // Color (Variant attributes)
-        if (colorArr.length > 0) {
-          const colorSet = varAttrs['color'] || varAttrs['colors'] || new Set();
-          const hasColor = Array.from(colorSet).some(c => colorArr.includes(c));
-          if (!hasColor) return false;
+        // 2. Check Variant-Level Filters with SAME-VARIANT MATCHING
+        const hasVariantFilters =
+          colorArr.length > 0 || sizeArr.length > 0 ||
+          connArr.length > 0 || matArr.length > 0 ||
+          requiresVariantStorage || hasMinPrice || hasMaxPrice;
+
+        if (hasVariantFilters) {
+          if (!Array.isArray(p.variants) || p.variants.length === 0) {
+            return false;
+          }
+
+          const hasMatchingVariant = p.variants.some((v: any) => {
+            const vPrice = v.salePrice || v.price || 0;
+            if (vPrice < minP || vPrice > maxP) return false;
+
+            const vAttrs: Record<string, string> = {};
+            if (v.attributes && typeof v.attributes === 'object') {
+              for (const [k, val] of Object.entries(v.attributes)) {
+                if (val) vAttrs[normalizeKey(k).toLowerCase()] = String(val).trim().toLowerCase();
+              }
+            }
+
+            if (colorArr.length > 0) {
+              const vColor = vAttrs['colors'] || vAttrs['color'] || '';
+              if (!vColor || !colorArr.some(c => vColor === c || vColor.startsWith(c) || vColor.includes(c) || c.includes(vColor))) return false;
+            }
+
+            if (sizeArr.length > 0) {
+              const vSize = vAttrs['sizes'] || vAttrs['size'] || '';
+              if (!vSize || !sizeArr.includes(vSize)) return false;
+            }
+
+            if (connArr.length > 0) {
+              const vConn = vAttrs['connectivities'] || vAttrs['connectivity'] || '';
+              if (!vConn || !connArr.includes(vConn)) return false;
+            }
+
+            if (matArr.length > 0) {
+              const vMat = vAttrs['materials'] || vAttrs['material'] || '';
+              if (!vMat || !matArr.includes(vMat)) return false;
+            }
+
+            if (requiresVariantStorage) {
+              const vStorage = vAttrs['storage'] || '';
+              if (!vStorage || !storageArr.includes(vStorage)) return false;
+            }
+
+            return true;
+          });
+
+          if (!hasMatchingVariant) return false;
         }
 
         return true;
@@ -736,42 +779,109 @@ router.get('/:id', async (req, res) => {
   }
 });
 
+// Helper to normalize variant attributes
+function normalizeVariantAttributes(attrs: any): Record<string, string> {
+  if (!attrs || typeof attrs !== 'object') return {};
+  const result: Record<string, string> = {};
+  for (const [k, v] of Object.entries(attrs)) {
+    if (k && v !== undefined && v !== null) {
+      const trimmedKey = k.trim();
+      const trimmedVal = String(v).trim();
+      if (trimmedKey && trimmedVal) {
+        result[trimmedKey] = trimmedVal;
+      }
+    }
+  }
+  return result;
+}
+
 // POST create product with variants
 router.post('/', authenticateToken, async (req, res) => {
   try {
     const { name, description, brand, image, images, categoryId, status, variants, specifications } = req.body;
 
+    if (!name || !String(name).trim()) {
+      return res.status(400).json({ message: 'Tên sản phẩm không được để trống' });
+    }
+
     // Validate variants
-    if (!variants || variants.length === 0) {
+    if (!variants || !Array.isArray(variants) || variants.length === 0) {
       return res.status(400).json({ message: 'Sản phẩm cần ít nhất 1 biến thể' });
     }
 
-    // Check SKU uniqueness for all variants
+    // Validate category & brand consistency if applicable
+    if (categoryId) {
+      const category = await prisma.category.findUnique({ where: { id: categoryId } });
+      if (category && brand) {
+        const catSlug = category.slug.toLowerCase();
+        const brandLower = brand.trim().toLowerCase();
+        if (catSlug === 'apple-watch' && brandLower !== 'apple') {
+          return res.status(400).json({ message: 'Sản phẩm thuộc danh mục Apple Watch phải có thương hiệu Apple' });
+        } else if (catSlug === 'samsung-watch' && brandLower !== 'samsung') {
+          return res.status(400).json({ message: 'Sản phẩm thuộc danh mục Samsung Watch phải có thương hiệu Samsung' });
+        } else if (catSlug === 'xiaomi-watch' && brandLower !== 'xiaomi') {
+          return res.status(400).json({ message: 'Sản phẩm thuộc danh mục Xiaomi Watch phải có thương hiệu Xiaomi' });
+        }
+      }
+    }
+
+    // Validate variant fields and check SKU uniqueness in payload
+    const payloadSkus = new Set<string>();
     for (const v of variants) {
-      const existing = await prisma.productVariant.findUnique({ where: { sku: v.sku } });
+      if (!v.sku || !String(v.sku).trim()) {
+        return res.status(400).json({ message: 'Mã SKU không được để trống' });
+      }
+      const trimmedSku = String(v.sku).trim();
+      if (payloadSkus.has(trimmedSku)) {
+        return res.status(400).json({ message: `Mã SKU "${trimmedSku}" bị trùng lặp trong danh sách biến thể` });
+      }
+      payloadSkus.add(trimmedSku);
+
+      const price = Number(v.price);
+      if (isNaN(price) || price < 0) {
+        return res.status(400).json({ message: `Giá bán của SKU "${trimmedSku}" không hợp lệ` });
+      }
+
+      if (v.salePrice !== undefined && v.salePrice !== null && v.salePrice !== '') {
+        const salePrice = Number(v.salePrice);
+        if (isNaN(salePrice) || salePrice < 0) {
+          return res.status(400).json({ message: `Giá khuyến mãi của SKU "${trimmedSku}" không hợp lệ` });
+        }
+        if (salePrice > price) {
+          return res.status(400).json({ message: `Giá khuyến mãi của SKU "${trimmedSku}" không được lớn hơn giá bán` });
+        }
+      }
+
+      const stock = parseInt(v.stock, 10);
+      if (isNaN(stock) || stock < 0) {
+        return res.status(400).json({ message: `Tồn kho của SKU "${trimmedSku}" phải là số không âm` });
+      }
+
+      // Check global SKU uniqueness in DB
+      const existing = await prisma.productVariant.findUnique({ where: { sku: trimmedSku } });
       if (existing) {
-        return res.status(400).json({ message: `Mã SKU "${v.sku}" đã tồn tại` });
+        return res.status(400).json({ message: `Mã SKU "${trimmedSku}" đã tồn tại trên hệ thống` });
       }
     }
 
     const newProduct = await prisma.product.create({
       data: {
-        name,
-        description: description || null,
-        brand: brand || null,
+        name: String(name).trim(),
+        description: description ? String(description).trim() : null,
+        brand: brand ? String(brand).trim() : null,
         image: image || null,
-        images: images || [],
+        images: Array.isArray(images) ? images.filter(Boolean) : [],
         categoryId: categoryId || null,
         status: status || 'active',
         specifications: specifications || null,
         variants: {
           create: variants.map((v: any) => ({
-            sku: v.sku,
+            sku: String(v.sku).trim(),
             price: Number(v.price),
-            salePrice: v.salePrice ? Number(v.salePrice) : null,
-            stock: Number(v.stock || 0),
-            attributes: v.attributes || {},
-            colorCode: v.colorCode || null,
+            salePrice: v.salePrice !== undefined && v.salePrice !== null && v.salePrice !== '' ? Number(v.salePrice) : null,
+            stock: Math.max(0, parseInt(v.stock, 10) || 0),
+            attributes: normalizeVariantAttributes(v.attributes),
+            colorCode: v.colorCode ? String(v.colorCode).trim() : null,
             image: v.image || null
           }))
         }
@@ -780,97 +890,205 @@ router.post('/', authenticateToken, async (req, res) => {
     });
 
     res.status(201).json({ message: 'Thêm sản phẩm thành công', product: newProduct });
-  } catch (error) {
-    console.error('Error creating product:', error); res.status(500).json({ message: 'Lỗi server: ' + ((error as any).message || '') }); return;
-    res.status(500).json({ message: 'Lỗi server' });
+  } catch (error: any) {
+    console.error('Error creating product:', error);
+    res.status(500).json({ message: 'Lỗi server: ' + (error.message || '') });
   }
 });
 
-// PUT update product (basic info + upsert variants)
+// PUT update product (safe variant diff, reference check, and transaction)
 router.put('/:id', authenticateToken, async (req, res) => {
   try {
     const id = getRouteParam(req.params.id);
     const { name, description, brand, image, images, categoryId, status, variants, specifications } = req.body;
 
-    // Update product basic info
-    const data: any = {};
-    if (name !== undefined) data.name = name;
-    if (description !== undefined) data.description = description;
-    if (brand !== undefined) data.brand = brand;
-    if (image !== undefined) data.image = image;
-    if (images !== undefined) data.images = images;
-    if (categoryId !== undefined) data.categoryId = categoryId;
-    if (status !== undefined) data.status = status;
-    if (specifications !== undefined) data.specifications = specifications;
-
-    const updatedProduct = await prisma.product.update({
+    const existingProduct = await prisma.product.findUnique({
       where: { id },
-      data,
       include: { category: true, variants: true }
     });
 
-    // If variants provided, update existing by SKU and create new ones
-    if (variants && Array.isArray(variants)) {
-      const incomingSkus = variants.map((v: any) => v.sku);
-      
-      const existingVariants = await prisma.productVariant.findMany({ where: { productId: id } });
-      const skusToDelete = existingVariants.filter(ev => !incomingSkus.includes(ev.sku)).map(ev => ev.sku);
-      
-      if (skusToDelete.length > 0) {
-        try {
-          await prisma.productVariant.deleteMany({ where: { sku: { in: skusToDelete } } });
-        } catch (e) {
-          return res.status(400).json({ message: 'Không thể xoá biến thể vì đã phát sinh đơn hàng liên quan.' });
+    if (!existingProduct) {
+      return res.status(404).json({ message: 'Không tìm thấy sản phẩm' });
+    }
+
+    // Validate category & brand consistency if applicable
+    const targetCategoryId = categoryId !== undefined ? categoryId : existingProduct.categoryId;
+    const targetBrand = brand !== undefined ? brand : existingProduct.brand;
+    if (targetCategoryId) {
+      const category = await prisma.category.findUnique({ where: { id: targetCategoryId } });
+      if (category && targetBrand) {
+        const catSlug = category.slug.toLowerCase();
+        const brandLower = String(targetBrand).trim().toLowerCase();
+        if (catSlug === 'apple-watch' && brandLower !== 'apple') {
+          return res.status(400).json({ message: 'Sản phẩm thuộc danh mục Apple Watch phải có thương hiệu Apple' });
+        } else if (catSlug === 'samsung-watch' && brandLower !== 'samsung') {
+          return res.status(400).json({ message: 'Sản phẩm thuộc danh mục Samsung Watch phải có thương hiệu Samsung' });
+        } else if (catSlug === 'xiaomi-watch' && brandLower !== 'xiaomi') {
+          return res.status(400).json({ message: 'Sản phẩm thuộc danh mục Xiaomi Watch phải có thương hiệu Xiaomi' });
+        }
+      }
+    }
+
+    // Prepare product info update payload
+    const productData: any = {};
+    if (name !== undefined) productData.name = String(name).trim();
+    if (description !== undefined) productData.description = description ? String(description).trim() : null;
+    if (brand !== undefined) productData.brand = brand ? String(brand).trim() : null;
+    if (image !== undefined) productData.image = image || null;
+    if (images !== undefined) productData.images = Array.isArray(images) ? images.filter(Boolean) : [];
+    if (categoryId !== undefined) productData.categoryId = categoryId || null;
+    if (status !== undefined) productData.status = status;
+    if (specifications !== undefined) productData.specifications = specifications;
+
+    // If variants are not provided, only update product basic info
+    if (!variants || !Array.isArray(variants)) {
+      const updatedProduct = await prisma.product.update({
+        where: { id },
+        data: productData,
+        include: { category: true, variants: true }
+      });
+      return res.json({ message: 'Cập nhật sản phẩm thành công', product: updatedProduct });
+    }
+
+    if (variants.length === 0) {
+      return res.status(400).json({ message: 'Sản phẩm cần ít nhất 1 biến thể' });
+    }
+
+    // Validate incoming variants & uniqueness
+    const payloadSkus = new Set<string>();
+    const incomingVariantIds = new Set<string>();
+
+    for (const v of variants) {
+      if (!v.sku || !String(v.sku).trim()) {
+        return res.status(400).json({ message: 'Mã SKU không được để trống' });
+      }
+      const trimmedSku = String(v.sku).trim();
+      if (payloadSkus.has(trimmedSku)) {
+        return res.status(400).json({ message: `Mã SKU "${trimmedSku}" bị trùng lặp trong danh sách biến thể` });
+      }
+      payloadSkus.add(trimmedSku);
+
+      const price = Number(v.price);
+      if (isNaN(price) || price < 0) {
+        return res.status(400).json({ message: `Giá bán của SKU "${trimmedSku}" không hợp lệ` });
+      }
+
+      if (v.salePrice !== undefined && v.salePrice !== null && v.salePrice !== '') {
+        const salePrice = Number(v.salePrice);
+        if (isNaN(salePrice) || salePrice < 0) {
+          return res.status(400).json({ message: `Giá khuyến mãi của SKU "${trimmedSku}" không hợp lệ` });
+        }
+        if (salePrice > price) {
+          return res.status(400).json({ message: `Giá khuyến mãi của SKU "${trimmedSku}" không được lớn hơn giá bán` });
         }
       }
 
+      const stock = parseInt(v.stock, 10);
+      if (isNaN(stock) || stock < 0) {
+        return res.status(400).json({ message: `Tồn kho của SKU "${trimmedSku}" phải là số không âm` });
+      }
+
+      if (v.id) {
+        const belongsToProduct = existingProduct.variants.some(ev => ev.id === v.id);
+        if (!belongsToProduct) {
+          return res.status(400).json({ message: `Biến thể ID "${v.id}" không thuộc sản phẩm này.` });
+        }
+        incomingVariantIds.add(v.id);
+
+        // Check if SKU changed and conflicts with another variant in DB
+        const conflict = await prisma.productVariant.findFirst({
+          where: { sku: trimmedSku, id: { not: v.id } }
+        });
+        if (conflict) {
+          return res.status(400).json({ message: `Mã SKU "${trimmedSku}" đã tồn tại ở sản phẩm khác.` });
+        }
+      } else {
+        // New variant - check global SKU
+        const conflict = await prisma.productVariant.findUnique({ where: { sku: trimmedSku } });
+        if (conflict) {
+          return res.status(400).json({ message: `Mã SKU "${trimmedSku}" đã tồn tại trên hệ thống.` });
+        }
+      }
+    }
+
+    // Determine removed variants
+    const removedVariants = existingProduct.variants.filter(ev => !incomingVariantIds.has(ev.id));
+
+    // Check OrderItem references for all removed variants
+    for (const removedVar of removedVariants) {
+      const refCount = await prisma.orderItem.count({
+        where: { variantId: removedVar.id }
+      });
+      if (refCount > 0) {
+        return res.status(409).json({
+          message: `Không thể xóa biến thể (SKU: ${removedVar.sku}) đã phát sinh trong đơn hàng.`
+        });
+      }
+    }
+
+    // Execute atomic transaction for safe variant diff
+    const result = await prisma.$transaction(async (tx) => {
+      // 1. Update Product basic fields
+      await tx.product.update({
+        where: { id },
+        data: productData
+      });
+
+      // 2. Delete safe unreferenced removed variants
+      for (const removedVar of removedVariants) {
+        await tx.productVariant.delete({
+          where: { id: removedVar.id }
+        });
+      }
+
+      // 3. Update existing variants by id
       for (const v of variants) {
-        const existing = existingVariants.find(ev => ev.sku === v.sku);
-        if (existing) {
-          await prisma.productVariant.update({
-            where: { id: existing.id },
+        const trimmedSku = String(v.sku).trim();
+        const salePriceVal = v.salePrice !== undefined && v.salePrice !== null && v.salePrice !== '' ? Number(v.salePrice) : null;
+        const normalizedAttrs = normalizeVariantAttributes(v.attributes);
+        const colorCodeVal = v.colorCode ? String(v.colorCode).trim() : null;
+
+        if (v.id) {
+          await tx.productVariant.update({
+            where: { id: v.id },
             data: {
+              sku: trimmedSku,
               price: Number(v.price),
-              salePrice: v.salePrice ? Number(v.salePrice) : null,
-              stock: Number(v.stock || 0),
-              attributes: v.attributes || {},
-              colorCode: v.colorCode || null,
+              salePrice: salePriceVal,
+              stock: Math.max(0, parseInt(v.stock, 10) || 0),
+              attributes: normalizedAttrs,
+              colorCode: colorCodeVal,
               image: v.image || null
             }
           });
         } else {
-          // Check SKU globally
-          const conflict = await prisma.productVariant.findUnique({ where: { sku: v.sku } });
-          if (conflict) {
-            return res.status(400).json({ message: `Mã SKU "${v.sku}" đã tồn tại ở sản phẩm khác.` });
-          }
-          await prisma.productVariant.create({
+          // 4. Create new variant
+          await tx.productVariant.create({
             data: {
-              sku: v.sku,
+              productId: id,
+              sku: trimmedSku,
               price: Number(v.price),
-              salePrice: v.salePrice ? Number(v.salePrice) : null,
-              stock: Number(v.stock || 0),
-              attributes: v.attributes || {},
-              colorCode: v.colorCode || null,
-              image: v.image || null,
-              productId: id
+              salePrice: salePriceVal,
+              stock: Math.max(0, parseInt(v.stock, 10) || 0),
+              attributes: normalizedAttrs,
+              colorCode: colorCodeVal,
+              image: v.image || null
             }
           });
         }
       }
 
-      // Refetch with new variants
-      const final = await prisma.product.findUnique({
+      // 5. Return updated product with all variants
+      return await tx.product.findUnique({
         where: { id },
         include: { category: true, variants: true }
       });
-      return res.json({ message: 'Cập nhật sản phẩm thành công', product: final });
-    }
+    });
 
-    res.json({ message: 'Cập nhật sản phẩm thành công', product: updatedProduct });
-  } catch (error) {
+    res.json({ message: 'Cập nhật sản phẩm thành công', product: result });
+  } catch (error: any) {
     console.error('Error updating product:', error);
-    res.status(500).json({ message: 'Lỗi server' });
+    res.status(500).json({ message: 'Lỗi server: ' + (error.message || '') });
   }
 });
 

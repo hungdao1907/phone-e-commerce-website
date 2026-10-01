@@ -675,13 +675,13 @@ export function FinalCTASection() {
                       <button
                         type="button"
                         onClick={handleReset}
-                        className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white/90 hover:text-white text-xs font-medium border border-white/10 hover:border-white/20 transition-all group cursor-pointer"
+                        className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-black/5 hover:bg-black/10 text-slate-800 hover:text-black text-xs font-medium border border-black/10 transition-all group cursor-pointer"
                       >
                         <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-0.5 transition-transform" />
                         <span>Quay lại tìm kiếm</span>
                       </button>
 
-                      <div className="text-[11px] font-mono text-white/40 hidden sm:block">
+                      <div className="text-[11px] font-mono text-slate-500 hidden sm:block">
                         {selectedUsageLabel} · {selectedPriorityLabel}
                       </div>
                     </div>
@@ -689,19 +689,19 @@ export function FinalCTASection() {
                     {/* Header Title */}
                     <div className="mb-3 shrink-0">
                       <div className="flex items-center gap-2 mb-1">
-                        <Sparkles className="w-3.5 h-3.5 text-[#38bdf8]" />
-                        <span className="text-[11px] font-semibold uppercase tracking-wider text-[#38bdf8]">
+                        <Sparkles className="w-3.5 h-3.5 text-[#0071e3]" />
+                        <span className="text-[11px] font-semibold uppercase tracking-wider text-[#0071e3]">
                           {recommendedProducts.length} Thiết bị phù hợp nhất cho bạn
                         </span>
                       </div>
-                      <h3 className="text-lg sm:text-xl font-bold text-white tracking-tight">
+                      <h3 className="text-lg sm:text-xl font-bold text-slate-900 tracking-tight">
                         Danh sách sản phẩm đề xuất (Điện thoại, Tablet, Laptop)
                       </h3>
                     </div>
 
                     {/* Results Content: Grid of up to 10 Product Labels */}
                     {hasError ? (
-                      <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-200 text-xs flex items-center gap-2 my-auto">
+                      <div className="p-4 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs flex items-center gap-2 my-auto">
                         <Info className="w-4 h-4 shrink-0" />
                         <span>Không thể tải sản phẩm lúc này. Vui lòng thử lại.</span>
                       </div>
@@ -716,10 +716,10 @@ export function FinalCTASection() {
                               animate={{ opacity: 1, y: 0 }}
                               transition={{ duration: 0.25, delay: idx * 0.03, ease: EASING }}
                               onClick={() => handleProductNavigate(product)}
-                              className="group flex items-center gap-2.5 p-2.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.1] border border-white/10 hover:border-[#38bdf8]/40 transition-all duration-200 cursor-pointer text-left"
+                              className="group flex items-center gap-2.5 p-2.5 rounded-xl bg-white hover:bg-slate-50 border border-black/8 hover:border-black/20 shadow-sm transition-all duration-200 cursor-pointer text-left"
                             >
                               {/* Product Thumbnail */}
-                              <div className="w-10 h-10 rounded-lg bg-white/[0.06] p-1 flex items-center justify-center shrink-0 border border-white/5 group-hover:scale-105 transition-transform duration-200">
+                              <div className="w-10 h-10 rounded-lg bg-slate-100 p-1 flex items-center justify-center shrink-0 border border-black/5 group-hover:scale-105 transition-transform duration-200">
                                 <img
                                   src={imgUrl}
                                   alt={product.name}
@@ -734,36 +734,36 @@ export function FinalCTASection() {
                               <div className="min-w-0 flex-1">
                                 <div className="flex items-center gap-1.5 mb-0.5">
                                   {product.brand && (
-                                    <span className="text-[9px] font-bold uppercase tracking-wider text-[#38bdf8] truncate">
+                                    <span className="text-[9px] font-bold uppercase tracking-wider text-[#0071e3] truncate">
                                       {product.brand}
                                     </span>
                                   )}
                                   {product.category?.name && (
-                                    <span className="text-[9px] text-white/40 truncate">
+                                    <span className="text-[9px] text-slate-400 truncate">
                                       • {product.category.name}
                                     </span>
                                   )}
                                 </div>
-                                <h4 className="text-xs font-semibold text-white truncate group-hover:text-[#38bdf8] transition-colors">
+                                <h4 className="text-xs font-semibold text-slate-900 truncate group-hover:text-[#0071e3] transition-colors">
                                   {product.name}
                                 </h4>
                               </div>
 
                               {/* Price & Action Icon */}
                               <div className="shrink-0 flex items-center gap-1 pl-1">
-                                <span className="text-[11px] font-bold text-emerald-400">
+                                <span className="text-[11px] font-bold text-emerald-600">
                                   {priceFormatted}
                                 </span>
-                                <ChevronRight className="w-3.5 h-3.5 text-white/40 group-hover:text-[#38bdf8] group-hover:translate-x-0.5 transition-all" />
+                                <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-slate-800 group-hover:translate-x-0.5 transition-all" />
                               </div>
                             </motion.div>
                           );
                         })}
                       </div>
                     ) : (
-                      <div className="py-12 text-center text-white/70 text-xs bg-white/[0.03] rounded-2xl border border-white/5 my-auto">
-                        <p className="font-medium text-white/90">Chưa tìm thấy sản phẩm phù hợp với lựa chọn này.</p>
-                        <p className="mt-1 text-white/50">Bạn có thể quay lại và thử một tiêu chí khác.</p>
+                      <div className="py-12 text-center text-slate-600 text-xs bg-white rounded-2xl border border-black/8 shadow-sm my-auto">
+                        <p className="font-medium text-slate-800">Chưa tìm thấy sản phẩm phù hợp với lựa chọn này.</p>
+                        <p className="mt-1 text-slate-500">Bạn có thể quay lại và thử một tiêu chí khác.</p>
                       </div>
                     )}
                   </motion.div>

@@ -1,7 +1,21 @@
 import React, { useState, useRef, useEffect, useLayoutEffect, useMemo } from 'react';
 import { MorphIcon } from 'morphicons/react';
 import { Menu, X, Search as SearchIcon } from 'lucide';
-import { ShoppingBag, User, ChevronDown } from 'lucide-react';
+import {
+  ShoppingBag,
+  User,
+  ChevronDown,
+  ChevronRight,
+  Smartphone,
+  Laptop,
+  Tablet,
+  Watch,
+  Headphones,
+  Sparkles,
+  ShieldCheck,
+  HelpCircle,
+  Users,
+} from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
 import { useAuthStore } from '../../store/authStore';
 import { useCartStore } from '../../store/useCartStore';
@@ -48,7 +62,7 @@ export function GlobalNav() {
       .catch(err => console.error(err));
   }, []);
 
-  const { visibleItems, navItems } = useMemo(() => {
+  const { leftItems, rightItems, visibleItems, navItems } = useMemo(() => {
     const rootCats = categories.filter(c => c.parentId === null && c.isActive);
     rootCats.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
     
@@ -63,7 +77,11 @@ export function GlobalNav() {
       { id: 'support', name: 'Hỗ Trợ', slug: 'support', isStatic: true }
     ];
 
-    return { visibleItems: visible, navItems: visible };
+    const mid = Math.ceil(visible.length / 2);
+    const left = visible.slice(0, mid);
+    const right = visible.slice(mid);
+
+    return { leftItems: left, rightItems: right, visibleItems: visible, navItems: visible };
   }, [categories]);
 
   const containerRef = useRef<HTMLDivElement>(null);
@@ -91,9 +109,11 @@ export function GlobalNav() {
     if (!item) return [];
     if (item.isStatic) {
       if (item.name === 'Cửa Hàng') return [
-        { title: 'Mua Hàng', links: ['Sản Phẩm Mới Nhất', 'Mac', 'iPad', 'iPhone', 'Apple Watch', 'Phụ Kiện'] },
-        { title: 'Liên Kết Nhanh', links: ['Tình Trạng Đơn Hàng', 'Apple Trade In', 'Ưu Đãi Sinh Viên'] },
-        { title: 'Cửa Hàng Đặc Biệt', links: ['Giáo Dục', 'Doanh Nghiệp'] }
+        {
+          title: 'MUA HÀNG',
+          links: ['Sản Phẩm Mới Nhất', 'MacBook', 'iPad', 'iPhone', 'Apple Watch', 'Tất Cả Phụ Kiện'],
+          slugs: ['/', 'laptop/macbook', 'tablet/ipad', 'phone/iphone', 'watch/apple-watch', null]
+        }
       ];
       if (item.name === 'Hỗ Trợ') return [
         { title: 'Tìm Trợ Giúp', links: ['iPhone', 'Mac', 'iPad', 'Watch', 'Bảo Hành'] },
@@ -156,24 +176,128 @@ export function GlobalNav() {
       groups.push({
         title: 'DÒNG MÁY',
         links: [`${item.name} Tiêu chuẩn`, `${item.name} Pro`, `${item.name} Series`],
-        slugs: []
+        slugs: [null, null, null]
       });
     }
 
-    // Mock Groups
-    groups.push({
-      title: 'MỨC GIÁ',
-      links: ['Trên 20 triệu', 'Từ 10 đến 20 triệu', 'Từ 5 đến 10 triệu', 'Dưới 5 triệu'],
-      slugs: []
-    });
-
-    groups.push({
-      title: 'SẢN PHẨM HOT 🔥',
-      links: [`${item.name} Pro Max`, `${item.name} Mới nhất`, `Sản phẩm ${item.name} bán chạy`],
-      slugs: []
-    });
-
     return groups;
+  };
+
+  const getWatchImage = (name: string) => {
+    const n = name.toLowerCase();
+    if (n.includes('ultra')) return '/images/watch/watch-ultra-studio.png';
+    if (n.includes('se 3') || n.includes('se3') || n.includes('watch se')) return '/images/watch/watch-se-studio.png';
+    if (n.includes('series 11') || n.includes('series-11')) return '/images/watch/watch-series11-studio.png';
+    if (n.includes('apple watch') || n.includes('trang chủ')) return '/images/watch/watch-series11-silver-studio.png';
+    if (n.includes('samsung')) return '/images/watch/watch-titanium-gold.png';
+    if (n.includes('xiaomi')) return '/images/watch/watch-titanium-slate.png';
+    return '/images/watch/watch-series11-studio.png';
+  };
+
+  const AsusLogo = ({ className = "w-8 h-4", ...props }: any) => (
+    <svg viewBox="0 0 120 28" fill="currentColor" className={className} {...props}>
+      <path d="M15 2L3 26h6.5l2.2-4.8h11.6L25.5 26H32L20 2h-5zm.1 6.8l4.1 9.2h-8.2l4.1-9.2zM36 21.5c2.5 1.8 5.6 2.8 8.8 2.8 4.2 0 6.8-2 6.8-4.9 0-3.2-2.8-4.1-7.2-5-5.2-1.1-9.4-2.5-9.4-7.5C35 2.6 39.2 0 45.4 0c3.2 0 6.2.8 8.4 2.2l-2.4 4.5c-1.8-1.1-3.9-1.8-6.1-1.8-3.1 0-5.1 1.4-5.1 3.4 0 2.4 2.4 3.3 6.3 4.1 5.6 1.2 10.3 2.8 10.3 8.3 0 4.8-4.1 7.7-11 7.7-3.9 0-7.6-1.1-10.2-2.8l2.5-4.6zM60 2h6.8v14.2c0 4.8 2.6 7.4 7.2 7.4s7.2-2.6 7.2-7.4V2H88v14c0 8.6-5.8 12.4-14 12.4s-14-3.8-14-12.4V2zm32.8 19.5c2.5 1.8 5.6 2.8 8.8 2.8 4.2 0 6.8-2 6.8-4.9 0-3.2-2.8-4.1-7.2-5-5.2-1.1-9.4-2.5-9.4-7.5C91.8 2.6 96 0 102.2 0c3.2 0 6.2.8 8.4 2.2l-2.4 4.5c-1.8-1.1-3.9-1.8-6.1-1.8-3.1 0-5.1 1.4-5.1 3.4 0 2.4 2.4 3.3 6.3 4.1 5.6 1.2 10.3 2.8 10.3 8.3 0 4.8-4.1 7.7-11 7.7-3.9 0-7.6-1.1-10.2-2.8l2.5-4.6z"/>
+    </svg>
+  );
+
+  const LenovoLogo = ({ className = "w-10 h-4", ...props }: any) => (
+    <svg viewBox="0 0 120 28" fill="none" className={className} {...props}>
+      <rect x="2" y="2" width="116" height="24" rx="4" fill="#E2231A" />
+      <text x="60" y="15" dominantBaseline="middle" textAnchor="middle" fill="#FFFFFF" fontFamily="system-ui, -apple-system, sans-serif" fontWeight="800" fontSize="14">
+        Lenovo
+      </text>
+    </svg>
+  );
+
+  const renderItemVisual = (link: string, categoryName: string = '', isFeatured: boolean = false) => {
+    const n = (link + ' ' + categoryName).toLowerCase();
+    const isWatchSection = n.includes('watch') || n.includes('đồng hồ');
+
+    // 1. If in the Watch section or watch product, show actual watch thumbnail
+    if (isWatchSection) {
+      const imgSrc = getWatchImage(link);
+      return (
+        <img
+          src={imgSrc}
+          alt={link}
+          className="w-8 h-8 object-contain drop-shadow-sm transition-transform duration-200 group-hover:scale-110"
+        />
+      );
+    }
+
+    // 2. Tech Brand Logos using Official Images
+    if (n.includes('apple') || n.includes('iphone') || n.includes('ipad') || n.includes('macbook') || n.includes('mac')) {
+      return (
+        <img
+          src="/images/brands/apple.png"
+          alt="Apple"
+          className="w-6 h-6 object-contain transition-transform duration-200 group-hover:scale-110"
+        />
+      );
+    }
+
+    if (n.includes('samsung') || n.includes('galaxy')) {
+      return (
+        <img
+          src="/images/brands/samsung.png"
+          alt="Samsung"
+          className="w-10 h-5 object-contain transition-transform duration-200 group-hover:scale-105"
+        />
+      );
+    }
+
+    if (n.includes('xiaomi') || n.includes('redmi')) {
+      return (
+        <img
+          src="/images/brands/xiaomi.png"
+          alt="Xiaomi"
+          className="w-7 h-7 object-contain rounded-lg transition-transform duration-200 group-hover:scale-105"
+        />
+      );
+    }
+
+    if (n.includes('oppo')) {
+      return (
+        <img
+          src="/images/brands/oppo.png"
+          alt="OPPO"
+          className="w-10 h-4 object-contain transition-transform duration-200 group-hover:scale-105"
+        />
+      );
+    }
+
+    if (n.includes('asus') || n.includes('rog')) {
+      return (
+        <AsusLogo
+          className="w-8 h-4 text-neutral-800 transition-transform duration-200 group-hover:scale-105"
+        />
+      );
+    }
+
+    if (n.includes('lenovo')) {
+      return (
+        <LenovoLogo className="w-10 h-4 transition-transform duration-200 group-hover:scale-105" />
+      );
+    }
+
+    // 3. Service / Utility feature icons
+    if (n.includes('phụ kiện') || n.includes('tai nghe') || n.includes('airpods')) {
+      return <Headphones className="w-5 h-5 text-neutral-700 group-hover:text-black transition-colors" />;
+    }
+    if (n.includes('bảo hành')) {
+      return <ShieldCheck className="w-5 h-5 text-neutral-700 group-hover:text-black transition-colors" />;
+    }
+    if (n.includes('hỗ trợ') || n.includes('help') || n.includes('trợ giúp')) {
+      return <HelpCircle className="w-5 h-5 text-neutral-700 group-hover:text-black transition-colors" />;
+    }
+    if (n.includes('cộng đồng') || n.includes('users') || n.includes('liên hệ')) {
+      return <Users className="w-5 h-5 text-neutral-700 group-hover:text-black transition-colors" />;
+    }
+    if (n.includes('mới nhất') || n.includes('khám phá')) {
+      return <Sparkles className="w-5 h-5 text-amber-500 transition-colors" />;
+    }
+
+    return <Smartphone className="w-5 h-5 text-neutral-700 group-hover:text-black transition-colors" />;
   };
 
   const checkIsActive = (item: any) => {
@@ -189,6 +313,26 @@ export function GlobalNav() {
            (activeMenu?.id === item.id);
   };
 
+  const renderNavLink = (item: any) => (
+    <li key={item.id} className="h-full flex items-center" onMouseEnter={() => handleMouseEnter(item)}>
+      <Link
+        to={item.id === 'store' ? '/' : `/${item.slug}`}
+        onClick={() => { setActiveMenu(null); setIsSearchOpen(false); }}
+        className={`nav-glow-link h-full flex items-center relative transition-colors duration-300 text-[13px] ${
+          checkIsActive(item) ? 'text-black font-semibold drop-shadow-[0_0_8px_rgba(0,0,0,0.35)]' : 'inherit'
+        }`}
+      >
+        {item.name}
+        {/* Active underline glow */}
+        <span
+          className={`absolute bottom-0 left-0 h-[2px] bg-black rounded-full transition-all duration-300 shadow-[0_0_8px_rgba(0,0,0,0.8),0_0_16px_rgba(0,0,0,0.4)] ${
+            checkIsActive(item) ? 'w-full opacity-100' : 'w-0 opacity-0'
+          }`}
+        />
+      </Link>
+    </li>
+  );
+
   return (
     <>
       <nav
@@ -197,58 +341,109 @@ export function GlobalNav() {
             ? 'bg-white border-b border-neutral-200/60 text-[#1d1d1f]'
             : isIphonePage
               ? 'bg-transparent border-b border-transparent hover:bg-black/90 text-[#f5f5f7]'
-              : 'bg-white/80 backdrop-blur-md border-b border-neutral-100 text-[#1d1d1f] shadow-sm'
+              : 'bg-white/90 backdrop-blur-md border-b border-neutral-100 text-[#1d1d1f] shadow-sm'
         }`}
         onMouseLeave={handleMouseLeave}
       >
-        <div className="max-w-[1300px] mx-auto px-4 lg:px-8 h-[52px] flex items-center justify-between">
-          <Link to="/" className="hover:opacity-80 transition-opacity flex-shrink-0" onClick={() => { setActiveMenu(null); setIsSearchOpen(false); }}>
-            <img src="/images/logo.png" alt="Logo" className="h-7 w-auto object-contain" />
-          </Link>
-
-
-
-          {/* Desktop Nav Links */}
-          <div ref={containerRef} className="flex-1 mx-6 lg:mx-12 h-full flex justify-center min-w-0">
-            <ul className="hidden md:flex items-center space-x-7 h-full">
-              {visibleItems.map((item) => (
-                <li key={item.id} className="h-full flex items-center" onMouseEnter={() => handleMouseEnter(item)}>
-                  <Link
-                    to={item.id === 'store' ? '/' : `/${item.slug}`}
-                    onClick={() => { setActiveMenu(null); setIsSearchOpen(false); }}
-                    className={`nav-glow-link h-full flex items-center relative transition-colors duration-300 ${
-                      checkIsActive(item) ? 'text-[#22c55e]' : 'inherit'
-                    }`}
-                  >
-                    {item.name}
-                    {/* Active underline glow */}
-                    <span
-                      className={`absolute bottom-0 left-0 h-[2px] bg-[#22c55e] rounded-full transition-all duration-300 shadow-[0_0_8px_#22c55e,0_0_16px_#22c55e40] ${
-                        checkIsActive(item) ? 'w-full opacity-100' : 'w-0 opacity-0'
-                      }`}
-                    />
-                  </Link>
-                </li>
-              ))}
+        <div className="max-w-[1300px] mx-auto px-4 lg:px-8 h-[54px] flex items-center justify-between">
+          {/* Desktop Left Nav Links (Split Left) */}
+          <div className="hidden md:flex flex-1 items-center justify-end h-full">
+            <ul className="flex items-center space-x-6 lg:space-x-8 h-full">
+              {leftItems.map(renderNavLink)}
             </ul>
           </div>
 
-          {/* Icons & Mobile Toggle */}
-          <div className="flex-shrink-0 flex items-center space-x-5">
+          {/* Center Logo */}
+          <div className="flex-shrink-0 flex items-center justify-center px-6 lg:px-10 h-full">
+            <Link
+              to="/"
+              className="hover:opacity-80 transition-opacity flex items-center"
+              onClick={() => { setActiveMenu(null); setIsSearchOpen(false); }}
+            >
+              <img src="/images/logo.png" alt="Logo" className="h-7 md:h-8 w-auto object-contain" />
+            </Link>
+          </div>
+
+          {/* Desktop Right Nav Links + Actions (Split Right) */}
+          <div className="hidden md:flex flex-1 items-center justify-between h-full">
+            <ul className="flex items-center space-x-6 lg:space-x-8 h-full">
+              {rightItems.map(renderNavLink)}
+            </ul>
+
+            {/* Utility Icons on the far right */}
+            <div className="flex items-center space-x-5 ml-6">
+              <button
+                onClick={() => {
+                  setActiveMenu(null);
+                  setIsSearchOpen((prev) => !prev);
+                }}
+                className={`nav-glow-link transition-colors flex items-center justify-center ${
+                  isSearchOpen ? 'text-black drop-shadow-[0_0_8px_rgba(0,0,0,0.4)]' : 'hover:text-black'
+                }`}
+                aria-label="Tìm kiếm"
+                aria-expanded={isSearchOpen}
+              >
+                <MorphIcon icon={isSearchOpen ? X : SearchIcon} size={18} strokeWidth={2} />
+              </button>
+
+              <div className="relative group">
+                <Link
+                  to={useAuthStore.getState().user ? "/profile" : "/login"}
+                  className="nav-glow-link hover:text-black transition-colors block"
+                  aria-label="Tài khoản"
+                >
+                  <User className="w-[18px] h-[18px]" />
+                </Link>
+
+                {useAuthStore.getState().user && (
+                  <div className="absolute right-0 top-full pt-4 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                    <div className="w-56 bg-white border border-neutral-100 rounded-2xl shadow-xl overflow-hidden">
+                      <div className="px-5 py-3 border-b border-neutral-100 bg-neutral-50/80">
+                        <p className="text-[13px] font-semibold text-neutral-900 truncate">
+                          {useAuthStore.getState().user?.username}
+                        </p>
+                      </div>
+                      <div className="py-2">
+                        <Link to="/profile" className="block px-5 py-2.5 text-[13px] font-medium text-neutral-700 hover:bg-neutral-50 hover:text-black">
+                          Hồ sơ của tôi
+                        </Link>
+                        {useAuthStore.getState().user?.role !== 'customer' && (
+                          <Link to="/dashboard" className="block px-5 py-2.5 text-[13px] font-medium text-neutral-700 hover:bg-neutral-50 hover:text-black">
+                            Vào Dashboard
+                          </Link>
+                        )}
+                        <button
+                          onClick={() => {
+                            useAuthStore.getState().logout();
+                            window.location.href = '/login';
+                          }}
+                          className="block w-full text-left px-5 py-2.5 text-[13px] font-medium text-red-600 hover:bg-red-50"
+                        >
+                          Đăng xuất
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Mobile Right Controls (Visible only on mobile) */}
+          <div className="md:hidden flex items-center space-x-4">
             <button
               onClick={() => {
                 setActiveMenu(null);
                 setIsSearchOpen((prev) => !prev);
               }}
               className={`nav-glow-link transition-colors flex items-center justify-center ${
-                isSearchOpen ? 'text-[#22c55e]' : 'hover:text-[#22c55e]'
+                isSearchOpen ? 'text-black drop-shadow-[0_0_8px_rgba(0,0,0,0.4)]' : 'hover:text-black'
               }`}
               aria-label="Tìm kiếm"
               aria-expanded={isSearchOpen}
             >
               <MorphIcon icon={isSearchOpen ? X : SearchIcon} size={18} strokeWidth={2} />
             </button>
-            
             <div className="relative group">
               {useAuthStore((state) => state.user) ? (
                 <Link 
@@ -269,7 +464,7 @@ export function GlobalNav() {
               ) : (
                 <Link 
                   to="/login" 
-                  className="nav-glow-link hover:text-[#22c55e] transition-colors block p-1" 
+                  className="nav-glow-link hover:text-black transition-colors block p-1" 
                   aria-label="Tài khoản" 
                 >
                   <User className="w-[18px] h-[18px]" />
@@ -285,11 +480,11 @@ export function GlobalNav() {
                       </p>
                     </div>
                     <div className="py-2">
-                      <Link to="/profile" className="block px-5 py-2.5 text-[13px] font-medium text-neutral-700 hover:bg-neutral-50 hover:text-[#22c55e]">
+                      <Link to="/profile" className="block px-5 py-2.5 text-[13px] font-medium text-neutral-700 hover:bg-neutral-50 hover:text-black">
                         Hồ sơ của tôi
                       </Link>
                       {useAuthStore((state) => state.user)?.role !== 'customer' && (
-                        <Link to="/dashboard" className="block px-5 py-2.5 text-[13px] font-medium text-neutral-700 hover:bg-neutral-50 hover:text-[#22c55e]">
+                        <Link to="/dashboard" className="block px-5 py-2.5 text-[13px] font-medium text-neutral-700 hover:bg-neutral-50 hover:text-black">
                           Vào Dashboard
                         </Link>
                       )}
@@ -310,7 +505,7 @@ export function GlobalNav() {
 
             <button
               onClick={toggleMobileMenu}
-              className="md:hidden hover:text-[#22c55e] transition-colors focus:outline-none flex items-center justify-center p-1"
+              className="hover:text-black transition-colors focus:outline-none flex items-center justify-center p-1"
               aria-label="Toggle Navigation"
               aria-expanded={mobileMenuOpen}
             >
@@ -319,47 +514,91 @@ export function GlobalNav() {
           </div>
         </div>
 
-        {/* Mega Menu Dropdown */}
+        {/* Floating Compact Dropdown Popover */}
         <div
-          className={`hidden md:block absolute left-0 right-0 top-[52px] bg-white overflow-hidden transition-all duration-[400ms] ease-[cubic-bezier(0.4,0,0.2,1)] ${
-            activeMenu ? 'max-h-[500px] border-b border-neutral-200/60 opacity-100 shadow-xl' : 'max-h-0 border-transparent opacity-0'
+          className={`hidden md:block absolute left-1/2 -translate-x-1/2 top-[calc(100%+8px)] z-50 bg-white/95 backdrop-blur-2xl border border-neutral-200/80 rounded-2xl shadow-[0_25px_60px_rgba(0,0,0,0.14),0_6px_20px_rgba(0,0,0,0.06)] overflow-hidden transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] transform ${
+            activeMenu
+              ? 'opacity-100 scale-100 translate-y-0 pointer-events-auto'
+              : 'opacity-0 scale-95 -translate-y-2 pointer-events-none'
           }`}
           onMouseEnter={() => { if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current); }}
         >
-          <div 
-            className={`max-w-[1300px] mx-auto px-4 lg:px-8 py-10 transition-all duration-[400ms] ease-[cubic-bezier(0.4,0,0.2,1)] transform ${
-              activeMenu ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'
-            }`}
-          >
-            {displayMenu && (
-              <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-x-10 gap-y-10">
+          {displayMenu && (
+            <div className="p-6 max-w-[92vw]">
+              <div className="flex items-start divide-x divide-neutral-100 gap-6">
                 {getMegaMenuGroups(displayMenu).map((group, idx) => (
-                  <div key={idx}>
-                    <h4 className="text-[11px] font-bold text-neutral-400 uppercase tracking-widest mb-5">{group.title}</h4>
-                    <ul className={`transition-all ${group.title === 'THƯƠNG HIỆU' ? 'space-y-4' : 'space-y-3'}`}>
+                  <div key={idx} className={idx > 0 ? 'pl-6' : ''}>
+                    <div className="flex items-center gap-1.5 mb-3.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-neutral-400"></span>
+                      <h4 className="text-[11px] font-bold text-neutral-400 uppercase tracking-wider">
+                        {group.title}
+                      </h4>
+                    </div>
+                    <div className="flex items-stretch gap-3">
                       {group.links.map((link: string, linkIdx: number) => {
-                         const targetSlug = group.slugs && group.slugs[linkIdx] ? `/${group.slugs[linkIdx]}` : '/';
-                         return (
-                          <li key={linkIdx}>
-                            <Link
-                              to={targetSlug}
-                              onClick={() => setActiveMenu(null)}
-                              className={`block transition-colors duration-200 hover:text-[#22c55e] ${linkIdx === 0 && idx === 0 && displayMenu.isStatic
-                                ? 'text-2xl font-bold text-[#1d1d1f] mb-2'
-                                : 'text-sm font-semibold text-[#1d1d1f]'
-                                }`}
-                            >
-                              {link}
-                            </Link>
-                          </li>
+                        const supportRoutes = displayMenu?.id === 'support'
+                          ? [
+                              ['phone/iphone', 'laptop/macbook', 'tablet/ipad', 'watch/apple-watch', null],
+                              [null, null],
+                            ][idx]
+                          : undefined;
+                        const targetSlug = group.slugs?.[linkIdx] ?? supportRoutes?.[linkIdx] ?? null;
+                        const targetPath = targetSlug
+                          ? (targetSlug.startsWith('/') ? targetSlug : `/${targetSlug}`)
+                          : null;
+                        const isFeatured = link.includes('17 Pro') || link.includes('Mới Nhất') || link.includes('Ultra');
+
+                        return (
+                          <div
+                            key={linkIdx}
+                            className={`group relative flex flex-col items-center justify-between p-4 w-[138px] rounded-2xl border transition-all duration-200 ${
+                              isFeatured
+                                ? 'bg-gradient-to-b from-neutral-900 to-neutral-950 text-white border-neutral-800 hover:border-neutral-700 hover:shadow-xl hover:-translate-y-1'
+                                : 'bg-neutral-50/70 hover:bg-white text-neutral-800 border-neutral-200/60 hover:border-neutral-300 hover:shadow-lg hover:shadow-neutral-200/50 hover:-translate-y-1'
+                            }`}
+                          >
+                            {targetPath && (
+                              <Link
+                                to={targetPath}
+                                onClick={() => setActiveMenu(null)}
+                                aria-label={link}
+                                className="absolute inset-0 z-10 rounded-2xl"
+                              />
+                            )}
+                            {isFeatured && (
+                              <span className="absolute -top-2.5 px-2 py-0.5 bg-gradient-to-r from-amber-500 to-rose-500 text-[9px] font-bold text-white uppercase tracking-wider rounded-full shadow-sm">
+                                HOT 🔥
+                              </span>
+                            )}
+                            <div className="w-12 h-12 rounded-xl bg-white border border-neutral-200/80 flex items-center justify-center mb-2.5 shadow-sm transition-all duration-200 group-hover:scale-105 group-hover:shadow-md overflow-hidden p-1.5">
+                              {renderItemVisual(link, displayMenu.name, isFeatured)}
+                            </div>
+                            <div className="text-center w-full">
+                              <span className={`text-[12.5px] font-semibold block truncate ${
+                                isFeatured ? 'text-white' : 'text-neutral-900'
+                              }`}>
+                                {link}
+                              </span>
+                              {targetPath && (
+                                <span className={`text-[10.5px] font-medium flex items-center justify-center gap-0.5 mt-1 transition-colors ${
+                                isFeatured
+                                  ? 'text-neutral-400 group-hover:text-neutral-200'
+                                  : 'text-neutral-400 group-hover:text-black'
+                              }`}>
+                                Khám phá
+                                <ChevronRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+                                </span>
+                              )}
+                            </div>
+                          </div>
                         );
                       })}
-                    </ul>
+                    </div>
                   </div>
                 ))}
               </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
 
         {/* Mobile Navigation Drawer */}
@@ -379,7 +618,7 @@ export function GlobalNav() {
       {/* Backdrop overlay for Mega Menu */}
       {activeMenu && !isSearchOpen && (
         <div
-          className="fixed inset-0 bg-black/40 z-40 transition-opacity duration-300"
+          className="fixed inset-0 bg-black/25 backdrop-blur-[2px] z-40 transition-opacity duration-300"
           onClick={() => setActiveMenu(null)}
         />
       )}

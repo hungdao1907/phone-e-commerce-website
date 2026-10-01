@@ -1,1 +1,0 @@
-export { BrandHeroSection as default, BrandHeroSection } from '@/components/smartphone/BrandHeroSection';

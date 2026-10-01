@@ -73,6 +73,15 @@ export function TabletHeroSection({ config }: { config: TabletBrandConfig }) {
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
+      const target = event.target;
+      if (
+        target instanceof HTMLInputElement ||
+        target instanceof HTMLTextAreaElement ||
+        (target instanceof HTMLElement && target.isContentEditable)
+      ) {
+        return;
+      }
+
       if (event.key === 'ArrowLeft') paginate(-1);
       if (event.key === 'ArrowRight') paginate(1);
       if (event.key === ' ' && bannerCount > 1) {
@@ -177,7 +186,7 @@ export function TabletHeroSection({ config }: { config: TabletBrandConfig }) {
 
       <div className="hidden">
         {banners.map((banner) => (
-          <img key={banner.id} src={resolveBannerImage(banner.image)} alt="" />
+          <img key={banner.id} src={resolveBannerImage(banner)} alt="" />
         ))}
       </div>
 
@@ -203,7 +212,7 @@ export function TabletHeroSection({ config }: { config: TabletBrandConfig }) {
               className={`absolute inset-0 flex h-full w-full items-center justify-center ${currentBanner.link ? 'cursor-pointer' : 'cursor-default'}`}
             >
               <img
-                src={resolveBannerImage(currentBanner.image)}
+                src={resolveBannerImage(currentBanner)}
                 alt={currentBanner.title}
                 className="pointer-events-none h-full w-full select-none object-cover object-center"
                 loading="eager"

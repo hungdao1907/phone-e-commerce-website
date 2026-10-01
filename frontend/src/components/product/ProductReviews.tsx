@@ -86,7 +86,7 @@ export function ProductReviews({ productId, categorySlug }: { productId?: string
     checkEligibility();
   }, [productId, token]);
 
-  const fetchReviews = async (pageNum: number, rFilter: number, imgFilter: boolean, vpFilter: boolean, reset = false) => {
+  const fetchReviews = async (pageNum: number, rFilter: number, imgFilter = hasImageFilter, vpFilter = isVerifiedPurchaseFilter, reset = false) => {
     try {
       if (reset) setLoading(true);
       setError(false);

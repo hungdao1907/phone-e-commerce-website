@@ -3,10 +3,7 @@ import { useLenis } from 'lenis/react';
 import {
   BrandHeroSection,
   BrandFeaturedSection,
-  BrandExperienceSection,
   BrandAllProductsSection,
-  BrandWhySection,
-  BrandFinalCTASection,
 } from '@/components/smartphone';
 import type { BrandConfig, BrandModel } from '@/types/smartphone';
 import '@/css/smartphone.css';
@@ -43,19 +40,8 @@ export function SmartphoneCatalogPage({ config, products }: SmartphoneCatalogPag
         {/* SECTION 2: FLAGSHIP SPOTLIGHT (Bento grid highlighting the brand's top flagships) */}
         <BrandFeaturedSection config={config} products={products} />
 
-        {/* SECTION 3: BRAND INNOVATION & ECOSYSTEM (Core technological edge, AI, camera & performance) */}
-        {config.id.toLowerCase() !== 'iphone' && (
-          <BrandExperienceSection config={config} products={products} />
-        )}
-
-        {/* SECTION 4: ALL PRODUCTS CATALOG (Smart series tabs, live search, sort filters & luxury cards) */}
+        {/* SECTION 3: ALL PRODUCTS CATALOG (Smart series tabs, live search, sort filters & luxury cards) */}
         <BrandAllProductsSection config={config} products={products} />
-
-        {/* SECTION 5: WHY CHOOSE BRAND & STORE GUARANTEES (Editorial brand values and trust commitments) */}
-        <BrandWhySection config={config} />
-
-        {/* SECTION 6: GRAND FINALE CTA (Multi-device composition, store support & inquiry hotline) */}
-        <BrandFinalCTASection config={config} />
       </main>
     </div>
   );

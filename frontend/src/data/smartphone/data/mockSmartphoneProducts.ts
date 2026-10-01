@@ -1,4 +1,4 @@
-import type { BrandModel } from '../../../types/smartphone/types/smartphone';
+import type { BrandModel } from '@/types/smartphone';
 
 export const SMARTPHONE_PRODUCTS: BrandModel[] = [
   /* ─── Apple iPhone Products ─── */

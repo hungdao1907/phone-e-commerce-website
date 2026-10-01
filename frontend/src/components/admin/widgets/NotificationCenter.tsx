@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   X, Bell, ShoppingBag, AlertCircle, MessageSquare,
   CreditCard, UserPlus, CheckCheck, Loader2, PackageSearch,
+  type LucideIcon,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -19,7 +20,7 @@ import {
 } from '@/hooks/useNotifications';
 
 // ─── Icon map ──────────────────────────────────────────────────────────────
-const ICON_MAP: Record<string, React.ElementType> = {
+const ICON_MAP: Record<string, LucideIcon> = {
   ShoppingBag, AlertCircle, MessageSquare, CreditCard, UserPlus, Bell,
   CheckCircle2: Bell, Megaphone: Bell,
 };

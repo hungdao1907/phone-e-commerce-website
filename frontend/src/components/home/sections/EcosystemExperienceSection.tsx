@@ -534,7 +534,7 @@ export function EcosystemExperienceSection() {
   return (
     <section
       ref={containerRef}
-      className="ecosystem-experience-section relative overflow-hidden py-10 sm:py-12 lg:py-14 select-none border-t border-black/[0.04]"
+      className="ecosystem-experience-section relative overflow-hidden py-10 sm:py-12 lg:py-14 xl:py-16 select-none border-t border-black/[0.04]"
       aria-labelledby="ecosystem-section-title"
     >
       {/* Background Ambience Layer */}
@@ -802,7 +802,7 @@ export function EcosystemExperienceSection() {
                 })}
               </div>
 
-              {/* ── CENTRAL HERO PRODUCT & CONTEXTUAL CTA ── */}
+              {/* ── CENTRAL HERO PRODUCT ── */}
               {/* This ref is used to measure where the clone should land */}
               <div
                 ref={centralTargetRef}
@@ -822,7 +822,7 @@ export function EcosystemExperienceSection() {
                         y: 4,
                         transition: { duration: 0.22, ease: 'easeOut' },
                       }}
-                      className="flex flex-col items-center justify-center cursor-default"
+                      className="flex items-center justify-center cursor-default"
                     >
                       <div
                         ref={centralProductWrapRef}
@@ -836,53 +836,6 @@ export function EcosystemExperienceSection() {
                           className="ecosystem-product-img"
                         />
                       </div>
-
-                      {/* Central Hero Contextual Apple Ecosystem CTA Button */}
-                      <motion.div
-                        className="mt-4 sm:mt-5 pointer-events-auto"
-                        initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: 6 }}
-                        animate={{
-                          opacity: 1,
-                          y: 0,
-                          transition: {
-                            duration: isTransitioning ? 0.15 : 0.45,
-                            ease: ENTER_EASE,
-                            delay: isTransitioning ? 0 : 0.04,
-                          },
-                        }}
-                        exit={
-                          shouldReduceMotion
-                            ? { opacity: 0 }
-                            : {
-                                opacity: 0,
-                                y: -4,
-                                transition: { duration: 0.18, ease: 'easeOut' },
-                              }
-                        }
-                      >
-                        <Link
-                          to={activeData.route}
-                          className="group/eco-cta inline-flex items-center gap-2 rounded-full border border-black/[0.08] bg-white/90 backdrop-blur-md px-5 sm:px-6 py-2.5 sm:py-3 text-[13px] sm:text-sm font-semibold text-[#1d1d1f] shadow-[0_4px_16px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.04)] transition-all duration-200 hover:-translate-y-[1px] hover:scale-[1.02] hover:bg-white hover:shadow-[0_8px_24px_rgba(0,0,0,0.09)] active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black min-h-[44px]"
-                          aria-label={`${activeData.ctaLabel} - Hệ sinh thái Apple`}
-                        >
-                          <AnimatePresence mode="wait" initial={false}>
-                            <motion.span
-                              key={activeData.id}
-                              className="inline-flex items-center gap-1.5 whitespace-nowrap"
-                              initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: 6 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              exit={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: -6 }}
-                              transition={{ duration: shouldReduceMotion ? 0.15 : 0.25, ease: PREMIUM_EASE }}
-                            >
-                              <span>{activeData.ctaLabel}</span>
-                              <ArrowRight
-                                className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#1d1d1f] transition-transform duration-200 group-hover/eco-cta:translate-x-1"
-                                aria-hidden="true"
-                              />
-                            </motion.span>
-                          </AnimatePresence>
-                        </Link>
-                      </motion.div>
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -890,6 +843,40 @@ export function EcosystemExperienceSection() {
             </div>
           </motion.div>
         </div>
+
+        {/* ─── DEDICATED BOTTOM CTA BAR (COMPLETELY BELOW THE ENTIRE ORBIT & SECTION) ─── */}
+        <motion.div
+          className="mt-4 sm:mt-6 lg:mt-8 flex justify-center items-center z-30"
+          initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: 10 }}
+          animate={{
+            opacity: 1,
+            y: 0,
+            transition: { duration: 0.5, ease: ENTER_EASE, delay: 0.1 },
+          }}
+        >
+          <Link
+            to={activeData.route}
+            className="group/eco-cta inline-flex items-center gap-2.5 rounded-full border border-black/[0.08] bg-white/95 backdrop-blur-md px-7 sm:px-8 py-3 sm:py-3.5 text-sm sm:text-base font-semibold text-[#1d1d1f] shadow-[0_8px_30px_rgba(0,0,0,0.08),0_1px_3px_rgba(0,0,0,0.04)] transition-all duration-200 hover:-translate-y-0.5 hover:scale-[1.02] hover:bg-white hover:shadow-[0_12px_36px_rgba(0,0,0,0.12)] active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black min-h-[48px]"
+            aria-label={`${activeData.ctaLabel} - Hệ sinh thái Apple`}
+          >
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.span
+                key={activeData.id}
+                className="inline-flex items-center gap-2 whitespace-nowrap"
+                initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: -6 }}
+                transition={{ duration: shouldReduceMotion ? 0.15 : 0.25, ease: PREMIUM_EASE }}
+              >
+                <span>{activeData.ctaLabel}</span>
+                <ArrowRight
+                  className="w-4 h-4 text-[#1d1d1f] transition-transform duration-200 group-hover/eco-cta:translate-x-1"
+                  aria-hidden="true"
+                />
+              </motion.span>
+            </AnimatePresence>
+          </Link>
+        </motion.div>
 
         {/* MOBILE DOCKED STATUS CARD */}
         <div className="mt-8 lg:hidden">

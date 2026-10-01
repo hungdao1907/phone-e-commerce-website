@@ -20,7 +20,8 @@ type Feedback = { tone: 'success' | 'error'; message: string } | null;
 interface Banner {
   id: string;
   title: string;
-  image: string;
+  image: string | null;
+  publicUrl: string | null;
   link: string | null;
   position: string;
   sortOrder: number;
@@ -39,6 +40,7 @@ interface PositionGroup { label: string; options: readonly PositionOption[]; }
 interface BannerFormState {
   title: string;
   image: string;
+  publicUrl: string;
   position: string;
   sortOrder: number;
   isActive: boolean;
@@ -116,7 +118,7 @@ const STATUS_CONFIG: Record<BannerStatus, { label: string; className: string }> 
 };
 
 const createEmptyForm = (): BannerFormState => ({
-  title: '', image: '', position: 'home_hero', sortOrder: 0, isActive: true,
+  title: '', image: '', publicUrl: '', position: 'home_hero', sortOrder: 0, isActive: true,
   startDate: '', endDate: '', destinationType: 'none', destinationValue: '', link: '',
 });
 
@@ -175,6 +177,7 @@ export function Banners() {
   const [editingBanner, setEditingBanner] = useState<Banner | null>(null);
   const [previewBanner, setPreviewBanner] = useState<Banner | null>(null);
   const [bannerPendingDelete, setBannerPendingDelete] = useState<Banner | null>(null);
+  const [isDeleteAllModalOpen, setIsDeleteAllModalOpen] = useState(false);
   const [form, setForm] = useState<BannerFormState>(createEmptyForm);
   const [formError, setFormError] = useState('');
   const [feedback, setFeedback] = useState<Feedback>(null);
@@ -238,14 +241,14 @@ export function Banners() {
   useEffect(() => { void fetchBanners(); void fetchDestinationData(); }, [token]);
 
   useEffect(() => {
-    if (!isModalOpen && !previewBanner && !bannerPendingDelete) return undefined;
+    if (!isModalOpen && !previewBanner && !bannerPendingDelete && !isDeleteAllModalOpen) return undefined;
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key !== 'Escape' || isSubmitting) return;
-      setIsModalOpen(false); setPreviewBanner(null); setBannerPendingDelete(null);
+      setIsModalOpen(false); setPreviewBanner(null); setBannerPendingDelete(null); setIsDeleteAllModalOpen(false);
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [bannerPendingDelete, isModalOpen, isSubmitting, previewBanner]);
+  }, [bannerPendingDelete, isDeleteAllModalOpen, isModalOpen, isSubmitting, previewBanner]);
 
   const visibleBanners = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -384,9 +387,21 @@ export function Banners() {
 
   const openEdit = (banner: Banner) => {
     setEditingBanner(banner);
-    setForm({ title: banner.title, image: banner.image, position: banner.position, sortOrder: banner.sortOrder,
-      isActive: banner.isActive, startDate: toDateInputValue(banner.startDate), endDate: toDateInputValue(banner.endDate), ...inferDestination(banner.link) });
-    setFormError(''); setProductSearch(''); setPreviewMode('desktop'); setIsModalOpen(true);
+    setForm({
+      title: banner.title,
+      image: banner.image ?? '',
+      publicUrl: banner.publicUrl ?? '',
+      position: banner.position,
+      sortOrder: banner.sortOrder,
+      isActive: banner.isActive,
+      startDate: toDateInputValue(banner.startDate),
+      endDate: toDateInputValue(banner.endDate),
+      ...inferDestination(banner.link),
+    });
+    setFormError('');
+    setProductSearch('');
+    setPreviewMode('desktop');
+    setIsModalOpen(true);
   };
 
   const getFinalLink = () => {
@@ -441,38 +456,75 @@ export function Banners() {
     const finalLink = getFinalLink();
     const startDate = form.startDate ? new Date(form.startDate) : null;
     const endDate = form.endDate ? new Date(form.endDate) : null;
-    if (!form.title.trim() || !form.image || !form.position) {
-      setFormError('Vui lòng hoàn tất tiêu đề, hình ảnh và vị trí hiển thị.'); return;
+    const trimmedImage = form.image.trim();
+    const trimmedPublicUrl = form.publicUrl.trim();
+
+    if (!form.title.trim()) {
+      setFormError('Vui lòng nhập tiêu đề banner.');
+      return;
+    }
+    if (!form.position) {
+      setFormError('Vui lòng chọn vị trí hiển thị.');
+      return;
+    }
+    if (!trimmedImage && !trimmedPublicUrl) {
+      setFormError('Vui lòng tải ảnh lên hoặc nhập Public URL.');
+      return;
+    }
+    if (trimmedPublicUrl && !/^https?:\/\//i.test(trimmedPublicUrl)) {
+      setFormError('Public URL phải bắt đầu bằng http:// hoặc https://');
+      return;
     }
     if (form.destinationType !== 'none' && !finalLink) {
-      setFormError('Vui lòng chọn đích đến hoặc nhập URL tùy chỉnh.'); return;
+      setFormError('Vui lòng chọn đích đến hoặc nhập URL tùy chỉnh.');
+      return;
     }
     if (finalLink && !isValidCustomLink(finalLink)) {
-      setFormError('Đường dẫn phải bắt đầu bằng "/" hoặc là URL http(s) hợp lệ.'); return;
+      setFormError('Đường dẫn phải bắt đầu bằng "/" hoặc là URL http(s) hợp lệ.');
+      return;
     }
     if ((startDate && Number.isNaN(startDate.getTime())) || (endDate && Number.isNaN(endDate.getTime()))) {
-      setFormError('Thời gian chạy không hợp lệ.'); return;
+      setFormError('Thời gian chạy không hợp lệ.');
+      return;
     }
     if (startDate && endDate && endDate <= startDate) {
-      setFormError('Thời gian kết thúc phải sau thời gian bắt đầu.'); return;
+      setFormError('Thời gian kết thúc phải sau thời gian bắt đầu.');
+      return;
     }
 
-    setIsSubmitting(true); setFormError('');
+    setIsSubmitting(true);
+    setFormError('');
     try {
       const isEditing = Boolean(editingBanner);
-      const response = await fetch(isEditing ? `${API_BASE_URL}/api/banners/${editingBanner?.id}` : `${API_BASE_URL}/api/banners`, {
-        method: isEditing ? 'PUT' : 'POST',
-        headers: { 'Content-Type': 'application/json', ...authHeaders },
-        body: JSON.stringify({ title: form.title.trim(), image: form.image, link: finalLink || null, position: form.position,
-          sortOrder: form.sortOrder, isActive: form.isActive, startDate: form.startDate || null, endDate: form.endDate || null }),
-      });
+      const payload = {
+        title: form.title.trim(),
+        image: trimmedImage || null,
+        publicUrl: trimmedPublicUrl || null,
+        link: finalLink || null,
+        position: form.position,
+        sortOrder: form.sortOrder,
+        isActive: form.isActive,
+        startDate: form.startDate || null,
+        endDate: form.endDate || null,
+      };
+
+      const response = await fetch(
+        isEditing ? `${API_BASE_URL}/api/banners/${editingBanner?.id}` : `${API_BASE_URL}/api/banners`,
+        {
+          method: isEditing ? 'PUT' : 'POST',
+          headers: { 'Content-Type': 'application/json', ...authHeaders },
+          body: JSON.stringify(payload),
+        }
+      );
       if (!response.ok) throw new Error(await getErrorMessage(response, 'Không thể lưu banner.'));
       setIsModalOpen(false);
       setFeedback({ tone: 'success', message: isEditing ? 'Đã lưu thay đổi banner.' : 'Đã tạo banner mới.' });
       await fetchBanners();
     } catch (error) {
       setFormError(error instanceof Error ? error.message : 'Không thể lưu banner.');
-    } finally { setIsSubmitting(false); }
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleToggleBanner = async (banner: Banner) => {
@@ -549,6 +601,20 @@ export function Banners() {
     } finally { setIsSubmitting(false); }
   };
 
+  const deleteAllBanners = async () => {
+    setIsSubmitting(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/banners`, { method: 'DELETE', headers: authHeaders });
+      if (!response.ok) throw new Error(await getErrorMessage(response, 'Không thể xóa tất cả banner.'));
+      const data = (await response.json()) as { message?: string };
+      setBanners([]);
+      setIsDeleteAllModalOpen(false);
+      setFeedback({ tone: 'success', message: data.message || 'Đã xóa tất cả banner thành công.' });
+    } catch (error) {
+      setFeedback({ tone: 'error', message: error instanceof Error ? error.message : 'Không thể xóa tất cả banner.' });
+    } finally { setIsSubmitting(false); }
+  };
+
   const filteredProducts = products.filter((product) => product.name.toLowerCase().includes(productSearch.trim().toLowerCase())).slice(0, 6);
   const finalLink = getFinalLink();
 
@@ -560,9 +626,25 @@ export function Banners() {
           <h1 className="text-2xl font-bold tracking-tight text-white">Quản lý Banner</h1>
           <p className="mt-1 text-sm text-white/50">Quản lý và cập nhật hình ảnh quảng cáo trên website.</p>
         </div>
-        <button type="button" onClick={openCreate} className="inline-flex items-center justify-center gap-2 rounded-2xl bg-lime-400 px-5 py-2.5 text-sm font-bold text-black shadow-[0_12px_28px_rgba(163,230,53,0.2)] transition-all hover:bg-lime-300 hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-lime-300 cursor-pointer">
-          <Plus className="h-4 w-4" aria-hidden="true" /> Thêm Banner Mới
-        </button>
+        <div className="flex flex-wrap items-center gap-3">
+          {banners.length > 0 && (
+            <button
+              type="button"
+              onClick={() => setIsDeleteAllModalOpen(true)}
+              disabled={isSubmitting || isLoading}
+              className="inline-flex items-center justify-center gap-2 rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-2.5 text-sm font-bold text-red-300 transition-all hover:bg-red-500/20 hover:border-red-500/50 hover:text-red-200 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer"
+            >
+              <Trash2 className="h-4 w-4 text-red-400" aria-hidden="true" /> Xóa Tất Cả Banner
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={openCreate}
+            className="inline-flex items-center justify-center gap-2 rounded-2xl bg-lime-400 px-5 py-2.5 text-sm font-bold text-black shadow-[0_12px_28px_rgba(163,230,53,0.2)] transition-all hover:bg-lime-300 hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-lime-300 cursor-pointer"
+          >
+            <Plus className="h-4 w-4" aria-hidden="true" /> Thêm Banner Mới
+          </button>
+        </div>
       </header>
 
       <div className="relative z-30 grid gap-3 rounded-2xl border border-white/10 bg-black/30 p-3 backdrop-blur-md sm:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_220px_180px_180px]">
@@ -671,7 +753,7 @@ export function Banners() {
               className="flex-1 overflow-y-auto px-6 py-6 custom-scrollbar sm:px-8 sm:py-7 space-y-6 min-h-0"
             >
               {/* Section 1: Thông tin cơ bản & Hình ảnh */}
-              <FormSection title="1. Thông tin cơ bản & Hình ảnh" description="Tiêu đề quản trị, vị trí hiển thị và tệp ảnh banner tải lên.">
+              <FormSection title="1. Thông tin cơ bản & Hình ảnh" description="Tiêu đề quản trị, vị trí hiển thị và tệp ảnh banner tải lên hoặc Public URL.">
                 <div className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
@@ -697,12 +779,12 @@ export function Banners() {
                   </div>
 
                   <div>
-                    <FieldLabel htmlFor="banner-image" label="Tải ảnh banner lên" required hint="Khuyến nghị tỉ lệ 16:6, 21:9 hoặc 16:9 · tối đa 5MB." />
+                    <FieldLabel htmlFor="banner-image" label="Ảnh Banner" hint="Tải ảnh lên từ thiết bị (tối đa 5MB) hoặc dán Public URL bên dưới." />
                     <label
                       htmlFor="banner-image"
                       onDragOver={(event) => event.preventDefault()}
                       onDrop={handleImageDrop}
-                      className="group relative mt-2 flex min-h-40 cursor-pointer items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed border-white/20 bg-black/40 transition-all duration-200 hover:border-lime-400/80 hover:bg-black/60"
+                      className="group relative mt-2 flex min-h-36 cursor-pointer items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed border-white/20 bg-black/40 transition-all duration-200 hover:border-lime-400/80 hover:bg-black/60"
                     >
                       {form.image ? (
                         <>
@@ -747,16 +829,62 @@ export function Banners() {
                     {form.image && (
                       <div className="mt-2.5 flex items-center justify-between">
                         <span className="text-xs text-lime-400 font-medium truncate max-w-md">
-                          ✓ Đã tải lên ảnh thành công
+                          ✓ Đã tải lên ảnh local
                         </span>
                         <button
                           type="button"
                           onClick={() => setForm((current) => ({ ...current, image: '' }))}
                           className="text-xs font-semibold text-red-400 hover:text-red-300 transition-colors cursor-pointer"
                         >
-                          Xóa ảnh này
+                          Xóa ảnh tải lên
                         </button>
                       </div>
+                    )}
+                  </div>
+
+                  {/* Divider HOẶC */}
+                  <div className="relative my-3 flex items-center justify-center">
+                    <div className="absolute inset-0 flex items-center">
+                      <div className="w-full border-t border-white/10" />
+                    </div>
+                    <div className="relative bg-neutral-900/95 px-4 text-[11px] font-extrabold uppercase tracking-widest text-white/40">
+                      HOẶC
+                    </div>
+                  </div>
+
+                  {/* Public URL Input */}
+                  <div>
+                    <div className="flex items-center justify-between">
+                      <FieldLabel
+                        htmlFor="banner-public-url"
+                        label="Public URL ảnh"
+                        hint="Dán Public URL của ảnh từ Cloudinary hoặc CDN. Public URL sẽ được ưu tiên hiển thị so với ảnh tải lên."
+                      />
+                      {form.publicUrl && (
+                        <button
+                          type="button"
+                          onClick={() => setForm((current) => ({ ...current, publicUrl: '' }))}
+                          className="text-xs font-semibold text-amber-400 hover:text-amber-300 transition-colors cursor-pointer"
+                        >
+                          Xóa URL
+                        </button>
+                      )}
+                    </div>
+                    <div className="relative mt-1.5">
+                      <LinkIcon className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-white/40" />
+                      <input
+                        id="banner-public-url"
+                        type="url"
+                        value={form.publicUrl}
+                        onChange={(event) => setForm((current) => ({ ...current, publicUrl: event.target.value }))}
+                        className="form-input pl-10"
+                        placeholder="https://res.cloudinary.com/.../image/upload/.../banner.webp"
+                      />
+                    </div>
+                    {form.image.trim() && form.publicUrl.trim() && (
+                      <p className="mt-2 text-xs text-amber-300 font-medium flex items-center gap-1.5">
+                        <span>ℹ️</span> Public URL đang được ưu tiên. Xóa Public URL để xem lại ảnh tải lên.
+                      </p>
                     )}
                   </div>
 
@@ -798,13 +926,33 @@ export function Banners() {
                           previewMode === 'desktop' ? 'aspect-[21/9] sm:aspect-[16/6] w-full max-w-xl' : 'aspect-[9/16] w-48'
                         }`}
                       >
-                        {form.image ? (
+                        {form.publicUrl.trim() || form.image.trim() ? (
                           <img
-                            src={toImageUrl(form.image)}
+                            key={form.publicUrl.trim() || form.image.trim()}
+                            src={toImageUrl(form.publicUrl.trim() || form.image.trim())}
                             alt="Preview banner"
                             className="absolute inset-0 h-full w-full object-cover"
+                            onError={(e) => {
+                              const target = e.currentTarget;
+                              target.style.display = 'none';
+                              const parent = target.parentElement;
+                              if (parent) {
+                                const errorDiv = parent.querySelector('.preview-error-fallback');
+                                if (errorDiv) (errorDiv as HTMLElement).style.display = 'flex';
+                              }
+                            }}
                           />
-                        ) : (
+                        ) : null}
+
+                        <div
+                          className="preview-error-fallback absolute inset-0 hidden flex-col items-center justify-center gap-2 bg-black/80 p-4 text-center text-amber-300/90"
+                        >
+                          <ImageIcon className="h-8 w-8 text-amber-400/60" />
+                          <span className="text-xs font-semibold">Không thể tải ảnh xem trước.</span>
+                          <span className="text-[11px] text-white/40">Vui lòng kiểm tra lại URL hoặc kết nối mạng.</span>
+                        </div>
+
+                        {!form.publicUrl.trim() && !form.image.trim() && (
                           <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-white/30 p-4 text-center">
                             <ImageIcon className="h-9 w-9 text-white/20" />
                             <span className="text-xs font-medium">Chưa có ảnh banner</span>
@@ -1078,7 +1226,13 @@ export function Banners() {
               </div>
               <div className="p-6">
                 <div className="relative aspect-[16/6] overflow-hidden rounded-2xl border border-white/10 bg-black/40">
-                  <img src={toImageUrl(previewBanner.image)} alt={previewBanner.title} className="h-full w-full object-cover" />
+                  {previewBanner.publicUrl || previewBanner.image ? (
+                    <img src={toImageUrl(previewBanner.publicUrl || previewBanner.image || '')} alt={previewBanner.title} className="h-full w-full object-cover" />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center text-white/30">
+                      <ImageIcon className="h-10 w-10 text-white/20" />
+                    </div>
+                  )}
                   <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-5">
                     <p className="text-xs font-semibold text-lime-300">{getPositionLabel(previewBanner.position)}</p>
                     <p className="mt-1 text-sm text-white/75">{previewBanner.link || 'Không điều hướng'}</p>
@@ -1109,6 +1263,44 @@ export function Banners() {
                 <button type="button" disabled={isSubmitting} onClick={() => void deleteBanner()} className="inline-flex items-center gap-2 rounded-xl bg-red-500 px-5 py-2.5 text-sm font-bold text-white hover:bg-red-400 disabled:opacity-50 cursor-pointer">
                   {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
                   Xóa Banner
+                </button>
+              </div>
+            </div>
+          </ModalShell>
+        )}
+      </AnimatePresence>
+
+      {/* Delete All Confirmation Modal */}
+      <AnimatePresence>
+        {isDeleteAllModalOpen && (
+          <ModalShell onClose={() => !isSubmitting && setIsDeleteAllModalOpen(false)} maxWidth="max-w-md" className="max-h-[90vh]">
+            <div role="alertdialog" aria-modal="true" aria-labelledby="delete-all-banners-title" className="w-full rounded-2xl sm:rounded-3xl border border-red-500/30 bg-neutral-950 p-6 shadow-2xl backdrop-blur-2xl">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-red-500/15 text-red-400 border border-red-500/30 shadow-[0_0_20px_rgba(239,68,68,0.2)]">
+                <Trash2 className="h-6 w-6" />
+              </div>
+              <h2 id="delete-all-banners-title" className="mt-4 text-xl font-bold text-white">
+                Xóa tất cả {banners.length} banner?
+              </h2>
+              <p className="mt-2 text-sm leading-6 text-white/60">
+                Bạn có chắc chắn muốn xóa toàn bộ <span className="font-semibold text-red-300">{banners.length} banner</span> hiện có? Mọi banner trên tất cả các vị trí storefront sẽ bị xóa vĩnh viễn khỏi hệ thống. Hành động này không thể hoàn tác.
+              </p>
+              <div className="mt-6 flex justify-end gap-3">
+                <button
+                  type="button"
+                  disabled={isSubmitting}
+                  onClick={() => setIsDeleteAllModalOpen(false)}
+                  className="rounded-xl px-4 py-2.5 text-sm font-semibold text-white/70 hover:bg-white/10 hover:text-white border border-white/10 cursor-pointer disabled:opacity-40"
+                >
+                  Hủy Bỏ
+                </button>
+                <button
+                  type="button"
+                  disabled={isSubmitting}
+                  onClick={() => void deleteAllBanners()}
+                  className="inline-flex items-center gap-2 rounded-xl bg-red-600 px-5 py-2.5 text-sm font-bold text-white hover:bg-red-500 shadow-[0_0_20px_rgba(239,68,68,0.4)] disabled:opacity-50 cursor-pointer active:scale-95 transition-all"
+                >
+                  {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
+                  {isSubmitting ? 'Đang xóa...' : 'Xác Nhận Xóa Tất Cả'}
                 </button>
               </div>
             </div>
@@ -1689,7 +1881,13 @@ function BannerRow({ banner, index, canMoveUp, canMoveDown, onPreview, onEdit, o
       className="group grid gap-4 rounded-3xl border border-white/10 bg-black/40 p-4 transition-all duration-200 hover:-translate-y-0.5 hover:border-lime-400/30 hover:bg-white/[0.045] lg:grid-cols-[220px_minmax(0,1fr)_auto] lg:items-center"
     >
       <div className="relative aspect-[16/6] overflow-hidden rounded-2xl border border-white/10 bg-black/30">
-        <img src={toImageUrl(banner.image)} alt={banner.title} className="h-full w-full object-cover" />
+        {banner.publicUrl || banner.image ? (
+          <img src={toImageUrl(banner.publicUrl || banner.image || '')} alt={banner.title} className="h-full w-full object-cover" />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center text-white/30">
+            <ImageIcon className="h-8 w-8 text-white/20" />
+          </div>
+        )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/35 to-transparent" />
       </div>
       <div className="min-w-0">

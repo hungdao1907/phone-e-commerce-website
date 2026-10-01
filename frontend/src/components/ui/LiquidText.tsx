@@ -115,11 +115,11 @@ const Texts: React.FC<Pick<MorphingTextProps, "texts" | "morphTime" | "cooldownT
   return (
     <>
       <span
-        className="absolute inset-0 flex items-center justify-center whitespace-nowrap text-center text-white"
+        className="absolute inset-0 flex items-center justify-center whitespace-nowrap text-center text-inherit"
         ref={text1Ref}
       />
       <span
-        className="absolute inset-0 flex items-center justify-center whitespace-nowrap text-center text-white"
+        className="absolute inset-0 flex items-center justify-center whitespace-nowrap text-center text-inherit"
         ref={text2Ref}
       />
     </>
@@ -152,7 +152,7 @@ const MorphingText: React.FC<MorphingTextProps> = ({
 }) => (
   <div
     className={cn(
-      "relative mx-auto flex h-14 sm:h-16 md:h-20 lg:h-24 w-full max-w-screen-md items-center justify-center text-center font-sans text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-[76px] font-bold leading-none text-white whitespace-nowrap select-none [filter:url(#threshold)_blur(0.6px)]",
+      "relative mx-auto flex h-14 sm:h-16 md:h-20 lg:h-24 w-full max-w-screen-md items-center justify-center text-center font-sans text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-[76px] font-bold leading-none text-neutral-900 whitespace-nowrap select-none [filter:url(#threshold)_blur(0.6px)]",
       className,
     )}
   >

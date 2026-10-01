@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useAuthStore } from '@/store/authStore';
-import { MessageSquareWarning, Loader2, AlertCircle, ChevronRight, CheckCircle, Clock, XCircle } from 'lucide-react';
+import { MessageSquareWarning, Loader2, AlertCircle, ChevronRight, CheckCircle, Clock, XCircle, type LucideIcon } from 'lucide-react';
 import { EmptyState } from './EmptyState';
 
-const STATUS_MAP: Record<string, { label: string, color: string, icon: React.ElementType, bg: string }> = {
+const STATUS_MAP: Record<string, { label: string, color: string, icon: LucideIcon, bg: string }> = {
   PENDING: { label: 'Chờ xử lý', color: 'text-orange-600', bg: 'bg-orange-50 border-orange-200', icon: Clock },
   PROCESSING: { label: 'Đang xử lý', color: 'text-blue-600', bg: 'bg-blue-50 border-blue-200', icon: Loader2 },
   RESOLVED: { label: 'Đã giải quyết', color: 'text-emerald-600', bg: 'bg-emerald-50 border-emerald-200', icon: CheckCircle },

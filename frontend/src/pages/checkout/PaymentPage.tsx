@@ -83,7 +83,7 @@ export function PaymentPage() {
       shippingAddress: finalAddress,
       shippingPhone: deliveryInfo.phone,
       shippingFee: 0, 
-      promoCode: appliedPromo?.code,
+      promoCode: appliedPromo?.name,
       note: deliveryInfo.note || '',
       estimatedDelivery: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString()
     };

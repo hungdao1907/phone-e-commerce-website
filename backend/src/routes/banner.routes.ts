@@ -11,7 +11,8 @@ type BannerPayload = Record<string, unknown>;
 
 type BannerWriteData = {
   title: string;
-  image: string;
+  image: string | null;
+  publicUrl: string | null;
   link: string | null;
   position: string;
   sortOrder: number;
@@ -43,13 +44,36 @@ function requiredText(value: unknown, field: string): string {
   return value.trim();
 }
 
-function sanitizeBannerImage(value: unknown, field: string): string {
-  const text = requiredText(value, field);
-  const match = text.match(/^https?:\/\/[^/]+(\/uploads\/.+)$/i);
+function optionalBannerImage(value: unknown): string | null {
+  if (value === null || value === undefined || value === '') return null;
+  if (typeof value !== 'string') {
+    throw new BannerValidationError('Đường dẫn ảnh phải là chuỗi hợp lệ.');
+  }
+
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+
+  const match = trimmed.match(/^https?:\/\/[^/]+(\/uploads\/.+)$/i);
   if (match) {
     return match[1];
   }
-  return text;
+  return trimmed;
+}
+
+function optionalPublicUrl(value: unknown): string | null {
+  if (value === null || value === undefined || value === '') return null;
+  if (typeof value !== 'string') {
+    throw new BannerValidationError('Public URL phải là chuỗi hợp lệ.');
+  }
+
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+
+  if (!/^https?:\/\//i.test(trimmed)) {
+    throw new BannerValidationError('Public URL phải bắt đầu bằng http:// hoặc https://');
+  }
+
+  return trimmed;
 }
 
 function optionalLink(value: unknown): string | null {
@@ -99,7 +123,17 @@ function activeState(value: unknown): boolean {
 
 function parseBannerPayload(payload: BannerPayload, existing?: Banner): BannerWriteData {
   const title = requiredText(readValue(payload, 'title', existing?.title), 'Tiêu đề');
-  const image = sanitizeBannerImage(readValue(payload, 'image', existing?.image), 'Hình ảnh');
+
+  const rawImage = readValue(payload, 'image', existing?.image ?? null);
+  const image = optionalBannerImage(rawImage);
+
+  const rawPublicUrl = readValue(payload, 'publicUrl', existing?.publicUrl ?? null);
+  const publicUrl = optionalPublicUrl(rawPublicUrl);
+
+  if (!image && !publicUrl) {
+    throw new BannerValidationError('Banner phải có ảnh tải lên hoặc Public URL.');
+  }
+
   const position = requiredText(readValue(payload, 'position', existing?.position), 'Vị trí hiển thị');
   const link = optionalLink(readValue(payload, 'link', existing?.link ?? null));
   const nextSortOrder = sortOrder(readValue(payload, 'sortOrder', existing?.sortOrder ?? 0));
@@ -114,6 +148,7 @@ function parseBannerPayload(payload: BannerPayload, existing?: Banner): BannerWr
   return {
     title,
     image,
+    publicUrl,
     link,
     position,
     sortOrder: nextSortOrder,
@@ -349,6 +384,24 @@ router.patch('/:id/status', authenticateToken, async (req, res) => {
     return res.status(message === 'Không tìm thấy banner.' ? 404 : 500).json({ message });
   }
 });
+
+const handleDeleteAllBanners = async (_req: express.Request, res: express.Response) => {
+  try {
+    const result = await prisma.banner.deleteMany({});
+    return res.json({
+      success: true,
+      message: `Đã xóa tất cả ${result.count} banner thành công.`,
+      count: result.count,
+      deletedCount: result.count,
+    });
+  } catch (error) {
+    console.error('Error deleting all banners:', error);
+    return res.status(500).json({ message: 'Lỗi server khi xóa tất cả banner.' });
+  }
+};
+
+router.delete('/all', authenticateToken, handleDeleteAllBanners);
+router.delete('/', authenticateToken, handleDeleteAllBanners);
 
 router.delete('/:id', authenticateToken, async (req, res) => {
   try {

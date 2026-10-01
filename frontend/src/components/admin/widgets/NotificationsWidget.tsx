@@ -1,12 +1,12 @@
 import React from 'react';
 import { motion, type Transition } from 'framer-motion';
-import { ShoppingBag, AlertCircle, MessageSquare, CreditCard, UserPlus, Bell, ArrowUpRight } from 'lucide-react';
+import { ShoppingBag, AlertCircle, MessageSquare, CreditCard, UserPlus, Bell, ArrowUpRight, type LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { NOTIFICATION_TYPE_CONFIG, type Notification } from '@/data/notifications';
 import { useTopNotifications } from '@/hooks/useNotifications';
 
 // Icon map
-const ICON_MAP: Record<string, React.ElementType> = {
+const ICON_MAP: Record<string, LucideIcon> = {
   ShoppingBag, AlertCircle, MessageSquare, CreditCard, UserPlus, Bell,
   CheckCircle2: Bell, Megaphone: Bell, // fallbacks
 };

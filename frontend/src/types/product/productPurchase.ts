@@ -43,7 +43,7 @@ export interface PurchaseProduct {
   galleryImages: string[];
   colors: PurchaseProductColor[];
   storageOptions: PurchaseProductOption[];
-  specifications: ProductSpecificationGroup[];
+  specifications: ProductSpecificationGroup[] | ProductSpecification[];
   variants: ProductVariant[];
   ratingAverage?: number;
   reviewCount?: number;

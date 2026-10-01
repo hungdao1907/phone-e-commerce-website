@@ -1,5 +1,5 @@
 import { Camera, Sparkles, RefreshCw, ShieldCheck } from 'lucide-react';
-import type { BrandConfig, BrandProductGroupDefinition, BrandPillar } from '../../../types/smartphone/types/index';
+import type { BrandConfig, BrandProductGroupDefinition, BrandPillar } from '@/types/smartphone';
 
 /* ─── Product Group Definitions ─── */
 const OPPO_PRODUCT_GROUPS: BrandProductGroupDefinition[] = [

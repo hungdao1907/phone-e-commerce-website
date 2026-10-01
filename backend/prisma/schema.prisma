@@ -289,6 +289,7 @@ model Banner {
   id        String    @id @default(uuid())
   title     String
   image     String?
+  publicUrl String?
   link      String?
   position  String
   sortOrder Int       @default(0)

@@ -162,7 +162,7 @@ export function FeaturedProductsSection() {
 
   return (
     <section
-      className="featured-products-section overflow-hidden bg-[#f5f5f7] py-20 sm:py-24 lg:py-28 xl:py-32"
+      className="featured-products-section overflow-hidden bg-white py-20 sm:py-24 lg:py-28 xl:py-32"
       aria-labelledby="featured-products-title"
     >
       <div className="mx-auto max-w-[1440px] px-5 sm:px-8 lg:px-12 xl:px-16">

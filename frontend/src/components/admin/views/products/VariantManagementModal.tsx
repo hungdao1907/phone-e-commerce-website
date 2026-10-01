@@ -40,6 +40,7 @@ export function VariantManagementModal({ product, onClose, onSaved }: VariantMan
         status: product.status,
         specifications: product.specifications,
         variants: variants.map(v => ({
+          id: v.id,
           sku: v.sku,
           price: Number(v.price),
           salePrice: v.salePrice ? Number(v.salePrice) : null,

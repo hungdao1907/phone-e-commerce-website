@@ -2,11 +2,8 @@ import { useEffect, useState, type CSSProperties } from 'react';
 import { getTabletBrandConfig, getTabletProductsByBrand } from '../../data/tablet/data/index';
 import {
   TabletAllProductsSection,
-  TabletBrandExperienceSection,
   TabletFeaturedProductsSection,
-  TabletFinalCTASection,
   TabletHeroSection,
-  TabletWhyBrandSection,
 } from '../../components/tablet/sections/index';
 import type { TabletBrandId, TabletModel } from '../../types/tablet/types/index';
 import '@/css/tablet.css';
@@ -59,16 +56,37 @@ export function TabletPage({ brand }: TabletPageProps) {
 
               // 2. Specifications
               const getSpec = (keyword: string) => {
-                if (!ap.specifications) return '';
-                if (ap.specifications.length > 0 && ap.specifications[0].title !== undefined) {
-                  for (const group of ap.specifications) {
-                    const item = group.items?.find((i: any) => (i.label || '').toLowerCase().includes(keyword));
-                    if (item) return item.value;
+                if (!ap.specifications || !Array.isArray(ap.specifications)) return '';
+                const kw = keyword.toLowerCase();
+
+                // Check Hùng's grouped specifications first (group.items)
+                for (const group of ap.specifications) {
+                  if (!group || typeof group !== 'object') continue;
+                  if (Array.isArray(group.items)) {
+                    const item = group.items.find((i: any) => {
+                      const itemLabel = (i?.label || i?.name || i?.key || '').toLowerCase();
+                      return itemLabel.includes(kw);
+                    });
+                    if (item && item.value !== undefined && item.value !== null) return String(item.value);
                   }
-                  return '';
                 }
-                const spec = ap.specifications.find((s: any) => (s.key || s.label || '').toLowerCase().includes(keyword));
-                return spec ? spec.value : '';
+
+                // Check flat specifications (key/label/name) or group title fallback
+                for (const s of ap.specifications) {
+                  if (!s || typeof s !== 'object') continue;
+                  const keyStr = (s.key || s.label || s.name || '').toLowerCase();
+                  if (keyStr.includes(kw) && s.value !== undefined && s.value !== null) {
+                    return String(s.value);
+                  }
+                  if (Array.isArray(s.items)) {
+                    const groupTitle = (s.title || s.group || '').toLowerCase();
+                    if (groupTitle.includes(kw)) {
+                      const firstVal = s.items.find((i: any) => i?.value !== undefined && i?.value !== null)?.value;
+                      if (firstVal !== undefined && firstVal !== null) return String(firstVal);
+                    }
+                  }
+                }
+                return '';
               };
 
               // 3. Colors
@@ -157,9 +175,6 @@ export function TabletPage({ brand }: TabletPageProps) {
         <TabletHeroSection config={config} />
         <TabletFeaturedProductsSection config={config} products={products} />
         <TabletAllProductsSection config={config} products={products} />
-        <TabletBrandExperienceSection config={config} products={products} />
-        <TabletWhyBrandSection config={config} />
-        <TabletFinalCTASection config={config} />
       </main>
     </div>
   );

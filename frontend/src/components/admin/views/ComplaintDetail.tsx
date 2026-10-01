@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { useAuthStore } from '@/store/authStore';
-import { ArrowLeft, MessageSquareWarning, Package, Clock, CheckCircle, XCircle, AlertTriangle, Send, Loader2 } from 'lucide-react';
+import { ArrowLeft, MessageSquareWarning, Package, Clock, CheckCircle, XCircle, AlertTriangle, Send, Loader2, type LucideIcon } from 'lucide-react';
 import { motion } from 'framer-motion';
 
-const STATUS_MAP: Record<string, { label: string, color: string, bg: string, icon: React.ElementType }> = {
+const STATUS_MAP: Record<string, { label: string, color: string, bg: string, icon: LucideIcon }> = {
   PENDING: { label: 'Chờ xử lý', color: 'text-orange-400', bg: 'bg-orange-400/10 border-orange-400/20', icon: Clock },
   PROCESSING: { label: 'Đang xử lý', color: 'text-blue-400', bg: 'bg-blue-400/10 border-blue-400/20', icon: AlertTriangle },
   RESOLVED: { label: 'Đã giải quyết', color: 'text-emerald-400', bg: 'bg-emerald-400/10 border-emerald-400/20', icon: CheckCircle },

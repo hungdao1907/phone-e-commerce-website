@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Monitor, Cpu, HardDrive, Battery, ShoppingBag } from 'lucide-react';
 import { useCartStore } from '../../store/useCartStore';
 import { useAppStore } from '../../store/useAppStore';
-import type { WatchBrandModel } from '@/types/watch/types';
+import type { WatchBrandModel } from '@/types/watch/brand/types/index';
 
 interface WatchBrandProductCardProps {
   key?: string | number;

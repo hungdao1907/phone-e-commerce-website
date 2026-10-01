@@ -14,6 +14,7 @@ const SPEC_MAPPINGS: Record<string, string> = {
   'dung lượng lưu trữ': 'storage',
   'dung lượng': 'storage',
   'rom': 'storage',
+  'bộ nhớ trong': 'storage',
   
   // CPU
   'cpu': 'cpu',
@@ -31,6 +32,7 @@ const SPEC_MAPPINGS: Record<string, string> = {
   // Color
   'màu sắc': 'colors',
   'color': 'colors',
+  'màu': 'colors',
 
   // OS
   'hệ điều hành': 'os',
@@ -39,6 +41,20 @@ const SPEC_MAPPINGS: Record<string, string> = {
   // Camera
   'camera': 'camera',
   'máy ảnh': 'camera',
+
+  // Size (Watch / Wearables / Displays)
+  'kích thước': 'sizes',
+  'size': 'sizes',
+  'kích thước mặt': 'sizes',
+
+  // Connectivity (Watch / Wearables / Tech)
+  'kết nối': 'connectivities',
+  'connectivity': 'connectivities',
+
+  // Material (Watch / Chassis / Bands)
+  'chất liệu': 'materials',
+  'material': 'materials',
+  'chất liệu vỏ': 'materials',
 };
 
 /**
@@ -46,7 +62,7 @@ const SPEC_MAPPINGS: Record<string, string> = {
  */
 export function normalizeKey(key: string): string {
   const lowerKey = key.trim().toLowerCase();
-  return SPEC_MAPPINGS[lowerKey] || lowerKey; // return mapped or fallback to lowercase
+  return SPEC_MAPPINGS[lowerKey] || lowerKey;
 }
 
 /**
@@ -142,7 +158,10 @@ export function extractFiltersFromProducts(products: any[]) {
     screenSize: new Set(),
     colors: new Set(),
     os: new Set(),
-    camera: new Set()
+    camera: new Set(),
+    sizes: new Set(),
+    connectivities: new Set(),
+    materials: new Set(),
   };
 
   // Map to track: shortValue -> set of original raw values (for backend filtering)
@@ -153,13 +172,16 @@ export function extractFiltersFromProducts(products: any[]) {
   const colorCodesMap: Record<string, string> = {};
 
   for (const product of products) {
-    if (product.brand) filters.brands.add(product.brand);
+    if (product.brand) filters.brands.add(product.brand.trim());
 
     // Extract from specifications
     if (Array.isArray(product.specifications)) {
       for (const spec of product.specifications) {
-        if (!spec.key || !spec.value) continue;
-        const normKey = normalizeKey(spec.key);
+        if (!spec || typeof spec !== 'object') continue;
+        const key = spec.key || spec.label || spec.name;
+        const value = spec.value;
+        if (!key || !value || typeof value !== 'string') continue;
+        const normKey = normalizeKey(key);
         
         // Add SHORTENED value to corresponding filter set
         if (filters[normKey]) {
@@ -174,7 +196,7 @@ export function extractFiltersFromProducts(products: any[]) {
       for (const variant of product.variants) {
         // Price Range
         const price = variant.salePrice || variant.price;
-        if (price > 0) {
+        if (price && price > 0) {
           if (price < minPrice) minPrice = price;
           if (price > maxPrice) maxPrice = price;
         }
@@ -182,10 +204,9 @@ export function extractFiltersFromProducts(products: any[]) {
         // Attributes
         if (variant.attributes && typeof variant.attributes === 'object') {
           for (const [key, value] of Object.entries(variant.attributes)) {
-            if (!value) continue;
+            if (!value || typeof value !== 'string') continue;
             const normKey = normalizeKey(key);
             if (filters[normKey]) {
-              // Storage and colors from variants don't need shortening (already short values like "128GB", "Đen")
               filters[normKey].add((value as string).trim());
             }
           }
@@ -202,7 +223,7 @@ export function extractFiltersFromProducts(products: any[]) {
     }
   }
 
-  // Convert sets to arrays
+  // Convert sets to sorted arrays
   return {
     brands: Array.from(filters.brands).sort(),
     ram: Array.from(filters.ram).sort(),
@@ -226,6 +247,9 @@ export function extractFiltersFromProducts(products: any[]) {
       const numB = parseInt(b) || 0;
       return numA - numB;
     }),
+    sizes: Array.from(filters.sizes).sort(),
+    connectivities: Array.from(filters.connectivities).sort(),
+    materials: Array.from(filters.materials).sort(),
     priceRange: {
       min: minPrice === Infinity ? 0 : minPrice,
       max: maxPrice
@@ -259,9 +283,12 @@ export function extractAdminFiltersFromProducts(products: any[]) {
     // Extract from specifications
     if (Array.isArray(product.specifications)) {
       for (const spec of product.specifications) {
-        if (!spec.key || !spec.value) continue;
-        const normKey = normalizeKey(spec.key);
-        incrementCount(`spec_${normKey}`, spec.value.trim());
+        if (!spec || typeof spec !== 'object') continue;
+        const key = spec.key || spec.label || spec.name;
+        const value = spec.value;
+        if (!key || !value || typeof value !== 'string') continue;
+        const normKey = normalizeKey(key);
+        incrementCount(`spec_${normKey}`, value.trim());
       }
     }
 
@@ -277,9 +304,9 @@ export function extractAdminFiltersFromProducts(products: any[]) {
 
         if (variant.attributes && typeof variant.attributes === 'object') {
           for (const [key, value] of Object.entries(variant.attributes)) {
-            if (!value) continue;
+            if (!value || typeof value !== 'string') continue;
             const normKey = normalizeKey(key);
-            incrementCount(`attr_${normKey}`, (value as string).trim());
+            incrementCount(`attr_${normKey}`, value.trim());
           }
         }
       }

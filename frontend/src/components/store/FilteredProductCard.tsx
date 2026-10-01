@@ -147,6 +147,7 @@ export function FilteredProductCard({ product, categorySlug }: FilteredProductCa
     }
   };
 
+
   const productUrl = `/product/${product.slug || product.id}`;
   const accentColor = '#6366f1';
 
