@@ -23,6 +23,18 @@ function readIsActive(value: unknown): boolean | null {
   return typeof value === 'boolean' ? value : null;
 }
 
+async function applyOrder(tx: Omit<Prisma.TransactionClient, never>, list: { id: string; sortOrder: number }[]) {
+  for (let i = 0; i < list.length; i++) {
+    if (list[i].sortOrder !== i + 1) {
+      await tx.homeFeaturedProduct.update({
+        where: { id: list[i].id },
+        data: { sortOrder: i + 1 },
+      });
+      list[i].sortOrder = i + 1;
+    }
+  }
+}
+
 // Public storefront selection: only active entries with active canonical products.
 router.get('/', async (_req, res) => {
   try {
@@ -32,7 +44,7 @@ router.get('/', async (_req, res) => {
         product: { status: 'active' },
       },
       include: productInclude,
-      orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
+      orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }, { id: 'asc' }],
     });
 
     return res.json({ featuredProducts });
@@ -47,7 +59,7 @@ router.get('/admin', authenticateToken, async (_req, res) => {
   try {
     const featuredProducts = await prisma.homeFeaturedProduct.findMany({
       include: productInclude,
-      orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
+      orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }, { id: 'asc' }],
     });
 
     return res.json({ featuredProducts });
@@ -80,24 +92,26 @@ router.post('/admin', authenticateToken, async (req, res) => {
         const existing = await tx.homeFeaturedProduct.findUnique({ where: { productId } });
         if (existing) throw new Error('DUPLICATE_PRODUCT');
 
-        const totalCount = await tx.homeFeaturedProduct.count();
-        const maxAllowed = totalCount + 1;
+        const all = await tx.homeFeaturedProduct.findMany({
+          orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }, { id: 'asc' }],
+          select: { id: true, sortOrder: true },
+        });
 
+        const maxAllowed = all.length + 1;
         if (requestedPosition === null || requestedPosition < 1 || requestedPosition > maxAllowed) {
           requestedPosition = maxAllowed;
         }
 
-        if (requestedPosition < maxAllowed) {
-          await tx.homeFeaturedProduct.updateMany({
-            where: { sortOrder: { gte: requestedPosition } },
-            data: { sortOrder: { increment: 1 } },
-          });
-        }
-
-        return tx.homeFeaturedProduct.create({
-          data: { productId, sortOrder: requestedPosition, isActive },
+        const created = await tx.homeFeaturedProduct.create({
+          data: { productId, sortOrder: 999999, isActive },
           include: productInclude,
         });
+
+        all.splice(requestedPosition - 1, 0, { id: created.id, sortOrder: 999999 });
+        await applyOrder(tx, all);
+
+        created.sortOrder = requestedPosition;
+        return created;
       });
       return res.status(201).json({ message: 'Da them san pham noi bat.', featuredProduct });
     } catch (e: any) {
@@ -145,36 +159,31 @@ router.put('/admin/:id', authenticateToken, async (req, res) => {
       const existing = await tx.homeFeaturedProduct.findUnique({ where: { id } });
       if (!existing) throw new Error('NOT_FOUND');
 
-      const dataToUpdate: any = {};
-      if (isActive !== null) dataToUpdate.isActive = isActive;
-
-      if (requestedPosition !== null && requestedPosition !== existing.sortOrder) {
-        const totalCount = await tx.homeFeaturedProduct.count();
-        let safePosition = requestedPosition;
-        if (safePosition > totalCount) safePosition = totalCount;
-
-        const oldPosition = existing.sortOrder;
-        const newPosition = safePosition;
-
-        if (oldPosition < newPosition) {
-          await tx.homeFeaturedProduct.updateMany({
-            where: { sortOrder: { gt: oldPosition, lte: newPosition } },
-            data: { sortOrder: { decrement: 1 } },
-          });
-        } else if (oldPosition > newPosition) {
-          await tx.homeFeaturedProduct.updateMany({
-            where: { sortOrder: { gte: newPosition, lt: oldPosition } },
-            data: { sortOrder: { increment: 1 } },
-          });
-        }
-        dataToUpdate.sortOrder = newPosition;
-      }
-
-      return tx.homeFeaturedProduct.update({
+      let updated = await tx.homeFeaturedProduct.update({
         where: { id },
-        data: dataToUpdate,
+        data: isActive !== null ? { isActive } : {},
         include: productInclude,
       });
+
+      if (requestedPosition !== null && requestedPosition !== existing.sortOrder) {
+        const all = await tx.homeFeaturedProduct.findMany({
+          orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }, { id: 'asc' }],
+          select: { id: true, sortOrder: true },
+        });
+
+        const targetIndex = all.findIndex((x) => x.id === id);
+        if (targetIndex > -1) {
+          const [targetItem] = all.splice(targetIndex, 1);
+          let safePosition = requestedPosition;
+          if (safePosition > all.length + 1) safePosition = all.length + 1;
+
+          all.splice(safePosition - 1, 0, targetItem);
+          await applyOrder(tx, all);
+          updated.sortOrder = safePosition;
+        }
+      }
+
+      return updated;
     });
 
     return res.json({ message: 'Da cap nhat san pham noi bat.', featuredProduct });
@@ -198,10 +207,11 @@ router.delete('/admin/:id', authenticateToken, async (req, res) => {
 
       await tx.homeFeaturedProduct.delete({ where: { id } });
       
-      await tx.homeFeaturedProduct.updateMany({
-        where: { sortOrder: { gt: existing.sortOrder } },
-        data: { sortOrder: { decrement: 1 } },
+      const all = await tx.homeFeaturedProduct.findMany({
+        orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }, { id: 'asc' }],
+        select: { id: true, sortOrder: true },
       });
+      await applyOrder(tx, all);
     });
 
     return res.json({ message: 'Da xoa san pham khoi danh sach noi bat.' });
