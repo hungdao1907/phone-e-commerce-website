@@ -52,17 +52,25 @@ export function Footer() {
     return url.startsWith('http://') || url.startsWith('https://');
   };
 
-  const sanitizePath = (url: string): string => {
-    // Collapse double-slash paths that would make React Router warn.
-    // "//" → "/", "//foo" → "/foo", "/./" → "/"
+  const isInvalidUrl = (url: string): boolean => {
     const trimmed = url.trim();
-    if (trimmed === '' || trimmed === '//') return '/';
-    // Replace leading // with /
+    return trimmed === '' || trimmed === '//';
+  };
+
+  const sanitizePath = (url: string): string => {
+    const trimmed = url.trim();
     if (trimmed.startsWith('//')) return trimmed.slice(1);
     return trimmed;
   };
 
   const renderLink = (link: PublicFooterLink) => {
+    if (isInvalidUrl(link.url)) {
+      return (
+        <span className="text-neutral-500 cursor-default">
+          {link.label}
+        </span>
+      );
+    }
     if (isExternal(link.url)) {
       return (
         <a
