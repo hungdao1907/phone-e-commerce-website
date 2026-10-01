@@ -23,15 +23,12 @@ function readIsActive(value: unknown): boolean | null {
   return typeof value === 'boolean' ? value : null;
 }
 
-async function applyOrder(tx: Omit<Prisma.TransactionClient, never>, list: { id: string; sortOrder: number }[]) {
-  for (let i = 0; i < list.length; i++) {
-    if (list[i].sortOrder !== i + 1) {
-      await tx.homeFeaturedProduct.update({
-        where: { id: list[i].id },
-        data: { sortOrder: i + 1 },
-      });
-      list[i].sortOrder = i + 1;
-    }
+async function applyOrder(tx: Prisma.TransactionClient, list: { id: string }[]) {
+  for (const [index, item] of list.entries()) {
+    await tx.homeFeaturedProduct.update({
+      where: { id: item.id },
+      data: { sortOrder: index + 1 },
+    });
   }
 }
 
@@ -73,10 +70,14 @@ router.post('/admin', authenticateToken, async (req, res) => {
   try {
     const productId = typeof req.body?.productId === 'string' ? req.body.productId.trim() : '';
     const isActive = readIsActive(req.body?.isActive);
-    let requestedPosition = readSortOrder(req.body?.sortOrder);
+    const hasSortOrder = Object.prototype.hasOwnProperty.call(req.body ?? {}, 'sortOrder');
+    const requestedPosition = hasSortOrder ? readSortOrder(req.body.sortOrder) : null;
 
     if (!productId) return res.status(400).json({ message: 'productId la bat buoc.' });
     if (isActive === null) return res.status(400).json({ message: 'Trang thai hien thi phai la boolean.' });
+    if (hasSortOrder && requestedPosition === null) {
+      return res.status(400).json({ message: 'Thu tu hien thi phai la so nguyen duong.' });
+    }
 
     const product = await prisma.product.findUnique({
       where: { id: productId },
@@ -98,8 +99,9 @@ router.post('/admin', authenticateToken, async (req, res) => {
         });
 
         const maxAllowed = all.length + 1;
-        if (requestedPosition === null || requestedPosition < 1 || requestedPosition > maxAllowed) {
-          requestedPosition = maxAllowed;
+        const targetPosition = requestedPosition ?? maxAllowed;
+        if (targetPosition < 1 || targetPosition > maxAllowed) {
+          throw new Error('INVALID_POSITION');
         }
 
         const created = await tx.homeFeaturedProduct.create({
@@ -107,16 +109,21 @@ router.post('/admin', authenticateToken, async (req, res) => {
           include: productInclude,
         });
 
-        all.splice(requestedPosition - 1, 0, { id: created.id, sortOrder: 999999 });
+        all.splice(targetPosition - 1, 0, { id: created.id, sortOrder: 999999 });
         await applyOrder(tx, all);
 
-        created.sortOrder = requestedPosition;
-        return created;
+        return tx.homeFeaturedProduct.findUniqueOrThrow({
+          where: { id: created.id },
+          include: productInclude,
+        });
       });
       return res.status(201).json({ message: 'Da them san pham noi bat.', featuredProduct });
     } catch (e: any) {
       if (e.message === 'DUPLICATE_PRODUCT') {
         return res.status(409).json({ message: 'San pham nay da nam trong danh sach noi bat.' });
+      }
+      if (e.message === 'INVALID_POSITION') {
+        return res.status(400).json({ message: 'Thu tu hien thi vuot qua so luong muc noi bat cho phep.' });
       }
       throw e;
     }
@@ -159,37 +166,41 @@ router.put('/admin/:id', authenticateToken, async (req, res) => {
       const existing = await tx.homeFeaturedProduct.findUnique({ where: { id } });
       if (!existing) throw new Error('NOT_FOUND');
 
-      let updated = await tx.homeFeaturedProduct.update({
-        where: { id },
-        data: isActive !== null ? { isActive } : {},
-        include: productInclude,
-      });
-
-      if (requestedPosition !== null && requestedPosition !== existing.sortOrder) {
+      if (requestedPosition !== null) {
         const all = await tx.homeFeaturedProduct.findMany({
           orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }, { id: 'asc' }],
           select: { id: true, sortOrder: true },
         });
 
         const targetIndex = all.findIndex((x) => x.id === id);
-        if (targetIndex > -1) {
-          const [targetItem] = all.splice(targetIndex, 1);
-          let safePosition = requestedPosition;
-          if (safePosition > all.length + 1) safePosition = all.length + 1;
-
-          all.splice(safePosition - 1, 0, targetItem);
-          await applyOrder(tx, all);
-          updated.sortOrder = safePosition;
+        if (targetIndex === -1) throw new Error('NOT_FOUND');
+        if (requestedPosition > all.length) {
+          throw new Error('INVALID_POSITION');
         }
+
+        const [targetItem] = all.splice(targetIndex, 1);
+        all.splice(requestedPosition - 1, 0, targetItem);
+        await applyOrder(tx, all);
       }
 
-      return updated;
+      await tx.homeFeaturedProduct.update({
+        where: { id },
+        data: isActive !== null ? { isActive } : {},
+      });
+
+      return tx.homeFeaturedProduct.findUniqueOrThrow({
+        where: { id },
+        include: productInclude,
+      });
     });
 
     return res.json({ message: 'Da cap nhat san pham noi bat.', featuredProduct });
   } catch (error: any) {
     if (error.message === 'NOT_FOUND') {
       return res.status(404).json({ message: 'Khong tim thay san pham noi bat.' });
+    }
+    if (error.message === 'INVALID_POSITION') {
+      return res.status(400).json({ message: 'Thu tu hien thi vuot qua so luong muc noi bat cho phep.' });
     }
     console.error('Error updating home featured product:', error);
     return res.status(500).json({ message: 'Khong the cap nhat san pham noi bat.' });
