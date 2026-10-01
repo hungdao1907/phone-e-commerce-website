@@ -86,12 +86,11 @@ export function MeshGradientSVG({
         </foreignObject>
 
         <motion.ellipse
-          cx={80}
-          cy={120}
           rx="20"
           ry="30"
           fill="currentColor"
           className="animate-blink text-neutral-900"
+          initial={{ cx: 80, cy: 120 }}
           animate={{
             cx: 80 + eyeOffset.x,
             cy: 120 + eyeOffset.y,
@@ -99,12 +98,11 @@ export function MeshGradientSVG({
           transition={{ type: "spring", stiffness: 150, damping: 15 }}
         />
         <motion.ellipse
-          cx={150}
-          cy={120}
           rx="20"
           ry="30"
           fill="currentColor"
           className="animate-blink text-neutral-900"
+          initial={{ cx: 150, cy: 120 }}
           animate={{
             cx: 150 + eyeOffset.x,
             cy: 120 + eyeOffset.y,

@@ -52,6 +52,16 @@ export function Footer() {
     return url.startsWith('http://') || url.startsWith('https://');
   };
 
+  const sanitizePath = (url: string): string => {
+    // Collapse double-slash paths that would make React Router warn.
+    // "//" → "/", "//foo" → "/foo", "/./" → "/"
+    const trimmed = url.trim();
+    if (trimmed === '' || trimmed === '//') return '/';
+    // Replace leading // with /
+    if (trimmed.startsWith('//')) return trimmed.slice(1);
+    return trimmed;
+  };
+
   const renderLink = (link: PublicFooterLink) => {
     if (isExternal(link.url)) {
       return (
@@ -66,7 +76,7 @@ export function Footer() {
       );
     }
     return (
-      <Link to={link.url} className="hover:underline transition-colors">
+      <Link to={sanitizePath(link.url)} className="hover:underline transition-colors">
         {link.label}
       </Link>
     );
@@ -114,8 +124,8 @@ export function Footer() {
                     <h4 className="font-semibold text-[#1d1d1f]">{col.title}</h4>
                     {col.links && col.links.length > 0 && (
                       <ul className="space-y-1.5 flex flex-col items-start">
-                        {col.links.map((link) => (
-                          <li key={link.id}>{renderLink(link)}</li>
+                        {col.links.map((link, linkIdx) => (
+                          <li key={link.id || `col-${col.id}-link-${linkIdx}`}>{renderLink(link)}</li>
                         ))}
                       </ul>
                     )}
@@ -131,7 +141,7 @@ export function Footer() {
                 {data.bottom.links && data.bottom.links.length > 0 && (
                   <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
                     {data.bottom.links.map((link, index) => (
-                      <React.Fragment key={link.id}>
+                      <React.Fragment key={link.id || `bottom-link-${index}`}>
                         {renderLink(link)}
                         {index < data.bottom.links.length - 1 && (
                           <span className="text-neutral-300">|</span>
