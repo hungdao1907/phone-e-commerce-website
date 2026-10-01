@@ -8,6 +8,7 @@ import { Inventory } from '@/components/admin/views/Inventory';
 import { Categories } from '@/components/admin/views/Categories';
 import { Marketing } from '@/components/admin/views/Marketing';
 import { Banners } from '@/components/admin/views/Banners';
+import { HomeFeaturedProducts } from '@/components/admin/views/HomeFeaturedProducts';
 import { Orders } from '@/components/admin/views/Orders';
 import { Reviews } from '@/components/admin/views/Reviews';
 import { Complaints } from '@/components/admin/views/Complaints';
@@ -27,6 +28,7 @@ const VIEW_LABELS: Record<string, string> = {
   planned: 'Lịch kế hoạch',
   marketing: 'Chiến dịch marketing',
   banners: 'Quản lý Banner',
+  'home-featured-products': 'Sản phẩm nổi bật',
   product: 'Sản phẩm',
   orders: 'Đơn hàng',
   crm: 'CRM',
@@ -107,6 +109,8 @@ export function DashboardLayout() {
               <Categories />
             ) : activeView === 'banners' ? (
               <Banners />
+            ) : activeView === 'home-featured-products' ? (
+              <HomeFeaturedProducts />
             ) : activeView === 'marketing' ? (
               <Marketing />
             ) : activeView === 'orders' || activeView === 'orders-list' ? (

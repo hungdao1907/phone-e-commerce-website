@@ -73,7 +73,8 @@ const DOCK_ITEMS = [
     path: '/marketing-module',
     subItems: [
       { id: 'marketing', label: 'Chiến dịch marketing' },
-      { id: 'banners', label: 'Quản lý Banner' }
+      { id: 'banners', label: 'Quản lý Banner' },
+      { id: 'home-featured-products', label: 'Sản phẩm nổi bật' }
     ]
   },
 ];
