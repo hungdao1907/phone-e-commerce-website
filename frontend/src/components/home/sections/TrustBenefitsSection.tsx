@@ -292,7 +292,7 @@ export function TrustBenefitsSection() {
   const shouldReduceMotion = useReducedMotion() === true;
 
   return (
-    <section className="trust-benefits" aria-labelledby="trust-benefits-title">
+    <section id="home-trust-benefits" data-home-section="home-trust-benefits" className="trust-benefits" aria-labelledby="trust-benefits-title">
       <div className="trust-benefits__container">
         {/* Editorial Section Header */}
         <motion.header

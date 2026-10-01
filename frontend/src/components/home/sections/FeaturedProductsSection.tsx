@@ -6,6 +6,8 @@ import type { Variants } from 'motion/react';
 import { Link } from 'react-router-dom';
 import { CardCarousel } from '@/components/ui/CardCarousel';
 import type { CarouselProduct } from '@/components/ui/CardCarousel';
+import { useHomeSectionReturn } from '@/hooks/useHomeSectionReturn';
+import { HOME_SECTION_IDS } from '@/lib/homeSectionHistory';
 import {
   fetchHomeFeaturedProducts,
   formatFeaturedProductPrice,
@@ -15,6 +17,8 @@ import {
 
 interface FeaturedProduct extends CarouselProduct {
   brand: string;
+  fullName: string;
+  fullTagline: string;
   tagline: string;
   price: string;
   image: string;
@@ -25,6 +29,8 @@ interface FeaturedProduct extends CarouselProduct {
 }
 
 const PREMIUM_EASE = [0.16, 1, 0.3, 1] as const;
+const CARD_NAME_LIMIT = 52;
+const CARD_TAGLINE_LIMIT = 120;
 
 const BRAND_PRESENTATION: Record<string, Pick<FeaturedProduct, 'accent' | 'glow' | 'imageClassName'>> = {
   apple: { accent: '#8c7a68', glow: 'rgba(164, 143, 121, 0.2)', imageClassName: 'featured-product-card__image--iphone' },
@@ -40,6 +46,11 @@ function plainText(value: string | null): string {
   return text || 'Sản phẩm chính hãng với trải nghiệm được chọn lọc cho bạn.';
 }
 
+function truncateCardText(value: string, maxLength: number): string {
+  const text = value.trim();
+  return text.length > maxLength ? `${text.slice(0, maxLength).trimEnd()}...` : text;
+}
+
 function toFeaturedProduct(item: HomeFeaturedProduct): FeaturedProduct {
   const brand = (item.product.brand || item.product.category?.name || 'Sản phẩm nổi bật').trim();
   const presentation = BRAND_PRESENTATION[brand.toLowerCase()] ?? {
@@ -47,12 +58,15 @@ function toFeaturedProduct(item: HomeFeaturedProduct): FeaturedProduct {
     glow: 'rgba(95, 107, 122, 0.16)',
     imageClassName: '',
   };
+  const fullTagline = plainText(item.product.description);
 
   return {
     id: item.id,
     brand: brand.toUpperCase(),
-    name: item.product.name,
-    tagline: plainText(item.product.description),
+    fullName: item.product.name,
+    name: truncateCardText(item.product.name, CARD_NAME_LIMIT),
+    fullTagline,
+    tagline: truncateCardText(fullTagline, CARD_TAGLINE_LIMIT),
     price: formatFeaturedProductPrice(item.product),
     image: getFeaturedProductImage(item.product),
     imageClassName: presentation.imageClassName,
@@ -81,25 +95,26 @@ function makeRevealVariants({ y = 24, delay, duration, reduceMotion }: RevealOpt
 }
 
 function ProductCard({ product, index }: { product: FeaturedProduct; index: number }) {
+  const rememberReturn = useHomeSectionReturn(HOME_SECTION_IDS.featuredProducts);
   const cardStyle = { '--product-accent': product.accent, '--product-glow': product.glow } as CSSProperties;
 
   return (
-    <article className="featured-product-card" style={cardStyle}>
+    <article className="featured-product-card bg-white" style={cardStyle}>
       <div className="featured-product-card__stage" aria-hidden="true"><span className="featured-product-card__accent" /></div>
       <div className="featured-product-card__media">
         {product.image ? (
-          <img className={`featured-product-card__image ${product.imageClassName}`} src={product.image} alt={`${product.brand} ${product.name}`} loading={index < 2 ? 'eager' : 'lazy'} decoding="async" draggable={false} />
+          <img className={`featured-product-card__image ${product.imageClassName}`} src={product.image} alt={`${product.brand} ${product.fullName}`} loading={index < 2 ? 'eager' : 'lazy'} decoding="async" draggable={false} />
         ) : (
           <span className="featured-product-card__wordmark">{product.brand}</span>
         )}
       </div>
       <div className="featured-product-card__content">
         <p className="featured-product-card__brand">{product.brand}</p>
-        <h3>{product.name}</h3>
-        <p className="featured-product-card__tagline">{product.tagline}</p>
+        <h3 title={product.fullName}>{product.name}</h3>
+        <p className="featured-product-card__tagline" title={product.fullTagline}>{product.tagline}</p>
         <div className="featured-product-card__footer">
           <p>{product.price}</p>
-          <Link className="featured-product-card__cta" to={product.href} aria-label={`Xem chi tiết ${product.name}`}>
+          <Link className="featured-product-card__cta" to={product.href} onClick={rememberReturn} aria-label={`Xem chi tiết ${product.fullName}`}>
             <span>Xem chi tiết</span>
             <ArrowUpRight aria-hidden="true" size={18} strokeWidth={1.8} />
           </Link>
@@ -132,7 +147,7 @@ export function FeaturedProductsSection() {
   if (!isLoading && (hasError || products.length === 0)) return null;
 
   return (
-    <section className="featured-products-section overflow-hidden bg-white py-20 sm:py-24 lg:py-28 xl:py-32" aria-labelledby="featured-products-title">
+    <section id={HOME_SECTION_IDS.featuredProducts} data-home-section={HOME_SECTION_IDS.featuredProducts} className="featured-products-section overflow-hidden bg-white py-20 sm:py-24 lg:py-28 xl:py-32" aria-labelledby="featured-products-title">
       <div className="mx-auto max-w-[1440px] px-5 sm:px-8 lg:px-12 xl:px-16">
         <motion.div className="max-w-[1200px]" initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.25 }}>
           <motion.p className="text-[0.7rem] font-semibold tracking-[0.2em] text-[#6e6e73] sm:text-xs" variants={makeRevealVariants({ y: 16, delay: 0.05, duration: 0.7, reduceMotion: shouldReduceMotion })}>NỔI BẬT</motion.p>

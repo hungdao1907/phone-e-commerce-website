@@ -5,6 +5,8 @@ import { motion, AnimatePresence, useInView, useReducedMotion } from 'motion/rea
 import type { Variants } from 'motion/react';
 import { ArrowRight } from 'lucide-react';
 import { GlassButton } from '@/components/ui/GlassButton';
+import { useHomeSectionReturn } from '@/hooks/useHomeSectionReturn';
+import { HOME_SECTION_IDS } from '@/lib/homeSectionHistory';
 
 export type EcosystemDeviceId = 'smartphone' | 'laptop' | 'tablet' | 'watch';
 
@@ -143,6 +145,7 @@ interface FlyingCloneGeometry {
 }
 
 export function EcosystemExperienceSection() {
+  const rememberReturn = useHomeSectionReturn(HOME_SECTION_IDS.ecosystem);
   const containerRef = useRef<HTMLElement>(null);
   const isInView = useInView(containerRef, { once: true, amount: 0.2 });
   const shouldReduceMotion = useReducedMotion() === true;
@@ -534,6 +537,8 @@ export function EcosystemExperienceSection() {
   return (
     <section
       ref={containerRef}
+      id={HOME_SECTION_IDS.ecosystem}
+      data-home-section={HOME_SECTION_IDS.ecosystem}
       className="ecosystem-experience-section relative overflow-hidden py-10 sm:py-12 lg:py-14 xl:py-16 select-none border-t border-black/[0.04]"
       aria-labelledby="ecosystem-section-title"
     >
@@ -856,6 +861,7 @@ export function EcosystemExperienceSection() {
         >
           <Link
             to={activeData.route}
+            onClick={rememberReturn}
             className="group/eco-cta inline-flex items-center gap-2.5 rounded-full border border-black/[0.08] bg-white/95 backdrop-blur-md px-7 sm:px-8 py-3 sm:py-3.5 text-sm sm:text-base font-semibold text-[#1d1d1f] shadow-[0_8px_30px_rgba(0,0,0,0.08),0_1px_3px_rgba(0,0,0,0.04)] transition-all duration-200 hover:-translate-y-0.5 hover:scale-[1.02] hover:bg-white hover:shadow-[0_12px_36px_rgba(0,0,0,0.12)] active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black min-h-[48px]"
             aria-label={`${activeData.ctaLabel} - Hệ sinh thái Apple`}
           >
@@ -882,6 +888,7 @@ export function EcosystemExperienceSection() {
         <div className="mt-8 lg:hidden">
           <Link
             to={activeData.route}
+            onClick={rememberReturn}
             className="block rounded-2xl p-4 border border-white/95 bg-white/85 backdrop-blur-md shadow-sm transition-all duration-300 hover:shadow-md active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black"
             style={{ borderLeft: `4px solid ${activeData.accent}` }}
             aria-label={`${activeData.ctaLabel} - ${activeData.title}`}

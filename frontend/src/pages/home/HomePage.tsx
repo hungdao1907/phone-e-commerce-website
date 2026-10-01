@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { useLocation, useNavigationType } from 'react-router-dom';
 import { FirstVisitHelloIntro, shouldShowIntro } from '@/components/ui/FirstVisitHelloIntro';
 import {
   HeroCinematicTransition,
@@ -8,10 +9,47 @@ import {
   WaveGallery,
   TrustBenefitsSection,
 } from '@/components/home/sections';
+import { readHomeSectionReturn } from '@/lib/homeSectionHistory';
 import '@/css/home.css';
 
 export function HomePage() {
+  const location = useLocation();
+  const navigationType = useNavigationType();
+  const restoredLocationKey = useRef<string | null>(null);
   const [isIntroPlaying, setIsIntroPlaying] = useState(shouldShowIntro);
+
+  useEffect(() => {
+    if (navigationType !== 'POP' || restoredLocationKey.current === location.key) return;
+
+    const marker = readHomeSectionReturn();
+    if (!marker || marker.homeLocationKey !== location.key) return;
+
+    restoredLocationKey.current = location.key;
+    let cancelled = false;
+    let attempts = 0;
+    let frameId = 0;
+
+    const restoreSection = () => {
+      if (cancelled) return;
+
+      const section = document.getElementById(marker.sectionId);
+      if (!section) {
+        if (attempts < 30) {
+          attempts += 1;
+          frameId = window.requestAnimationFrame(restoreSection);
+        }
+        return;
+      }
+
+      section.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'auto' });
+    };
+
+    frameId = window.requestAnimationFrame(restoreSection);
+    return () => {
+      cancelled = true;
+      window.cancelAnimationFrame(frameId);
+    };
+  }, [location.key, navigationType]);
 
   return (
     <div className="bg-white min-h-screen font-sans text-[#1d1d1f]">
