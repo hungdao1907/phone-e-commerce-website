@@ -2,9 +2,11 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { ChatMessage } from './types';
 import { ProductResultCard } from './ProductResultCard';
+import { ChatMarkdown } from './ChatMarkdown';
 import { resolveBackendUrl } from '../../services/chatbot.api';
 import { FileText, Download, User, Bot, Sparkles, CheckCircle2 } from 'lucide-react';
 import { cn } from '../../lib/utils';
+import './chatbot.css';
 
 export function ChatMessageItem({ message }: { message: ChatMessage }) {
   const isUser = message.role === 'user';
@@ -21,7 +23,7 @@ export function ChatMessageItem({ message }: { message: ChatMessage }) {
       transition={{ duration: 0.22, ease: 'easeOut' }}
       className={cn("flex w-full mb-4", isUser ? "justify-end" : "justify-start")}
     >
-      <div className={cn("flex max-w-[88%] sm:max-w-[82%] gap-2.5", isUser ? "flex-row-reverse" : "flex-row")}>
+      <div className={cn("flex gap-2.5", isUser ? "max-w-[88%] flex-row-reverse" : "max-w-[95%] flex-row")}>
         {/* Avatar */}
         <div className="flex-shrink-0 mt-auto mb-1">
           {isUser ? (
@@ -45,7 +47,7 @@ export function ChatMessageItem({ message }: { message: ChatMessage }) {
                 ? "bg-gradient-to-r from-blue-600 via-blue-600 to-indigo-600 text-white rounded-br-xs shadow-blue-500/15"
                 : "bg-white/95 backdrop-blur-md border border-neutral-200/90 text-neutral-800 rounded-bl-xs shadow-[0_2px_8px_rgba(0,0,0,0.03)]"
             )}>
-              {message.text}
+              {isUser ? <span className="whitespace-pre-wrap">{message.text}</span> : <ChatMarkdown content={message.text} />}
             </div>
           )}
 
