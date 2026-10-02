@@ -64,12 +64,12 @@ export function AdminProductFilterSidebar({
 
   return (
     <div className="w-64 flex flex-col gap-4 sticky top-4 max-h-[calc(100vh-2rem)] overflow-y-auto custom-scrollbar pr-2 shrink-0">
-      <div className="flex items-center justify-between pb-2 border-b border-white/10">
-        <h2 className="text-sm font-bold text-white uppercase tracking-wider">Bộ lọc</h2>
+      <div className="flex items-center justify-between pb-2 border-b border-slate-200">
+        <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wider">Bộ lọc</h2>
         {hasActiveFilters && (
           <button 
             onClick={onClearFilters}
-            className="text-xs text-red-400 hover:text-red-300 flex items-center gap-1 transition-colors"
+            className="text-xs text-red-600 hover:text-red-700 flex items-center gap-1 transition-colors font-semibold"
           >
             <RefreshCw className="w-3 h-3" /> Xoá lọc
           </button>
@@ -77,13 +77,13 @@ export function AdminProductFilterSidebar({
       </div>
 
       {/* DANH MỤC */}
-      <div className="border border-white/5 rounded-xl bg-black/20 overflow-hidden">
+      <div className="border border-slate-200 rounded-xl bg-white shadow-sm overflow-hidden">
         <button 
           onClick={() => toggleGroup('categories')}
-          className="w-full flex items-center justify-between p-3 text-sm font-semibold text-white/90 hover:bg-white/5 transition-colors"
+          className="w-full flex items-center justify-between p-3 text-sm font-semibold text-slate-800 hover:bg-slate-50 transition-colors"
         >
           Danh mục
-          {expandedGroups['categories'] ? <ChevronUp className="w-4 h-4 text-white/40" /> : <ChevronDown className="w-4 h-4 text-white/40" />}
+          {expandedGroups['categories'] ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
         </button>
         <AnimatePresence initial={false}>
           {expandedGroups['categories'] && (
@@ -98,7 +98,7 @@ export function AdminProductFilterSidebar({
                   onClick={() => onCategoryChange('')}
                   className={cn(
                     "text-left text-sm px-2 py-1.5 rounded-lg transition-colors",
-                    currentCategory === '' ? "bg-emerald-500/10 text-emerald-400 font-medium" : "text-white/60 hover:bg-white/5 hover:text-white"
+                    currentCategory === '' ? "bg-emerald-50 text-emerald-700 font-semibold" : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
                   )}
                 >
                   Tất cả sản phẩm
@@ -109,7 +109,7 @@ export function AdminProductFilterSidebar({
                     onClick={() => onCategoryChange(cat.slug)}
                     className={cn(
                       "text-left text-sm px-2 py-1.5 rounded-lg transition-colors flex items-center justify-between",
-                      currentCategory === cat.slug ? "bg-emerald-500/10 text-emerald-400 font-medium" : "text-white/60 hover:bg-white/5 hover:text-white"
+                      currentCategory === cat.slug ? "bg-emerald-50 text-emerald-700 font-semibold" : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
                     )}
                     style={{ paddingLeft: `${cat.depth * 12 + 8}px` }}
                   >
@@ -123,13 +123,13 @@ export function AdminProductFilterSidebar({
       </div>
 
       {/* STATUS */}
-      <div className="border border-white/5 rounded-xl bg-black/20 overflow-hidden">
+      <div className="border border-slate-200 rounded-xl bg-white shadow-sm overflow-hidden">
         <button 
           onClick={() => toggleGroup('status')}
-          className="w-full flex items-center justify-between p-3 text-sm font-semibold text-white/90 hover:bg-white/5 transition-colors"
+          className="w-full flex items-center justify-between p-3 text-sm font-semibold text-slate-800 hover:bg-slate-50 transition-colors"
         >
           Trạng thái
-          {expandedGroups['status'] ? <ChevronUp className="w-4 h-4 text-white/40" /> : <ChevronDown className="w-4 h-4 text-white/40" />}
+          {expandedGroups['status'] ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
         </button>
         <AnimatePresence initial={false}>
           {expandedGroups['status'] && (
@@ -148,11 +148,11 @@ export function AdminProductFilterSidebar({
                   <label key={opt.id} className="flex items-center gap-3 cursor-pointer group" onClick={() => onStatusChange(opt.id)}>
                     <div className={cn(
                       "w-4 h-4 rounded border flex items-center justify-center transition-colors shrink-0",
-                      statusFilter === opt.id ? "bg-emerald-500 border-emerald-500" : "border-white/20 group-hover:border-white/40"
+                      statusFilter === opt.id ? "bg-emerald-600 border-emerald-600" : "border-slate-300 group-hover:border-slate-400 bg-white"
                     )}>
-                      {statusFilter === opt.id && <Check className="w-3 h-3 text-black" />}
+                      {statusFilter === opt.id && <Check className="w-3 h-3 text-white" />}
                     </div>
-                    <span className={cn("text-sm", statusFilter === opt.id ? "text-emerald-400 font-medium" : "text-white/70 group-hover:text-white")}>
+                    <span className={cn("text-sm", statusFilter === opt.id ? "text-emerald-700 font-semibold" : "text-slate-600 group-hover:text-slate-900")}>
                       {opt.label}
                     </span>
                   </label>
@@ -164,13 +164,13 @@ export function AdminProductFilterSidebar({
       </div>
 
       {/* STOCK */}
-      <div className="border border-white/5 rounded-xl bg-black/20 overflow-hidden">
+      <div className="border border-slate-200 rounded-xl bg-white shadow-sm overflow-hidden">
         <button 
           onClick={() => toggleGroup('stock')}
-          className="w-full flex items-center justify-between p-3 text-sm font-semibold text-white/90 hover:bg-white/5 transition-colors"
+          className="w-full flex items-center justify-between p-3 text-sm font-semibold text-slate-800 hover:bg-slate-50 transition-colors"
         >
           Tồn kho
-          {expandedGroups['stock'] ? <ChevronUp className="w-4 h-4 text-white/40" /> : <ChevronDown className="w-4 h-4 text-white/40" />}
+          {expandedGroups['stock'] ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
         </button>
         <AnimatePresence initial={false}>
           {expandedGroups['stock'] && (
@@ -190,11 +190,11 @@ export function AdminProductFilterSidebar({
                   <label key={opt.id} className="flex items-center gap-3 cursor-pointer group" onClick={() => onStockChange(opt.id)}>
                     <div className={cn(
                       "w-4 h-4 rounded border flex items-center justify-center transition-colors shrink-0",
-                      stockFilter === opt.id ? "bg-emerald-500 border-emerald-500" : "border-white/20 group-hover:border-white/40"
+                      stockFilter === opt.id ? "bg-emerald-600 border-emerald-600" : "border-slate-300 group-hover:border-slate-400 bg-white"
                     )}>
-                      {stockFilter === opt.id && <Check className="w-3 h-3 text-black" />}
+                      {stockFilter === opt.id && <Check className="w-3 h-3 text-white" />}
                     </div>
-                    <span className={cn("text-sm", stockFilter === opt.id ? "text-emerald-400 font-medium" : "text-white/70 group-hover:text-white")}>
+                    <span className={cn("text-sm", stockFilter === opt.id ? "text-emerald-700 font-semibold" : "text-slate-600 group-hover:text-slate-900")}>
                       {opt.label}
                     </span>
                   </label>

@@ -8,17 +8,17 @@ export function PerformanceWidget() {
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ delay: 0.3, duration: 0.5 }}
-      className="bg-gradient-to-br from-[#5A827E]/90 to-[#26667F]/90 backdrop-blur-md  border border-white/[0.08] rounded-2xl p-5 flex flex-col justify-between h-full"
+      className="bg-white border border-slate-200/80 rounded-2xl p-5 flex flex-col justify-between h-full shadow-sm"
     >
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-xl bg-purple-500/15 flex items-center justify-center">
-            <TrendingUp className="w-4 h-4 text-purple-400" />
+          <div className="w-8 h-8 rounded-xl bg-purple-50 flex items-center justify-center">
+            <TrendingUp className="w-4 h-4 text-purple-600" />
           </div>
-          <span className="text-white/50 text-xs font-medium">Total profit:</span>
+          <span className="text-slate-500 text-xs font-medium">Total profit:</span>
         </div>
-        <div className="flex items-center gap-1 text-emerald-400 text-xs font-semibold">
+        <div className="flex items-center gap-1 text-emerald-600 text-xs font-semibold">
           <TrendingUp className="w-3 h-3" />
           +42%
         </div>
@@ -26,8 +26,8 @@ export function PerformanceWidget() {
 
       {/* Value */}
       <div className="mt-3">
-        <p className="text-xl font-bold text-white">$25.6k</p>
-        <p className="text-white/30 text-[11px] mt-0.5">Weekly Profit</p>
+        <p className="text-xl font-bold text-slate-900">$25.6k</p>
+        <p className="text-slate-400 text-[11px] mt-0.5">Weekly Profit</p>
       </div>
 
       {/* Mini Chart (SVG demo) */}

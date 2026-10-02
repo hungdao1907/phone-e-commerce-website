@@ -6,7 +6,7 @@ import { FunnelChart } from "@/components/admin/widgets/funnel-chart";
 export function SalesFunnelChart() {
   return (
     <div className="w-full h-full flex flex-col items-center justify-center p-4">
-      <h2 className="text-sm font-semibold text-white/80 mb-2 self-start pl-2">Sales Conversion Funnel</h2>
+      <h2 className="text-sm font-semibold text-slate-900 mb-2 self-start pl-2">Sales Conversion Funnel</h2>
       <div className="w-full flex-1 flex items-center justify-center mt-4">
         <FunnelChart
           data={[

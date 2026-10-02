@@ -29,8 +29,8 @@ function ProductThumbnail({ product, size = 'md' }: { product: HomeFeaturedProdu
   const iconSize = size === 'sm' ? 'h-4 w-4' : 'h-5 w-5';
 
   return (
-    <div className={`flex shrink-0 items-center justify-center overflow-hidden border border-white/10 bg-black/40 ${sizeClasses}`}>
-      {image ? <img src={image} alt="" className="h-full w-full object-cover" /> : <ImageIcon className={`${iconSize} text-white/30`} />}
+    <div className={`flex shrink-0 items-center justify-center overflow-hidden border border-slate-200 bg-slate-50 ${sizeClasses}`}>
+      {image ? <img src={image} alt="" className="h-full w-full object-cover" /> : <ImageIcon className={`${iconSize} text-slate-400`} />}
     </div>
   );
 }
@@ -191,65 +191,65 @@ export function HomeFeaturedProducts() {
   const formOpen = isCreateOpen || editing !== null;
 
   return (
-    <section className="mx-auto max-w-6xl space-y-6 text-white">
+    <section className="mx-auto max-w-6xl space-y-6 text-slate-900">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-lime-400">Trang chủ</p>
-          <h1 className="mt-1 text-3xl font-bold tracking-tight">Sản phẩm nổi bật</h1>
-          <p className="mt-2 text-sm text-white/55">Chọn sản phẩm có sẵn để hiển thị trên trang chủ. Thao tác này không chỉnh sửa sản phẩm gốc.</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-emerald-600">Trang chủ</p>
+          <h1 className="mt-1 text-3xl font-bold tracking-tight text-slate-900">Sản phẩm nổi bật</h1>
+          <p className="mt-2 text-sm text-slate-500">Chọn sản phẩm có sẵn để hiển thị trên trang chủ. Thao tác này không chỉnh sửa sản phẩm gốc.</p>
         </div>
-        <button type="button" onClick={openCreate} className="inline-flex items-center gap-2 rounded-2xl bg-lime-400 px-4 py-2.5 text-sm font-bold text-black transition hover:bg-lime-300">
+        <button type="button" onClick={openCreate} className="inline-flex items-center gap-2 rounded-2xl bg-emerald-600 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-emerald-700 shadow-sm">
           <Plus className="h-4 w-4" /> Thêm sản phẩm nổi bật
         </button>
       </div>
 
-      {feedback && <div className={`rounded-2xl border px-4 py-3 text-sm ${feedback.tone === 'success' ? 'border-lime-300/30 bg-lime-400/10 text-lime-200' : 'border-red-300/30 bg-red-400/10 text-red-200'}`}>{feedback.message}</div>}
+      {feedback && <div className={`rounded-2xl border px-4 py-3 text-sm ${feedback.tone === 'success' ? 'border-emerald-200 bg-emerald-50 text-emerald-800' : 'border-red-200 bg-red-50 text-red-800'}`}>{feedback.message}</div>}
 
       {formOpen && (
-        <div className="relative z-30 rounded-3xl border border-white/10 bg-black/30 p-5 shadow-2xl backdrop-blur-xl sm:p-6">
+        <div className="relative z-30 rounded-3xl border border-slate-200 bg-white p-5 shadow-xl sm:p-6">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <h2 className="text-lg font-bold">{editing ? 'Cập nhật hiển thị' : 'Thêm sản phẩm nổi bật'}</h2>
-              <p className="mt-1 text-sm text-white/50">
+              <h2 className="text-lg font-bold text-slate-900">{editing ? 'Cập nhật hiển thị' : 'Thêm sản phẩm nổi bật'}</h2>
+              <p className="mt-1 text-sm text-slate-500">
                 {editing ? 'Sản phẩm được giữ cố định; chỉ thay đổi thứ tự và trạng thái.' : 'Chỉ sản phẩm đang hoạt động và chưa được chọn mới có thể thêm.'}
               </p>
             </div>
-            <button type="button" onClick={closeForm} className="rounded-xl p-2 text-white/60 hover:bg-white/10">
+            <button type="button" onClick={closeForm} className="rounded-xl p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-colors">
               <X className="h-5 w-5" />
             </button>
           </div>
 
           {editing ? (
-            <div className="mt-5 flex items-center gap-3 rounded-2xl border border-white/10 bg-black/20 p-3.5">
+            <div className="mt-5 flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-3.5">
               <div className="min-w-0 flex-1">
-                <p className="font-semibold text-base text-white">{editing.product.name}</p>
-                <p className="mt-0.5 text-sm text-white/50">{productLabel(editing.product)} · <span className="text-lime-300 font-medium">{formatFeaturedProductPrice(editing.product)}</span></p>
+                <p className="font-semibold text-base text-slate-900">{editing.product.name}</p>
+                <p className="mt-0.5 text-sm text-slate-500">{productLabel(editing.product)} · <span className="text-emerald-700 font-semibold">{formatFeaturedProductPrice(editing.product)}</span></p>
               </div>
             </div>
           ) : (
             <div className={`mt-5 relative ${isDropdownOpen ? 'z-40' : 'z-20'}`} ref={dropdownRef}>
               <div className="flex items-center justify-between">
-                <label className="text-sm font-semibold text-white/90">Chọn sản phẩm</label>
-                <span className="text-xs text-white/40">{availableProducts.length} sản phẩm khả dụng</span>
+                <label className="text-sm font-semibold text-slate-800">Chọn sản phẩm</label>
+                <span className="text-xs text-slate-400">{availableProducts.length} sản phẩm khả dụng</span>
               </div>
 
               {/* Custom Dropdown Trigger (Text Only) */}
               <div className="relative mt-2">
                 {selectedProduct ? (
-                  <div className="flex items-center justify-between gap-3 rounded-2xl border border-lime-400/40 bg-lime-400/5 p-3.5 transition">
+                  <div className="flex items-center justify-between gap-3 rounded-2xl border border-emerald-300 bg-emerald-50/50 p-3.5 transition">
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
-                        <p className="truncate font-semibold text-white">{selectedProduct.name}</p>
+                        <p className="truncate font-semibold text-slate-900">{selectedProduct.name}</p>
                         {selectedProduct.brand && (
-                          <span className="shrink-0 rounded-md bg-white/10 px-2 py-0.5 text-[11px] font-medium text-white/70">
+                          <span className="shrink-0 rounded-md bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-600 border border-slate-200">
                             {selectedProduct.brand}
                           </span>
                         )}
                       </div>
-                      <p className="mt-1 text-xs text-lime-300 font-medium">
+                      <p className="mt-1 text-xs text-emerald-700 font-semibold">
                         {formatFeaturedProductPrice(selectedProduct)}
                         {selectedProduct.category?.name && (
-                          <span className="text-white/40 font-normal"> · {selectedProduct.category.name}</span>
+                          <span className="text-slate-400 font-normal"> · {selectedProduct.category.name}</span>
                         )}
                       </p>
                     </div>
@@ -257,14 +257,14 @@ export function HomeFeaturedProducts() {
                       <button
                         type="button"
                         onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                        className="rounded-xl border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-white/80 transition hover:bg-white/15 hover:text-white"
+                        className="rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 transition shadow-xs"
                       >
                         Đổi sản phẩm
                       </button>
                       <button
                         type="button"
                         onClick={() => setProductId('')}
-                        className="rounded-xl p-1.5 text-white/40 transition hover:bg-white/10 hover:text-white/80"
+                        className="rounded-xl p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
                         title="Bỏ chọn"
                       >
                         <X className="h-4 w-4" />
@@ -275,34 +275,34 @@ export function HomeFeaturedProducts() {
                   <button
                     type="button"
                     onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                    className={`flex w-full items-center justify-between gap-3 rounded-2xl border bg-black/40 px-4 py-3.5 text-left text-sm transition ${
-                      isDropdownOpen ? 'border-lime-400 ring-2 ring-lime-400/20' : 'border-white/15 hover:border-white/30'
+                    className={`flex w-full items-center justify-between gap-3 rounded-2xl border bg-white px-4 py-3.5 text-left text-sm transition ${
+                      isDropdownOpen ? 'border-emerald-500 ring-2 ring-emerald-500/20' : 'border-slate-200 hover:border-slate-300'
                     }`}
                   >
-                    <span className="text-white/50">Chọn sản phẩm để thêm vào nổi bật...</span>
-                    <ChevronDown className={`h-4 w-4 text-white/50 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180 text-lime-400' : ''}`} />
+                    <span className="text-slate-400">Chọn sản phẩm để thêm vào nổi bật...</span>
+                    <ChevronDown className={`h-4 w-4 text-slate-400 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180 text-emerald-600' : ''}`} />
                   </button>
                 )}
 
                 {/* Dropdown Menu Panel (Text Only) */}
                 {isDropdownOpen && (
-                  <div className="absolute left-0 right-0 top-full z-50 mt-2 overflow-hidden rounded-2xl border border-white/15 bg-neutral-900/95 shadow-2xl backdrop-blur-2xl animate-in fade-in zoom-in-95 duration-150">
+                  <div className="absolute left-0 right-0 top-full z-50 mt-2 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl animate-in fade-in zoom-in-95 duration-150">
                     {/* Search Input Box */}
-                    <div className="p-3 border-b border-white/10">
+                    <div className="p-3 border-b border-slate-100 bg-slate-50/50">
                       <div className="relative">
-                        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/40" />
+                        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                         <input
                           ref={searchInputRef}
                           value={search}
                           onChange={(event) => setSearch(event.target.value)}
-                          className="w-full rounded-xl border border-white/10 bg-black/50 py-2.5 pl-9 pr-8 text-sm text-white placeholder-white/40 outline-none transition focus:border-lime-400 focus:ring-1 focus:ring-lime-400/20"
+                          className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-9 pr-8 text-sm text-slate-900 placeholder-slate-400 outline-none transition focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
                           placeholder="Tìm theo tên sản phẩm, thương hiệu hoặc danh mục..."
                         />
                         {search && (
                           <button
                             type="button"
                             onClick={() => setSearch('')}
-                            className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-md p-1 text-white/40 hover:text-white"
+                            className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-md p-1 text-slate-400 hover:text-slate-700"
                           >
                             <X className="h-3.5 w-3.5" />
                           </button>
@@ -311,11 +311,11 @@ export function HomeFeaturedProducts() {
                     </div>
 
                     {/* Product Options List (Text Only) */}
-                    <div className="max-h-72 overflow-y-auto p-2 divide-y divide-white/5 space-y-1 scrollbar-thin scrollbar-thumb-white/10">
+                    <div className="max-h-72 overflow-y-auto p-2 divide-y divide-slate-100 space-y-1 custom-scrollbar">
                       {availableProducts.length === 0 ? (
-                        <div className="py-8 text-center text-white/40">
+                        <div className="py-8 text-center text-slate-400">
                           <p className="text-sm font-medium">Không tìm thấy sản phẩm phù hợp</p>
-                          <p className="text-xs text-white/30 mt-1">Thử tìm kiếm với từ khóa khác</p>
+                          <p className="text-xs text-slate-400/80 mt-1">Thử tìm kiếm với từ khóa khác</p>
                         </div>
                       ) : (
                         availableProducts.map((product) => {
@@ -331,28 +331,28 @@ export function HomeFeaturedProducts() {
                               }}
                               className={`flex w-full items-center justify-between gap-3 rounded-xl px-3.5 py-2.5 text-left transition ${
                                 isSelected
-                                  ? 'bg-lime-400/15 border border-lime-400/40 text-white'
-                                  : 'hover:bg-white/10 hover:border-white/15 border border-transparent text-white/90'
+                                  ? 'bg-emerald-50 border border-emerald-300 text-slate-900'
+                                  : 'hover:bg-slate-50 border border-transparent text-slate-800'
                               }`}
                             >
                               <div className="min-w-0 flex-1">
                                 <div className="flex items-center gap-2">
                                   <p className="truncate font-semibold text-sm">{product.name}</p>
                                   {product.brand && (
-                                    <span className="shrink-0 rounded bg-white/10 px-1.5 py-0.5 text-[10px] font-medium text-white/60">
+                                    <span className="shrink-0 rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-medium text-slate-600 border border-slate-200">
                                       {product.brand}
                                     </span>
                                   )}
                                 </div>
                                 <div className="mt-0.5 flex items-center gap-2 text-xs">
-                                  <span className="font-semibold text-lime-300">{formatFeaturedProductPrice(product)}</span>
+                                  <span className="font-semibold text-emerald-700">{formatFeaturedProductPrice(product)}</span>
                                   {product.category?.name && (
-                                    <span className="text-white/40">· {product.category.name}</span>
+                                    <span className="text-slate-400">· {product.category.name}</span>
                                   )}
                                 </div>
                               </div>
                               {isSelected && (
-                                <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-lime-400 text-black">
+                                <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-white">
                                   <Check className="h-3 w-3 stroke-[3]" />
                                 </div>
                               )}
@@ -370,28 +370,28 @@ export function HomeFeaturedProducts() {
           {/* Upgraded Position Dropdown & Active Checkbox */}
           <div className="mt-5 grid gap-4 sm:grid-cols-[minmax(0,240px)_1fr]">
             <div ref={positionDropdownRef} className={`relative ${isPositionDropdownOpen ? 'z-30' : 'z-10'}`}>
-              <label className="text-sm font-semibold text-white/90">Vị trí hiển thị</label>
+              <label className="text-sm font-semibold text-slate-800">Vị trí hiển thị</label>
               <div className="relative mt-2">
                 <button
                   type="button"
                   onClick={() => setIsPositionDropdownOpen(!isPositionDropdownOpen)}
-                  className={`flex w-full items-center justify-between gap-2 rounded-2xl border bg-black/40 px-4 py-3 text-left text-sm transition ${
-                    isPositionDropdownOpen ? 'border-lime-400 ring-2 ring-lime-400/20' : 'border-white/15 hover:border-white/30'
+                  className={`flex w-full items-center justify-between gap-2 rounded-2xl border bg-white px-4 py-3 text-left text-sm transition ${
+                    isPositionDropdownOpen ? 'border-emerald-500 ring-2 ring-emerald-500/20' : 'border-slate-200 hover:border-slate-300'
                   }`}
                 >
                   <div className="flex items-center gap-2.5">
-                    <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-lime-400/20 font-bold text-xs text-lime-300">
+                    <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-emerald-50 font-bold text-xs text-emerald-700 border border-emerald-200">
                       {sortOrder}
                     </span>
-                    <span className="font-medium text-white">
+                    <span className="font-medium text-slate-800">
                       {Number(sortOrder) === 1 ? 'Vị trí 1 (Đầu tiên)' : Number(sortOrder) === totalPositions ? `Vị trí ${sortOrder} (Cuối cùng)` : `Vị trí ${sortOrder}`}
                     </span>
                   </div>
-                  <ChevronDown className={`h-4 w-4 text-white/50 transition-transform duration-200 ${isPositionDropdownOpen ? 'rotate-180 text-lime-400' : ''}`} />
+                  <ChevronDown className={`h-4 w-4 text-slate-400 transition-transform duration-200 ${isPositionDropdownOpen ? 'rotate-180 text-emerald-600' : ''}`} />
                 </button>
 
                 {isPositionDropdownOpen && (
-                  <div className="absolute left-0 right-0 top-full z-50 mt-2 max-h-60 overflow-y-auto rounded-2xl border border-white/15 bg-neutral-900/98 p-1.5 shadow-2xl backdrop-blur-2xl animate-in fade-in zoom-in-95 duration-150 scrollbar-thin scrollbar-thumb-white/10">
+                  <div className="absolute left-0 right-0 top-full z-50 mt-2 max-h-60 overflow-y-auto rounded-2xl border border-slate-200 bg-white p-1.5 shadow-2xl animate-in fade-in zoom-in-95 duration-150 custom-scrollbar">
                     {Array.from({ length: totalPositions }, (_, i) => i + 1).map((pos) => {
                       const isSelected = String(pos) === String(sortOrder);
                       return (
@@ -404,13 +404,13 @@ export function HomeFeaturedProducts() {
                           }}
                           className={`flex w-full items-center justify-between gap-2 rounded-xl px-3 py-2 text-left text-sm transition ${
                             isSelected
-                              ? 'bg-lime-400/15 text-lime-300 font-semibold'
-                              : 'text-white/80 hover:bg-white/10 hover:text-white'
+                              ? 'bg-emerald-50 text-emerald-800 font-semibold'
+                              : 'text-slate-700 hover:bg-slate-50 hover:text-slate-900'
                           }`}
                         >
                           <div className="flex items-center gap-2.5">
                             <span className={`flex h-5 w-5 items-center justify-center rounded-md font-bold text-[11px] ${
-                              isSelected ? 'bg-lime-400 text-black' : 'bg-white/10 text-white/70'
+                              isSelected ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-600'
                             }`}>
                               {pos}
                             </span>
@@ -418,7 +418,7 @@ export function HomeFeaturedProducts() {
                               {pos === 1 ? 'Vị trí 1 — Đầu tiên' : pos === totalPositions ? `Vị trí ${pos} — Cuối cùng` : `Vị trí ${pos}`}
                             </span>
                           </div>
-                          {isSelected && <Check className="h-4 w-4 text-lime-400 stroke-[2.5]" />}
+                          {isSelected && <Check className="h-4 w-4 text-emerald-600 stroke-[2.5]" />}
                         </button>
                       );
                     })}
@@ -427,22 +427,22 @@ export function HomeFeaturedProducts() {
               </div>
             </div>
 
-            <label className="flex cursor-pointer items-center gap-3 self-end rounded-2xl border border-white/10 bg-black/20 px-4 py-3.5 text-sm transition hover:border-white/20">
+            <label className="flex cursor-pointer items-center gap-3 self-end rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-sm transition hover:border-slate-300">
               <input
                 type="checkbox"
                 checked={isActive}
                 onChange={(event) => setIsActive(event.target.checked)}
-                className="h-4 w-4 rounded accent-lime-400"
+                className="h-4 w-4 rounded accent-emerald-600"
               />
-              <span className="font-medium text-white/90">Hiển thị trên trang chủ</span>
+              <span className="font-medium text-slate-800">Hiển thị trên trang chủ</span>
             </label>
           </div>
 
-          <div className="mt-6 flex justify-end gap-3 border-t border-white/10 pt-4">
+          <div className="mt-6 flex justify-end gap-3 border-t border-slate-100 pt-4">
             <button
               type="button"
               onClick={closeForm}
-              className="rounded-xl border border-white/10 px-4 py-2.5 text-sm font-semibold text-white/70 transition hover:bg-white/10 hover:text-white"
+              className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 shadow-xs transition"
             >
               Hủy
             </button>
@@ -450,7 +450,7 @@ export function HomeFeaturedProducts() {
               type="button"
               disabled={isSaving || (!editing && !productId)}
               onClick={() => void save()}
-              className="inline-flex items-center gap-2 rounded-xl bg-lime-400 px-5 py-2.5 text-sm font-bold text-black transition hover:bg-lime-300 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-bold text-white transition hover:bg-emerald-700 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
               {editing ? 'Lưu thay đổi' : 'Thêm vào trang chủ'}
@@ -459,40 +459,40 @@ export function HomeFeaturedProducts() {
         </div>
       )}
 
-      <div className="relative z-10 overflow-hidden rounded-3xl border border-white/10 bg-black/25 backdrop-blur-xl">
+      <div className="relative z-10 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
         {isLoading ? (
-          <div className="flex min-h-52 items-center justify-center text-white/50">
-            <Loader2 className="mr-2 h-5 w-5 animate-spin text-lime-400" />
+          <div className="flex min-h-52 items-center justify-center text-slate-500">
+            <Loader2 className="mr-2 h-5 w-5 animate-spin text-emerald-600" />
             Đang tải danh sách...
           </div>
         ) : featuredProducts.length === 0 ? (
           <div className="p-10 text-center">
-            <Package className="mx-auto h-10 w-10 text-white/20 mb-3" />
-            <p className="font-semibold text-lg">Chưa có sản phẩm nổi bật.</p>
-            <p className="mt-1 text-sm text-white/50">Bấm "Thêm sản phẩm nổi bật" để đưa sản phẩm lên carousel trang chủ.</p>
+            <Package className="mx-auto h-10 w-10 text-slate-300 mb-3" />
+            <p className="font-semibold text-lg text-slate-800">Chưa có sản phẩm nổi bật.</p>
+            <p className="mt-1 text-sm text-slate-500">Bấm "Thêm sản phẩm nổi bật" để đưa sản phẩm lên carousel trang chủ.</p>
           </div>
         ) : (
-          <div className="divide-y divide-white/10">
+          <div className="divide-y divide-slate-100">
             {featuredProducts.map((item) => (
-              <article key={item.id} className="flex flex-wrap items-center gap-4 p-4 transition hover:bg-white/[0.02] sm:flex-nowrap">
+              <article key={item.id} className="flex flex-wrap items-center gap-4 p-4 transition hover:bg-slate-50/70 sm:flex-nowrap">
                 <ProductThumbnail product={item.product} />
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
-                    <h2 className="truncate font-bold text-base">{item.product.name}</h2>
-                    <span className={`rounded-full border px-2.5 py-0.5 text-xs font-semibold ${item.isActive ? 'border-lime-300/30 bg-lime-400/10 text-lime-200' : 'border-white/10 bg-white/5 text-white/45'}`}>
+                    <h2 className="truncate font-bold text-base text-slate-900">{item.product.name}</h2>
+                    <span className={`rounded-full border px-2.5 py-0.5 text-xs font-semibold ${item.isActive ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-slate-200 bg-slate-100 text-slate-500'}`}>
                       {item.isActive ? 'Đang hiển thị' : 'Đã tắt'}
                     </span>
                   </div>
-                  <p className="mt-1 text-sm text-white/50">{productLabel(item.product)} · <span className="text-lime-300 font-medium">{formatFeaturedProductPrice(item.product)}</span></p>
+                  <p className="mt-1 text-sm text-slate-500">{productLabel(item.product)} · <span className="text-emerald-700 font-semibold">{formatFeaturedProductPrice(item.product)}</span></p>
                 </div>
-                <div className="rounded-xl border border-white/10 bg-white/5 px-3 py-1.5 text-sm text-white/70">
-                  Vị trí: <span className="font-bold text-lime-300">{item.sortOrder}</span>
+                <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm text-slate-600">
+                  Vị trí: <span className="font-bold text-emerald-700">{item.sortOrder}</span>
                 </div>
                 <div className="flex gap-2">
-                  <button type="button" onClick={() => openEdit(item)} className="rounded-xl border border-white/10 p-2.5 text-white/70 transition hover:bg-white/10 hover:text-white" aria-label={`Sửa ${item.product.name}`}>
+                  <button type="button" onClick={() => openEdit(item)} className="rounded-xl border border-slate-200 bg-white p-2.5 text-slate-600 transition hover:bg-slate-50 hover:text-slate-900 shadow-xs" aria-label={`Sửa ${item.product.name}`}>
                     <Edit3 className="h-4 w-4" />
                   </button>
-                  <button type="button" onClick={() => void remove(item)} className="rounded-xl border border-red-300/20 p-2.5 text-red-300 transition hover:bg-red-400/10" aria-label={`Gỡ ${item.product.name} khỏi nổi bật`}>
+                  <button type="button" onClick={() => void remove(item)} className="rounded-xl border border-red-200 bg-red-50/50 p-2.5 text-red-600 transition hover:bg-red-100/60" aria-label={`Gỡ ${item.product.name} khỏi nổi bật`}>
                     <Trash2 className="h-4 w-4" />
                   </button>
                 </div>

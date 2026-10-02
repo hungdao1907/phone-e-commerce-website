@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
+import {
   Folder, FolderOpen, Smartphone, Laptop, Tablet, Headphones, Watch,
   ChevronRight, ChevronDown, Plus, Edit2, Trash2, X,
   LayoutGrid
@@ -28,7 +28,7 @@ const getIcon = (type?: string | null, isOpen?: boolean) => {
     case 'tablet': return <Tablet className="w-4 h-4" />;
     case 'headphones': return <Headphones className="w-4 h-4" />;
     case 'watch': return <Watch className="w-4 h-4" />;
-    default: return isOpen ? <FolderOpen className="w-4 h-4 text-emerald-400" /> : <Folder className="w-4 h-4 text-emerald-400/70" />;
+    default: return isOpen ? <FolderOpen className="w-4 h-4 text-emerald-600" /> : <Folder className="w-4 h-4 text-emerald-600/80" />;
   }
 };
 
@@ -42,10 +42,10 @@ const ICON_OPTIONS = [
 ];
 
 // ========== TREE NODE COMPONENT ==========
-const TreeNode = ({ 
+const TreeNode = ({
   node, depth = 0, activeId, onSelect, onRefresh
-}: { 
-  node: Category; depth?: number; activeId: string | null; 
+}: {
+  node: Category; depth?: number; activeId: string | null;
   onSelect: (node: Category) => void; onRefresh: () => void;
 }) => {
   const [isOpen, setIsOpen] = useState(depth === 0);
@@ -54,35 +54,35 @@ const TreeNode = ({
 
   return (
     <div className="flex flex-col w-full">
-      <div 
+      <div
         onClick={() => { onSelect(node); if (hasChildren) setIsOpen(!isOpen); }}
         className={cn(
           "group relative flex items-center gap-2 py-2 pr-3 cursor-pointer rounded-xl transition-all duration-200 select-none",
-          isSelected ? "bg-white/10" : "hover:bg-white/5"
+          isSelected ? "bg-emerald-50 text-emerald-800 font-medium" : "hover:bg-slate-100 text-slate-700"
         )}
         style={{ paddingLeft: `${depth * 16 + 12}px` }}
       >
         {isSelected && (
-          <motion.div 
+          <motion.div
             layoutId="active-indicator"
-            className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-emerald-400 rounded-r-full" 
+            className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-emerald-600 rounded-r-full"
           />
         )}
 
-        <div className="w-4 h-4 shrink-0 flex items-center justify-center text-white/50">
+        <div className="w-4 h-4 shrink-0 flex items-center justify-center text-slate-400">
           {hasChildren && (isOpen ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />)}
         </div>
 
-        <div className={cn("w-5 h-5 shrink-0 flex items-center justify-center transition-colors", isSelected ? "text-emerald-400" : "text-white/60 group-hover:text-white/90")}>
+        <div className={cn("w-5 h-5 shrink-0 flex items-center justify-center transition-colors", isSelected ? "text-emerald-600" : "text-slate-400 group-hover:text-slate-600")}>
           {getIcon(node.icon, isOpen)}
         </div>
 
-        <span className={cn("text-sm font-medium truncate flex-1 transition-colors", isSelected ? "text-white" : "text-white/70 group-hover:text-white")}>
+        <span className={cn("text-sm truncate flex-1 transition-colors", isSelected ? "text-slate-900 font-semibold" : "text-slate-700 group-hover:text-slate-900")}>
           {node.name}
         </span>
 
         {!node.isActive && (
-          <span className="text-[10px] text-white/30 bg-white/5 px-1.5 py-0.5 rounded">Ẩn</span>
+          <span className="text-[10px] text-slate-400 bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded">Ẩn</span>
         )}
       </div>
 
@@ -90,7 +90,7 @@ const TreeNode = ({
         {hasChildren && isOpen && (
           <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }} className="overflow-hidden flex flex-col w-full">
             <div className="relative w-full">
-              <div className="absolute top-0 bottom-2 bg-white/10 w-px" style={{ left: `${depth * 16 + 26}px` }} />
+              <div className="absolute top-0 bottom-2 bg-slate-200 w-px" style={{ left: `${depth * 16 + 26}px` }} />
               {node.children.map((child) => (
                 <TreeNode key={child.id} node={child} depth={depth + 1} activeId={activeId} onSelect={onSelect} onRefresh={onRefresh} />
               ))}
@@ -220,41 +220,41 @@ export function Categories() {
   };
 
   return (
-    <div className="flex flex-col h-full gap-6 text-white w-full">
+    <div className="flex flex-col h-full gap-6 text-slate-900 w-full">
       {/* HEADER */}
       <div className="flex items-center justify-between shrink-0">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Danh mục</h1>
-          <p className="text-sm text-white/50 mt-1">Quản lý cấu trúc cây phân loại sản phẩm.</p>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Danh mục</h1>
+          <p className="text-sm text-slate-500 mt-1">Quản lý cấu trúc cây phân loại sản phẩm.</p>
         </div>
-        <button 
+        <button
           onClick={() => handleOpenCreateCat()}
-          className="h-10 px-5 rounded-xl bg-white/10 border border-white/20 text-white flex items-center gap-2 hover:bg-white/20 transition-colors text-sm font-medium"
+          className="h-10 px-5 rounded-xl bg-white border border-slate-200 text-slate-800 shadow-sm flex items-center gap-2 hover:bg-slate-50 transition-colors text-sm font-medium"
         >
-          <Plus className="w-4 h-4" />
+          <Plus className="w-4 h-4 text-emerald-600" />
           Tạo Danh Mục Gốc
         </button>
       </div>
 
       {/* SPLIT PANE */}
       <div className="flex-1 flex gap-6 min-h-0">
-        
+
         {/* LEFT: TREE */}
-        <div className="w-[45%] flex flex-col bg-white/5 border border-white/10 rounded-2xl overflow-hidden shrink-0">
-          <div className="p-4 border-b border-white/10 flex items-center justify-between bg-black/20">
-            <h2 className="font-semibold text-sm text-white/80 uppercase tracking-wider flex items-center gap-2">
-              <LayoutGrid className="w-4 h-4 text-emerald-400" /> Cây Danh Mục
+        <div className="w-[45%] flex flex-col bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm shrink-0">
+          <div className="p-4 border-b border-slate-200 flex items-center justify-between bg-slate-50">
+            <h2 className="font-semibold text-xs text-slate-500 uppercase tracking-wider flex items-center gap-2">
+              <LayoutGrid className="w-4 h-4 text-emerald-600" /> Cây Danh Mục
             </h2>
           </div>
-          
+
           <div className="flex-1 overflow-y-auto custom-scrollbar p-3 flex flex-col">
             {isLoading ? (
               <div className="flex items-center justify-center h-40">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
               </div>
             ) : categories.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-40 text-white/40 text-sm">
-                <Folder className="w-10 h-10 text-white/15 mb-3" />
+              <div className="flex flex-col items-center justify-center h-40 text-slate-400 text-sm">
+                <Folder className="w-10 h-10 text-slate-300 mb-3" />
                 <p>Chưa có danh mục nào</p>
                 <p className="text-xs mt-1">Hãy tạo danh mục đầu tiên!</p>
               </div>
@@ -267,37 +267,37 @@ export function Categories() {
         </div>
 
         {/* RIGHT: DETAILS */}
-        <div className="flex-1 flex flex-col bg-white/5 border border-white/10 rounded-2xl overflow-hidden relative">
+        <div className="flex-1 flex flex-col bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm relative">
           {activeCategory ? (
             <>
               {/* Header */}
-              <div className="h-28 bg-gradient-to-br from-emerald-500/20 via-black/40 to-black/80 border-b border-white/10 relative p-6 flex items-end">
+              <div className="h-28 bg-gradient-to-br from-emerald-50 via-slate-50 to-white border-b border-slate-200 relative p-6 flex items-end">
                 <div className="relative z-10 flex items-center justify-between w-full">
                   <div className="flex items-center gap-4">
-                    <div className="w-14 h-14 rounded-2xl bg-black/50 border border-white/20 backdrop-blur-md flex items-center justify-center text-emerald-400 shadow-xl">
+                    <div className="w-14 h-14 rounded-2xl bg-white border border-slate-200 shadow-md flex items-center justify-center text-emerald-600">
                       {getIcon(activeCategory.icon, true)}
                     </div>
                     <div>
-                      <h2 className="text-xl font-bold tracking-tight text-white">{activeCategory.name}</h2>
-                      <p className="text-xs text-emerald-300/80 font-mono mt-0.5">/{activeCategory.slug || activeCategory.id}</p>
+                      <h2 className="text-xl font-bold tracking-tight text-slate-900">{activeCategory.name}</h2>
+                      <p className="text-xs text-emerald-700 font-mono mt-0.5">/{activeCategory.slug || activeCategory.id}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <button 
+                    <button
                       onClick={() => handleOpenCreateCat(activeCategory.id)}
-                      className="h-9 px-3 rounded-lg bg-white/10 hover:bg-white/20 border border-white/10 transition-colors text-sm font-medium flex items-center gap-1.5"
+                      className="h-9 px-3 rounded-lg bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 shadow-sm transition-colors text-sm font-medium flex items-center gap-1.5"
                     >
-                      <Plus className="w-3.5 h-3.5" /> Thêm con
+                      <Plus className="w-3.5 h-3.5 text-emerald-600" /> Thêm con
                     </button>
-                    <button 
+                    <button
                       onClick={() => handleOpenEditCat(activeCategory)}
-                      className="h-9 px-3 rounded-lg bg-white/10 hover:bg-white/20 border border-white/10 transition-colors text-sm font-medium flex items-center gap-1.5"
+                      className="h-9 px-3 rounded-lg bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 shadow-sm transition-colors text-sm font-medium flex items-center gap-1.5"
                     >
-                      <Edit2 className="w-3.5 h-3.5" /> Sửa
+                      <Edit2 className="w-3.5 h-3.5 text-slate-500" /> Sửa
                     </button>
-                    <button 
+                    <button
                       onClick={() => handleDeleteCat(activeCategory.id, activeCategory.name)}
-                      className="h-9 px-3 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 transition-colors text-sm font-medium flex items-center gap-1.5"
+                      className="h-9 px-3 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 shadow-sm transition-colors text-sm font-medium flex items-center gap-1.5"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
@@ -308,19 +308,19 @@ export function Categories() {
               {/* Content */}
               <div className="flex-1 overflow-y-auto custom-scrollbar p-6 flex flex-col gap-8">
                 {/* Status Toggle */}
-                <div className="flex items-center justify-between p-5 rounded-2xl bg-black/20 border border-white/5">
+                <div className="flex items-center justify-between p-5 rounded-2xl bg-slate-50 border border-slate-200">
                   <div>
-                    <h3 className="font-semibold text-white/90">Trạng thái hiển thị</h3>
-                    <p className="text-sm text-white/40 mt-1">Danh mục này sẽ hiển thị trên menu chính của website</p>
+                    <h3 className="font-semibold text-slate-900">Trạng thái hiển thị</h3>
+                    <p className="text-sm text-slate-500 mt-1">Danh mục này sẽ hiển thị trên menu chính của website</p>
                   </div>
-                  <div 
+                  <div
                     onClick={() => handleToggleActive(activeCategory)}
                     className={cn(
                       "w-12 h-6 rounded-full p-1 cursor-pointer transition-colors relative",
-                      activeCategory.isActive ? "bg-emerald-500" : "bg-white/10"
+                      activeCategory.isActive ? "bg-emerald-600" : "bg-slate-300"
                     )}
                   >
-                    <motion.div 
+                    <motion.div
                       layout className="w-4 h-4 rounded-full bg-white shadow-sm"
                       animate={{ x: activeCategory.isActive ? 24 : 0 }}
                       transition={{ type: "spring", stiffness: 500, damping: 30 }}
@@ -331,9 +331,9 @@ export function Categories() {
             </>
           ) : (
             <div className="flex-1 flex flex-col items-center justify-center text-center p-8">
-              <FolderOpen className="w-16 h-16 text-white/10 mb-4" />
-              <h2 className="text-xl font-semibold text-white/80">Chưa chọn Danh mục</h2>
-              <p className="text-white/40 mt-2 max-w-sm">Hãy chọn một danh mục trên cây thư mục bên trái để xem và chỉnh sửa.</p>
+              <FolderOpen className="w-16 h-16 text-slate-300 mb-4" />
+              <h2 className="text-xl font-semibold text-slate-700">Chưa chọn Danh mục</h2>
+              <p className="text-slate-400 mt-2 max-w-sm">Hãy chọn một danh mục trên cây thư mục bên trái để xem và chỉnh sửa.</p>
             </div>
           )}
         </div>
@@ -343,26 +343,26 @@ export function Categories() {
       <AnimatePresence>
         {isCatModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center">
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsCatModalOpen(false)} className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-            <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }} className="relative w-full max-w-md bg-[#1c1c1e] border border-white/10 rounded-3xl shadow-2xl p-6">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsCatModalOpen(false)} className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
+            <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }} className="relative w-full max-w-md bg-white border border-slate-200 rounded-3xl shadow-2xl p-6 text-slate-900">
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-bold">{editingCategory ? 'Sửa danh mục' : 'Tạo danh mục mới'}</h2>
-                <button onClick={() => setIsCatModalOpen(false)} className="p-2 hover:bg-white/10 rounded-full transition-colors"><X className="w-5 h-5 text-white/70" /></button>
+                <h2 className="text-xl font-bold text-slate-900">{editingCategory ? 'Sửa danh mục' : 'Tạo danh mục mới'}</h2>
+                <button onClick={() => setIsCatModalOpen(false)} className="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-400 hover:text-slate-600"><X className="w-5 h-5" /></button>
               </div>
-              {errorMsg && <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-sm">{errorMsg}</div>}
+              {errorMsg && <div className="mb-4 p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-600 text-sm">{errorMsg}</div>}
               <form onSubmit={handleSubmitCat} className="space-y-4">
                 <div>
-                  <label className="block text-xs font-medium text-white/50 mb-1.5">Tên danh mục *</label>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1.5">Tên danh mục *</label>
                   <input type="text" required value={catForm.name} onChange={e => setCatForm({...catForm, name: e.target.value})}
-                    className="w-full h-11 bg-white/5 border border-white/10 rounded-xl px-4 text-sm focus:outline-none focus:border-emerald-500 transition-colors" placeholder="VD: Điện thoại di động" />
+                    className="w-full h-11 bg-slate-50 border border-slate-200 rounded-xl px-4 text-sm text-slate-900 focus:outline-none focus:border-emerald-500 focus:bg-white placeholder:text-slate-400 transition-colors" placeholder="VD: Điện thoại di động" />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-white/50 mb-1.5">Icon</label>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1.5">Icon</label>
                   <div className="flex gap-2 flex-wrap">
                     {ICON_OPTIONS.map(opt => (
                       <button key={opt.value} type="button"
                         onClick={() => setCatForm({...catForm, icon: opt.value})}
-                        className={cn("flex items-center gap-2 px-3 py-2 rounded-xl border text-sm transition-colors", catForm.icon === opt.value ? "border-emerald-500 bg-emerald-500/10 text-emerald-400" : "border-white/10 bg-white/5 text-white/60 hover:bg-white/10")}
+                        className={cn("flex items-center gap-2 px-3 py-2 rounded-xl border text-sm transition-colors", catForm.icon === opt.value ? "border-emerald-500 bg-emerald-50 text-emerald-700 font-medium" : "border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100")}
                       >
                         {getIcon(opt.value || undefined)} {opt.label}
                       </button>
@@ -370,8 +370,8 @@ export function Categories() {
                   </div>
                 </div>
                 <div className="pt-4 flex items-center justify-end gap-3">
-                  <button type="button" onClick={() => setIsCatModalOpen(false)} className="h-11 px-5 rounded-xl font-medium hover:bg-white/10 transition-colors">Hủy</button>
-                  <button type="submit" disabled={isSubmitting} className="h-11 px-6 rounded-xl font-medium bg-emerald-500 text-black hover:bg-emerald-400 transition-colors disabled:opacity-50">
+                  <button type="button" onClick={() => setIsCatModalOpen(false)} className="h-11 px-5 rounded-xl font-medium text-slate-600 hover:bg-slate-100 transition-colors">Hủy</button>
+                  <button type="submit" disabled={isSubmitting} className="h-11 px-6 rounded-xl font-medium bg-emerald-600 text-white hover:bg-emerald-500 shadow-md transition-colors disabled:opacity-50">
                     {isSubmitting ? 'Đang lưu...' : 'Lưu'}
                   </button>
                 </div>

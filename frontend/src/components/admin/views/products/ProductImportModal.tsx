@@ -168,24 +168,24 @@ export function ProductImportModal({ isOpen, onClose, onSuccess, token }: Produc
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            className="relative w-full max-w-5xl bg-[#111111] border border-white/10 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[95vh]"
+            className="relative w-full max-w-5xl bg-white border border-slate-200 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[95vh]"
           >
             {/* Header */}
-            <div className="flex items-center justify-between p-6 border-b border-white/10 shrink-0">
-              <h2 className="text-xl font-bold text-white">Import Sản phẩm từ Excel</h2>
+            <div className="flex items-center justify-between p-6 border-b border-slate-200 shrink-0 bg-white">
+              <h2 className="text-xl font-bold text-slate-900">Import Sản phẩm từ Excel</h2>
               <button
                 onClick={handleClose}
                 disabled={step === 'importing'}
-                className="p-2 text-white/50 hover:text-white hover:bg-white/10 rounded-full transition-colors disabled:opacity-50"
+                className="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-full transition-colors disabled:opacity-50"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             {/* Content */}
-            <div className="p-6 overflow-y-auto custom-scrollbar flex-1">
+            <div className="p-6 overflow-y-auto custom-scrollbar flex-1 bg-slate-50/50">
               {error && (
-                <div className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 flex items-start gap-3">
+                <div className="mb-6 p-4 rounded-xl bg-red-50 border border-red-200 text-red-700 flex items-start gap-3">
                   <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
                   <p className="text-sm">{error}</p>
                 </div>
@@ -193,17 +193,17 @@ export function ProductImportModal({ isOpen, onClose, onSuccess, token }: Produc
 
               {step === 'upload' && (
                 <div className="flex flex-col gap-6">
-                  <div className="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/10">
+                  <div className="flex items-center justify-between p-4 rounded-xl bg-slate-50 border border-slate-200">
                     <div className="flex items-center gap-3">
-                      <FileText className="w-5 h-5 text-emerald-400" />
+                      <FileText className="w-5 h-5 text-emerald-600" />
                       <div>
-                        <h3 className="text-sm font-medium text-white">File mẫu (Template Tự Động Sinh Variant)</h3>
-                        <p className="text-xs text-white/50 mt-0.5">Sử dụng dấu | để khai báo nhiều thuộc tính trên 1 dòng</p>
+                        <h3 className="text-sm font-semibold text-slate-800">File mẫu (Template Tự Động Sinh Variant)</h3>
+                        <p className="text-xs text-slate-500 mt-0.5">Sử dụng dấu | để khai báo nhiều thuộc tính trên 1 dòng</p>
                       </div>
                     </div>
                     <button
                       onClick={downloadTemplate}
-                      className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white text-sm font-medium rounded-lg transition-colors"
+                      className="px-4 py-2 bg-white hover:bg-slate-100 text-slate-700 text-sm font-semibold rounded-lg transition-colors border border-slate-200 shadow-sm"
                     >
                       Tải File Mẫu
                     </button>
@@ -212,8 +212,8 @@ export function ProductImportModal({ isOpen, onClose, onSuccess, token }: Produc
                   <div 
                     onClick={() => fileInputRef.current?.click()}
                     className={cn(
-                      "border-2 border-dashed rounded-xl p-10 flex flex-col items-center justify-center gap-4 cursor-pointer transition-colors",
-                      file ? "border-emerald-500/50 bg-emerald-500/5" : "border-white/20 hover:border-white/40 hover:bg-white/5"
+                      "border-2 border-dashed rounded-xl p-10 flex flex-col items-center justify-center gap-4 cursor-pointer transition-colors bg-white",
+                      file ? "border-emerald-500 bg-emerald-50/20" : "border-slate-300 hover:border-slate-400 hover:bg-slate-50/50"
                     )}
                   >
                     <input 
@@ -223,14 +223,14 @@ export function ProductImportModal({ isOpen, onClose, onSuccess, token }: Produc
                       ref={fileInputRef}
                       onChange={handleFileChange}
                     />
-                    <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center">
-                      <Upload className={cn("w-8 h-8", file ? "text-emerald-400" : "text-white/50")} />
+                    <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center">
+                      <Upload className={cn("w-8 h-8", file ? "text-emerald-600" : "text-slate-400")} />
                     </div>
                     <div className="text-center">
-                      <h3 className="text-base font-medium text-white mb-1">
+                      <h3 className="text-base font-semibold text-slate-800 mb-1">
                         {file ? file.name : "Kéo thả file hoặc nhấn để chọn"}
                       </h3>
-                      <p className="text-sm text-white/50">
+                      <p className="text-sm text-slate-500">
                         {file ? `${(file.size / 1024 / 1024).toFixed(2)} MB` : "Hỗ trợ .xlsx, .xls, .csv"}
                       </p>
                     </div>
@@ -240,7 +240,7 @@ export function ProductImportModal({ isOpen, onClose, onSuccess, token }: Produc
                     <button
                       onClick={handlePreview}
                       disabled={!file}
-                      className="px-6 py-2.5 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold rounded-xl transition-colors"
+                      className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold rounded-xl transition-colors shadow-sm"
                     >
                       Tiếp tục (Preview)
                     </button>
@@ -251,39 +251,39 @@ export function ProductImportModal({ isOpen, onClose, onSuccess, token }: Produc
               {step === 'preview' && previewData && (
                 <div className="flex flex-col gap-6">
                   <div className="grid grid-cols-4 gap-4">
-                    <div className="p-4 rounded-xl bg-white/5 border border-white/10 text-center">
-                      <div className="text-2xl font-bold text-white">{previewData.totalRows}</div>
-                      <div className="text-xs text-white/50 mt-1">Sản phẩm (Dòng)</div>
+                    <div className="p-4 rounded-xl bg-white border border-slate-200 text-center shadow-sm">
+                      <div className="text-2xl font-bold text-slate-900">{previewData.totalRows}</div>
+                      <div className="text-xs text-slate-500 mt-1">Sản phẩm (Dòng)</div>
                     </div>
-                    <div className="p-4 rounded-xl bg-blue-500/10 border border-blue-500/20 text-center">
-                      <div className="text-2xl font-bold text-blue-400">{totalGeneratedVariants}</div>
-                      <div className="text-xs text-white/50 mt-1">Variants được sinh ra</div>
+                    <div className="p-4 rounded-xl bg-blue-50 border border-blue-200 text-center shadow-sm">
+                      <div className="text-2xl font-bold text-blue-700">{totalGeneratedVariants}</div>
+                      <div className="text-xs text-blue-600 mt-1">Variants được sinh ra</div>
                     </div>
-                    <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-center">
-                      <div className="text-2xl font-bold text-emerald-400">{previewData.validRows}</div>
-                      <div className="text-xs text-white/50 mt-1">Dòng hợp lệ</div>
+                    <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-center shadow-sm">
+                      <div className="text-2xl font-bold text-emerald-700">{previewData.validRows}</div>
+                      <div className="text-xs text-emerald-600 mt-1">Dòng hợp lệ</div>
                     </div>
-                    <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-center">
-                      <div className="text-2xl font-bold text-red-400">{previewData.errorRows}</div>
-                      <div className="text-xs text-white/50 mt-1">Dòng bị lỗi</div>
+                    <div className="p-4 rounded-xl bg-red-50 border border-red-200 text-center shadow-sm">
+                      <div className="text-2xl font-bold text-red-700">{previewData.errorRows}</div>
+                      <div className="text-xs text-red-600 mt-1">Dòng bị lỗi</div>
                     </div>
                   </div>
 
                   <div className="space-y-6">
                     {previewData.groupedProducts.map((prod: any, prodIndex: number) => (
-                      <div key={prod.key} className="rounded-xl border border-white/10 overflow-hidden bg-black/20">
-                        <div className="p-4 bg-white/5 flex items-center justify-between border-b border-white/10">
+                      <div key={prod.key} className="rounded-xl border border-slate-200 overflow-hidden bg-white shadow-sm">
+                        <div className="p-4 bg-slate-50 flex items-center justify-between border-b border-slate-200">
                           <div>
-                            <h3 className="font-bold text-white text-lg">{prod.name}</h3>
-                            <p className="text-xs text-white/50 mt-0.5">Category: {prod.categorySlug || 'N/A'} | Brand: {prod.brand}</p>
+                            <h3 className="font-bold text-slate-900 text-lg">{prod.name}</h3>
+                            <p className="text-xs text-slate-500 mt-0.5">Category: {prod.categorySlug || 'N/A'} | Brand: {prod.brand}</p>
                           </div>
                           <div className="text-right">
-                            <span className="text-sm font-medium text-blue-400">{prod.variants?.length || 0} Variants</span>
+                            <span className="text-sm font-semibold text-blue-700">{prod.variants?.length || 0} Variants</span>
                           </div>
                         </div>
 
                         {prod.error ? (
-                          <div className="p-4 bg-red-500/10 text-red-400 text-sm">
+                          <div className="p-4 bg-red-50 text-red-700 text-sm">
                             <AlertCircle className="w-4 h-4 inline-block mr-2" />
                             {prod.error}
                           </div>
@@ -291,7 +291,7 @@ export function ProductImportModal({ isOpen, onClose, onSuccess, token }: Produc
                           <div className="overflow-x-auto">
                             <table className="w-full text-left border-collapse text-sm">
                               <thead>
-                                <tr className="border-b border-white/10 bg-white/5 text-white/50">
+                                <tr className="border-b border-slate-200 bg-slate-50 text-slate-500">
                                   <th className="p-3 font-medium whitespace-nowrap">SKU</th>
                                   <th className="p-3 font-medium">Thuộc tính</th>
                                   <th className="p-3 font-medium w-32">Giá (VND)</th>
@@ -301,12 +301,12 @@ export function ProductImportModal({ isOpen, onClose, onSuccess, token }: Produc
                               </thead>
                               <tbody>
                                 {prod.variants.map((v: any, varIndex: number) => (
-                                  <tr key={v.sku} className="border-b border-white/5 hover:bg-white/5 last:border-0">
-                                    <td className="p-3 text-white/80 font-mono text-xs">{v.sku}</td>
-                                    <td className="p-3 text-white">
+                                  <tr key={v.sku} className="border-b border-slate-100 hover:bg-slate-50 last:border-0">
+                                    <td className="p-3 text-slate-700 font-mono text-xs">{v.sku}</td>
+                                    <td className="p-3 text-slate-800">
                                       <div className="flex flex-wrap gap-1">
                                         {Object.entries(v.attributes).map(([k, val]) => (
-                                          <span key={k} className="px-2 py-0.5 rounded bg-white/10 text-xs text-white/70">
+                                          <span key={k} className="px-2 py-0.5 rounded bg-slate-100 border border-slate-200 text-xs text-slate-700">
                                             {String(val)}
                                           </span>
                                         ))}
@@ -317,7 +317,7 @@ export function ProductImportModal({ isOpen, onClose, onSuccess, token }: Produc
                                         type="text"
                                         value={v.price ? v.price.toLocaleString('vi-VN') : ''}
                                         onChange={(e) => handleVariantChange(prodIndex, varIndex, 'price', e.target.value)}
-                                        className="w-full bg-black/40 border border-white/10 rounded px-2 py-1 text-white text-sm outline-none focus:border-emerald-500"
+                                        className="w-full bg-white border border-slate-200 rounded px-2 py-1 text-slate-800 text-sm outline-none focus:border-emerald-500"
                                       />
                                     </td>
                                     <td className="p-3">
@@ -325,7 +325,7 @@ export function ProductImportModal({ isOpen, onClose, onSuccess, token }: Produc
                                         type="text"
                                         value={v.salePrice ? v.salePrice.toLocaleString('vi-VN') : ''}
                                         onChange={(e) => handleVariantChange(prodIndex, varIndex, 'salePrice', e.target.value)}
-                                        className="w-full bg-black/40 border border-white/10 rounded px-2 py-1 text-white text-sm outline-none focus:border-emerald-500"
+                                        className="w-full bg-white border border-slate-200 rounded px-2 py-1 text-emerald-700 font-semibold text-sm outline-none focus:border-emerald-500"
                                         placeholder="Trống"
                                       />
                                     </td>
@@ -334,7 +334,7 @@ export function ProductImportModal({ isOpen, onClose, onSuccess, token }: Produc
                                         type="number"
                                         value={v.stock}
                                         onChange={(e) => handleVariantChange(prodIndex, varIndex, 'stock', e.target.value)}
-                                        className="w-full bg-black/40 border border-white/10 rounded px-2 py-1 text-white text-sm outline-none focus:border-emerald-500"
+                                        className="w-full bg-white border border-slate-200 rounded px-2 py-1 text-slate-800 text-sm outline-none focus:border-emerald-500"
                                         min="0"
                                       />
                                     </td>
@@ -351,14 +351,14 @@ export function ProductImportModal({ isOpen, onClose, onSuccess, token }: Produc
                   <div className="flex justify-between items-center mt-4">
                     <button
                       onClick={() => setStep('upload')}
-                      className="px-6 py-2.5 bg-white/5 hover:bg-white/10 text-white text-sm font-medium rounded-xl transition-colors"
+                      className="px-6 py-2.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 text-sm font-semibold rounded-xl transition-colors shadow-sm"
                     >
                       Quay lại
                     </button>
                     <button
                       onClick={handleConfirm}
                       disabled={hasErrors || previewData.validRows === 0}
-                      className="px-6 py-2.5 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold rounded-xl transition-colors"
+                      className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold rounded-xl transition-colors shadow-sm"
                     >
                       Xác nhận Import ({previewData.validRows} SP / {totalGeneratedVariants} Variants)
                     </button>
@@ -368,42 +368,42 @@ export function ProductImportModal({ isOpen, onClose, onSuccess, token }: Produc
 
               {step === 'importing' && (
                 <div className="flex flex-col items-center justify-center py-20 gap-6">
-                  <Loader2 className="w-12 h-12 text-emerald-500 animate-spin" />
+                  <Loader2 className="w-12 h-12 text-emerald-600 animate-spin" />
                   <div className="text-center">
-                    <h3 className="text-lg font-bold text-white mb-2">Đang xử lý dữ liệu...</h3>
-                    <p className="text-sm text-white/50">Hệ thống đang tải ảnh và lưu vào database.<br/>Vui lòng không đóng cửa sổ này.</p>
+                    <h3 className="text-lg font-bold text-slate-900 mb-2">Đang xử lý dữ liệu...</h3>
+                    <p className="text-sm text-slate-500">Hệ thống đang tải ảnh và lưu vào database.<br/>Vui lòng không đóng cửa sổ này.</p>
                   </div>
                 </div>
               )}
 
               {step === 'result' && importResult && (
                 <div className="flex flex-col items-center py-10 gap-8">
-                  <div className="w-20 h-20 rounded-full bg-emerald-500/20 flex items-center justify-center">
-                    <CheckCircle2 className="w-10 h-10 text-emerald-500" />
+                  <div className="w-20 h-20 rounded-full bg-emerald-50 border border-emerald-200 flex items-center justify-center">
+                    <CheckCircle2 className="w-10 h-10 text-emerald-600" />
                   </div>
                   
                   <div className="text-center">
-                    <h3 className="text-2xl font-bold text-white mb-2">Import Thành Công</h3>
-                    <p className="text-white/70">Quá trình nhập liệu đã hoàn tất.</p>
+                    <h3 className="text-2xl font-bold text-slate-900 mb-2">Import Thành Công</h3>
+                    <p className="text-slate-600">Quá trình nhập liệu đã hoàn tất.</p>
                   </div>
 
-                  <div className="w-full max-w-md bg-white/5 border border-white/10 rounded-xl p-6 flex flex-col gap-4">
+                  <div className="w-full max-w-md bg-white border border-slate-200 rounded-xl p-6 flex flex-col gap-4 shadow-sm">
                     <div className="flex justify-between items-center">
-                      <span className="text-white/70">Sản phẩm tạo mới:</span>
-                      <span className="text-white font-bold">{importResult.productsCreated}</span>
+                      <span className="text-slate-600">Sản phẩm tạo mới:</span>
+                      <span className="text-slate-900 font-bold">{importResult.productsCreated}</span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-white/70">Phiên bản (Variants) tạo mới:</span>
-                      <span className="text-white font-bold">{importResult.variantsCreated}</span>
+                      <span className="text-slate-600">Phiên bản (Variants) tạo mới:</span>
+                      <span className="text-slate-900 font-bold">{importResult.variantsCreated}</span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-white/70">Ảnh đã tải về:</span>
-                      <span className="text-emerald-400 font-bold">{importResult.imagesDownloaded}</span>
+                      <span className="text-slate-600">Ảnh đã tải về:</span>
+                      <span className="text-emerald-700 font-bold">{importResult.imagesDownloaded}</span>
                     </div>
                     {importResult.errors?.length > 0 && (
-                      <div className="mt-4 pt-4 border-t border-white/10">
-                        <span className="text-red-400 font-medium mb-2 block">Lỗi trong quá trình import ({importResult.errors.length}):</span>
-                        <div className="max-h-32 overflow-y-auto text-xs text-red-400/80 bg-red-500/10 p-3 rounded">
+                      <div className="mt-4 pt-4 border-t border-slate-200">
+                        <span className="text-red-700 font-semibold mb-2 block">Lỗi trong quá trình import ({importResult.errors.length}):</span>
+                        <div className="max-h-32 overflow-y-auto text-xs text-red-700 bg-red-50 p-3 rounded border border-red-200">
                           {importResult.errors.map((e: string, i: number) => <div key={i} className="mb-1">{e}</div>)}
                         </div>
                       </div>
@@ -412,7 +412,7 @@ export function ProductImportModal({ isOpen, onClose, onSuccess, token }: Produc
 
                   <button
                     onClick={handleClose}
-                    className="px-8 py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold rounded-xl transition-colors"
+                    className="px-8 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl transition-colors shadow-sm"
                   >
                     Đóng cửa sổ
                   </button>

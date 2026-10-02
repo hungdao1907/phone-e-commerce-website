@@ -17,12 +17,12 @@ export function SettingsManager() {
   ];
 
   return (
-    <div className="flex h-[calc(100vh-140px)] bg-black/20 rounded-3xl overflow-hidden border border-white/5">
+    <div className="flex h-[calc(100vh-140px)] bg-white rounded-3xl overflow-hidden border border-slate-200 shadow-sm">
       {/* Settings Sidebar */}
-      <div className="w-64 bg-black/40 border-r border-white/5 flex flex-col">
-        <div className="p-6 border-b border-white/5">
-          <h2 className="text-lg font-bold text-white flex items-center gap-2">
-            <LayoutDashboard className="w-5 h-5" /> Settings
+      <div className="w-64 bg-slate-50 border-r border-slate-200 flex flex-col">
+        <div className="p-6 border-b border-slate-200">
+          <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+            <LayoutDashboard className="w-5 h-5 text-emerald-600" /> Cài Đặt Hệ Thống
           </h2>
         </div>
         <div className="flex-1 overflow-y-auto p-4 space-y-2">
@@ -33,13 +33,13 @@ export function SettingsManager() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as SettingsTab)}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200 ${
-                  isActive 
-                    ? 'bg-white/10 text-white shadow-lg shadow-white/5' 
-                    : 'text-white/50 hover:bg-white/5 hover:text-white/80'
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200 border ${
+                  isActive
+                    ? 'bg-white text-slate-900 shadow-sm border-slate-200'
+                    : 'text-slate-600 hover:bg-slate-100/80 hover:text-slate-900 border-transparent'
                 }`}
               >
-                <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-white/50'}`} />
+                <Icon className={`w-4 h-4 ${isActive ? 'text-emerald-600' : 'text-slate-400'}`} />
                 {tab.label}
               </button>
             );
@@ -48,13 +48,13 @@ export function SettingsManager() {
       </div>
 
       {/* Settings Content Area */}
-      <div className="flex-1 overflow-y-auto p-8 custom-scrollbar relative">
+      <div className="flex-1 overflow-y-auto p-8 custom-scrollbar relative bg-white">
         {activeTab === 'cart-rewards' && <CartRewardsSetting />}
         {activeTab === 'promo-codes' && <PromoCodesSetting />}
         {activeTab === 'footer' && <FooterManagement />}
         {activeTab === 'general' && (
-          <div className="flex flex-col items-center justify-center h-full text-white/50">
-            <Settings className="w-12 h-12 mb-4 opacity-20" />
+          <div className="flex flex-col items-center justify-center h-full text-slate-400">
+            <Settings className="w-12 h-12 mb-4 opacity-20 text-slate-400" />
             <p>Các cài đặt hệ thống chung sẽ xuất hiện ở đây.</p>
           </div>
         )}

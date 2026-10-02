@@ -111,10 +111,10 @@ const BRAND_DESTINATIONS = [
 ] as const;
 
 const STATUS_CONFIG: Record<BannerStatus, { label: string; className: string }> = {
-  active: { label: 'Đang chạy', className: 'border-emerald-300/25 bg-emerald-400/10 text-emerald-200' },
-  scheduled: { label: 'Sắp chạy', className: 'border-sky-300/25 bg-sky-400/10 text-sky-200' },
-  expired: { label: 'Đã hết hạn', className: 'border-amber-300/25 bg-amber-400/10 text-amber-200' },
-  disabled: { label: 'Đã tắt', className: 'border-white/10 bg-white/[0.05] text-white/45' },
+  active: { label: 'Đang chạy', className: 'border-emerald-200 bg-emerald-50 text-emerald-700' },
+  scheduled: { label: 'Sắp chạy', className: 'border-sky-200 bg-sky-50 text-sky-700' },
+  expired: { label: 'Đã hết hạn', className: 'border-amber-200 bg-amber-50 text-amber-700' },
+  disabled: { label: 'Đã tắt', className: 'border-slate-200 bg-slate-100 text-slate-500' },
 };
 
 const createEmptyForm = (): BannerFormState => ({
@@ -279,7 +279,7 @@ export function Banners() {
         value: 'all',
         label: 'Tất cả vị trí',
         shortLabel: 'Tất cả',
-        icon: <Layers className="h-3.5 w-3.5 text-lime-400" />,
+        icon: <Layers className="h-3.5 w-3.5 text-emerald-600" />,
       },
     ];
 
@@ -315,31 +315,31 @@ export function Banners() {
       value: 'all',
       label: 'Tất cả trạng thái',
       shortLabel: 'Tất cả',
-      icon: <SlidersHorizontal className="h-3.5 w-3.5 text-white/50" />,
+      icon: <SlidersHorizontal className="h-3.5 w-3.5 text-slate-400" />,
       sublabel: 'Xem mọi trạng thái',
     },
     {
       value: 'active',
       label: 'Đang chạy',
-      dotColor: 'bg-emerald-400 shadow-[0_0_8px_#34d399]',
+      dotColor: 'bg-emerald-500',
       sublabel: 'Đang hiển thị công khai',
     },
     {
       value: 'scheduled',
       label: 'Sắp chạy',
-      dotColor: 'bg-sky-400 shadow-[0_0_8px_#38bdf8]',
+      dotColor: 'bg-sky-500',
       sublabel: 'Theo lịch hẹn giờ',
     },
     {
       value: 'expired',
       label: 'Đã hết hạn',
-      dotColor: 'bg-amber-400 shadow-[0_0_8px_#fbbf24]',
+      dotColor: 'bg-amber-500',
       sublabel: 'Đã qua ngày kết thúc',
     },
     {
       value: 'disabled',
       label: 'Đã tắt',
-      dotColor: 'bg-neutral-500',
+      dotColor: 'bg-slate-400',
       sublabel: 'Tạm ẩn thủ công',
     },
   ], []);
@@ -349,7 +349,7 @@ export function Banners() {
       value: 'all',
       label: 'Tất cả thời gian',
       shortLabel: 'Tất cả',
-      icon: <Clock className="h-3.5 w-3.5 text-white/50" />,
+      icon: <Clock className="h-3.5 w-3.5 text-slate-400" />,
       sublabel: 'Mọi khung thời gian',
     },
     {
@@ -619,12 +619,12 @@ export function Banners() {
   const finalLink = getFinalLink();
 
   return (
-    <div className="flex h-full min-h-0 w-full flex-col gap-6 text-white">
+    <div className="flex h-full min-h-0 w-full flex-col gap-6 text-slate-900">
       <header className="flex flex-col justify-between gap-4 lg:flex-row lg:items-end">
         <div>
-          <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-lime-400">Nội dung storefront</p>
-          <h1 className="text-2xl font-bold tracking-tight text-white">Quản lý Banner</h1>
-          <p className="mt-1 text-sm text-white/50">Quản lý và cập nhật hình ảnh quảng cáo trên website.</p>
+          <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-emerald-600">Nội dung storefront</p>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Quản lý Banner</h1>
+          <p className="mt-1 text-sm text-slate-500">Quản lý và cập nhật hình ảnh quảng cáo trên website.</p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
           {banners.length > 0 && (
@@ -632,28 +632,28 @@ export function Banners() {
               type="button"
               onClick={() => setIsDeleteAllModalOpen(true)}
               disabled={isSubmitting || isLoading}
-              className="inline-flex items-center justify-center gap-2 rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-2.5 text-sm font-bold text-red-300 transition-all hover:bg-red-500/20 hover:border-red-500/50 hover:text-red-200 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer"
+              className="inline-flex items-center justify-center gap-2 rounded-2xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm font-bold text-red-600 transition-all hover:bg-red-100 hover:border-red-300 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer shadow-xs"
             >
-              <Trash2 className="h-4 w-4 text-red-400" aria-hidden="true" /> Xóa Tất Cả Banner
+              <Trash2 className="h-4 w-4 text-red-600" aria-hidden="true" /> Xóa Tất Cả Banner
             </button>
           )}
           <button
             type="button"
             onClick={openCreate}
-            className="inline-flex items-center justify-center gap-2 rounded-2xl bg-lime-400 px-5 py-2.5 text-sm font-bold text-black shadow-[0_12px_28px_rgba(163,230,53,0.2)] transition-all hover:bg-lime-300 hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-lime-300 cursor-pointer"
+            className="inline-flex items-center justify-center gap-2 rounded-2xl bg-emerald-600 px-5 py-2.5 text-sm font-bold text-white shadow-sm transition-all hover:bg-emerald-700 active:scale-95 focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer"
           >
             <Plus className="h-4 w-4" aria-hidden="true" /> Thêm Banner Mới
           </button>
         </div>
       </header>
 
-      <div className="relative z-30 grid gap-3 rounded-2xl border border-white/10 bg-black/30 p-3 backdrop-blur-md sm:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_220px_180px_180px]">
-        <label className="flex h-11 items-center gap-3 rounded-xl border border-white/10 bg-black/40 px-3.5 transition-all focus-within:border-lime-400 focus-within:ring-1 focus-within:ring-lime-400/30">
-          <Search className="h-4 w-4 text-white/40 shrink-0" aria-hidden="true" />
+      <div className="relative z-30 grid gap-3 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm sm:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_220px_180px_180px]">
+        <label className="flex h-11 items-center gap-3 rounded-xl border border-slate-200 bg-white px-3.5 transition-all focus-within:border-emerald-500 focus-within:ring-1 focus-within:ring-emerald-500/20">
+          <Search className="h-4 w-4 text-slate-400 shrink-0" aria-hidden="true" />
           <input
             value={search}
             onChange={(event) => setSearch(event.target.value)}
-            className="min-w-0 flex-1 bg-transparent text-sm text-white outline-none placeholder:text-white/30"
+            className="min-w-0 flex-1 bg-transparent text-sm text-slate-900 outline-none placeholder:text-slate-400"
             placeholder="Tìm banner, vị trí hoặc đường dẫn..."
             aria-label="Tìm kiếm banner"
           />
@@ -661,7 +661,7 @@ export function Banners() {
             <button
               type="button"
               onClick={() => setSearch('')}
-              className="p-1 text-white/40 hover:text-white hover:bg-white/10 rounded-md transition-colors cursor-pointer"
+              className="p-1 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-md transition-colors cursor-pointer"
               title="Xóa tìm kiếm"
             >
               <X className="h-3.5 w-3.5" />
@@ -721,12 +721,12 @@ export function Banners() {
             maxWidth="max-w-3xl"
           >
             {/* Modal Top Header (Pinned at Top) */}
-            <div className="flex items-center justify-between border-b border-white/10 bg-neutral-900/95 px-6 py-4 sm:px-8 shrink-0 z-10">
+            <div className="flex items-center justify-between border-b border-slate-100 bg-white px-6 py-4 sm:px-8 shrink-0 z-10">
               <div>
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-lime-400/15 text-lime-400 border border-lime-400/30">
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-200">
                   Banner Management
                 </span>
-                <h2 id="banner-form-title" className="mt-1 text-xl sm:text-2xl font-extrabold text-white tracking-tight">
+                <h2 id="banner-form-title" className="mt-1 text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">
                   {editingBanner ? 'Chỉnh Sửa Banner' : 'Thêm Banner Mới'}
                 </h2>
               </div>
@@ -735,7 +735,7 @@ export function Banners() {
                 onClick={() => setIsModalOpen(false)}
                 disabled={isSubmitting}
                 aria-label="Đóng biểu mẫu banner"
-                className="rounded-xl p-2.5 text-white/60 transition-colors hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer"
+                className="rounded-xl p-2.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700 disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -750,7 +750,7 @@ export function Banners() {
               aria-labelledby="banner-form-title"
               onSubmit={handleSubmit}
               onWheel={handleModalWheel}
-              className="flex-1 overflow-y-auto px-6 py-6 custom-scrollbar sm:px-8 sm:py-7 space-y-6 min-h-0"
+              className="flex-1 overflow-y-auto px-6 py-6 custom-scrollbar sm:px-8 sm:py-7 space-y-6 min-h-0 bg-white"
             >
               {/* Section 1: Thông tin cơ bản & Hình ảnh */}
               <FormSection title="1. Thông tin cơ bản & Hình ảnh" description="Tiêu đề quản trị, vị trí hiển thị và tệp ảnh banner tải lên hoặc Public URL.">
@@ -784,7 +784,7 @@ export function Banners() {
                       htmlFor="banner-image"
                       onDragOver={(event) => event.preventDefault()}
                       onDrop={handleImageDrop}
-                      className="group relative mt-2 flex min-h-36 cursor-pointer items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed border-white/20 bg-black/40 transition-all duration-200 hover:border-lime-400/80 hover:bg-black/60"
+                      className="group relative mt-2 flex min-h-36 cursor-pointer items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed border-slate-300 bg-slate-50 transition-all duration-200 hover:border-emerald-500 hover:bg-slate-100/60"
                     >
                       {form.image ? (
                         <>
@@ -800,17 +800,17 @@ export function Banners() {
                           </div>
                         </>
                       ) : (
-                        <div className="flex flex-col items-center gap-2.5 px-6 text-center text-white/50">
+                        <div className="flex flex-col items-center gap-2.5 px-6 text-center text-slate-500">
                           {isUploading ? (
-                            <Loader2 className="h-8 w-8 animate-spin text-lime-400" />
+                            <Loader2 className="h-8 w-8 animate-spin text-emerald-600" />
                           ) : (
-                            <UploadCloud className="h-8 w-8 text-lime-400/80 group-hover:scale-110 transition-transform" />
+                            <UploadCloud className="h-8 w-8 text-emerald-600 group-hover:scale-110 transition-transform" />
                           )}
                           <div>
-                            <span className="text-sm font-bold text-white block">
+                            <span className="text-sm font-bold text-slate-800 block">
                               Kéo thả hoặc click để chọn ảnh tải lên
                             </span>
-                            <span className="text-xs text-white/40 block mt-0.5">
+                            <span className="text-xs text-slate-400 block mt-0.5">
                               Hỗ trợ PNG, JPG, WEBP (tối đa 5MB)
                             </span>
                           </div>
@@ -828,13 +828,13 @@ export function Banners() {
 
                     {form.image && (
                       <div className="mt-2.5 flex items-center justify-between">
-                        <span className="text-xs text-lime-400 font-medium truncate max-w-md">
+                        <span className="text-xs text-emerald-700 font-medium truncate max-w-md">
                           ✓ Đã tải lên ảnh local
                         </span>
                         <button
                           type="button"
                           onClick={() => setForm((current) => ({ ...current, image: '' }))}
-                          className="text-xs font-semibold text-red-400 hover:text-red-300 transition-colors cursor-pointer"
+                          className="text-xs font-semibold text-red-600 hover:text-red-700 transition-colors cursor-pointer"
                         >
                           Xóa ảnh tải lên
                         </button>
@@ -845,9 +845,9 @@ export function Banners() {
                   {/* Divider HOẶC */}
                   <div className="relative my-3 flex items-center justify-center">
                     <div className="absolute inset-0 flex items-center">
-                      <div className="w-full border-t border-white/10" />
+                      <div className="w-full border-t border-slate-200" />
                     </div>
-                    <div className="relative bg-neutral-900/95 px-4 text-[11px] font-extrabold uppercase tracking-widest text-white/40">
+                    <div className="relative bg-slate-50 px-4 text-[11px] font-extrabold uppercase tracking-widest text-slate-400">
                       HOẶC
                     </div>
                   </div>
@@ -864,14 +864,14 @@ export function Banners() {
                         <button
                           type="button"
                           onClick={() => setForm((current) => ({ ...current, publicUrl: '' }))}
-                          className="text-xs font-semibold text-amber-400 hover:text-amber-300 transition-colors cursor-pointer"
+                          className="text-xs font-semibold text-amber-600 hover:text-amber-700 transition-colors cursor-pointer"
                         >
                           Xóa URL
                         </button>
                       )}
                     </div>
                     <div className="relative mt-1.5">
-                      <LinkIcon className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-white/40" />
+                      <LinkIcon className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                       <input
                         id="banner-public-url"
                         type="url"
@@ -882,25 +882,25 @@ export function Banners() {
                       />
                     </div>
                     {form.image.trim() && form.publicUrl.trim() && (
-                      <p className="mt-2 text-xs text-amber-300 font-medium flex items-center gap-1.5">
+                      <p className="mt-2 text-xs text-amber-700 font-medium flex items-center gap-1.5">
                         <span>ℹ️</span> Public URL đang được ưu tiên. Xóa Public URL để xem lại ảnh tải lên.
                       </p>
                     )}
                   </div>
 
                   {/* Integrated Live Preview Box */}
-                  <div className="mt-4 rounded-2xl border border-white/10 bg-black/50 p-4 sm:p-5 backdrop-blur-md">
-                    <div className="flex items-center justify-between pb-3 border-b border-white/10">
+                  <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4 sm:p-5">
+                    <div className="flex items-center justify-between pb-3 border-b border-slate-200">
                       <div className="flex items-center gap-2">
-                        <Eye className="h-4 w-4 text-lime-400" />
-                        <span className="text-sm font-bold text-white">Xem trước hiển thị (Live Preview)</span>
+                        <Eye className="h-4 w-4 text-emerald-600" />
+                        <span className="text-sm font-bold text-slate-900">Xem trước hiển thị (Live Preview)</span>
                       </div>
-                      <div className="flex rounded-xl border border-white/10 bg-black/40 p-1">
+                      <div className="flex rounded-xl border border-slate-200 bg-white p-1 shadow-xs">
                         <button
                           type="button"
                           onClick={() => setPreviewMode('desktop')}
                           className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                            previewMode === 'desktop' ? 'bg-lime-400 text-black shadow-sm' : 'text-white/50 hover:text-white'
+                            previewMode === 'desktop' ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-800'
                           }`}
                         >
                           <Monitor className="h-3.5 w-3.5" />
@@ -910,7 +910,7 @@ export function Banners() {
                           type="button"
                           onClick={() => setPreviewMode('mobile')}
                           className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                            previewMode === 'mobile' ? 'bg-lime-400 text-black shadow-sm' : 'text-white/50 hover:text-white'
+                            previewMode === 'mobile' ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-800'
                           }`}
                         >
                           <Smartphone className="h-3.5 w-3.5" />
@@ -922,7 +922,7 @@ export function Banners() {
                     {/* Simulated Banner Container */}
                     <div className="mt-4 flex justify-center">
                       <div
-                        className={`relative overflow-hidden rounded-xl border border-white/15 bg-black/70 shadow-inner transition-all duration-300 ${
+                        className={`relative overflow-hidden rounded-xl border border-slate-200 bg-slate-100 shadow-inner transition-all duration-300 ${
                           previewMode === 'desktop' ? 'aspect-[21/9] sm:aspect-[16/6] w-full max-w-xl' : 'aspect-[9/16] w-48'
                         }`}
                       >
@@ -945,22 +945,22 @@ export function Banners() {
                         ) : null}
 
                         <div
-                          className="preview-error-fallback absolute inset-0 hidden flex-col items-center justify-center gap-2 bg-black/80 p-4 text-center text-amber-300/90"
+                          className="preview-error-fallback absolute inset-0 hidden flex-col items-center justify-center gap-2 bg-slate-900/80 p-4 text-center text-amber-300"
                         >
-                          <ImageIcon className="h-8 w-8 text-amber-400/60" />
+                          <ImageIcon className="h-8 w-8 text-amber-400" />
                           <span className="text-xs font-semibold">Không thể tải ảnh xem trước.</span>
-                          <span className="text-[11px] text-white/40">Vui lòng kiểm tra lại URL hoặc kết nối mạng.</span>
+                          <span className="text-[11px] text-slate-300">Vui lòng kiểm tra lại URL hoặc kết nối mạng.</span>
                         </div>
 
                         {!form.publicUrl.trim() && !form.image.trim() && (
-                          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-white/30 p-4 text-center">
-                            <ImageIcon className="h-9 w-9 text-white/20" />
+                          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-slate-400 p-4 text-center">
+                            <ImageIcon className="h-9 w-9 text-slate-300" />
                             <span className="text-xs font-medium">Chưa có ảnh banner</span>
                           </div>
                         )}
 
                         {/* Banner Location & Title Overlay */}
-                        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent p-3">
+                        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-3">
                           <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold bg-white/20 text-white backdrop-blur-md mb-0.5 border border-white/10">
                             {getPositionLabel(form.position)}
                           </span>
@@ -1020,7 +1020,7 @@ export function Banners() {
                   <div className="mt-4">
                     <FieldLabel htmlFor="destination-product-search" label="Chọn sản phẩm đích" />
                     <div className="relative mt-1.5">
-                      <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-white/40" />
+                      <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                       <input
                         id="destination-product-search"
                         value={productSearch}
@@ -1029,7 +1029,7 @@ export function Banners() {
                         placeholder="Tìm kiếm sản phẩm theo tên..."
                       />
                     </div>
-                    <div className="mt-2 max-h-40 space-y-1 overflow-y-auto rounded-xl border border-white/10 bg-black/40 p-2 custom-scrollbar">
+                    <div className="mt-2 max-h-40 space-y-1 overflow-y-auto rounded-xl border border-slate-200 bg-slate-50 p-2 custom-scrollbar">
                       {filteredProducts.length ? (
                         filteredProducts.map((product) => (
                           <button
@@ -1038,16 +1038,16 @@ export function Banners() {
                             onClick={() => setForm((current) => ({ ...current, destinationValue: product.id }))}
                             className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-xs font-semibold transition-colors cursor-pointer ${
                               form.destinationValue === product.id
-                                ? 'bg-lime-400/20 text-lime-300 border border-lime-400/30'
-                                : 'text-white/75 hover:bg-white/10'
+                                ? 'bg-emerald-50 text-emerald-700 border border-emerald-300 font-semibold'
+                                : 'text-slate-700 hover:bg-slate-100'
                             }`}
                           >
                             <span className="truncate">{product.name}</span>
-                            {form.destinationValue === product.id && <Check className="ml-3 h-4 w-4 shrink-0 text-lime-400" />}
+                            {form.destinationValue === product.id && <Check className="ml-3 h-4 w-4 shrink-0 text-emerald-600" />}
                           </button>
                         ))
                       ) : (
-                        <p className="px-3 py-2 text-xs text-white/40">Không tìm thấy sản phẩm phù hợp.</p>
+                        <p className="px-3 py-2 text-xs text-slate-400">Không tìm thấy sản phẩm phù hợp.</p>
                       )}
                     </div>
                   </div>
@@ -1097,10 +1097,10 @@ export function Banners() {
                   </div>
                 )}
 
-                <div className="mt-4 flex items-center gap-2.5 rounded-xl border border-white/10 bg-black/40 px-3.5 py-3 text-xs sm:text-sm">
-                  <LinkIcon className="h-4 w-4 shrink-0 text-lime-400" />
-                  <span className="shrink-0 text-white/50">Đường dẫn click:</span>
-                  <span className="min-w-0 truncate font-mono font-bold text-white">
+                <div className="mt-4 flex items-center gap-2.5 rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-3 text-xs sm:text-sm">
+                  <LinkIcon className="h-4 w-4 shrink-0 text-emerald-600" />
+                  <span className="shrink-0 text-slate-500 font-medium">Đường dẫn click:</span>
+                  <span className="min-w-0 truncate font-mono font-bold text-slate-900">
                     {finalLink || 'Không điều hướng'}
                   </span>
                 </div>
@@ -1110,10 +1110,10 @@ export function Banners() {
               <FormSection title="3. Trạng thái & Lịch chạy" description="Cài đặt hiển thị, số thứ tự ưu tiên và thời gian bắt đầu/kết thúc.">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {/* Switch */}
-                  <div className="flex items-center justify-between gap-4 rounded-xl border border-white/10 bg-black/35 p-4">
+                  <div className="flex items-center justify-between gap-4 rounded-xl border border-slate-200 bg-slate-50/80 p-4">
                     <div>
-                      <p className="text-sm font-bold text-white">Hiển thị banner</p>
-                      <p className="text-xs text-white/50 mt-0.5">
+                      <p className="text-sm font-bold text-slate-900">Hiển thị banner</p>
+                      <p className="text-xs text-slate-500 mt-0.5">
                         {form.isActive ? 'Đang kích hoạt trên web' : 'Đang tắt / ẩn'}
                       </p>
                     </div>
@@ -1124,20 +1124,20 @@ export function Banners() {
                       aria-label="Hiển thị banner"
                       onClick={() => setForm((current) => ({ ...current, isActive: !current.isActive }))}
                       className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full p-1 transition-colors duration-200 ease-in-out cursor-pointer focus:outline-none ${
-                        form.isActive ? 'border border-lime-400/80 bg-lime-400' : 'border border-white/20 bg-white/10'
+                        form.isActive ? 'border border-emerald-600 bg-emerald-600' : 'border border-slate-300 bg-slate-200'
                       }`}
                     >
                       <span
                         aria-hidden="true"
                         className={`pointer-events-none inline-block h-5 w-5 transform rounded-full shadow-md transition duration-200 ease-in-out ${
-                          form.isActive ? 'translate-x-5 bg-black' : 'translate-x-0 bg-white'
+                          form.isActive ? 'translate-x-5 bg-white' : 'translate-x-0 bg-white'
                         }`}
                       />
                     </button>
                   </div>
 
                   {/* Sort Order Input */}
-                  <div className="rounded-xl border border-white/10 bg-black/35 p-4 flex flex-col justify-between">
+                  <div className="rounded-xl border border-slate-200 bg-slate-50/80 p-4 flex flex-col justify-between">
                     <FieldLabel htmlFor="banner-sort-order" label="Thứ tự hiển thị" hint="Số nhỏ hơn được ưu tiên trước." />
                     <input
                       id="banner-sort-order"
@@ -1180,19 +1180,19 @@ export function Banners() {
               </FormSection>
 
               {formError && (
-                <p role="alert" className="rounded-xl border border-red-400/30 bg-red-500/15 px-4 py-3 text-sm text-red-200 font-medium">
+                <p role="alert" className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 font-medium">
                   {formError}
                 </p>
               )}
             </form>
 
             {/* Modal Bottom Footer (Pinned at Bottom) */}
-            <footer className="flex shrink-0 items-center justify-between gap-4 border-t border-white/10 bg-neutral-900/95 px-6 py-4 sm:px-8 shrink-0 z-10">
+            <footer className="flex shrink-0 items-center justify-between gap-4 border-t border-slate-200 bg-white px-6 py-4 sm:px-8 shrink-0 z-10">
               <button
                 type="button"
                 onClick={() => setIsModalOpen(false)}
                 disabled={isSubmitting}
-                className="rounded-xl px-5 py-2.5 text-sm font-bold text-white/75 border border-white/15 bg-white/5 hover:bg-white/10 hover:text-white transition-all cursor-pointer disabled:cursor-not-allowed disabled:opacity-40"
+                className="rounded-xl px-5 py-2.5 text-sm font-semibold text-slate-700 border border-slate-200 bg-slate-100 hover:bg-slate-200 hover:text-slate-900 transition-all cursor-pointer disabled:cursor-not-allowed disabled:opacity-40"
               >
                 Hủy Bỏ
               </button>
@@ -1200,7 +1200,7 @@ export function Banners() {
                 type="submit"
                 form="banner-modal-form"
                 disabled={isSubmitting || isUploading}
-                className="inline-flex items-center gap-2 rounded-xl bg-lime-400 hover:bg-lime-300 px-6 py-2.5 text-sm font-bold text-black transition-all shadow-[0_0_20px_rgba(163,230,53,0.3)] hover:scale-105 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
+                className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 px-6 py-2.5 text-sm font-bold text-white transition-all shadow-sm hover:scale-105 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
               >
                 {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
                 {isSubmitting ? 'Đang lưu...' : editingBanner ? 'Lưu Thay Đổi' : 'Thêm Banner Mới'}
@@ -1214,28 +1214,28 @@ export function Banners() {
       <AnimatePresence>
         {previewBanner && (
           <ModalShell onClose={() => setPreviewBanner(null)} maxWidth="max-w-4xl" className="max-h-[90vh]">
-            <div role="dialog" aria-modal="true" aria-labelledby="banner-preview-title" className="w-full overflow-hidden rounded-2xl sm:rounded-3xl border border-white/15 bg-neutral-950 p-0 shadow-2xl backdrop-blur-2xl">
-              <div className="flex items-center justify-between border-b border-white/10 px-6 py-4">
+            <div role="dialog" aria-modal="true" aria-labelledby="banner-preview-title" className="w-full overflow-hidden rounded-2xl sm:rounded-3xl border border-slate-200 bg-white p-0 shadow-2xl">
+              <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4">
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-lime-400">Storefront preview</p>
-                  <h2 id="banner-preview-title" className="mt-1 text-lg font-bold text-white">{previewBanner.title}</h2>
+                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-emerald-600">Storefront preview</p>
+                  <h2 id="banner-preview-title" className="mt-1 text-lg font-bold text-slate-900">{previewBanner.title}</h2>
                 </div>
-                <button type="button" onClick={() => setPreviewBanner(null)} aria-label="Đóng preview banner" className="rounded-xl p-2 text-white/55 hover:bg-white/10 hover:text-white cursor-pointer">
+                <button type="button" onClick={() => setPreviewBanner(null)} aria-label="Đóng preview banner" className="rounded-xl p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-700 cursor-pointer">
                   <X className="h-5 w-5" />
                 </button>
               </div>
               <div className="p-6">
-                <div className="relative aspect-[16/6] overflow-hidden rounded-2xl border border-white/10 bg-black/40">
+                <div className="relative aspect-[16/6] overflow-hidden rounded-2xl border border-slate-200 bg-slate-100">
                   {previewBanner.publicUrl || previewBanner.image ? (
                     <img src={toImageUrl(previewBanner.publicUrl || previewBanner.image || '')} alt={previewBanner.title} className="h-full w-full object-cover" />
                   ) : (
-                    <div className="flex h-full w-full items-center justify-center text-white/30">
-                      <ImageIcon className="h-10 w-10 text-white/20" />
+                    <div className="flex h-full w-full items-center justify-center text-slate-400">
+                      <ImageIcon className="h-10 w-10 text-slate-300" />
                     </div>
                   )}
                   <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-5">
-                    <p className="text-xs font-semibold text-lime-300">{getPositionLabel(previewBanner.position)}</p>
-                    <p className="mt-1 text-sm text-white/75">{previewBanner.link || 'Không điều hướng'}</p>
+                    <p className="text-xs font-semibold text-emerald-300">{getPositionLabel(previewBanner.position)}</p>
+                    <p className="mt-1 text-sm text-white/90">{previewBanner.link || 'Không điều hướng'}</p>
                   </div>
                 </div>
               </div>
@@ -1248,19 +1248,19 @@ export function Banners() {
       <AnimatePresence>
         {bannerPendingDelete && (
           <ModalShell onClose={() => !isSubmitting && setBannerPendingDelete(null)} maxWidth="max-w-md" className="max-h-[90vh]">
-            <div role="alertdialog" aria-modal="true" aria-labelledby="delete-banner-title" className="w-full rounded-2xl sm:rounded-3xl border border-white/15 bg-neutral-950 p-6 shadow-2xl backdrop-blur-2xl">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-red-500/15 text-red-400 border border-red-500/20">
+            <div role="alertdialog" aria-modal="true" aria-labelledby="delete-banner-title" className="w-full rounded-2xl sm:rounded-3xl border border-slate-200 bg-white p-6 shadow-2xl">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-red-50 text-red-600 border border-red-200">
                 <Trash2 className="h-6 w-6" />
               </div>
-              <h2 id="delete-banner-title" className="mt-4 text-xl font-bold text-white">Xóa banner này?</h2>
-              <p className="mt-2 text-sm leading-6 text-white/60">
-                Banner <span className="font-semibold text-white">{bannerPendingDelete.title}</span> sẽ bị xóa khỏi hệ thống. Hành động này không thể hoàn tác.
+              <h2 id="delete-banner-title" className="mt-4 text-xl font-bold text-slate-900">Xóa banner này?</h2>
+              <p className="mt-2 text-sm leading-6 text-slate-600">
+                Banner <span className="font-semibold text-slate-900">{bannerPendingDelete.title}</span> sẽ bị xóa khỏi hệ thống. Hành động này không thể hoàn tác.
               </p>
               <div className="mt-6 flex justify-end gap-3">
-                <button type="button" disabled={isSubmitting} onClick={() => setBannerPendingDelete(null)} className="rounded-xl px-4 py-2.5 text-sm font-semibold text-white/70 hover:bg-white/10 hover:text-white border border-white/10 cursor-pointer">
+                <button type="button" disabled={isSubmitting} onClick={() => setBannerPendingDelete(null)} className="rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-100 hover:text-slate-900 border border-slate-200 cursor-pointer">
                   Hủy Bỏ
                 </button>
-                <button type="button" disabled={isSubmitting} onClick={() => void deleteBanner()} className="inline-flex items-center gap-2 rounded-xl bg-red-500 px-5 py-2.5 text-sm font-bold text-white hover:bg-red-400 disabled:opacity-50 cursor-pointer">
+                <button type="button" disabled={isSubmitting} onClick={() => void deleteBanner()} className="inline-flex items-center gap-2 rounded-xl bg-red-600 px-5 py-2.5 text-sm font-bold text-white hover:bg-red-700 disabled:opacity-50 cursor-pointer shadow-sm">
                   {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
                   Xóa Banner
                 </button>
@@ -1274,22 +1274,22 @@ export function Banners() {
       <AnimatePresence>
         {isDeleteAllModalOpen && (
           <ModalShell onClose={() => !isSubmitting && setIsDeleteAllModalOpen(false)} maxWidth="max-w-md" className="max-h-[90vh]">
-            <div role="alertdialog" aria-modal="true" aria-labelledby="delete-all-banners-title" className="w-full rounded-2xl sm:rounded-3xl border border-red-500/30 bg-neutral-950 p-6 shadow-2xl backdrop-blur-2xl">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-red-500/15 text-red-400 border border-red-500/30 shadow-[0_0_20px_rgba(239,68,68,0.2)]">
+            <div role="alertdialog" aria-modal="true" aria-labelledby="delete-all-banners-title" className="w-full rounded-2xl sm:rounded-3xl border border-red-200 bg-white p-6 shadow-2xl">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-red-50 text-red-600 border border-red-200">
                 <Trash2 className="h-6 w-6" />
               </div>
-              <h2 id="delete-all-banners-title" className="mt-4 text-xl font-bold text-white">
+              <h2 id="delete-all-banners-title" className="mt-4 text-xl font-bold text-slate-900">
                 Xóa tất cả {banners.length} banner?
               </h2>
-              <p className="mt-2 text-sm leading-6 text-white/60">
-                Bạn có chắc chắn muốn xóa toàn bộ <span className="font-semibold text-red-300">{banners.length} banner</span> hiện có? Mọi banner trên tất cả các vị trí storefront sẽ bị xóa vĩnh viễn khỏi hệ thống. Hành động này không thể hoàn tác.
+              <p className="mt-2 text-sm leading-6 text-slate-600">
+                Bạn có chắc chắn muốn xóa toàn bộ <span className="font-semibold text-red-600">{banners.length} banner</span> hiện có? Mọi banner trên tất cả các vị trí storefront sẽ bị xóa vĩnh viễn khỏi hệ thống. Hành động này không thể hoàn tác.
               </p>
               <div className="mt-6 flex justify-end gap-3">
                 <button
                   type="button"
                   disabled={isSubmitting}
                   onClick={() => setIsDeleteAllModalOpen(false)}
-                  className="rounded-xl px-4 py-2.5 text-sm font-semibold text-white/70 hover:bg-white/10 hover:text-white border border-white/10 cursor-pointer disabled:opacity-40"
+                  className="rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-100 hover:text-slate-900 border border-slate-200 cursor-pointer disabled:opacity-40"
                 >
                   Hủy Bỏ
                 </button>
@@ -1297,7 +1297,7 @@ export function Banners() {
                   type="button"
                   disabled={isSubmitting}
                   onClick={() => void deleteAllBanners()}
-                  className="inline-flex items-center gap-2 rounded-xl bg-red-600 px-5 py-2.5 text-sm font-bold text-white hover:bg-red-500 shadow-[0_0_20px_rgba(239,68,68,0.4)] disabled:opacity-50 cursor-pointer active:scale-95 transition-all"
+                  className="inline-flex items-center gap-2 rounded-xl bg-red-600 px-5 py-2.5 text-sm font-bold text-white hover:bg-red-700 shadow-sm disabled:opacity-50 cursor-pointer active:scale-95 transition-all"
                 >
                   {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
                   {isSubmitting ? 'Đang xóa...' : 'Xác Nhận Xóa Tất Cả'}
@@ -1313,20 +1313,20 @@ export function Banners() {
 
 function FieldLabel({ htmlFor, label, required, hint }: { htmlFor: string; label: string; required?: boolean; hint?: string }) {
   return (
-    <label htmlFor={htmlFor} className="block text-xs sm:text-sm font-bold text-white/90 mb-1">
+    <label htmlFor={htmlFor} className="block text-xs sm:text-sm font-semibold text-slate-800 mb-1">
       {label}
-      {required && <span className="ml-1 text-lime-400 font-bold">*</span>}
-      {hint && <span className="mt-0.5 block text-xs font-normal text-white/45 leading-normal">{hint}</span>}
+      {required && <span className="ml-1 text-emerald-600 font-bold">*</span>}
+      {hint && <span className="mt-0.5 block text-xs font-normal text-slate-400 leading-normal">{hint}</span>}
     </label>
   );
 }
 
 function FormSection({ title, description, children }: { title: string; description: string; children: ReactNode }) {
   return (
-    <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 sm:p-6 backdrop-blur-md transition-all duration-200 hover:border-white/15">
-      <div className="mb-4 pb-3 border-b border-white/5">
-        <h3 className="text-base font-bold text-white tracking-tight">{title}</h3>
-        <p className="mt-0.5 text-xs text-white/50 leading-relaxed">{description}</p>
+    <section className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6 shadow-sm transition-all duration-200 hover:border-slate-300">
+      <div className="mb-4 pb-3 border-b border-slate-100">
+        <h3 className="text-base font-bold text-slate-900 tracking-tight">{title}</h3>
+        <p className="mt-0.5 text-xs text-slate-500 leading-relaxed">{description}</p>
       </div>
       {children}
     </section>
@@ -1379,31 +1379,31 @@ function PositionDropdown({
     switch (groupLabel) {
       case 'Trang chủ':
         return (
-          <span className="inline-flex items-center gap-1.5 rounded-md bg-amber-400/10 px-2 py-0.5 text-[10px] font-bold text-amber-300 border border-amber-400/20 shrink-0">
+          <span className="inline-flex items-center gap-1.5 rounded-md bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-700 border border-amber-200 shrink-0">
             <LayoutTemplate className="h-3 w-3" /> Trang chủ
           </span>
         );
       case 'Smartphone':
         return (
-          <span className="inline-flex items-center gap-1.5 rounded-md bg-lime-400/10 px-2 py-0.5 text-[10px] font-bold text-lime-400 border border-lime-400/20 shrink-0">
+          <span className="inline-flex items-center gap-1.5 rounded-md bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700 border border-emerald-200 shrink-0">
             <Smartphone className="h-3 w-3" /> Smartphone
           </span>
         );
       case 'Laptop':
         return (
-          <span className="inline-flex items-center gap-1.5 rounded-md bg-indigo-400/10 px-2 py-0.5 text-[10px] font-bold text-indigo-400 border border-indigo-400/20 shrink-0">
+          <span className="inline-flex items-center gap-1.5 rounded-md bg-indigo-50 px-2 py-0.5 text-[10px] font-bold text-indigo-700 border border-indigo-200 shrink-0">
             <Monitor className="h-3 w-3" /> Laptop
           </span>
         );
       case 'Danh mục khác':
         return (
-          <span className="inline-flex items-center gap-1.5 rounded-md bg-sky-400/10 px-2 py-0.5 text-[10px] font-bold text-sky-300 border border-sky-400/20 shrink-0">
+          <span className="inline-flex items-center gap-1.5 rounded-md bg-sky-50 px-2 py-0.5 text-[10px] font-bold text-sky-700 border border-sky-200 shrink-0">
             <Monitor className="h-3 w-3" /> Danh mục
           </span>
         );
       default:
         return (
-          <span className="inline-flex items-center gap-1.5 rounded-md bg-white/10 px-2 py-0.5 text-[10px] font-bold text-white/60 border border-white/10 shrink-0">
+          <span className="inline-flex items-center gap-1.5 rounded-md bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-600 border border-slate-200 shrink-0">
             <CalendarClock className="h-3 w-3" /> Khác
           </span>
         );
@@ -1413,15 +1413,15 @@ function PositionDropdown({
   const getGroupIcon = (groupLabel: string) => {
     switch (groupLabel) {
       case 'Trang chủ':
-        return <LayoutTemplate className="h-3.5 w-3.5 text-amber-400" />;
+        return <LayoutTemplate className="h-3.5 w-3.5 text-amber-500" />;
       case 'Smartphone':
-        return <Smartphone className="h-3.5 w-3.5 text-lime-400" />;
+        return <Smartphone className="h-3.5 w-3.5 text-emerald-600" />;
       case 'Laptop':
-        return <Monitor className="h-3.5 w-3.5 text-indigo-400" />;
+        return <Monitor className="h-3.5 w-3.5 text-indigo-600" />;
       case 'Danh mục khác':
-        return <Monitor className="h-3.5 w-3.5 text-sky-400" />;
+        return <Monitor className="h-3.5 w-3.5 text-sky-600" />;
       default:
-        return <CalendarClock className="h-3.5 w-3.5 text-neutral-400" />;
+        return <CalendarClock className="h-3.5 w-3.5 text-slate-400" />;
     }
   };
 
@@ -1458,17 +1458,17 @@ function PositionDropdown({
         aria-expanded={isOpen}
         className={`group flex w-full items-center justify-between gap-3 rounded-xl border px-3.5 py-2.5 text-left text-sm transition-all duration-200 cursor-pointer ${
           isOpen
-            ? 'border-lime-400/90 bg-neutral-900 shadow-[0_0_20px_rgba(163,230,53,0.18)] ring-1 ring-lime-400/40'
-            : 'border-white/15 bg-black/40 hover:border-white/30 hover:bg-black/60'
+            ? 'border-emerald-500 bg-white shadow-sm ring-1 ring-emerald-500'
+            : 'border-slate-200 bg-white hover:border-slate-300'
         }`}
       >
         <div className="flex items-center gap-2.5 min-w-0">
           {getGroupBadge(selectedInfo.group)}
-          <span className="truncate font-semibold text-white">{selectedInfo.label}</span>
+          <span className="truncate font-semibold text-slate-800">{selectedInfo.label}</span>
         </div>
         <ChevronDown
           className={`h-4 w-4 shrink-0 transition-transform duration-300 ${
-            isOpen ? 'rotate-180 text-lime-400' : 'text-white/40 group-hover:text-white'
+            isOpen ? 'rotate-180 text-emerald-600' : 'text-slate-400 group-hover:text-slate-600'
           }`}
         />
       </button>
@@ -1482,12 +1482,12 @@ function PositionDropdown({
             exit={{ opacity: 0, y: 4, scale: 0.98 }}
             transition={{ duration: 0.18, ease: 'easeOut' }}
             onWheel={handleMenuWheel}
-            className="absolute left-0 right-0 top-full z-[80] mt-2 max-h-72 overflow-y-auto rounded-2xl border border-white/15 bg-neutral-900/95 p-2 shadow-[0_25px_60px_rgba(0,0,0,0.9)] backdrop-blur-2xl custom-scrollbar"
+            className="absolute left-0 right-0 top-full z-[80] mt-2 max-h-72 overflow-y-auto rounded-2xl border border-slate-200 bg-white p-2 shadow-2xl custom-scrollbar"
             role="listbox"
           >
             {POSITION_GROUPS.map((group, groupIdx) => (
-              <div key={group.label} className={groupIdx > 0 ? 'mt-2 pt-2 border-t border-white/10' : ''}>
-                <div className="flex items-center gap-2 px-2.5 py-1.5 text-[11px] font-extrabold uppercase tracking-wider text-white/40">
+              <div key={group.label} className={groupIdx > 0 ? 'mt-2 pt-2 border-t border-slate-100' : ''}>
+                <div className="flex items-center gap-2 px-2.5 py-1.5 text-[11px] font-extrabold uppercase tracking-wider text-slate-400">
                   {getGroupIcon(group.label)}
                   <span>{group.label}</span>
                 </div>
@@ -1504,8 +1504,8 @@ function PositionDropdown({
                         }}
                         className={`group/opt flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-sm transition-all duration-150 cursor-pointer ${
                           isSelected
-                            ? 'bg-lime-400/15 text-lime-300 font-bold border border-lime-400/30 shadow-sm'
-                            : 'text-white/80 hover:bg-white/10 hover:text-white'
+                            ? 'bg-emerald-50 text-emerald-700 font-bold border border-emerald-200 shadow-sm'
+                            : 'text-slate-700 hover:bg-slate-50 hover:text-slate-900'
                         }`}
                         role="option"
                         aria-selected={isSelected}
@@ -1513,12 +1513,12 @@ function PositionDropdown({
                         <div className="flex items-center gap-2.5 min-w-0">
                           <span
                             className={`h-1.5 w-1.5 rounded-full shrink-0 transition-colors ${
-                              isSelected ? 'bg-lime-400 shadow-[0_0_8px_#a3e635]' : 'bg-white/20 group-hover/opt:bg-white/50'
+                              isSelected ? 'bg-emerald-600 shadow-[0_0_8px_#059669]' : 'bg-slate-300 group-hover/opt:bg-slate-400'
                             }`}
                           />
                           <span className="truncate">{opt.label}</span>
                         </div>
-                        {isSelected && <Check className="h-4 w-4 shrink-0 text-lime-400 ml-2" />}
+                        {isSelected && <Check className="h-4 w-4 shrink-0 text-emerald-600 ml-2" />}
                       </button>
                     );
                   })}
@@ -1544,7 +1544,7 @@ function FormSelect({ id, value, onChange, required, children, className = '' }:
       >
         {children}
       </select>
-      <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-white/40" />
+      <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
     </div>
   );
 }
@@ -1664,8 +1664,8 @@ function FilterDropdown({
         }}
         className={`group/opt flex w-full items-center justify-between gap-2 rounded-xl px-2.5 py-2 text-left text-xs sm:text-[13px] transition-all duration-150 cursor-pointer ${
           isSelected
-            ? 'bg-lime-400/15 text-lime-300 font-bold border border-lime-400/30 shadow-sm'
-            : 'text-white/80 hover:bg-white/10 hover:text-white'
+            ? 'bg-emerald-50 text-emerald-700 font-bold border border-emerald-200 shadow-sm'
+            : 'text-slate-700 hover:bg-slate-50 hover:text-slate-900'
         }`}
         role="option"
         aria-selected={isSelected}
@@ -1675,7 +1675,7 @@ function FilterDropdown({
             <span className={`h-2 w-2 rounded-full shrink-0 ${opt.dotColor}`} />
           ) : (
             opt.icon && (
-              <span className={`shrink-0 ${isSelected ? 'text-lime-400' : 'text-white/40 group-hover/opt:text-white/70'}`}>
+              <span className={`shrink-0 ${isSelected ? 'text-emerald-600' : 'text-slate-400 group-hover/opt:text-slate-600'}`}>
                 {opt.icon}
               </span>
             )
@@ -1683,13 +1683,13 @@ function FilterDropdown({
           <div className="min-w-0 flex-1">
             <div className="truncate font-medium">{opt.label}</div>
             {opt.sublabel && (
-              <div className="text-[10px] text-white/40 group-hover/opt:text-white/60 truncate font-normal">
+              <div className="text-[10px] text-slate-400 group-hover/opt:text-slate-500 truncate font-normal">
                 {opt.sublabel}
               </div>
             )}
           </div>
         </div>
-        {isSelected && <Check className="h-3.5 w-3.5 shrink-0 text-lime-400 ml-1" />}
+        {isSelected && <Check className="h-3.5 w-3.5 shrink-0 text-emerald-600 ml-1" />}
       </button>
     );
   };
@@ -1709,10 +1709,10 @@ function FilterDropdown({
         title="Cuộn chuột để đổi lựa chọn nhanh"
         className={`group relative flex h-11 w-full items-center justify-between gap-2 rounded-xl border px-3 py-2 text-left text-sm transition-all duration-200 cursor-pointer select-none ${
           isOpen
-            ? 'border-lime-400 bg-neutral-900 shadow-[0_0_20px_rgba(163,230,53,0.18)] ring-1 ring-lime-400/40 text-white'
+            ? 'border-emerald-500 bg-white shadow-sm ring-1 ring-emerald-500 text-slate-900'
             : isFiltered
-              ? 'border-lime-400/60 bg-lime-400/[0.08] hover:border-lime-400/80 hover:bg-lime-400/[0.12] ring-1 ring-lime-400/20'
-              : 'border-white/10 bg-black/40 hover:border-white/25 hover:bg-black/60 text-white/80'
+              ? 'border-emerald-300 bg-emerald-50/60 hover:bg-emerald-50 ring-1 ring-emerald-200 text-emerald-800'
+              : 'border-slate-200 bg-white hover:border-slate-300 text-slate-700'
         }`}
       >
         <div className="flex items-center gap-2 min-w-0 flex-1">
@@ -1720,14 +1720,14 @@ function FilterDropdown({
             <span className={`h-2 w-2 rounded-full shrink-0 ${selectedOption.dotColor}`} />
           ) : (
             icon && (
-              <span className={`shrink-0 transition-colors ${isFiltered ? 'text-lime-400' : 'text-white/40 group-hover:text-white/60'}`}>
+              <span className={`shrink-0 transition-colors ${isFiltered ? 'text-emerald-600' : 'text-slate-400 group-hover:text-slate-600'}`}>
                 {icon}
               </span>
             )
           )}
           <div className="flex items-center gap-1.5 min-w-0 truncate text-xs sm:text-[13px]">
-            <span className="text-white/45 font-medium shrink-0">{label}:</span>
-            <span className={`truncate font-semibold ${isFiltered ? 'text-lime-300' : 'text-white/90'}`}>
+            <span className="text-slate-400 font-medium shrink-0">{label}:</span>
+            <span className={`truncate font-semibold ${isFiltered ? 'text-emerald-700' : 'text-slate-900'}`}>
               {selectedOption.shortLabel || selectedOption.label}
             </span>
           </div>
@@ -1748,7 +1748,7 @@ function FilterDropdown({
                   onChange('all');
                 }
               }}
-              className="p-1 rounded-md text-white/40 hover:text-white hover:bg-white/15 transition-colors cursor-pointer"
+              className="p-1 rounded-md text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
               title="Xóa bộ lọc này"
               aria-label="Xóa bộ lọc"
             >
@@ -1757,7 +1757,7 @@ function FilterDropdown({
           )}
           <ChevronDown
             className={`h-3.5 w-3.5 transition-transform duration-200 ${
-              isOpen ? 'rotate-180 text-lime-400' : 'text-white/40 group-hover:text-white'
+              isOpen ? 'rotate-180 text-emerald-600' : 'text-slate-400 group-hover:text-slate-600'
             }`}
           />
         </div>
@@ -1771,19 +1771,19 @@ function FilterDropdown({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 4, scale: 0.98 }}
             transition={{ duration: 0.16, ease: 'easeOut' }}
-            className={`absolute top-full z-[100] mt-2 ${align === 'right' ? 'right-0' : 'left-0'} ${menuWidth} max-h-72 overflow-y-auto rounded-2xl border border-white/20 bg-neutral-900 p-1.5 shadow-[0_24px_60px_rgba(0,0,0,0.98)] custom-scrollbar`}
+            className={`absolute top-full z-[100] mt-2 ${align === 'right' ? 'right-0' : 'left-0'} ${menuWidth} max-h-72 overflow-y-auto rounded-2xl border border-slate-200 bg-white p-1.5 shadow-2xl custom-scrollbar`}
             role="listbox"
           >
             {groupedOptions ? (
               <>
                 {groupedOptions.ungrouped.length > 0 && (
-                  <div className="space-y-0.5 pb-1 border-b border-white/10 mb-1">
+                  <div className="space-y-0.5 pb-1 border-b border-slate-100 mb-1">
                     {groupedOptions.ungrouped.map((opt) => renderOptionItem(opt))}
                   </div>
                 )}
                 {groupedOptions.groups.map(([groupName, groupOpts], gIdx) => (
-                  <div key={groupName} className={gIdx > 0 ? 'mt-2 pt-1 border-t border-white/10' : ''}>
-                    <div className="px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wider text-white/40">
+                  <div key={groupName} className={gIdx > 0 ? 'mt-2 pt-1 border-t border-slate-100' : ''}>
+                    <div className="px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
                       {groupName}
                     </div>
                     <div className="space-y-0.5 mt-0.5">
@@ -1812,7 +1812,7 @@ function ModalShell({ children, onClose, onWheel, maxWidth = 'max-w-3xl', classN
       <div
         role="presentation"
         onClick={onClose}
-        className="fixed inset-0 bg-black/80 backdrop-blur-md cursor-default"
+        className="fixed inset-0 bg-black/60 backdrop-blur-sm cursor-default"
       />
       <motion.div
         initial={{ opacity: 0, y: 16, scale: 0.98 }}
@@ -1820,7 +1820,7 @@ function ModalShell({ children, onClose, onWheel, maxWidth = 'max-w-3xl', classN
         exit={{ opacity: 0, y: 16, scale: 0.98 }}
         transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
         onWheel={onWheel}
-        className={`relative z-10 flex w-full ${maxWidth} max-h-[88vh] flex-col rounded-2xl sm:rounded-3xl border border-white/20 bg-neutral-950 shadow-[0_32px_120px_rgba(0,0,0,0.9)] backdrop-blur-3xl overflow-hidden ${className}`}
+        className={`relative z-10 flex w-full ${maxWidth} max-h-[88vh] flex-col rounded-2xl sm:rounded-3xl border border-slate-200 bg-white shadow-2xl overflow-hidden ${className}`}
       >
         {children}
       </motion.div>
@@ -1831,15 +1831,15 @@ function ModalShell({ children, onClose, onWheel, maxWidth = 'max-w-3xl', classN
 
 function EmptyState({ onCreate }: { onCreate: () => void }) {
   return (
-    <div className="flex min-h-[330px] flex-col items-center justify-center rounded-3xl border border-dashed border-white/15 bg-black/20 px-6 text-center">
-      <div className="grid h-14 w-14 place-items-center rounded-2xl border border-lime-400/20 bg-lime-400/10">
-        <LayoutTemplate className="h-6 w-6 text-lime-400" />
+    <div className="flex min-h-[330px] flex-col items-center justify-center rounded-3xl border border-dashed border-slate-200 bg-slate-50 px-6 text-center">
+      <div className="grid h-14 w-14 place-items-center rounded-2xl border border-emerald-200 bg-emerald-50">
+        <LayoutTemplate className="h-6 w-6 text-emerald-600" />
       </div>
-      <h2 className="mt-5 text-lg font-bold text-white">Chưa có banner nào</h2>
-      <p className="mt-2 max-w-sm text-sm leading-6 text-white/50">
+      <h2 className="mt-5 text-lg font-bold text-slate-900">Chưa có banner nào</h2>
+      <p className="mt-2 max-w-sm text-sm leading-6 text-slate-500">
         Tạo banner đầu tiên để bắt đầu hiển thị nội dung quảng cáo trên storefront.
       </p>
-      <button type="button" onClick={onCreate} className="mt-5 inline-flex items-center gap-2 rounded-xl bg-lime-400 px-5 py-2.5 text-sm font-bold text-black hover:bg-lime-300 transition-colors cursor-pointer">
+      <button type="button" onClick={onCreate} className="mt-5 inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-bold text-white hover:bg-emerald-700 transition-colors cursor-pointer shadow-sm">
         <Plus className="h-4 w-4" /> Tạo Banner Mới
       </button>
     </div>
@@ -1848,10 +1848,10 @@ function EmptyState({ onCreate }: { onCreate: () => void }) {
 
 function LoadError({ message, onRetry }: { message: string; onRetry: () => void }) {
   return (
-    <div className="flex min-h-[260px] flex-col items-center justify-center rounded-3xl border border-red-400/20 bg-red-400/10 px-6 text-center">
-      <p className="font-bold text-red-200">Không thể tải danh sách banner</p>
-      <p className="mt-2 text-sm text-white/50">{message}</p>
-      <button type="button" onClick={onRetry} className="mt-5 rounded-xl border border-white/15 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-white/10 cursor-pointer">
+    <div className="flex min-h-[260px] flex-col items-center justify-center rounded-3xl border border-red-200 bg-red-50 px-6 text-center">
+      <p className="font-bold text-red-700">Không thể tải danh sách banner</p>
+      <p className="mt-2 text-sm text-slate-600">{message}</p>
+      <button type="button" onClick={onRetry} className="mt-5 rounded-xl border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-100 cursor-pointer">
         Thử lại
       </button>
     </div>
@@ -1860,10 +1860,10 @@ function LoadError({ message, onRetry }: { message: string; onRetry: () => void 
 
 function NoMatches({ onReset }: { onReset: () => void }) {
   return (
-    <div className="flex min-h-[260px] flex-col items-center justify-center rounded-3xl border border-white/10 bg-black/20 px-6 text-center">
-      <Search className="h-9 w-9 text-white/20" />
-      <p className="mt-3 font-bold text-white/80">Không tìm thấy banner phù hợp</p>
-      <button type="button" onClick={onReset} className="mt-4 text-sm font-bold text-lime-400 hover:text-lime-300 cursor-pointer">
+    <div className="flex min-h-[260px] flex-col items-center justify-center rounded-3xl border border-slate-200 bg-slate-50 px-6 text-center">
+      <Search className="h-9 w-9 text-slate-300" />
+      <p className="mt-3 font-bold text-slate-700">Không tìm thấy banner phù hợp</p>
+      <button type="button" onClick={onReset} className="mt-4 text-sm font-bold text-emerald-600 hover:text-emerald-700 cursor-pointer">
         Xóa bộ lọc
       </button>
     </div>
@@ -1878,45 +1878,45 @@ function BannerRow({ banner, index, canMoveUp, canMoveDown, onPreview, onEdit, o
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: Math.min(index * 0.03, 0.2) }}
-      className="group grid gap-4 rounded-3xl border border-white/10 bg-black/40 p-4 transition-all duration-200 hover:-translate-y-0.5 hover:border-lime-400/30 hover:bg-white/[0.045] lg:grid-cols-[220px_minmax(0,1fr)_auto] lg:items-center"
+      className="group grid gap-4 rounded-3xl border border-slate-200 bg-white p-4 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-emerald-300 hover:shadow-md lg:grid-cols-[220px_minmax(0,1fr)_auto] lg:items-center"
     >
-      <div className="relative aspect-[16/6] overflow-hidden rounded-2xl border border-white/10 bg-black/30">
+      <div className="relative aspect-[16/6] overflow-hidden rounded-2xl border border-slate-200 bg-slate-100">
         {banner.publicUrl || banner.image ? (
           <img src={toImageUrl(banner.publicUrl || banner.image || '')} alt={banner.title} className="h-full w-full object-cover" />
         ) : (
-          <div className="flex h-full w-full items-center justify-center text-white/30">
-            <ImageIcon className="h-8 w-8 text-white/20" />
+          <div className="flex h-full w-full items-center justify-center text-slate-400">
+            <ImageIcon className="h-8 w-8 text-slate-300" />
           </div>
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/35 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
       </div>
       <div className="min-w-0">
         <div className="flex flex-wrap items-center gap-2">
-          <h2 className="truncate text-base font-bold text-white">{banner.title}</h2>
+          <h2 className="truncate text-base font-bold text-slate-900">{banner.title}</h2>
           <span className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] font-bold ${statusConfig.className}`}>
             <span className="h-1.5 w-1.5 rounded-full bg-current" />
             {statusConfig.label}
           </span>
         </div>
-        <div className="mt-2 flex flex-wrap gap-x-4 gap-y-2 text-xs text-white/50">
-          <span className="font-semibold text-lime-300">{getPositionLabel(banner.position)}</span>
+        <div className="mt-2 flex flex-wrap gap-x-4 gap-y-2 text-xs text-slate-500">
+          <span className="font-semibold text-emerald-600">{getPositionLabel(banner.position)}</span>
           <span className="inline-flex items-center gap-1">
-            <CalendarClock className="h-3.5 w-3.5" />
+            <CalendarClock className="h-3.5 w-3.5 text-slate-400" />
             {formatDate(banner.startDate)} → {formatDate(banner.endDate)}
           </span>
           <span className="inline-flex min-w-0 items-center gap-1">
-            <LinkIcon className="h-3.5 w-3.5 shrink-0" />
-            <span className="max-w-[260px] truncate font-mono">{banner.link || 'Không điều hướng'}</span>
+            <LinkIcon className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+            <span className="max-w-[260px] truncate font-mono text-slate-600">{banner.link || 'Không điều hướng'}</span>
           </span>
         </div>
       </div>
       <div className="flex flex-wrap items-center gap-2 lg:justify-end">
-        <div className="mr-1 flex items-center overflow-hidden rounded-xl border border-white/10 bg-black/30">
-          <button type="button" onClick={() => onMove('up')} disabled={!canMoveUp || isUpdating} aria-label="Đưa banner lên trước" className="p-2 text-white/60 transition-colors hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-25 cursor-pointer">
+        <div className="mr-1 flex items-center overflow-hidden rounded-xl border border-slate-200 bg-slate-50">
+          <button type="button" onClick={() => onMove('up')} disabled={!canMoveUp || isUpdating} aria-label="Đưa banner lên trước" className="p-2 text-slate-500 transition-colors hover:bg-slate-200 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-25 cursor-pointer">
             <ArrowUp className="h-4 w-4" />
           </button>
-          <span className="min-w-9 border-x border-white/10 px-2 py-1.5 text-center text-xs font-bold text-white/80">#{banner.sortOrder}</span>
-          <button type="button" onClick={() => onMove('down')} disabled={!canMoveDown || isUpdating} aria-label="Đưa banner xuống sau" className="p-2 text-white/60 transition-colors hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-25 cursor-pointer">
+          <span className="min-w-9 border-x border-slate-200 px-2 py-1.5 text-center text-xs font-bold text-slate-700">#{banner.sortOrder}</span>
+          <button type="button" onClick={() => onMove('down')} disabled={!canMoveDown || isUpdating} aria-label="Đưa banner xuống sau" className="p-2 text-slate-500 transition-colors hover:bg-slate-200 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-25 cursor-pointer">
             <ArrowDown className="h-4 w-4" />
           </button>
         </div>
@@ -1936,13 +1936,13 @@ function BannerRow({ banner, index, canMoveUp, canMoveDown, onPreview, onEdit, o
           className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full p-1 transition-colors duration-200 ease-in-out focus:outline-none ${
             isUpdating ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'
           } ${
-            banner.isActive ? 'border border-lime-400/80 bg-lime-400' : 'border border-white/20 bg-white/10'
+            banner.isActive ? 'border border-emerald-600 bg-emerald-600' : 'border border-slate-300 bg-slate-200'
           }`}
         >
           <span
             aria-hidden="true"
             className={`pointer-events-none inline-block h-5 w-5 transform rounded-full shadow-md transition duration-200 ease-in-out ${
-              banner.isActive ? 'translate-x-5 bg-black' : 'translate-x-0 bg-white'
+              banner.isActive ? 'translate-x-5 bg-white' : 'translate-x-0 bg-white'
             }`}
           >
             {isUpdating && (
@@ -1952,7 +1952,7 @@ function BannerRow({ banner, index, canMoveUp, canMoveDown, onPreview, onEdit, o
             )}
           </span>
         </button>
-        <button type="button" onClick={onDelete} className="icon-action hover:!border-red-400/40 hover:!bg-red-500/20 hover:!text-red-200" aria-label={`Xóa ${banner.title}`}>
+        <button type="button" onClick={onDelete} className="icon-action hover:!border-red-300 hover:!bg-red-50 hover:!text-red-600" aria-label={`Xóa ${banner.title}`}>
           <Trash2 className="h-4 w-4" />
         </button>
       </div>

@@ -36,15 +36,15 @@ export const MainDashboardView = React.memo(function MainDashboardView({ onViewA
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, ease: 'easeOut' }}
-          className="bg-gradient-to-br from-[#5A827E]/90 to-[#26667F]/90 backdrop-blur-md  border border-white/[0.08] rounded-2xl p-5 flex items-center gap-3 overflow-hidden relative"
+          className="bg-white border border-slate-200/80 rounded-2xl p-5 flex items-center gap-3 overflow-hidden relative shadow-sm"
         >
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center shrink-0 shadow-lg">
+          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shrink-0 shadow-sm">
             <User className="w-5 h-5 text-white" />
           </div>
           <div className="min-w-0">
-            <p className="text-white/40 text-[11px] font-medium">Welcome back</p>
-            <p className="text-white font-bold text-sm truncate">{user?.username || 'Admin'}</p>
-            <p className="text-white/30 text-[10px] truncate capitalize">{user?.role || 'Staff'}</p>
+            <p className="text-slate-500 text-[11px] font-medium">Welcome back</p>
+            <p className="text-slate-900 font-bold text-sm truncate">{user?.username || 'Admin'}</p>
+            <p className="text-slate-400 text-[10px] truncate capitalize">{user?.role || 'Staff'}</p>
           </div>
         </motion.div>
 
@@ -70,7 +70,7 @@ export const MainDashboardView = React.memo(function MainDashboardView({ onViewA
           isLoading={isLoading}
           subtitle={
             summary && summary.pendingOrders > 0 ? (
-              <span className="text-orange-400 font-semibold text-[9px] px-1.5 py-0.5 rounded-full bg-orange-400/10 border border-orange-400/20 whitespace-nowrap">
+              <span className="text-orange-600 font-semibold text-[9px] px-1.5 py-0.5 rounded-full bg-orange-50 border border-orange-200 whitespace-nowrap">
                 [ {summary.pendingOrders} PENDING ]
               </span>
             ) : null
@@ -87,7 +87,7 @@ export const MainDashboardView = React.memo(function MainDashboardView({ onViewA
           isLoading={isLoading}
           subtitle={
             summary && summary.lowStockVariants > 0 ? (
-              <span className="text-amber-400 font-semibold text-[9px] px-1.5 py-0.5 rounded-full bg-amber-400/10 border border-amber-400/20 whitespace-nowrap">
+              <span className="text-amber-700 font-semibold text-[9px] px-1.5 py-0.5 rounded-full bg-amber-50 border border-amber-200 whitespace-nowrap">
                 [ {summary.lowStockVariants} sắp hết ]
               </span>
             ) : null
@@ -113,7 +113,7 @@ export const MainDashboardView = React.memo(function MainDashboardView({ onViewA
 
         {/* Sales Overview — BIG WIDGET */}
         <div className="relative h-full">
-          <div className="absolute inset-0 bg-gradient-to-br from-[#5A827E]/90 to-[#26667F]/90 backdrop-blur-md  border border-white/[0.08] rounded-2xl overflow-hidden">
+          <div className="absolute inset-0 bg-white border border-slate-200/80 rounded-2xl overflow-hidden shadow-sm">
             <DoanhThuChart />
           </div>
         </div>
@@ -127,7 +127,7 @@ export const MainDashboardView = React.memo(function MainDashboardView({ onViewA
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.25, duration: 0.5 }}
-              className="bg-gradient-to-br from-[#5A827E]/90 to-[#26667F]/90 backdrop-blur-md  border border-white/[0.08] overflow-hidden drop-shadow-2xl aspect-[180/220]"
+              className="bg-white border border-slate-200/80 overflow-hidden shadow-sm aspect-[180/220] p-1"
               style={{ borderRadius: '40px' }}
             >
               <div className="w-full h-full">

@@ -1,0 +1,260 @@
+/* ==========================================================================
+   WEBPHONE ADMIN LIGHT THEME SYSTEM
+   Scoped exclusively to .admin-shell to guarantee zero leakage to storefront.
+   ========================================================================== */
+
+/* Scoped root shell */
+.admin-shell {
+  background-color: var(--admin-page-bg);
+  color: var(--admin-text-primary);
+  color-scheme: light;
+  font-family: var(--admin-font-sans) !important;
+}
+
+/* Scoped Form Inputs */
+.admin-shell .form-input {
+  width: 100%;
+  border: 1px solid var(--admin-border);
+  border-radius: 0.75rem;
+  background-color: #ffffff;
+  padding: 0.625rem 0.875rem;
+  color: var(--admin-text-primary);
+  font-size: 0.875rem;
+  outline: none;
+  transition: border-color 150ms ease, box-shadow 150ms ease, background-color 150ms ease;
+  box-shadow: var(--admin-shadow-sm);
+}
+
+.admin-shell .form-input:focus {
+  border-color: #10b981;
+  background-color: #ffffff;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
+}
+
+.admin-shell .form-input::placeholder {
+  color: var(--admin-text-muted);
+}
+
+.admin-shell .form-input option,
+.admin-shell .form-input optgroup {
+  background-color: #ffffff;
+  color: var(--admin-text-primary);
+  padding: 6px 8px;
+}
+
+/* Scoped Icon Actions */
+.admin-shell .icon-action {
+  display: inline-flex;
+  height: 2.25rem;
+  width: 2.25rem;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--admin-border);
+  border-radius: 0.75rem;
+  background-color: #ffffff;
+  color: var(--admin-text-secondary);
+  transition: color 150ms ease, background-color 150ms ease, border-color 150ms ease, transform 150ms ease;
+  cursor: pointer;
+  box-shadow: var(--admin-shadow-sm);
+}
+
+.admin-shell .icon-action:hover {
+  border-color: #10b981;
+  background-color: #ecfdf5;
+  color: #059669;
+  transform: scale(1.05);
+}
+
+/* Scoped Light Custom Scrollbars */
+.admin-shell .custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.admin-shell .custom-scrollbar::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 9999px;
+}
+
+.admin-shell .custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+
+.admin-shell .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Subtle table borders inside admin */
+.admin-shell table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.admin-shell th {
+  color: var(--admin-text-secondary);
+  font-weight: 600;
+}
+
+.admin-shell td {
+  color: var(--admin-text-primary);
+}
+
+/*
+ * Legacy admin views still use the original dark utility palette. Keep the
+ * presentation migration centralized and scoped to the dashboard shell so
+ * storefront pages are not affected. Semantic/accent utilities are restored
+ * below where they are used for actions, badges, overlays, and charts.
+ */
+.admin-shell {
+  --admin-font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --admin-page-bg: #f8fafc;
+  --admin-surface: #ffffff;
+  --admin-surface-muted: #f8fafc;
+  --admin-border: #e2e8f0;
+  --admin-text-primary: #0f172a;
+  --admin-text-secondary: #475569;
+  --admin-text-muted: #94a3b8;
+  --admin-accent: #059669;
+  --admin-accent-soft: #ecfdf5;
+}
+
+/* Dark surface utilities become light admin surfaces. */
+.admin-shell [class*="bg-black"],
+.admin-shell [class*="bg-[#1A1A1A]"],
+.admin-shell [class*="bg-white/5"],
+.admin-shell [class*="bg-white/[0.035]"],
+.admin-shell [class*="bg-white/[0.04]"],
+.admin-shell [class*="bg-white/[0.06]"] {
+  background-color: var(--admin-surface) !important;
+}
+
+.admin-shell [class*="border-white/"] {
+  border-color: var(--admin-border) !important;
+}
+
+/* Neutral dark controls become white controls with readable copy. */
+.admin-shell [class*="bg-neutral-9"],
+.admin-shell [class*="bg-zinc-9"],
+.admin-shell [class*="bg-slate-9"],
+.admin-shell [class*="bg-gray-9"] {
+  background-color: var(--admin-surface) !important;
+}
+
+.admin-shell [class~="text-white"],
+.admin-shell [class*="text-white/"] {
+  color: var(--admin-text-primary) !important;
+}
+
+.admin-shell [class~="text-slate-100"],
+.admin-shell [class~="text-gray-100"],
+.admin-shell [class~="text-neutral-100"],
+.admin-shell [class~="text-zinc-100"] {
+  color: var(--admin-text-primary) !important;
+}
+
+/* Keep white type on colored actions and intentional media/visual treatments. */
+.admin-shell [class*="bg-emerald-"].text-white,
+.admin-shell [class*="bg-blue-"].text-white,
+.admin-shell [class*="bg-red-"].text-white,
+.admin-shell [class*="bg-rose-"].text-white,
+.admin-shell [class*="bg-purple-"].text-white,
+.admin-shell [class*="bg-indigo-"].text-white,
+.admin-shell [class*="bg-gradient-"].text-white,
+.admin-shell [class*="from-emerald-"].text-white,
+.admin-shell [class*="from-neutral-"].text-white,
+.admin-shell [class*="bg-black/"][class*="absolute"],
+.admin-shell [class*="bg-gradient-to-t"] [class~="text-white"],
+.admin-shell .admin-chat-surface [class~="text-white"] {
+  color: #ffffff !important;
+}
+
+/* Image/video treatments and the dedicated watch-face visualization remain
+ * intentionally dark so their contrast and visual data are preserved. */
+.admin-shell [class*="absolute"][class*="inset-0"][class*="bg-black/"] {
+  background-color: rgba(15, 23, 42, 0.42) !important;
+}
+
+.admin-shell [class*="fixed"][class*="inset-0"][class*="bg-slate-900"],
+.admin-shell [class*="absolute"][class*="inset-0"][class*="bg-slate-900"] {
+  background-color: rgba(15, 23, 42, 0.42) !important;
+}
+
+.admin-shell :not(input):not(select):not(textarea)[class*="bg-black/"][class*="text-white"],
+.admin-shell :not(input):not(select):not(textarea)[class*="bg-white/20"][class*="text-white"] {
+  background-color: rgba(15, 23, 42, 0.72) !important;
+  color: #ffffff !important;
+}
+
+.admin-shell .admin-visual-dark [class~="text-white"],
+.admin-shell .admin-visual-dark [class*="text-white/"] {
+  color: #ffffff !important;
+}
+
+.admin-shell .admin-visual-dark [class*="bg-black/"] {
+  background-color: revert-layer !important;
+}
+
+/* Legacy muted white text maps to the light theme's readable gray scale. */
+.admin-shell [class*="text-white/90"] { color: #1e293b !important; }
+.admin-shell [class*="text-white/80"] { color: #334155 !important; }
+.admin-shell [class*="text-white/70"] { color: #475569 !important; }
+.admin-shell [class*="text-white/60"] { color: #475569 !important; }
+.admin-shell [class*="text-white/50"],
+.admin-shell [class*="text-white/40"] { color: #64748b !important; }
+.admin-shell [class*="text-white/30"],
+.admin-shell [class*="text-white/20"] { color: #94a3b8 !important; }
+
+/* Forms, tables, and popovers should remain white even in legacy views. */
+.admin-shell input:not([type="checkbox"]):not([type="radio"]),
+.admin-shell select,
+.admin-shell textarea {
+  background-color: #ffffff !important;
+  border-color: var(--admin-border) !important;
+  color: var(--admin-text-primary) !important;
+}
+
+.admin-shell input::placeholder,
+.admin-shell textarea::placeholder {
+  color: var(--admin-text-muted) !important;
+}
+
+/* The global light form rule must not create a second white field inside the
+ * pill-shaped admin navigation search control. */
+.admin-shell .admin-search-control {
+  background-color: #ffffff !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+.admin-shell .admin-search-input,
+.admin-shell .admin-search-input:focus {
+  background-color: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  color: var(--admin-text-primary) !important;
+}
+
+.admin-shell table,
+.admin-shell thead,
+.admin-shell tbody,
+.admin-shell td,
+.admin-shell th {
+  background-color: #ffffff;
+  border-color: var(--admin-border);
+}
+
+.admin-shell tbody tr:hover {
+  background-color: #f8fafc !important;
+}
+
+/* Overlay layers stay dark for modal readability; their dialog surfaces do not. */
+.admin-shell [class*="fixed"][class*="inset-0"][class*="bg-black/"] {
+  background-color: rgba(15, 23, 42, 0.42) !important;
+}
+
+.admin-shell [class*="shadow-2xl"],
+.admin-shell [class*="shadow-xl"] {
+  --tw-shadow-color: rgba(15, 23, 42, 0.10) !important;
+}

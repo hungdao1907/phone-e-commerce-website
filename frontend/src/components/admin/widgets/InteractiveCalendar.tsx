@@ -52,8 +52,8 @@ const NotificationBadge = ({ meetingInfo, isHovered, badgeIndex }: { meetingInfo
       animate={{ scale: 1, opacity: 1 }}
       className={
         active
-          ? "absolute inset-0 m-auto flex size-10 items-center justify-center bg-white text-black text-sm font-bold z-10"
-          : "absolute bottom-1 right-1 flex size-5 items-center justify-center bg-zinc-700 text-white text-[10px] font-bold"
+          ? "absolute inset-0 m-auto flex size-10 items-center justify-center bg-emerald-600 text-white text-sm font-bold z-10 shadow-md"
+          : "absolute bottom-1 right-1 flex size-5 items-center justify-center bg-slate-200 text-slate-700 text-[10px] font-bold border border-slate-300"
       }
       style={{ borderRadius: 999 }}
       transition={{
@@ -80,7 +80,7 @@ const Day: React.FC<DayProps> = ({ classNames, day, onHover }) => {
       >
         <motion.div className="flex flex-col items-center justify-center">
           {!(day.day[0] === '+' || day.day[0] === '-') && (
-            <span className="text-sm text-white">{day.day}</span>
+            <span className="text-sm font-medium text-slate-800">{day.day}</span>
           )}
         </motion.div>
 
@@ -110,7 +110,7 @@ const MeetingActions = ({ mIndex, day, meeting, fetchPlans, onEdit }: { mIndex: 
           <motion.div
             layoutId={layoutId}
             onClick={() => setIsOpen(true)}
-            className="w-7 h-7 flex items-center justify-center cursor-pointer text-white/50 hover:text-white backdrop-blur-md bg-white/5 border border-white/10 shadow-lg will-change-transform"
+            className="w-7 h-7 flex items-center justify-center cursor-pointer text-slate-400 hover:text-slate-700 bg-white border border-slate-200 shadow-sm will-change-transform"
             style={{ borderRadius: 999 }}
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.95 }}
@@ -121,7 +121,7 @@ const MeetingActions = ({ mIndex, day, meeting, fetchPlans, onEdit }: { mIndex: 
         ) : (
           <motion.div
             layoutId={layoutId}
-            className="flex items-center overflow-hidden backdrop-blur-xl bg-white/10 border border-white/20 will-change-transform shadow-lg"
+            className="flex items-center overflow-hidden bg-white border border-slate-200 will-change-transform shadow-lg"
             style={{ borderRadius: 999 }}
             transition={{ type: 'spring' as const, stiffness: 400, damping: 28 }}
           >
@@ -134,7 +134,7 @@ const MeetingActions = ({ mIndex, day, meeting, fetchPlans, onEdit }: { mIndex: 
             >
               <button
                 onClick={() => { setIsOpen(false); onEdit(meeting, layoutId); }}
-                className="flex gap-1.5 items-center justify-center h-8 px-3 text-white hover:bg-white/10 transition-colors border-r border-white/10"
+                className="flex gap-1.5 items-center justify-center h-8 px-3 text-slate-700 hover:bg-slate-50 transition-colors border-r border-slate-200"
                 onMouseEnter={() => setIsHoveringEdit(true)}
                 onMouseLeave={() => setIsHoveringEdit(false)}
               >
@@ -148,16 +148,16 @@ const MeetingActions = ({ mIndex, day, meeting, fetchPlans, onEdit }: { mIndex: 
                     fetchPlans();
                   } catch (e) { console.error(e); }
                 }}
-                className="flex gap-1.5 items-center justify-center h-8 px-3 text-red-400 hover:bg-white/10 transition-colors border-r border-white/10"
+                className="flex gap-1.5 items-center justify-center h-8 px-3 text-red-600 hover:bg-red-50 transition-colors border-r border-slate-200"
                 onMouseEnter={() => setIsHoveringDelete(true)}
                 onMouseLeave={() => setIsHoveringDelete(false)}
               >
-                <div className="w-3.5 h-3.5 opacity-80 text-red-400"><LottieIcon path="/lottie/delete.json" playing={isHoveringDelete} /></div>
+                <div className="w-3.5 h-3.5 opacity-80 text-red-600"><LottieIcon path="/lottie/delete.json" playing={isHoveringDelete} /></div>
                 <span className="text-xs font-medium">Xoá</span>
               </button>
               <button
                 onClick={() => setIsOpen(false)}
-                className="flex items-center justify-center w-8 h-8 text-white/50 hover:text-white hover:bg-white/10 transition-colors"
+                className="flex items-center justify-center w-8 h-8 text-slate-400 hover:text-slate-700 hover:bg-slate-50 transition-colors"
               >
                 <X size={14} />
               </button>
@@ -189,7 +189,7 @@ const generateDays = (date: Date): DayType[] => {
 
   // Previous month trailing days
   for (let i = 0; i < startingDayOfWeek; i++) {
-    days.push({ day: `-${startingDayOfWeek - i}`, classNames: 'bg-zinc-700/20' });
+    days.push({ day: `-${startingDayOfWeek - i}`, classNames: 'bg-slate-100/50 text-slate-300' });
   }
 
   // Current month days
@@ -197,7 +197,7 @@ const generateDays = (date: Date): DayType[] => {
     const isWeekend = new Date(year, month, i).getDay() === 0 || new Date(year, month, i).getDay() === 6;
     days.push({
       day: i < 10 ? `0${i}` : `${i}`,
-      classNames: isWeekend ? 'bg-zinc-700/20' : 'bg-white/5'
+      classNames: isWeekend ? 'bg-slate-100/70 border border-slate-200/60' : 'bg-white border border-slate-200/80 shadow-xs'
     });
   }
 
@@ -206,7 +206,7 @@ const generateDays = (date: Date): DayType[] => {
   const rows = Math.ceil(totalDays / 7);
   const totalSlots = rows * 7;
   for (let i = 1; i <= totalSlots - totalDays; i++) {
-    days.push({ day: `+${i}`, classNames: 'bg-zinc-700/20' });
+    days.push({ day: `+${i}`, classNames: 'bg-slate-100/50 text-slate-300' });
   }
 
   return days;
@@ -254,7 +254,7 @@ const InteractiveCalendar = React.forwardRef((
         const dayObj = newDays.find(d => d.day === dayStr);
         if (dayObj) {
           if (!dayObj.meetingInfo) dayObj.meetingInfo = [];
-          dayObj.classNames += ' cursor-pointer shadow-lg bg-white/10 border border-white/20'; // highlight days with plans slightly
+          dayObj.classNames += ' cursor-pointer shadow-md bg-emerald-50/80 border border-emerald-300'; // highlight days with plans slightly
           dayObj.meetingInfo.push({
             id: plan.id,
             date: plan.date,
@@ -356,13 +356,11 @@ const InteractiveCalendar = React.forwardRef((
         <motion.div layout className="w-full max-w-lg shrink-0">
           <motion.div key="calendar-view" className="flex w-full flex-col gap-4">
             <div className="flex w-full items-center justify-between">
-              <motion.h2 className="mb-2 text-4xl font-bold tracking-wider text-zinc-300">
-                Tháng {currentDate.getMonth() + 1} <span className="opacity-50">{currentDate.getFullYear()}</span>
+              <motion.h2 className="mb-2 text-4xl font-bold tracking-wider text-slate-900">
+                Tháng {currentDate.getMonth() + 1} <span className="text-slate-400">{currentDate.getFullYear()}</span>
               </motion.h2>
               <div
-                className="relative flex items-center rounded-full backdrop-blur-xl bg-white/5 p-1 border border-white/10
-                    shadow-[0_0_6px_rgba(0,0,0,0.03),0_2px_6px_rgba(0,0,0,0.08),inset_3px_3px_0.5px_-3px_rgba(0,0,0,0.9),inset_-3px_-3px_0.5px_-3px_rgba(0,0,0,0.85),inset_1px_1px_1px_-0.5px_rgba(0,0,0,0.6),inset_-1px_-1px_1px_-0.5px_rgba(0,0,0,0.6),inset_0_0_6px_6px_rgba(0,0,0,0.12),inset_0_0_2px_2px_rgba(0,0,0,0.06),0_0_12px_rgba(255,255,255,0.15)]
-                    dark:shadow-[0_0_8px_rgba(0,0,0,0.03),0_2px_6px_rgba(0,0,0,0.08),inset_3px_3px_0.5px_-3.5px_rgba(255,255,255,0.09),inset_-3px_-3px_0.5px_-3.5px_rgba(255,255,255,0.85),inset_1px_1px_1px_-0.5px_rgba(255,255,255,0.6),inset_-1px_-1px_1px_-0.5px_rgba(255,255,255,0.6),inset_0_0_6px_6px_rgba(255,255,255,0.12),inset_0_0_2px_2px_rgba(255,255,255,0.06),0_0_12px_rgba(0,0,0,0.15)]"
+                className="relative flex items-center rounded-full bg-slate-100 p-1 border border-slate-200 shadow-xs"
               >
                 <button
                   className="relative z-[2] flex items-center justify-center w-9 h-8 rounded-full cursor-pointer"
@@ -379,12 +377,11 @@ const InteractiveCalendar = React.forwardRef((
                   {!moreView && (
                     <motion.div
                       layoutId="glass-toggle-indicator"
-                      className="absolute inset-0 rounded-full bg-white/15 backdrop-blur-md border border-white/20
-                          shadow-[inset_1px_1px_1px_-0.5px_rgba(255,255,255,0.3),inset_-1px_-1px_1px_-0.5px_rgba(255,255,255,0.3)]"
+                      className="absolute inset-0 rounded-full bg-white border border-slate-200 shadow-sm"
                       transition={{ type: 'spring' as const, stiffness: 400, damping: 28 }}
                     />
                   )}
-                  <Columns3 className={`relative z-10 transition-colors duration-200 ${!moreView ? 'text-white' : 'text-white/40'}`} size={16} />
+                  <Columns3 className={`relative z-10 transition-colors duration-200 ${!moreView ? 'text-slate-900' : 'text-slate-400'}`} size={16} />
                 </button>
                 <button
                   className="relative z-[2] flex items-center justify-center w-9 h-8 rounded-full cursor-pointer"
@@ -411,18 +408,17 @@ const InteractiveCalendar = React.forwardRef((
                   {moreView && (
                     <motion.div
                       layoutId="glass-toggle-indicator"
-                      className="absolute inset-0 rounded-full bg-white/15 backdrop-blur-md border border-white/20
-                          shadow-[inset_1px_1px_1px_-0.5px_rgba(255,255,255,0.3),inset_-1px_-1px_1px_-0.5px_rgba(255,255,255,0.3)]"
+                      className="absolute inset-0 rounded-full bg-white border border-slate-200 shadow-sm"
                       transition={{ type: 'spring' as const, stiffness: 400, damping: 28 }}
                     />
                   )}
-                  <Grid className={`relative z-10 transition-colors duration-200 ${moreView ? 'text-white' : 'text-white/40'}`} size={16} />
+                  <Grid className={`relative z-10 transition-colors duration-200 ${moreView ? 'text-slate-900' : 'text-slate-400'}`} size={16} />
                 </button>
               </div>
             </div>
             <div className="grid grid-cols-7 gap-2">
               {['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'].map((d) => (
-                <div key={d} className="rounded-xl bg-white/5 py-1 text-center text-xs text-white/60">
+                <div key={d} className="rounded-xl bg-slate-100 py-1 text-center text-xs font-semibold text-slate-500 border border-slate-200/50">
                   {d}
                 </div>
               ))}
@@ -433,6 +429,7 @@ const InteractiveCalendar = React.forwardRef((
               <MotionButton
                 label="Tháng trước"
                 direction="left"
+                classes="bg-white border-slate-200 text-slate-800 shadow-sm"
                 onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1))}
               />
               <motion.div layout className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
@@ -445,13 +442,12 @@ const InteractiveCalendar = React.forwardRef((
                       setEditingPlanId(null);
                       setFormData({ title: '', date: '', time: '', location: '', participants: '' });
                     }}
-                    className="w-12 h-12 cursor-pointer relative flex items-center justify-center text-white text-3xl font-light will-change-transform backdrop-blur-xl bg-white/10"
+                    className="w-12 h-12 cursor-pointer relative flex items-center justify-center text-slate-800 text-3xl font-light will-change-transform bg-white border border-slate-200 shadow-md"
                     style={{ borderRadius: 999 }}
                     whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.95 }}
                     transition={{ type: 'spring' as const, stiffness: 400, damping: 28 }}
                   >
-                    <div className="absolute inset-0 rounded-full shadow-[0_0_6px_rgba(0,0,0,0.03),0_2px_6px_rgba(0,0,0,0.08),inset_3px_3px_0.5px_-3px_rgba(0,0,0,0.9),inset_-3px_-3px_0.5px_-3px_rgba(0,0,0,0.85),inset_1px_1px_1px_-0.5px_rgba(0,0,0,0.6),inset_-1px_-1px_1px_-0.5px_rgba(0,0,0,0.6),inset_0_0_6px_6px_rgba(0,0,0,0.12),inset_0_0_2px_2px_rgba(0,0,0,0.06),0_0_12px_rgba(255,255,255,0.15)] dark:shadow-[0_0_8px_rgba(0,0,0,0.03),0_2px_6px_rgba(0,0,0,0.08),inset_3px_3px_0.5px_-3.5px_rgba(255,255,255,0.09),inset_-3px_-3px_0.5px_-3.5px_rgba(255,255,255,0.85),inset_1px_1px_1px_-0.5px_rgba(255,255,255,0.6),inset_-1px_-1px_1px_-0.5px_rgba(255,255,255,0.6),inset_0_0_6px_6px_rgba(255,255,255,0.12),inset_0_0_2px_2px_rgba(255,255,255,0.06),0_0_12px_rgba(0,0,0,0.15)] pointer-events-none" />
                     <span className="relative z-10 pointer-events-none">+</span>
                   </motion.div>
                 )}
@@ -459,6 +455,7 @@ const InteractiveCalendar = React.forwardRef((
               <MotionButton
                 label="Tháng sau"
                 direction="right"
+                classes="bg-white border-slate-200 text-slate-800 shadow-sm"
                 onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1))}
               />
             </motion.div>
@@ -469,13 +466,9 @@ const InteractiveCalendar = React.forwardRef((
         {(isAddingPlan || editingLayoutId) && (
           <motion.div
             layoutId={editingLayoutId || "add-plan-morph"}
-            className="w-full max-w-lg relative overflow-hidden border border-white/10 backdrop-blur-xl bg-white/5 will-change-transform"
-            style={{ borderRadius: 24 }}
+            className="w-full max-w-lg relative overflow-hidden border border-slate-200 bg-white shadow-xl will-change-transform rounded-3xl"
             transition={{ type: 'spring' as const, stiffness: 400, damping: 28 }}
           >
-            {/* Liquid Glass edge shadow */}
-            <div className="absolute inset-0 rounded-3xl shadow-[0_0_6px_rgba(0,0,0,0.03),0_2px_6px_rgba(0,0,0,0.08),inset_3px_3px_0.5px_-3px_rgba(0,0,0,0.9),inset_-3px_-3px_0.5px_-3px_rgba(0,0,0,0.85),inset_1px_1px_1px_-0.5px_rgba(0,0,0,0.6),inset_-1px_-1px_1px_-0.5px_rgba(0,0,0,0.6),inset_0_0_6px_6px_rgba(0,0,0,0.12),inset_0_0_2px_2px_rgba(0,0,0,0.06),0_0_12px_rgba(255,255,255,0.15)] dark:shadow-[0_0_8px_rgba(0,0,0,0.03),0_2px_6px_rgba(0,0,0,0.08),inset_3px_3px_0.5px_-3.5px_rgba(255,255,255,0.09),inset_-3px_-3px_0.5px_-3.5px_rgba(255,255,255,0.85),inset_1px_1px_1px_-0.5px_rgba(255,255,255,0.6),inset_-1px_-1px_1px_-0.5px_rgba(255,255,255,0.6),inset_0_0_6px_6px_rgba(255,255,255,0.12),inset_0_0_2px_2px_rgba(255,255,255,0.06),0_0_12px_rgba(0,0,0,0.15)] pointer-events-none" />
-
             {/* Form Content — fades in after morph completes */}
             <motion.div
               className="relative z-10 p-6 flex flex-col gap-5"
@@ -483,8 +476,8 @@ const InteractiveCalendar = React.forwardRef((
               animate={{ opacity: 1 }}
               transition={{ delay: 0.3, duration: 0.3 }}
             >
-              <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-bold text-white">{editingLayoutId ? "Sửa kế hoạch" : "Thêm kế hoạch"}</h2>
+              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                <h2 className="text-2xl font-bold text-slate-900">{editingLayoutId ? "Sửa kế hoạch" : "Thêm kế hoạch"}</h2>
                 <button
                   onClick={() => {
                     if (editingLayoutId) {
@@ -496,7 +489,7 @@ const InteractiveCalendar = React.forwardRef((
                       setIsAddingPlan(false);
                     }
                   }}
-                  className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white/60 hover:text-white transition-colors"
+                  className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-500 hover:text-slate-800 transition-colors"
                 >
                   <X size={16} />
                 </button>
@@ -504,70 +497,70 @@ const InteractiveCalendar = React.forwardRef((
 
               <div className="flex flex-col gap-4">
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-medium text-white/50 uppercase tracking-wider">Tên kế hoạch</label>
+                  <label className="text-xs font-semibold text-slate-700 uppercase tracking-wider">Tên kế hoạch</label>
                   <input
                     type="text"
                     value={formData.title}
                     onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                     placeholder="Ví dụ: Họp team Marketing"
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-white/30 outline-none focus:border-white/30 transition-colors text-sm"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-slate-900 placeholder:text-slate-400 outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-colors text-sm"
                   />
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-medium text-white/50 uppercase tracking-wider flex items-center gap-1.5">
-                      <CalendarDays size={12} /> Ngày
+                    <label className="text-xs font-semibold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                      <CalendarDays size={12} className="text-slate-400" /> Ngày
                     </label>
                     <input
                       type="date"
                       value={formData.date}
                       onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white outline-none focus:border-white/30 transition-colors text-sm [color-scheme:dark]"
+                      className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-slate-900 outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-colors text-sm"
                     />
                   </div>
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-medium text-white/50 uppercase tracking-wider flex items-center gap-1.5">
-                      <Clock size={12} /> Thời gian
+                    <label className="text-xs font-semibold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                      <Clock size={12} className="text-slate-400" /> Thời gian
                     </label>
                     <input
                       type="time"
                       value={formData.time}
                       onChange={(e) => setFormData({ ...formData, time: e.target.value })}
-                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white outline-none focus:border-white/30 transition-colors text-sm [color-scheme:dark]"
+                      className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-slate-900 outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-colors text-sm"
                     />
                   </div>
                 </div>
 
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-medium text-white/50 uppercase tracking-wider flex items-center gap-1.5">
-                    <MapPin size={12} /> Địa điểm
+                  <label className="text-xs font-semibold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                    <MapPin size={12} className="text-slate-400" /> Địa điểm
                   </label>
                   <input
                     type="text"
                     value={formData.location}
                     onChange={(e) => setFormData({ ...formData, location: e.target.value })}
                     placeholder="Ví dụ: Phòng họp A, Zoom Meeting..."
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-white/30 outline-none focus:border-white/30 transition-colors text-sm"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-slate-900 placeholder:text-slate-400 outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-colors text-sm"
                   />
                 </div>
 
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-medium text-white/50 uppercase tracking-wider flex items-center gap-1.5">
-                    <Users size={12} /> Người tham gia
+                  <label className="text-xs font-semibold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                    <Users size={12} className="text-slate-400" /> Người tham gia
                   </label>
                   <input
                     type="text"
                     value={formData.participants}
                     onChange={(e) => setFormData({ ...formData, participants: e.target.value })}
                     placeholder="Ví dụ: Nguyễn Văn A, Trần Thị B..."
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-white/30 outline-none focus:border-white/30 transition-colors text-sm"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-slate-900 placeholder:text-slate-400 outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-colors text-sm"
                   />
                 </div>
 
                 <button
                   onClick={editingLayoutId ? handleUpdatePlan : handleSubmitPlan}
-                  className="w-full mt-2 bg-white text-black font-semibold py-3 rounded-xl hover:bg-white/90 transition-colors"
+                  className="w-full mt-2 bg-emerald-600 text-white font-semibold py-3 rounded-xl hover:bg-emerald-700 shadow-sm transition-colors"
                 >
                   {editingLayoutId ? "Cập nhật kế hoạch" : "Lưu kế hoạch"}
                 </button>
@@ -587,13 +580,13 @@ const InteractiveCalendar = React.forwardRef((
           >
             <motion.div key="more-view" className="flex w-full flex-col gap-4">
               <div className="flex flex-col">
-                <h2 className="mb-1 text-4xl font-bold tracking-wider text-zinc-300">Kế hoạch</h2>
-                <p className="text-sm font-medium text-zinc-300/50">
+                <h2 className="mb-1 text-4xl font-bold tracking-wider text-slate-900">Kế hoạch</h2>
+                <p className="text-sm font-medium text-slate-500">
                   Xem các sự kiện, kế hoạch sắp tới và đã hoàn thành của bạn.
                 </p>
               </div>
               <motion.div
-                className="flex h-[520px] flex-col items-start justify-start overflow-y-auto rounded-xl border border-white/10 shadow-md"
+                className="flex h-[520px] flex-col items-start justify-start overflow-y-auto rounded-2xl border border-slate-200 bg-white shadow-sm"
                 layout
               >
                 <AnimatePresence mode="wait">
@@ -607,16 +600,16 @@ const InteractiveCalendar = React.forwardRef((
                       className="w-full flex flex-col"
                     >
                       {[1, 2, 3].map((i) => (
-                        <div key={i} className="border-b border-white/5 p-4 last:border-b-0">
+                        <div key={i} className="border-b border-slate-100 p-4 last:border-b-0">
                           <div className="mb-2 flex items-center justify-between pr-8">
-                            <div className="h-3 w-20 rounded bg-white/10 animate-pulse" />
-                            <div className="h-3 w-24 rounded bg-white/10 animate-pulse" />
+                            <div className="h-3 w-20 rounded bg-slate-100 animate-pulse" />
+                            <div className="h-3 w-24 rounded bg-slate-100 animate-pulse" />
                           </div>
-                          <div className="mb-3 h-5 w-2/3 rounded bg-white/10 animate-pulse" />
-                          <div className="mb-3 h-4 w-full rounded bg-white/5 animate-pulse" />
+                          <div className="mb-3 h-5 w-2/3 rounded bg-slate-100 animate-pulse" />
+                          <div className="mb-3 h-4 w-full rounded bg-slate-50 animate-pulse" />
                           <div className="flex items-center gap-2 pr-8">
-                            <div className="h-3.5 w-3.5 rounded-full bg-blue-400/20 animate-pulse" />
-                            <div className="h-3 w-32 rounded bg-blue-400/20 animate-pulse" />
+                            <div className="h-3.5 w-3.5 rounded-full bg-blue-100 animate-pulse" />
+                            <div className="h-3 w-32 rounded bg-blue-100 animate-pulse" />
                           </div>
                         </div>
                       ))}
@@ -624,23 +617,23 @@ const InteractiveCalendar = React.forwardRef((
                   ) : (
                     <motion.div key="content" className="w-full" layout>
                       {sortedDays.filter((d) => d.meetingInfo).map((day) => (
-                        <motion.div key={day.day} className="w-full border-b border-white/10 last:border-b-0" layout>
+                        <motion.div key={day.day} className="w-full border-b border-slate-100 last:border-b-0" layout>
                           {day.meetingInfo?.map((meeting, mIndex) => (
                             <motion.div
                               key={mIndex}
-                              className="relative border-b border-white/5 p-4 last:border-b-0 hover:bg-white/5 transition-colors"
+                              className="relative border-b border-slate-100 p-4 last:border-b-0 hover:bg-slate-50 transition-colors"
                               initial={{ opacity: 0, y: 10 }}
                               animate={{ opacity: 1, y: 0 }}
                               exit={{ opacity: 0, y: -10 }}
                               transition={{ duration: 0.2, delay: mIndex * 0.05 }}
                             >
                               <div className="mb-1 flex items-center justify-between pr-8">
-                                <span className="text-xs text-white/50">{meeting.date}</span>
-                                <span className="text-xs text-white/50">{meeting.time}</span>
+                                <span className="text-xs text-slate-400 font-medium">{meeting.date}</span>
+                                <span className="text-xs text-slate-400 font-medium">{meeting.time}</span>
                               </div>
-                              <h3 className="mb-1 pr-8 text-base font-semibold text-white">{meeting.title}</h3>
-                              <p className="mb-2 pr-8 text-sm text-zinc-500">{meeting.participants.join(', ')}</p>
-                              <div className="flex items-center text-blue-400 gap-1 pr-8">
+                              <h3 className="mb-1 pr-8 text-base font-semibold text-slate-900">{meeting.title}</h3>
+                              <p className="mb-2 pr-8 text-sm text-slate-500">{meeting.participants.join(', ')}</p>
+                              <div className="flex items-center text-blue-600 gap-1 pr-8">
                                 <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                                     d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"

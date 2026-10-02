@@ -11,11 +11,11 @@ export function Marketing() {
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  
+
   // Multi-select product modal state
   const [isProductSelectorOpen, setIsProductSelectorOpen] = useState(false);
   const [productSearch, setProductSearch] = useState('');
-  
+
   const { token } = useAuthStore();
 
   const [formData, setFormData] = useState({
@@ -49,13 +49,13 @@ export function Marketing() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Validation
     if (formData.appliesTo === 'product' && formData.targetIds.length === 0) {
       alert('Vui lòng chọn ít nhất một sản phẩm.');
       return;
     }
-    
+
     if (formData.discountType === 'percentage') {
       if (formData.discountValue <= 0 || formData.discountValue > 100) {
         alert('Mức giảm phần trăm phải lớn hơn 0 và nhỏ hơn hoặc bằng 100.');
@@ -71,7 +71,7 @@ export function Marketing() {
     try {
       const url = editingId ? `${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/campaigns/${editingId}` : `${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/campaigns`;
       const method = editingId ? 'PUT' : 'POST';
-      
+
       const payload = {
         ...formData,
         discountValue: Number(formData.discountValue),
@@ -84,7 +84,7 @@ export function Marketing() {
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify(payload)
       });
-      
+
       if (res.ok) {
         setIsModalOpen(false);
         fetchData();
@@ -119,11 +119,11 @@ export function Marketing() {
 
   // Product Selector Logic
   const filteredProducts = products.filter(p => p.name.toLowerCase().includes(productSearch.toLowerCase()));
-  
+
   const toggleProductSelect = (id: string) => {
     setFormData(prev => ({
       ...prev,
-      targetIds: prev.targetIds.includes(id) 
+      targetIds: prev.targetIds.includes(id)
         ? prev.targetIds.filter(pid => pid !== id)
         : [...prev.targetIds, id]
     }));
@@ -154,12 +154,12 @@ export function Marketing() {
   };
 
   return (
-    <div className="flex flex-col h-full gap-6 text-white w-full relative">
+    <div className="flex flex-col h-full gap-6 text-slate-900 w-full relative">
       {/* HEADER */}
       <div className="flex items-center justify-between shrink-0">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Chiến dịch Marketing (Săn Deal)</h1>
-          <p className="text-sm text-white/50 mt-1">Quản lý các chương trình Săn Deal Giá Sốc, Flash Sale.</p>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Chiến dịch Marketing (Săn Deal)</h1>
+          <p className="text-sm text-slate-500 mt-1">Quản lý các chương trình Săn Deal Giá Sốc, Flash Sale.</p>
         </div>
         <button onClick={() => {
             setEditingId(null);
@@ -170,8 +170,8 @@ export function Marketing() {
               isActive: true, appliesTo: 'all', targetIds: [], bannerUrl: ''
             });
             setIsModalOpen(true);
-          }} 
-          className="flex items-center gap-2 px-4 py-2 bg-white text-black rounded-xl font-medium hover:bg-white/90 transition-colors"
+          }}
+          className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-xl font-medium hover:bg-emerald-500 transition-colors shadow-sm"
         >
           <Plus className="w-5 h-5" /> Tạo chiến dịch
         </button>
@@ -180,26 +180,26 @@ export function Marketing() {
       {/* TOOLBAR */}
       <div className="flex items-center gap-3 shrink-0">
         <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <input type="text" placeholder="Tìm kiếm chiến dịch..." value={search} onChange={e => setSearch(e.target.value)}
-            className="w-full h-10 pl-9 pr-4 rounded-xl bg-white/5 border border-white/10 text-sm outline-none focus:border-white/30 transition-colors placeholder:text-white/30" />
+            className="w-full h-10 pl-9 pr-4 rounded-xl bg-white border border-slate-200 text-sm text-slate-900 outline-none focus:border-emerald-500 transition-colors placeholder:text-slate-400 shadow-sm" />
         </div>
       </div>
 
       {/* LIST */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 flex-1 overflow-y-auto custom-scrollbar pb-10">
         {isLoading ? (
-          <div className="col-span-full flex items-center justify-center h-40"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white" /></div>
+          <div className="col-span-full flex items-center justify-center h-40"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600" /></div>
         ) : filteredCampaigns.length === 0 ? (
-          <div className="col-span-full flex flex-col items-center justify-center h-40 text-white/40">
-            <Megaphone className="w-10 h-10 text-white/15 mb-3" />
+          <div className="col-span-full flex flex-col items-center justify-center h-40 text-slate-400">
+            <Megaphone className="w-10 h-10 text-slate-300 mb-3" />
             <p>Không có chiến dịch nào</p>
           </div>
         ) : (
           filteredCampaigns.map((camp, index) => {
             const isOngoing = camp.isActive && new Date(camp.startDate) <= new Date() && new Date(camp.endDate) >= new Date();
             const isEnded = new Date(camp.endDate) < new Date();
-            
+
             let previewProducts = [];
             if (camp.appliesTo === 'product' && camp.targetIds && camp.targetIds.length > 0) {
               previewProducts = camp.targetIds.map((id: string) => products.find(p => p.id === id)).filter(Boolean);
@@ -207,32 +207,29 @@ export function Marketing() {
 
             return (
               <motion.div key={camp.id} initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: index * 0.05 }}
-                className={cn("bg-black/40 border p-6 rounded-3xl flex flex-col relative overflow-hidden", 
-                  camp.isActive ? "border-white/20 shadow-xl shadow-emerald-500/5" : "border-white/5 opacity-70")}
+                className={cn("bg-white border p-6 rounded-3xl flex flex-col relative overflow-hidden shadow-sm transition-all",
+                  camp.isActive ? "border-slate-200 hover:shadow-md" : "border-slate-200 opacity-70 bg-slate-50/50")}
               >
-                {/* Background Glow */}
-                {isOngoing && <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/20 blur-[50px] rounded-full pointer-events-none" />}
-                
                 <div className="flex justify-between items-start mb-4 relative z-10">
                   <div className="flex items-center gap-3">
                     {camp.bannerUrl ? (
-                      <div className="w-12 h-12 rounded-2xl shrink-0 overflow-hidden border border-white/10">
+                      <div className="w-12 h-12 rounded-2xl shrink-0 overflow-hidden border border-slate-200">
                         <img src={camp.bannerUrl} alt="Banner" className="w-full h-full object-cover" />
                       </div>
                     ) : (
-                      <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center shrink-0", 
-                        camp.isActive ? "bg-gradient-to-br from-emerald-400 to-teal-500 text-black" : "bg-white/10 text-white/50")}>
+                      <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 border",
+                        camp.isActive ? "bg-emerald-50 text-emerald-600 border-emerald-200" : "bg-slate-100 text-slate-400 border-slate-200")}>
                         <Percent className="w-6 h-6" />
                       </div>
                     )}
-                    
+
                     <div>
-                      <h3 className="font-bold text-lg text-white leading-tight">{camp.name}</h3>
+                      <h3 className="font-bold text-lg text-slate-900 leading-tight">{camp.name}</h3>
                       <div className="flex items-center gap-2 mt-1">
-                        <span className={cn("text-xs font-bold px-2 py-0.5 rounded uppercase tracking-wider", 
-                          !camp.isActive ? "bg-white/10 text-white/50" :
-                          isEnded ? "bg-red-500/20 text-red-400" :
-                          isOngoing ? "bg-emerald-500/20 text-emerald-400" : "bg-blue-500/20 text-blue-400"
+                        <span className={cn("text-xs font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider border",
+                          !camp.isActive ? "bg-slate-100 text-slate-600 border-slate-200" :
+                          isEnded ? "bg-rose-50 text-rose-700 border-rose-200" :
+                          isOngoing ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-blue-50 text-blue-700 border-blue-200"
                         )}>
                           {!camp.isActive ? 'Tạm dừng' : isEnded ? 'Đã kết thúc' : isOngoing ? 'Đang chạy' : 'Sắp diễn ra'}
                         </span>
@@ -242,37 +239,37 @@ export function Marketing() {
                 </div>
 
                 <div className="space-y-3 mb-4 relative z-10">
-                  <div className="flex items-center gap-3 text-sm text-white/70">
-                    <Tag className="w-4 h-4 text-white/40" />
-                    <span>Giảm: <strong className="text-white">{camp.discountType === 'percentage' ? `${camp.discountValue}%` : `${camp.discountValue.toLocaleString()}đ`}</strong></span>
+                  <div className="flex items-center gap-3 text-sm text-slate-600">
+                    <Tag className="w-4 h-4 text-slate-400" />
+                    <span>Giảm: <strong className="text-slate-900 font-bold">{camp.discountType === 'percentage' ? `${camp.discountValue}%` : `${camp.discountValue.toLocaleString()}đ`}</strong></span>
                   </div>
-                  <div className="flex items-center gap-3 text-sm text-white/70">
-                    <Calendar className="w-4 h-4 text-white/40" />
+                  <div className="flex items-center gap-3 text-sm text-slate-600">
+                    <Calendar className="w-4 h-4 text-slate-400" />
                     <span>{new Date(camp.startDate).toLocaleDateString('vi-VN')} - {new Date(camp.endDate).toLocaleDateString('vi-VN')}</span>
                   </div>
                 </div>
 
                 {camp.appliesTo === 'product' && (
-                  <div className="mb-4 relative z-10 bg-white/5 p-3 rounded-xl">
-                    <p className="text-xs text-white/50 mb-2 font-medium">ÁP DỤNG CHO {camp.targetIds.length} SẢN PHẨM</p>
+                  <div className="mb-4 relative z-10 bg-slate-50 border border-slate-200 p-3 rounded-xl">
+                    <p className="text-xs text-slate-500 mb-2 font-semibold uppercase">ÁP DỤNG CHO {camp.targetIds.length} SẢN PHẨM</p>
                     <div className="flex flex-col gap-1">
                       {previewProducts.slice(0, 3).map((p, i) => (
-                        <div key={i} className="text-sm truncate text-white/90">• {p.name}</div>
+                        <div key={i} className="text-sm truncate text-slate-800 font-medium">• {p.name}</div>
                       ))}
                       {previewProducts.length > 3 && (
-                        <div className="text-xs text-white/50 italic mt-1">+{previewProducts.length - 3} sản phẩm khác</div>
+                        <div className="text-xs text-slate-500 italic mt-1">+{previewProducts.length - 3} sản phẩm khác</div>
                       )}
                     </div>
                   </div>
                 )}
                 {camp.appliesTo === 'all' && (
-                  <div className="mb-4 relative z-10 bg-white/5 p-3 rounded-xl">
-                    <p className="text-sm text-emerald-400 font-medium">Áp dụng toàn cửa hàng</p>
+                  <div className="mb-4 relative z-10 bg-emerald-50 border border-emerald-200 p-3 rounded-xl">
+                    <p className="text-sm text-emerald-700 font-semibold">Áp dụng toàn cửa hàng</p>
                   </div>
                 )}
 
-                <div className="mt-auto pt-4 border-t border-white/10 flex items-center justify-between relative z-10">
-                  <button onClick={() => handleToggleActive(camp.id, camp.isActive)} className={cn("flex items-center gap-2 text-sm font-medium transition-colors", camp.isActive ? "text-orange-400 hover:text-orange-300" : "text-emerald-400 hover:text-emerald-300")}>
+                <div className="mt-auto pt-4 border-t border-slate-100 flex items-center justify-between relative z-10">
+                  <button onClick={() => handleToggleActive(camp.id, camp.isActive)} className={cn("flex items-center gap-2 text-sm font-semibold transition-colors", camp.isActive ? "text-amber-600 hover:text-amber-700" : "text-emerald-600 hover:text-emerald-700")}>
                     {camp.isActive ? <><Square className="w-4 h-4" /> Tạm dừng</> : <><Play className="w-4 h-4" /> Kích hoạt</>}
                   </button>
                   <div className="flex items-center gap-2">
@@ -285,8 +282,8 @@ export function Marketing() {
                         isActive: camp.isActive, appliesTo: camp.appliesTo, targetIds: camp.targetIds || [], bannerUrl: camp.bannerUrl || ''
                       });
                       setIsModalOpen(true);
-                    }} className="p-2 hover:bg-white/10 rounded-lg text-white/50 hover:text-white transition-colors"><Edit2 className="w-4 h-4" /></button>
-                    <button onClick={() => handleDelete(camp.id)} className="p-2 hover:bg-red-500/20 rounded-lg text-white/50 hover:text-red-400 transition-colors"><Trash2 className="w-4 h-4" /></button>
+                    }} className="p-2 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-slate-700 transition-colors"><Edit2 className="w-4 h-4" /></button>
+                    <button onClick={() => handleDelete(camp.id)} className="p-2 hover:bg-rose-50 rounded-lg text-slate-400 hover:text-rose-600 transition-colors"><Trash2 className="w-4 h-4" /></button>
                   </div>
                 </div>
               </motion.div>
@@ -299,77 +296,77 @@ export function Marketing() {
       <AnimatePresence>
         {isModalOpen && !isProductSelectorOpen && (
           <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsModalOpen(false)} className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="relative w-full max-w-2xl bg-[#1c1c1e] rounded-3xl border border-white/10 shadow-2xl p-6 custom-scrollbar max-h-[90vh] overflow-y-auto">
-              <h2 className="text-xl font-bold mb-6">{editingId ? 'Sửa chiến dịch' : 'Tạo chiến dịch mới'}</h2>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsModalOpen(false)} className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="relative w-full max-w-2xl bg-white rounded-3xl border border-slate-200 shadow-2xl p-6 custom-scrollbar max-h-[90vh] overflow-y-auto text-slate-900">
+              <h2 className="text-xl font-bold mb-6 text-slate-900">{editingId ? 'Sửa chiến dịch' : 'Tạo chiến dịch mới'}</h2>
               <form onSubmit={handleSubmit} className="space-y-5">
                 <div>
-                  <label className="block text-sm text-white/70 mb-1">Tên chiến dịch</label>
-                  <input required type="text" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-white outline-none focus:border-white/30" />
-                </div>
-                
-                <div>
-                  <label className="block text-sm text-white/70 mb-1">Mô tả (tùy chọn)</label>
-                  <textarea value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-white outline-none focus:border-white/30 h-16 resize-none" />
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Tên chiến dịch</label>
+                  <input required type="text" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-slate-900 outline-none focus:border-emerald-500 focus:bg-white" />
                 </div>
 
                 <div>
-                  <label className="block text-sm text-white/70 mb-1">Phạm vi áp dụng</label>
-                  <select value={formData.appliesTo} onChange={e => setFormData({...formData, appliesTo: e.target.value, targetIds: []})} className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-white outline-none focus:border-white/30">
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Mô tả (tùy chọn)</label>
+                  <textarea value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-slate-900 outline-none focus:border-emerald-500 focus:bg-white h-16 resize-none" />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Phạm vi áp dụng</label>
+                  <select value={formData.appliesTo} onChange={e => setFormData({...formData, appliesTo: e.target.value, targetIds: []})} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-slate-900 outline-none focus:border-emerald-500 focus:bg-white">
                     <option value="all">Tất cả sản phẩm</option>
                     <option value="product">Sản phẩm cụ thể</option>
                   </select>
                 </div>
 
                 {formData.appliesTo === 'product' && (
-                  <div className="bg-white/5 border border-white/10 p-4 rounded-xl">
+                  <div className="bg-slate-50 border border-slate-200 p-4 rounded-xl">
                     <div className="flex items-center justify-between mb-3">
-                      <label className="block text-sm font-bold text-white">Sản phẩm áp dụng</label>
-                      <button type="button" onClick={() => setIsProductSelectorOpen(true)} className="px-3 py-1.5 bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 rounded-lg text-sm font-medium transition-colors">
+                      <label className="block text-sm font-bold text-slate-900">Sản phẩm áp dụng</label>
+                      <button type="button" onClick={() => setIsProductSelectorOpen(true)} className="px-3 py-1.5 bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 rounded-lg text-sm font-medium transition-colors shadow-sm">
                         + Chọn sản phẩm
                       </button>
                     </div>
-                    
+
                     {formData.targetIds.length > 0 ? (
                       <>
-                        <p className="text-xs text-white/50 mb-3">Đã chọn {formData.targetIds.length} sản phẩm</p>
+                        <p className="text-xs text-slate-500 mb-3">Đã chọn {formData.targetIds.length} sản phẩm</p>
                         <div className="flex flex-wrap gap-2 mb-4">
                           {formData.targetIds.map(id => {
                             const p = products.find(prod => prod.id === id);
                             if (!p) return null;
                             return (
-                              <div key={id} className="flex items-center gap-2 bg-white/10 px-3 py-1.5 rounded-full text-sm">
+                              <div key={id} className="flex items-center gap-2 bg-white border border-slate-200 px-3 py-1.5 rounded-full text-sm text-slate-800 shadow-sm">
                                 <span className="truncate max-w-[150px]">{p.name}</span>
-                                <button type="button" onClick={() => removeProduct(id)} className="text-white/50 hover:text-white"><X className="w-3.5 h-3.5" /></button>
+                                <button type="button" onClick={() => removeProduct(id)} className="text-slate-400 hover:text-slate-600"><X className="w-3.5 h-3.5" /></button>
                               </div>
                             )
                           })}
                         </div>
                       </>
                     ) : (
-                      <p className="text-sm text-white/40 italic mb-2">Chưa có sản phẩm nào được chọn.</p>
+                      <p className="text-sm text-slate-400 italic mb-2">Chưa có sản phẩm nào được chọn.</p>
                     )}
                   </div>
                 )}
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm text-white/70 mb-1">Loại giảm giá</label>
-                    <select value={formData.discountType} onChange={e => setFormData({...formData, discountType: e.target.value})} className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-white outline-none focus:border-white/30">
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Loại giảm giá</label>
+                    <select value={formData.discountType} onChange={e => setFormData({...formData, discountType: e.target.value})} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-slate-900 outline-none focus:border-emerald-500 focus:bg-white">
                       <option value="percentage">% Phần trăm</option>
                       <option value="fixed">Số tiền cố định</option>
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm text-white/70 mb-1">Mức giảm</label>
-                    <input required type="number" min="0" value={formData.discountValue} onChange={e => setFormData({...formData, discountValue: Number(e.target.value)})} className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-white outline-none focus:border-white/30" />
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Mức giảm</label>
+                    <input required type="number" min="0" value={formData.discountValue} onChange={e => setFormData({...formData, discountValue: Number(e.target.value)})} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-slate-900 outline-none focus:border-emerald-500 focus:bg-white" />
                   </div>
                 </div>
 
                 {/* PRICE PREVIEW */}
                 {formData.appliesTo === 'product' && formData.targetIds.length > 0 && formData.discountValue > 0 && (
-                  <div className="bg-emerald-500/10 border border-emerald-500/20 p-4 rounded-xl">
-                    <label className="block text-sm font-bold text-emerald-400 mb-3">Preview Giá Sau Giảm</label>
+                  <div className="bg-emerald-50/70 border border-emerald-200 p-4 rounded-xl">
+                    <label className="block text-sm font-bold text-emerald-800 mb-3">Preview Giá Sau Giảm</label>
                     <div className="space-y-3 max-h-40 overflow-y-auto custom-scrollbar pr-2">
                       {formData.targetIds.map(id => {
                         const p = products.find(prod => prod.id === id);
@@ -377,13 +374,13 @@ export function Marketing() {
                         const price = getProductPrice(p);
                         const finalPrice = calculateDiscountedPrice(price);
                         return (
-                          <div key={id} className="flex items-center gap-3 bg-black/20 p-2 rounded-lg">
-                            {p.image && <img src={p.image} className="w-10 h-10 object-cover rounded-md" />}
+                          <div key={id} className="flex items-center gap-3 bg-white p-2.5 rounded-lg border border-emerald-100 shadow-sm">
+                            {p.image && <img src={p.image} className="w-10 h-10 object-cover rounded-md border border-slate-200" />}
                             <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium truncate">{p.name}</p>
+                              <p className="text-sm font-medium text-slate-900 truncate">{p.name}</p>
                               <div className="flex items-center gap-2 text-xs">
-                                <span className="line-through text-white/40">{price.toLocaleString()}đ</span>
-                                <span className="text-emerald-400 font-bold">{finalPrice.toLocaleString()}đ</span>
+                                <span className="line-through text-slate-400">{price.toLocaleString()}đ</span>
+                                <span className="text-emerald-600 font-bold">{finalPrice.toLocaleString()}đ</span>
                               </div>
                             </div>
                           </div>
@@ -395,18 +392,18 @@ export function Marketing() {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm text-white/70 mb-1">Bắt đầu</label>
-                    <input required type="datetime-local" value={formData.startDate} onChange={e => setFormData({...formData, startDate: e.target.value})} className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-white outline-none focus:border-white/30 [color-scheme:dark]" />
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Bắt đầu</label>
+                    <input required type="datetime-local" value={formData.startDate} onChange={e => setFormData({...formData, startDate: e.target.value})} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-slate-900 outline-none focus:border-emerald-500 focus:bg-white [color-scheme:light]" />
                   </div>
                   <div>
-                    <label className="block text-sm text-white/70 mb-1">Kết thúc</label>
-                    <input required type="datetime-local" value={formData.endDate} onChange={e => setFormData({...formData, endDate: e.target.value})} className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-white outline-none focus:border-white/30 [color-scheme:dark]" />
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Kết thúc</label>
+                    <input required type="datetime-local" value={formData.endDate} onChange={e => setFormData({...formData, endDate: e.target.value})} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-slate-900 outline-none focus:border-emerald-500 focus:bg-white [color-scheme:light]" />
                   </div>
                 </div>
 
-                <div className="pt-4 flex justify-end gap-3 border-t border-white/10">
-                  <button type="button" onClick={() => setIsModalOpen(false)} className="px-5 py-2.5 rounded-xl hover:bg-white/10 transition-colors font-medium">Hủy</button>
-                  <button type="submit" className="px-5 py-2.5 bg-white text-black rounded-xl font-bold hover:bg-white/90 transition-colors">Lưu chiến dịch</button>
+                <div className="pt-4 flex justify-end gap-3 border-t border-slate-100">
+                  <button type="button" onClick={() => setIsModalOpen(false)} className="px-5 py-2.5 rounded-xl hover:bg-slate-100 transition-colors font-medium text-slate-700">Hủy</button>
+                  <button type="submit" className="px-5 py-2.5 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-500 transition-colors shadow-sm">Lưu chiến dịch</button>
                 </div>
               </form>
             </motion.div>
@@ -418,27 +415,27 @@ export function Marketing() {
       <AnimatePresence>
         {isProductSelectorOpen && (
           <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsProductSelectorOpen(false)} className="absolute inset-0 bg-black/80 backdrop-blur-sm" />
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }} className="relative w-full max-w-3xl bg-[#1c1c1e] rounded-3xl border border-white/10 shadow-2xl flex flex-col max-h-[85vh]">
-              <div className="p-5 border-b border-white/10 flex items-center justify-between shrink-0">
-                <h2 className="text-xl font-bold">Chọn sản phẩm</h2>
-                <button onClick={() => setIsProductSelectorOpen(false)} className="p-2 hover:bg-white/10 rounded-full"><X className="w-5 h-5" /></button>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsProductSelectorOpen(false)} className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }} className="relative w-full max-w-3xl bg-white rounded-3xl border border-slate-200 shadow-2xl flex flex-col max-h-[85vh] text-slate-900">
+              <div className="p-5 border-b border-slate-200 flex items-center justify-between shrink-0 bg-slate-50 rounded-t-3xl">
+                <h2 className="text-xl font-bold text-slate-900">Chọn sản phẩm</h2>
+                <button onClick={() => setIsProductSelectorOpen(false)} className="p-2 hover:bg-slate-200/50 rounded-full text-slate-400 hover:text-slate-600"><X className="w-5 h-5" /></button>
               </div>
-              
-              <div className="p-5 border-b border-white/10 shrink-0 space-y-4">
+
+              <div className="p-5 border-b border-slate-200 shrink-0 space-y-4">
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                   <input type="text" placeholder="Tìm kiếm sản phẩm..." value={productSearch} onChange={e => setProductSearch(e.target.value)}
-                    className="w-full h-11 pl-10 pr-4 rounded-xl bg-black/40 border border-white/10 text-sm outline-none focus:border-white/30 transition-colors placeholder:text-white/30" />
+                    className="w-full h-11 pl-10 pr-4 rounded-xl bg-slate-50 border border-slate-200 text-sm text-slate-900 outline-none focus:border-emerald-500 focus:bg-white transition-colors placeholder:text-slate-400" />
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <button onClick={selectAllProducts} className="text-sm text-blue-400 hover:text-blue-300 font-medium">Chọn tất cả kết quả</button>
-                    <span className="text-white/20">|</span>
-                    <button onClick={deselectAllProducts} className="text-sm text-white/50 hover:text-white font-medium">Bỏ chọn kết quả</button>
+                    <button onClick={selectAllProducts} className="text-sm text-blue-600 hover:text-blue-700 font-semibold">Chọn tất cả kết quả</button>
+                    <span className="text-slate-200">|</span>
+                    <button onClick={deselectAllProducts} className="text-sm text-slate-500 hover:text-slate-700 font-medium">Bỏ chọn kết quả</button>
                   </div>
-                  <div className="text-sm font-medium">
-                    Đã chọn: <span className="text-emerald-400">{formData.targetIds.length}</span>
+                  <div className="text-sm font-medium text-slate-600">
+                    Đã chọn: <span className="text-emerald-600 font-bold">{formData.targetIds.length}</span>
                   </div>
                 </div>
               </div>
@@ -448,30 +445,30 @@ export function Marketing() {
                   {filteredProducts.map(p => {
                     const isSelected = formData.targetIds.includes(p.id);
                     return (
-                      <div key={p.id} onClick={() => toggleProductSelect(p.id)} className={cn("flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all", isSelected ? "bg-emerald-500/10 border-emerald-500/30" : "bg-black/20 border-white/5 hover:border-white/20")}>
-                        <div className={cn("w-5 h-5 rounded border flex items-center justify-center shrink-0 transition-colors", isSelected ? "bg-emerald-500 border-emerald-500" : "border-white/20")}>
+                      <div key={p.id} onClick={() => toggleProductSelect(p.id)} className={cn("flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all", isSelected ? "bg-emerald-50 border-emerald-300 shadow-sm" : "bg-white border-slate-200 hover:border-slate-300")}>
+                        <div className={cn("w-5 h-5 rounded border flex items-center justify-center shrink-0 transition-colors", isSelected ? "bg-emerald-600 border-emerald-600" : "border-slate-300 bg-white")}>
                           {isSelected && <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
                         </div>
                         {p.image ? (
-                          <img src={p.image} alt={p.name} className="w-12 h-12 object-cover rounded-lg shrink-0" />
+                          <img src={p.image} alt={p.name} className="w-12 h-12 object-cover rounded-lg shrink-0 border border-slate-200" />
                         ) : (
-                          <div className="w-12 h-12 bg-white/5 rounded-lg shrink-0" />
+                          <div className="w-12 h-12 bg-slate-100 rounded-lg shrink-0 border border-slate-200" />
                         )}
                         <div className="flex-1 min-w-0">
-                          <p className="font-medium text-sm truncate">{p.name}</p>
-                          <p className="text-xs text-white/50">{getProductPrice(p).toLocaleString()}đ</p>
+                          <p className="font-medium text-sm text-slate-900 truncate">{p.name}</p>
+                          <p className="text-xs text-slate-500 font-semibold">{getProductPrice(p).toLocaleString()}đ</p>
                         </div>
                       </div>
                     )
                   })}
                 </div>
                 {filteredProducts.length === 0 && (
-                  <div className="text-center py-10 text-white/40">Không tìm thấy sản phẩm nào phù hợp</div>
+                  <div className="text-center py-10 text-slate-400">Không tìm thấy sản phẩm nào phù hợp</div>
                 )}
               </div>
 
-              <div className="p-5 border-t border-white/10 flex justify-end shrink-0">
-                <button onClick={() => setIsProductSelectorOpen(false)} className="px-6 py-2.5 bg-white text-black rounded-xl font-bold hover:bg-white/90 transition-colors">Xác nhận</button>
+              <div className="p-5 border-t border-slate-200 flex justify-end shrink-0 bg-slate-50 rounded-b-3xl">
+                <button onClick={() => setIsProductSelectorOpen(false)} className="px-6 py-2.5 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-500 transition-colors shadow-sm">Xác nhận</button>
               </div>
             </motion.div>
           </div>

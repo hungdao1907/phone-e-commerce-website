@@ -21,6 +21,8 @@ import { SettingsManager } from '@/components/admin/views/SettingsManager';
 import { AdminChatWidget } from '@/components/admin/chat/AdminChatWidget';
 import { NotificationCenter } from '@/components/admin/widgets/NotificationCenter';
 
+import '@/css/admin.css';
+
 // Map view IDs to readable titles
 const VIEW_LABELS: Record<string, string> = {
   dashboard: 'Tổng quan',
@@ -61,7 +63,7 @@ export function DashboardLayout() {
   const handleOpenNotifCenter = useCallback(() => setIsNotifCenterOpen(true), []);
 
   return (
-    <div className="relative min-h-screen w-full overflow-hidden bg-gradient-to-br from-[#183D61] to-[#ACD99C] text-white font-sans">
+    <div className="admin-shell relative min-h-screen w-full overflow-hidden bg-[#f8fafc] text-slate-900 font-sans">
 
 
       {/* Main Content Area */}
@@ -72,7 +74,7 @@ export function DashboardLayout() {
         {/* Right Area (Navbar + Main Workspace) */}
         <div className="flex-1 flex flex-col h-full overflow-hidden">
           {/* Top Navbar */}
-          <header className="relative z-50 h-[80px] shrink-0 flex items-center px-8">
+          <header className="relative z-50 h-[80px] shrink-0 flex items-center px-8 border-b border-slate-200/60 bg-transparent">
 
             {/* Left Spacer */}
             <div className="flex-1"></div>
@@ -125,10 +127,10 @@ export function DashboardLayout() {
               <SettingsManager />
             ) : (
               <div className="flex flex-col gap-2">
-                <p className="text-white/40 text-sm">Đang xem</p>
-                <h1 className="text-white text-2xl font-bold">{VIEW_LABELS[activeView] ?? activeView}</h1>
-                <p className="text-white/40 text-sm mt-4">
-                  Nội dung của <strong className="text-white/60">{VIEW_LABELS[activeView]}</strong> sẽ hiển thị ở đây.
+                <p className="text-slate-400 text-sm">Đang xem</p>
+                <h1 className="text-slate-900 text-2xl font-bold">{VIEW_LABELS[activeView] ?? activeView}</h1>
+                <p className="text-slate-500 text-sm mt-4">
+                  Nội dung của <strong className="text-slate-800">{VIEW_LABELS[activeView]}</strong> sẽ hiển thị ở đây.
                 </p>
               </div>
             )}

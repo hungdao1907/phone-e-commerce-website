@@ -178,7 +178,7 @@ export function AppleWatchWeatherFace() {
 
   return (
     <div
-      className="w-full h-full relative select-none"
+      className="admin-visual-dark w-full h-full relative select-none"
       style={{
         backgroundImage: "url('/images/bgWatch.jpg')",
         backgroundSize: 'cover',

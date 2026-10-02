@@ -50,16 +50,16 @@ const footerViewAllVariants = {
 function SkeletonCard({ i }: { i: number }) {
   return (
     <motion.div
-      className="bg-[#FFEDA8]/50 border border-white/[0.08] rounded-xl px-4 py-3 relative animate-pulse"
+      className="bg-slate-50 border border-slate-200/80 rounded-xl px-4 py-3 relative animate-pulse shadow-xs"
       variants={getCardVariants(i)}
       transition={springTransition}
       style={{ zIndex: 3 - i }}
     >
       <div className="flex items-start gap-3">
-        <div className="w-7 h-7 rounded-lg bg-white/20 shrink-0 mt-0.5" />
+        <div className="w-7 h-7 rounded-lg bg-slate-200 shrink-0 mt-0.5" />
         <div className="flex-1 min-w-0 space-y-2">
-          <div className="h-3 bg-white/20 rounded w-3/4" />
-          <div className="h-2 bg-white/10 rounded w-full" />
+          <div className="h-3 bg-slate-200 rounded w-3/4" />
+          <div className="h-2 bg-slate-100 rounded w-full" />
         </div>
       </div>
     </motion.div>
@@ -99,7 +99,7 @@ export function NotificationsWidget({ onViewAll }: NotificationsWidgetProps) {
     >
       {/* Inner stacked container */}
       <motion.div
-        className="w-full rounded-2xl bg-gradient-to-br from-[#5A827E]/90 to-[#26667F]/90 backdrop-blur-md border border-white/[0.08] p-4 flex flex-col gap-3"
+        className="w-full rounded-2xl bg-white border border-slate-200/80 shadow-sm p-4 flex flex-col gap-3"
       >
         {/* Card stack */}
         <div>
@@ -107,9 +107,9 @@ export function NotificationsWidget({ onViewAll }: NotificationsWidgetProps) {
             // Loading skeletons — giữ đúng 3 card
             [0, 1, 2].map((i) => <SkeletonCard key={i} i={i} />)
           ) : notifications.length === 0 ? (
-            <div className="bg-[#FFEDA8]/30 border border-white/[0.08] rounded-xl px-4 py-4 text-center">
-              <Bell className="w-5 h-5 text-[#003631]/40 mx-auto mb-1" />
-              <p className="text-[11px] text-[#003631]/50">Không có thông báo</p>
+            <div className="bg-slate-50 border border-slate-200/80 rounded-xl px-4 py-4 text-center">
+              <Bell className="w-5 h-5 text-slate-400 mx-auto mb-1" />
+              <p className="text-[11px] text-slate-500">Không có thông báo</p>
             </div>
           ) : (
             notifications.map((notif, i) => {
@@ -120,9 +120,9 @@ export function NotificationsWidget({ onViewAll }: NotificationsWidgetProps) {
                 <motion.div
                   key={notif.id}
                   className={cn(
-                    "bg-[#FFEDA8] border border-white/[0.08] rounded-xl px-4 py-3 relative",
-                    "hover:bg-[#FFEDA8]/90 transition-colors duration-200",
-                    "shadow-[0_2px_8px_rgba(0,0,0,0.15)]"
+                    "bg-white border border-slate-200 rounded-xl px-4 py-3 relative",
+                    "hover:bg-slate-50 transition-colors duration-200",
+                    "shadow-sm"
                   )}
                   variants={getCardVariants(i)}
                   transition={springTransition}
@@ -139,18 +139,18 @@ export function NotificationsWidget({ onViewAll }: NotificationsWidgetProps) {
                       <div className="flex items-center justify-between gap-2">
                         <span className={cn(
                           "text-xs font-semibold truncate",
-                          !notif.isRead ? "text-[#003631]" : "text-[#003631]/60"
+                          !notif.isRead ? "text-slate-900 font-bold" : "text-slate-600"
                         )}>
                           {notif.title}
                         </span>
                         <div className="flex items-center gap-1.5 shrink-0">
-                          <span className="text-[10px] text-[#003631]/50">{formatTime(notif.createdAt)}</span>
+                          <span className="text-[10px] text-slate-400">{formatTime(notif.createdAt)}</span>
                           {!notif.isRead && (
-                            <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                           )}
                         </div>
                       </div>
-                      <p className="text-[11px] text-[#003631]/70 line-clamp-1 mt-0.5">{notif.message}</p>
+                      <p className="text-[11px] text-slate-500 line-clamp-1 mt-0.5">{notif.message}</p>
                     </div>
                   </div>
                 </motion.div>
@@ -161,19 +161,19 @@ export function NotificationsWidget({ onViewAll }: NotificationsWidgetProps) {
 
         {/* Footer — switches between "Notifications" and "View all" */}
         <div className="flex items-center gap-2 px-1">
-          <div className="w-5 h-5 rounded-full bg-white/10 text-white/60 text-[10px] flex items-center justify-center font-bold">
+          <div className="w-5 h-5 rounded-full bg-slate-100 text-slate-700 text-[10px] flex items-center justify-center font-bold border border-slate-200">
             {unreadCount > 0 ? unreadCount : (notifications.length || '0')}
           </div>
           <span className="grid">
             <motion.span
-              className="text-xs font-medium text-white/40 row-start-1 col-start-1"
+              className="text-xs font-medium text-slate-500 row-start-1 col-start-1"
               variants={footerNotifVariants}
               transition={textSwitchTransition}
             >
               Notifications
             </motion.span>
             <motion.span
-              className="text-xs font-medium text-white/60 flex items-center gap-1 cursor-pointer select-none row-start-1 col-start-1"
+              className="text-xs font-semibold text-emerald-700 hover:text-emerald-800 flex items-center gap-1 cursor-pointer select-none row-start-1 col-start-1"
               variants={footerViewAllVariants}
               transition={textSwitchTransition}
               onClick={onViewAll}
