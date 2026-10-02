@@ -52,7 +52,6 @@ export function WaveGallery() {
     <section id="home-wave-gallery" data-home-section="home-wave-gallery" className="wave-gallery" aria-labelledby="wave-gallery-title">
       <div className="wave-gallery__grid">
         <div className="wave-gallery__editorial">
-          <p className="wave-gallery__eyebrow">CÔNG NGHỆ & CUỘC SỐNG</p>
           <h2 id="wave-gallery-title">
             Công nghệ trong<br />
             từng khoảnh khắc.

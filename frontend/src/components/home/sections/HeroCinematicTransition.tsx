@@ -45,6 +45,8 @@ export function HeroCinematicTransition({ isIntroPlaying = false }: HeroCinemati
   return (
     <section
       ref={transitionRef}
+      id="home-hero"
+      data-home-section="home-hero"
       className="hero-cinematic-transition relative -mt-[44px] h-[200svh] bg-[#030712]"
       aria-label="Chuyển cảnh từ giới thiệu sang phim thương hiệu"
     >

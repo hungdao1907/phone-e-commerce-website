@@ -15,6 +15,12 @@ import {
   ShieldCheck,
   HelpCircle,
   Users,
+  Truck,
+  CreditCard,
+  Wrench,
+  PhoneCall,
+  MessageCircle,
+  MapPin,
 } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
 import { useAuthStore } from '../../store/authStore';
@@ -111,8 +117,18 @@ export function GlobalNav() {
         }
       ];
       if (item.name === 'Hỗ Trợ') return [
-        { title: 'Tìm Trợ Giúp', links: ['iPhone', 'Mac', 'iPad', 'Watch', 'Bảo Hành'] },
-        { title: 'Liên Hệ', links: ['Nhận Hỗ Trợ', 'Cộng Đồng'] }
+        {
+          title: 'DỊCH VỤ & CHÍNH SÁCH',
+          links: ['Bảo Hành & Đổi Trả', 'Giao Hàng & Đơn Hàng', 'Trả Góp & Thanh Toán', 'Dịch Vụ & Sửa Chữa'],
+          subtitles: ['1 đổi 1 trong 30 ngày', 'Tra cứu vận chuyển', 'Trả góp 0% lãi suất', 'Bảo dưỡng & thay pin'],
+          slugs: [null, null, null, null],
+        },
+        {
+          title: 'LIÊN HỆ & TRỢ GIÚP',
+          links: ['Hotline CSKH', 'Chat Trực Tuyến', 'Hệ Thống Cửa Hàng', 'Câu Hỏi Thường Gặp'],
+          subtitles: ['1800.6868 (Miễn phí)', 'Tư vấn Zalo / LiveChat', 'Tìm showroom gần nhất', 'Giải đáp nhanh (FAQ)'],
+          slugs: [null, null, null, null],
+        }
       ];
       return [];
     }
@@ -275,12 +291,33 @@ export function GlobalNav() {
       );
     }
 
-    // 3. Service / Utility feature icons
+    // 3. Service / Support feature icons
+    if (n.includes('bảo hành') || n.includes('đổi trả')) {
+      return <ShieldCheck className="w-5 h-5 text-emerald-600 transition-transform duration-200 group-hover:scale-110" />;
+    }
+    if (n.includes('giao hàng') || n.includes('vận chuyển') || n.includes('đơn hàng')) {
+      return <Truck className="w-5 h-5 text-blue-600 transition-transform duration-200 group-hover:scale-110" />;
+    }
+    if (n.includes('trả góp') || n.includes('thanh toán')) {
+      return <CreditCard className="w-5 h-5 text-purple-600 transition-transform duration-200 group-hover:scale-110" />;
+    }
+    if (n.includes('sửa chữa') || n.includes('dịch vụ') || n.includes('bảo dưỡng')) {
+      return <Wrench className="w-5 h-5 text-amber-600 transition-transform duration-200 group-hover:scale-110" />;
+    }
+    if (n.includes('hotline') || n.includes('tổng đài') || n.includes('cskh')) {
+      return <PhoneCall className="w-5 h-5 text-rose-600 transition-transform duration-200 group-hover:scale-110" />;
+    }
+    if (n.includes('chat') || n.includes('tư vấn') || n.includes('trực tuyến')) {
+      return <MessageCircle className="w-5 h-5 text-sky-600 transition-transform duration-200 group-hover:scale-110" />;
+    }
+    if (n.includes('cửa hàng') || n.includes('showroom') || n.includes('hệ thống')) {
+      return <MapPin className="w-5 h-5 text-red-600 transition-transform duration-200 group-hover:scale-110" />;
+    }
+    if (n.includes('câu hỏi') || n.includes('faq') || n.includes('thường gặp')) {
+      return <HelpCircle className="w-5 h-5 text-teal-600 transition-transform duration-200 group-hover:scale-110" />;
+    }
     if (n.includes('phụ kiện') || n.includes('tai nghe') || n.includes('airpods')) {
       return <Headphones className="w-5 h-5 text-neutral-700 group-hover:text-black transition-colors" />;
-    }
-    if (n.includes('bảo hành')) {
-      return <ShieldCheck className="w-5 h-5 text-neutral-700 group-hover:text-black transition-colors" />;
     }
     if (n.includes('hỗ trợ') || n.includes('help') || n.includes('trợ giúp')) {
       return <HelpCircle className="w-5 h-5 text-neutral-700 group-hover:text-black transition-colors" />;
@@ -481,22 +518,17 @@ export function GlobalNav() {
                     </div>
                     <div className="flex items-stretch gap-3">
                       {group.links.map((link: string, linkIdx: number) => {
-                        const supportRoutes = displayMenu?.id === 'support'
-                          ? [
-                              ['phone/iphone', 'laptop/macbook', 'tablet/ipad', 'watch/apple-watch', null],
-                              [null, null],
-                            ][idx]
-                          : undefined;
-                        const targetSlug = group.slugs?.[linkIdx] ?? supportRoutes?.[linkIdx] ?? null;
+                        const targetSlug = group.slugs?.[linkIdx] ?? null;
                         const targetPath = targetSlug
                           ? (targetSlug.startsWith('/') ? targetSlug : `/${targetSlug}`)
                           : null;
+                        const customSubtitle = (group as any).subtitles?.[linkIdx];
                         const isFeatured = link.includes('17 Pro') || link.includes('Mới Nhất') || link.includes('Ultra');
 
                         return (
                           <div
                             key={linkIdx}
-                            className={`group relative flex flex-col items-center justify-between p-4 w-[138px] rounded-2xl border transition-all duration-200 ${
+                            className={`group relative flex flex-col items-center justify-between p-3.5 w-[142px] rounded-2xl border transition-all duration-200 ${
                               isFeatured
                                 ? 'bg-gradient-to-b from-neutral-900 to-neutral-950 text-white border-neutral-800 hover:border-neutral-700 hover:shadow-xl hover:-translate-y-1'
                                 : 'bg-neutral-50/70 hover:bg-white text-neutral-800 border-neutral-200/60 hover:border-neutral-300 hover:shadow-lg hover:shadow-neutral-200/50 hover:-translate-y-1'
@@ -515,25 +547,29 @@ export function GlobalNav() {
                                 HOT 🔥
                               </span>
                             )}
-                            <div className="w-12 h-12 rounded-xl bg-white border border-neutral-200/80 flex items-center justify-center mb-2.5 shadow-sm transition-all duration-200 group-hover:scale-105 group-hover:shadow-md overflow-hidden p-1.5">
+                            <div className="w-12 h-12 rounded-xl bg-white border border-neutral-200/80 flex items-center justify-center mb-2 shadow-sm transition-all duration-200 group-hover:scale-105 group-hover:shadow-md overflow-hidden p-1.5">
                               {renderItemVisual(link, displayMenu.name, isFeatured)}
                             </div>
                             <div className="text-center w-full">
-                              <span className={`text-[12.5px] font-semibold block truncate ${
+                              <span className={`text-[12px] font-semibold block truncate ${
                                 isFeatured ? 'text-white' : 'text-neutral-900'
                               }`}>
                                 {link}
                               </span>
-                              {targetPath && (
-                                <span className={`text-[10.5px] font-medium flex items-center justify-center gap-0.5 mt-1 transition-colors ${
-                                isFeatured
-                                  ? 'text-neutral-400 group-hover:text-neutral-200'
-                                  : 'text-neutral-400 group-hover:text-black'
-                              }`}>
-                                Khám phá
-                                <ChevronRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+                              {customSubtitle ? (
+                                <span className="text-[10px] font-medium text-neutral-400 group-hover:text-neutral-600 block mt-1 truncate transition-colors">
+                                  {customSubtitle}
                                 </span>
-                              )}
+                              ) : targetPath ? (
+                                <span className={`text-[10.5px] font-medium flex items-center justify-center gap-0.5 mt-1 transition-colors ${
+                                  isFeatured
+                                    ? 'text-neutral-400 group-hover:text-neutral-200'
+                                    : 'text-neutral-400 group-hover:text-black'
+                                }`}>
+                                  Khám phá
+                                  <ChevronRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+                                </span>
+                              ) : null}
                             </div>
                           </div>
                         );

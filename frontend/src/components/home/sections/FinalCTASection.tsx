@@ -546,12 +546,6 @@ export function FinalCTASection() {
                     transition={{ duration: 0.35, ease: EASING }}
                     className="h-full flex flex-col justify-between"
                   >
-                    {/* Eyebrow */}
-                    <div className="final-cta-panel__eyebrow-box">
-                      <span className="final-cta-panel__eyebrow-line" aria-hidden="true" />
-                      <p className="final-cta-panel__eyebrow">TÌM LỰA CHỌN DÀNH CHO BẠN</p>
-                    </div>
-
                     {/* Headline */}
                     <h2 id="final-cta-heading" className="final-cta-panel__title">
                       Không cần biết mọi thông số.<br />

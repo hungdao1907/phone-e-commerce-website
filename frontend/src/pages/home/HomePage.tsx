@@ -52,7 +52,7 @@ export function HomePage() {
   }, [location.key, navigationType]);
 
   return (
-    <div className="bg-white min-h-screen font-sans text-[#1d1d1f]">
+    <div className="home-page bg-white min-h-screen font-sans text-[#1d1d1f]">
       {/* Màn hình chào mừng phong cách Apple khi lần đầu ghé thăm */}
       <FirstVisitHelloIntro onFadeOutStart={() => setIsIntroPlaying(false)} />
 

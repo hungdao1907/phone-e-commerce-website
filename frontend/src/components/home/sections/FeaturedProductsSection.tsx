@@ -156,15 +156,14 @@ export function FeaturedProductsSection() {
     <section id={HOME_SECTION_IDS.featuredProducts} data-home-section={HOME_SECTION_IDS.featuredProducts} className="featured-products-section overflow-hidden bg-white py-20 sm:py-24 lg:py-28 xl:py-32" aria-labelledby="featured-products-title">
       <div className="mx-auto max-w-[1440px] px-5 sm:px-8 lg:px-12 xl:px-16">
         <motion.div className="max-w-[1200px]" initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.25 }}>
-          <motion.p className="text-[0.7rem] font-semibold tracking-[0.2em] text-[#6e6e73] sm:text-xs" variants={makeRevealVariants({ y: 16, delay: 0.05, duration: 0.7, reduceMotion: shouldReduceMotion })}>NỔI BẬT</motion.p>
-          <div className="mt-4 overflow-hidden py-2 sm:mt-5 sm:py-3">
+          <div className="overflow-hidden py-2 sm:py-3">
             <h2 id="featured-products-title" className="max-w-[1200px] text-[clamp(1.75rem,calc(1.25rem+2vw),3rem)] font-semibold leading-[1.15] tracking-[-0.04em]">
-              <motion.span className="inline-block text-[#1d1d1f]" variants={makeRevealVariants({ y: 32, delay: 0.15, duration: 0.95, reduceMotion: shouldReduceMotion })}>Thế hệ mới nhất.</motion.span>{' '}
-              <motion.span className="inline-block text-[#6e6e73]" variants={makeRevealVariants({ y: 32, delay: 0.3, duration: 0.95, reduceMotion: shouldReduceMotion })}>Xem ngay có gì mới.</motion.span>
+              <motion.span className="inline-block text-[#1d1d1f]" variants={makeRevealVariants({ y: 32, delay: 0.15, duration: 0.95, reduceMotion: shouldReduceMotion })}>Thiết bị mới nhất.</motion.span>{' '}
+              <motion.span className="inline-block text-[#6e6e73]" variants={makeRevealVariants({ y: 32, delay: 0.3, duration: 0.95, reduceMotion: shouldReduceMotion })}>Trải nghiệm vượt bậc.</motion.span>
             </h2>
           </div>
           <motion.p className="mt-4 max-w-[620px] text-base leading-relaxed text-[#6e6e73] sm:text-lg" variants={makeRevealVariants({ y: 22, delay: 0.45, duration: 0.85, reduceMotion: shouldReduceMotion })}>
-            Những lựa chọn nổi bật cho hiệu năng, thiết kế và trải nghiệm mỗi ngày.
+            Những lựa chọn hàng đầu cho hiệu năng đột phá, thiết kế tinh tế và trải nghiệm mỗi ngày.
           </motion.p>
         </motion.div>
         <div className="mt-12 sm:mt-14 lg:mt-16">
