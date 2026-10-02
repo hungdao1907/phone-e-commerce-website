@@ -7,6 +7,8 @@ import {
   type UsageType,
   type PriorityType,
 } from '@/components/home/FinalCTAVisual';
+import { useHomeSectionReturn } from '@/hooks/useHomeSectionReturn';
+import { HOME_SECTION_IDS } from '@/lib/homeSectionHistory';
 
 const EASING = [0.22, 1, 0.36, 1] as const;
 
@@ -389,6 +391,7 @@ export function FinalCTASection() {
   const shouldReduceMotion = useReducedMotion() === true;
   const panelRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
+  const rememberReturn = useHomeSectionReturn(HOME_SECTION_IDS.finalCta);
 
   const [selectedUsage, setSelectedUsage] = useState<UsageType | null>('everyday');
   const [selectedPriority, setSelectedPriority] = useState<PriorityType | null>('performance');
@@ -490,6 +493,7 @@ export function FinalCTASection() {
   };
 
   const handleProductNavigate = (product: ProductItem) => {
+    rememberReturn();
     if (product.name.toLowerCase().includes('iphone 17 pro max')) {
       navigate('/phone/exploreIphone17promax');
     } else {
@@ -511,7 +515,7 @@ export function FinalCTASection() {
   };
 
   return (
-    <section className="final-cta-section" aria-labelledby="final-cta-heading">
+    <section id={HOME_SECTION_IDS.finalCta} data-home-section={HOME_SECTION_IDS.finalCta} className="final-cta-section" aria-labelledby="final-cta-heading">
       <div className="final-cta-section__outer-container">
         {/* Dark Graphite Cinematic Closing Panel */}
         <motion.div

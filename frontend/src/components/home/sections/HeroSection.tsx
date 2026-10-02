@@ -497,6 +497,7 @@ export function HeroSection({
     <section
       ref={heroRef}
       id="home-hero"
+      data-home-section="home-hero"
       aria-labelledby="home-hero-title"
       onPointerMove={handlePointerMove}
       onPointerLeave={handlePointerLeave}

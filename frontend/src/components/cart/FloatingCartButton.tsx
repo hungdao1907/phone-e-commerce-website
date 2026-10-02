@@ -21,12 +21,14 @@ export function FloatingCartButton() {
   const [isPlaying, setIsPlaying] = useState(false);
 
   useEffect(() => {
-    if (cartItemCount > 0) {
-      setIsPlaying(true);
-      const timer = setTimeout(() => setIsPlaying(false), 1500);
-      return () => clearTimeout(timer);
-    }
-  }, [cartItemCount]);
+    if (isExplorePage || isHiddenPath || cartItemCount <= 0) return;
+
+    setIsPlaying(true);
+    const timer = setTimeout(() => setIsPlaying(false), 1500);
+    return () => clearTimeout(timer);
+  }, [cartItemCount, isExplorePage, isHiddenPath]);
+
+  if (isExplorePage || isHiddenPath) return null;
 
   if (isExplorePage || isHiddenPath) return null;
 

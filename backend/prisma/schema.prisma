@@ -103,9 +103,21 @@ model Product {
   images         String[]
   category       Category?        @relation(fields: [categoryId], references: [id])
   variants       ProductVariant[]
+  homeFeaturedProduct HomeFeaturedProduct?
   Review         Review[]
   Dispute        Dispute[]
   Wishlist       Wishlist[]
+}
+
+model HomeFeaturedProduct {
+  id        String   @id @default(uuid())
+  productId String   @unique
+  sortOrder Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 }
 
 model ProductVariant {
