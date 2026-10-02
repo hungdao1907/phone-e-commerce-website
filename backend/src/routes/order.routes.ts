@@ -288,7 +288,7 @@ router.post('/', authenticateToken, async (req, res) => {
 
     // 📩 Send "Order Received" Email asynchronously
     if (newOrder.customer && newOrder.customer.email) {
-      sendOrderReceivedEmail(newOrder.customer.email, newOrder.customer.fullName, newOrder.orderCode).catch(console.error);
+      sendOrderReceivedEmail(newOrder).catch(console.error);
     }
 
     // 🔔 Create notification for new order
@@ -333,7 +333,7 @@ router.put('/:id/status', authenticateToken, async (req, res) => {
         const order = await tx.order.update({
           where: { id: orderId },
           data: dataToUpdate,
-          include: { Invoice: true, customer: true }
+          include: { Invoice: true, customer: true, items: true, Payment: true }
         });
 
         // Create invoice if not exists
@@ -365,18 +365,13 @@ router.put('/:id/status', authenticateToken, async (req, res) => {
       updatedOrder = await prisma.order.update({
         where: { id: orderId },
         data: dataToUpdate,
-        include: { customer: true }
+        include: { customer: true, items: true, Payment: true }
       });
     }
 
     // 📩 Send "Order Confirmed / Shipping" Email when status changes to 'shipping'
     if (status === 'shipping' && updatedOrder.customer && updatedOrder.customer.email) {
-      sendOrderConfirmedEmail(
-        updatedOrder.customer.email, 
-        updatedOrder.customer.fullName, 
-        updatedOrder.orderCode, 
-        updatedOrder.estimatedDelivery
-      ).catch(console.error);
+      sendOrderConfirmedEmail(updatedOrder).catch(console.error);
     }
 
     res.json({ message: 'Cập nhật trạng thái thành công', order: updatedOrder });

@@ -23,6 +23,7 @@ import { CheckoutPage } from './pages/checkout/CheckoutPage';
 import { PaymentPage } from './pages/checkout/PaymentPage';
 import { OrderSuccessPage } from './pages/checkout/OrderSuccessPage';
 import { OrderDetailPage } from './pages/order/OrderDetailPage';
+import { CategoryPage } from './pages/category/CategoryPage';
 
 const WatchPage = lazy(() =>
   import('./pages/watch/WatchPage').then(({ WatchPage: Page }) => ({ default: Page })),
@@ -149,25 +150,21 @@ export default function App() {
                 <Route path="/checkout/payment" element={<PaymentPage />} />
                 <Route path="/order-success" element={<OrderSuccessPage />} />
 
-                {/* Legacy / Category Aliases & Redirects */}
+                <Route path="/:categorySlug" element={<CategoryPage />} />
                 <Route path="/iphone" element={<Navigate to="/phone/iphone" replace />} />
                 <Route path="/exploreIphone17promax" element={<Navigate to="/phone/exploreIphone17promax" replace />} />
                 <Route path="/samsung" element={<Navigate to="/phone/samsung" replace />} />
                 <Route path="/xiaomi" element={<Navigate to="/phone/xiaomi" replace />} />
                 <Route path="/oppo" element={<Navigate to="/phone/oppo" replace />} />
-                <Route path="/phone" element={<Navigate to="/phone/iphone" replace />} />
                 <Route path="/dien-thoai" element={<Navigate to="/phone/iphone" replace />} />
                 <Route path="/ien-thoai" element={<Navigate to="/phone/iphone" replace />} />
-                <Route path="/watch" element={<Navigate to="/watch/exploreWatch" replace />} />
                 <Route path="/watch/series-11" element={<Navigate to="/watch/exploreSeries-11" replace />} />
                 <Route path="/watch/se-3" element={<Navigate to="/watch/exploreSe-3" replace />} />
                 <Route path="/watch/ultra-3" element={<Navigate to="/watch/exploreUltra-3" replace />} />
                 <Route path="/dong-ho-thong-minh" element={<Navigate to="/watch/exploreWatch" replace />} />
                 <Route path="/ong-ho-thong-minh" element={<Navigate to="/watch/exploreWatch" replace />} />
-                <Route path="/tablet" element={<Navigate to="/tablet/ipad" replace />} />
                 <Route path="/tablet/apple" element={<Navigate to="/tablet/ipad" replace />} />
                 <Route path="/may-tinh-bang" element={<Navigate to="/tablet/ipad" replace />} />
-                <Route path="/laptop" element={<Navigate to="/laptop/macbook" replace />} />
                 <Route path="/laptop/apple" element={<Navigate to="/laptop/macbook" replace />} />
 
                 {/* Customer Profile Route (Protected inside MainLayout) */}

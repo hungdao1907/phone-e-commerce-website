@@ -172,7 +172,10 @@ export function extractFiltersFromProducts(products: any[]) {
   const colorCodesMap: Record<string, string> = {};
 
   for (const product of products) {
-    if (product.brand) filters.brands.add(product.brand.trim());
+    if (product.brand) {
+      const properBrand = product.brand.trim().charAt(0).toUpperCase() + product.brand.trim().slice(1).toLowerCase();
+      filters.brands.add(properBrand);
+    }
 
     // Extract from specifications
     if (Array.isArray(product.specifications)) {
