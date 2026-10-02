@@ -400,21 +400,21 @@ export const SearchButton = ({ onNavigate }: SearchButtonProps) => {
             key="search-input-container"
             layoutId="search-input-container"
             transition={{ layout: { duration: 0.5, type: 'spring', bounce: 0.2 } }}
-            style={{ transformOrigin: 'left center', borderRadius: 9999 }}
-            className="w-full flex flex-col items-center justify-start z-10 relative overflow-hidden bg-[#222222] border border-white/10"
+            style={{ transformOrigin: 'left center', borderRadius: 9999, backdropFilter: 'none', WebkitBackdropFilter: 'none' }}
+            className="admin-search-control w-full flex flex-col items-center justify-start z-10 relative overflow-hidden bg-white border border-slate-200/90 shadow-sm"
           >
             {/* Input row */}
             <div className="flex items-center w-full gap-2 px-4 h-10">
               {breadcrumb.length > 0 ? (
-                <button onClick={goBack} className="shrink-0 text-white/40 hover:text-white transition-colors">
+                <button onClick={goBack} className="shrink-0 text-slate-900 hover:text-black transition-colors">
                   <ArrowLeft size={16} />
                 </button>
               ) : (
-                <motion.div layoutId="search-icon"><Search size={16} /></motion.div>
+                <motion.div layoutId="search-icon" className="text-slate-900"><Search size={16} /></motion.div>
               )}
               <div className="flex-1 relative text-sm flex items-center">
                 {!displayValue && (
-                  <div className="absolute inset-0 flex items-center pointer-events-none z-10 text-gray-500">
+                  <div className="absolute inset-0 flex items-center pointer-events-none z-10 text-slate-400">
                     <span className="block truncate w-full">
                       {hoveredShortcut !== null ? SHORTCUT_ICONS[hoveredShortcut].label : 'Tìm kiếm sản phẩm, đơn hàng...'}
                     </span>
@@ -426,7 +426,7 @@ export const SearchButton = ({ onNavigate }: SearchButtonProps) => {
                   value={displayValue}
                   onChange={handleInputChange}
                   onFocus={() => setHovered(true)}
-                  className="w-full bg-transparent outline-none ring-0 border-none m-0 p-0 text-sm text-white truncate pr-4"
+                  className="admin-search-input w-full bg-transparent outline-none ring-0 border-none m-0 p-0 text-sm text-slate-900 truncate pr-4 placeholder-slate-400"
                 />
               </div>
             </div>
@@ -442,10 +442,10 @@ export const SearchButton = ({ onNavigate }: SearchButtonProps) => {
                 transition={{ duration: 0.2 }}
                 className="absolute top-full left-0 w-full pt-2 z-50"
               >
-                <div className="w-full bg-[#222222] border border-white/10 rounded-2xl overflow-hidden shadow-2xl max-h-[420px] overflow-y-auto custom-scrollbar">
+                <div className="w-full bg-white border border-slate-200/90 rounded-2xl overflow-hidden shadow-2xl max-h-[420px] overflow-y-auto custom-scrollbar">
                   {/* Breadcrumb trail */}
                   {breadcrumb.length > 0 && (
-                    <div className="px-4 pt-3 pb-1 flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-white/30">
+                    <div className="px-4 pt-3 pb-1 flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-slate-400">
                       {breadcrumb.map((node, i) => (
                         <React.Fragment key={i}>
                           <button
@@ -453,11 +453,11 @@ export const SearchButton = ({ onNavigate }: SearchButtonProps) => {
                               setBreadcrumb(prev => prev.slice(0, i + 1));
                               setFilterText('');
                             }}
-                            className="hover:text-white/60 transition-colors cursor-pointer"
+                            className="hover:text-slate-700 transition-colors cursor-pointer"
                           >
                             {node.label}
                           </button>
-                          {i < breadcrumb.length - 1 && <ChevronRight size={10} className="text-white/20" />}
+                          {i < breadcrumb.length - 1 && <ChevronRight size={10} className="text-slate-300" />}
                         </React.Fragment>
                       ))}
                     </div>
@@ -465,11 +465,11 @@ export const SearchButton = ({ onNavigate }: SearchButtonProps) => {
 
                   {/* Loading state */}
                   {isLoadingApi && (
-                    <div className="px-4 py-6 text-center text-white/40 text-sm">
+                    <div className="px-4 py-6 text-center text-slate-400 text-sm">
                       <motion.div
                         animate={{ rotate: 360 }}
                         transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
-                        className="inline-block w-4 h-4 border-2 border-white/20 border-t-white/60 rounded-full mr-2"
+                        className="inline-block w-4 h-4 border-2 border-slate-200 border-t-emerald-600 rounded-full mr-2"
                       />
                       Đang tải dữ liệu...
                     </div>
@@ -477,7 +477,7 @@ export const SearchButton = ({ onNavigate }: SearchButtonProps) => {
 
                   {/* Results */}
                   {!isLoadingApi && dropdownItems.length === 0 && (
-                    <div className="px-4 py-6 text-center text-white/40 text-sm">
+                    <div className="px-4 py-6 text-center text-slate-400 text-sm">
                       {filterText ? `Không tìm thấy "${filterText}"` : 'Không có dữ liệu'}
                     </div>
                   )}
@@ -494,16 +494,16 @@ export const SearchButton = ({ onNavigate }: SearchButtonProps) => {
                           <button
                             type="button"
                             onClick={item.action}
-                            className="flex items-center text-white justify-start hover:bg-white/10 gap-3 py-2.5 px-3 rounded-xl transition-colors duration-200 w-full text-left group/card"
+                            className="flex items-center text-slate-900 justify-start hover:bg-slate-50 gap-3 py-2.5 px-3 rounded-xl transition-colors duration-200 w-full text-left group/card"
                           >
-                            <div className="w-7 h-7 flex items-center justify-center shrink-0 text-white/50 group-hover/card:text-white/80 transition-colors">
+                            <div className="w-7 h-7 flex items-center justify-center shrink-0 text-slate-900 group-hover/card:text-black transition-colors">
                               {item.icon}
                             </div>
                             <div className="flex flex-col min-w-0 flex-1">
-                              <p className="font-medium text-sm m-0 leading-tight truncate">{item.label}</p>
-                              <p className="text-xs opacity-40 m-0 leading-tight truncate">{item.description}</p>
+                              <p className="font-medium text-sm m-0 leading-tight truncate text-slate-900">{item.label}</p>
+                              <p className="text-xs text-slate-500 m-0 leading-tight truncate">{item.description}</p>
                             </div>
-                            <ChevronRight className="size-4 opacity-0 group-hover/card:opacity-60 shrink-0 transition-opacity" />
+                            <ChevronRight className="size-4 opacity-0 group-hover/card:opacity-60 text-slate-900 shrink-0 transition-opacity" />
                           </button>
                         </motion.div>
                       ))}
@@ -531,14 +531,14 @@ export const SearchButton = ({ onNavigate }: SearchButtonProps) => {
                   bounce: 0.2,
                   delay: index * 0.05,
                 }}
-                className="rounded-full cursor-pointer bg-white/5 border border-white/10 text-white shadow-lg"
+                className="rounded-full cursor-pointer bg-white border border-slate-200 text-slate-900 shadow-md"
               >
                 <button
                   type="button"
                   onClick={() => handleShortcutClick(index)}
-                  className="rounded-full cursor-pointer hover:shadow-lg opacity-30 hover:opacity-100 transition-[opacity,shadow] duration-200"
+                  className="rounded-full cursor-pointer hover:shadow-lg opacity-80 hover:opacity-100 transition-[opacity,shadow] duration-200"
                 >
-                  <div className="size-9 aspect-square flex items-center justify-center bg-transparent">
+                  <div className="size-9 aspect-square flex items-center justify-center bg-transparent [filter:brightness(0)]">
                     <LottieIcon
                       path={shortcut.lottiePath}
                       className="w-5 h-5"
