@@ -303,7 +303,6 @@ export function TrustBenefitsSection() {
           transition={{ duration: 0.6, ease: EASING }}
         >
           <div className="trust-benefits__header-left">
-            <p className="trust-benefits__eyebrow">TRẢI NGHIỆM MUA SẮM</p>
             <h2 id="trust-benefits-title" className="trust-benefits__title">
               An tâm từ lúc chọn<br />
               đến khi nhận.

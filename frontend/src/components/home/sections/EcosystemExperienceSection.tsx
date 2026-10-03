@@ -421,15 +421,6 @@ export function EcosystemExperienceSection() {
   const activeData = ECOSYSTEM_DEVICES[activeDeviceId];
 
   // Header Animation Variants
-  const eyebrowVariants: Variants = {
-    hidden: shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: 14 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: shouldReduceMotion ? 0.2 : 0.5, ease: ENTER_EASE },
-    },
-  };
-
   const headlineVariants: Variants = {
     hidden: shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: 24 },
     visible: {
@@ -553,19 +544,9 @@ export function EcosystemExperienceSection() {
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 lg:gap-10 xl:gap-12">
           {/* ═══ LEFT COLUMN: EDITORIAL NARRATIVE & INDEX ═══ */}
           <div className="lg:w-[40%] xl:w-[38%] flex flex-col justify-center z-20">
-            <motion.p
-              className="text-[0.7rem] sm:text-xs font-semibold tracking-[0.22em] text-[#6e6e73] uppercase flex items-center gap-2"
-              initial="hidden"
-              animate={isInView ? 'visible' : 'hidden'}
-              variants={eyebrowVariants}
-            >
-              <span className="w-2.5 h-[1.5px] bg-slate-400/80 rounded-full" />
-              HỆ SINH THÁI
-            </motion.p>
-
             <motion.h2
               id="ecosystem-section-title"
-              className="mt-2 text-[clamp(1.65rem,2.7vw,2.5rem)] font-bold leading-[1.18] tracking-[-0.03em] text-[#1d1d1f]"
+              className="text-[clamp(1.65rem,2.7vw,2.5rem)] font-bold leading-[1.18] tracking-[-0.03em] text-[#1d1d1f]"
               initial="hidden"
               animate={isInView ? 'visible' : 'hidden'}
               variants={headlineVariants}

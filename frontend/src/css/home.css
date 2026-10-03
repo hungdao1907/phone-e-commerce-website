@@ -1,3 +1,74 @@
+/* ===================================================
+   APPLE OFFICIAL TYPOGRAPHY SYSTEM FOR HOME PAGE
+   - Display Headings: SF Pro Display
+   - Body Copy & Text: SF Pro Text
+   - Numbers & Monospace: SF Mono
+=================================================== */
+
+:root {
+  --apple-font-display: "SF Pro Display", "SF Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --apple-font-text: "SF Pro Text", "SF Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --apple-font-mono: "SF Mono", "SF Pro Mono", ui-monospace, Menlo, Monaco, Consolas, monospace;
+}
+
+.home-page,
+.home-page *,
+[data-home-section],
+[data-home-section] * {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: "kern" 1, "liga" 1, "calt" 1;
+}
+
+.home-page,
+[data-home-section] {
+  font-family: var(--apple-font-text);
+  letter-spacing: -0.011em;
+}
+
+.home-page h1,
+.home-page h2,
+.home-page h3,
+.home-page h4,
+[data-home-section] h1,
+[data-home-section] h2,
+[data-home-section] h3,
+[data-home-section] h4,
+.featured-products-section h2,
+.ecosystem-experience-section h2,
+.final-cta-panel__title,
+.wave-gallery h2,
+.trust-benefits__title {
+  font-family: var(--apple-font-display);
+  letter-spacing: -0.035em;
+  font-weight: 600;
+}
+
+.home-page p,
+.home-page span,
+.home-page li,
+.home-page button,
+.home-page a,
+.home-page input,
+.home-page label,
+[data-home-section] p,
+[data-home-section] span,
+[data-home-section] li,
+[data-home-section] button,
+[data-home-section] a,
+[data-home-section] input,
+[data-home-section] label {
+  font-family: var(--apple-font-text);
+}
+
+.home-page .font-mono,
+[data-home-section] .font-mono,
+.home-page code,
+[data-home-section] code {
+  font-family: var(--apple-font-mono) !important;
+}
+
 /* ===== FLOATING PRODUCT GALLERY HERO ===== */
 #home-hero {
   isolation: isolate;
@@ -42,7 +113,7 @@
 }
 
 .wave-gallery h2 {
-  margin: 1.25rem 0 0;
+  margin: 0;
   font-size: clamp(2.35rem, 3.4vw, 3.5rem);
   font-weight: 650;
   letter-spacing: -0.045em;
@@ -1733,7 +1804,7 @@
 }
 
 .trust-benefits__title {
-  margin: 0.65rem 0 0;
+  margin: 0;
   font-size: clamp(2rem, 3.2vw, 3.25rem);
   font-weight: 650;
   letter-spacing: -0.04em;
