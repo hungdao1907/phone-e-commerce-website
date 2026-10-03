@@ -148,6 +148,7 @@ router.delete('/:id', async (req, res) => {
     const orderIds = orders.map(o => o.id);
     
     if (orderIds.length > 0) {
+      await prisma.payment.deleteMany({ where: { orderId: { in: orderIds } } });
       await prisma.invoice.deleteMany({ where: { orderId: { in: orderIds } } });
       // OrderItem has onDelete: Cascade but we can be explicit if needed, however Prisma handles it if it's in schema.
       await prisma.order.deleteMany({ where: { customerId: id } });
