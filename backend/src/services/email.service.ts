@@ -97,15 +97,18 @@ export const sendOrderReceivedEmail = async (order: any) => {
       </div>
     `;
 
-    await transporter.sendMail({
+    transporter.sendMail({
       from: `"H&M Phone Store" <${process.env.SMTP_EMAIL}>`,
       to: customerEmail,
       subject: `[H&M Phone Store] Đã tiếp nhận đơn hàng #${order.orderCode}`,
       html: htmlContent,
+    }).then(() => {
+      console.log(`Email "Order Received" sent to ${customerEmail}`);
+    }).catch((error) => {
+      console.error('Error sending order received email:', error);
     });
-    console.log(`Email "Order Received" sent to ${customerEmail}`);
   } catch (error) {
-    console.error('Error sending order received email:', error);
+    console.error('Error preparing order received email:', error);
   }
 };
 
@@ -194,14 +197,17 @@ export const sendOrderConfirmedEmail = async (order: any) => {
       </div>
     `;
 
-    await transporter.sendMail({
+    transporter.sendMail({
       from: `"H&M Phone Store" <${process.env.SMTP_EMAIL}>`,
       to: customerEmail,
       subject: `[H&M Phone Store] Đơn hàng #${order.orderCode} đã được xác nhận`,
       html: htmlContent,
+    }).then(() => {
+      console.log(`Email "Order Confirmed" sent to ${customerEmail}`);
+    }).catch((error) => {
+      console.error('Error sending order confirmed email:', error);
     });
-    console.log(`Email "Order Confirmed" sent to ${customerEmail}`);
   } catch (error) {
-    console.error('Error sending order confirmed email:', error);
+    console.error('Error preparing order confirmed email:', error);
   }
 };

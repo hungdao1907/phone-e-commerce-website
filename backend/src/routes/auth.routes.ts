@@ -63,7 +63,7 @@ router.post('/customer/register', async (req, res) => {
     if (process.env.SMTP_EMAIL && process.env.SMTP_PASSWORD) {
       const currentYear = new Date().getFullYear();
       const otp_expiration = 5;
-      await smtpTransporter.sendMail({
+      smtpTransporter.sendMail({
         from: `"H&M Phone Store" <${process.env.SMTP_EMAIL}>`,
         to: email,
         subject: '[H&M Phone Store] Mã xác thực đăng ký tài khoản',
@@ -101,6 +101,8 @@ router.post('/customer/register', async (req, res) => {
             </div>
           </div>
         `
+      }).catch(err => {
+        console.error('Lỗi khi gửi email OTP:', err);
       });
     } else {
       console.log('OTP Generated (Email not configured):', otp);
@@ -173,7 +175,7 @@ router.post('/customer/forgot-password', async (req, res) => {
     if (process.env.SMTP_EMAIL && process.env.SMTP_PASSWORD) {
       const currentYear = new Date().getFullYear();
       const otp_expiration = 5;
-      await smtpTransporter.sendMail({
+      smtpTransporter.sendMail({
         from: `"H&M Phone Store" <${process.env.SMTP_EMAIL}>`,
         to: email,
         subject: '[H&M Phone Store] Mã xác thực khôi phục mật khẩu',
@@ -211,6 +213,8 @@ router.post('/customer/forgot-password', async (req, res) => {
             </div>
           </div>
         `
+      }).catch(err => {
+        console.error('Lỗi khi gửi email khôi phục mật khẩu:', err);
       });
     } else {
       console.log('OTP Forgot Password Generated (Email not configured):', otp);
