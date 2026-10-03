@@ -345,7 +345,7 @@ export function GlobalNav() {
         }`}
         onMouseLeave={handleMouseLeave}
       >
-        <div className="max-w-[1300px] mx-auto px-4 lg:px-8 h-[54px] flex items-center justify-between">
+        <div className="max-w-[1200px] mx-auto px-4 lg:px-8 h-[54px] flex items-center justify-between">
           {/* Desktop Left Nav Links (Split Left) */}
           <div className="hidden md:flex flex-1 items-center justify-end h-full">
             <ul className="flex items-center space-x-6 lg:space-x-8 h-full">
@@ -386,21 +386,39 @@ export function GlobalNav() {
                 <MorphIcon icon={isSearchOpen ? X : SearchIcon} size={18} strokeWidth={2} />
               </button>
 
-              <div className="relative group">
-                <Link
-                  to={useAuthStore.getState().user ? "/profile" : "/login"}
-                  className="nav-glow-link hover:text-black transition-colors block"
-                  aria-label="Tài khoản"
-                >
-                  <User className="w-[18px] h-[18px]" />
-                </Link>
+              <div className="relative group flex items-center h-full py-2">
+                {useAuthStore.getState().user ? (
+                  <Link
+                    to="/profile"
+                    className="flex items-center gap-2 pl-1 pr-2 md:pr-3 py-1 bg-transparent hover:bg-neutral-100 border border-transparent hover:border-neutral-200 rounded-full transition-colors cursor-pointer"
+                  >
+                    <div className="w-7 h-7 bg-white rounded-full flex items-center justify-center shrink-0 border border-neutral-200 shadow-sm overflow-hidden">
+                      {useAuthStore.getState().user?.avatar ? (
+                        <img src={useAuthStore.getState().user?.avatar} alt="Avatar" className="w-full h-full rounded-full object-cover" />
+                      ) : (
+                        <User className="w-4 h-4 text-neutral-500" />
+                      )}
+                    </div>
+                    <span className="text-[13px] font-bold text-neutral-700 max-w-[120px] truncate hidden lg:block">
+                      {useAuthStore.getState().user?.fullName || useAuthStore.getState().user?.username}
+                    </span>
+                  </Link>
+                ) : (
+                  <Link
+                    to="/login"
+                    className="nav-glow-link hover:text-black transition-colors block px-2 py-1"
+                    aria-label="Tài khoản"
+                  >
+                    <User className="w-[18px] h-[18px]" />
+                  </Link>
+                )}
 
                 {useAuthStore.getState().user && (
-                  <div className="absolute right-0 top-full pt-4 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
-                    <div className="w-56 bg-white border border-neutral-100 rounded-2xl shadow-xl overflow-hidden">
+                  <div className="absolute right-0 top-full pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                    <div className="w-56 bg-white border border-neutral-100 rounded-2xl shadow-xl overflow-hidden mt-1">
                       <div className="px-5 py-3 border-b border-neutral-100 bg-neutral-50/80">
                         <p className="text-[13px] font-semibold text-neutral-900 truncate">
-                          {useAuthStore.getState().user?.username}
+                          {useAuthStore.getState().user?.fullName || useAuthStore.getState().user?.username}
                         </p>
                       </div>
                       <div className="py-2">

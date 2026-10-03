@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useAuthStore } from '@/store/authStore';
-import { Megaphone, Plus, Search, Calendar, Tag, Percent, Trash2, Edit2, Play, Square, Image as ImageIcon, X } from 'lucide-react';
+import { Megaphone, Plus, Search, Calendar, Tag, Percent, Trash2, Edit2, Play, Square, Image as ImageIcon, X, LayoutGrid } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
+import { BannerCampaignManager } from './BannerCampaignManager';
 
 export function Marketing() {
   const [campaigns, setCampaigns] = useState<any[]>([]);
@@ -11,6 +12,7 @@ export function Marketing() {
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'campaigns' | 'banner-products'>('campaigns');
   
   // Multi-select product modal state
   const [isProductSelectorOpen, setIsProductSelectorOpen] = useState(false);
@@ -177,6 +179,38 @@ export function Marketing() {
         </button>
       </div>
 
+      {/* TABS */}
+      <div className="flex gap-2 shrink-0">
+        <button
+          onClick={() => setActiveTab('campaigns')}
+          className={cn(
+            'flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all border',
+            activeTab === 'campaigns'
+              ? 'bg-white text-black border-white'
+              : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10 hover:text-white'
+          )}
+        >
+          <Megaphone className="w-4 h-4" />
+          Chiến dịch
+        </button>
+        <button
+          onClick={() => setActiveTab('banner-products')}
+          className={cn(
+            'flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all border',
+            activeTab === 'banner-products'
+              ? 'bg-white text-black border-white'
+              : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10 hover:text-white'
+          )}
+        >
+          <LayoutGrid className="w-4 h-4" />
+          Sản phẩm Banner
+        </button>
+      </div>
+
+      {activeTab === 'banner-products' ? (
+        <BannerCampaignManager campaigns={campaigns} />
+      ) : (
+        <>
       {/* TOOLBAR */}
       <div className="flex items-center gap-3 shrink-0">
         <div className="relative flex-1 max-w-md">
@@ -294,6 +328,8 @@ export function Marketing() {
           })
         )}
       </div>
+        </>
+      )}
 
       {/* CREATE/EDIT CAMPAIGN MODAL */}
       <AnimatePresence>

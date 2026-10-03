@@ -40,36 +40,33 @@ export function ProductImportModal({ isOpen, onClose, onSuccess, token }: Produc
   };
 
   const downloadTemplate = () => {
-    // Generate a template with new array structure using '|'
     const headers = [
       "Product Name", "Category", "Brand", "Description", "Base Price",
       "Storage", "Storage Price", "Storage Sale Price",
       "Color", "Color Code", "Color Image URL",
       "RAM", "SSD",
       "Product Image URL", "Gallery Image URLs", "Status",
-      "Screen", "CPU", "GPU", "Camera", "Battery", "OS", "Resolution"
+      "Specification JSON", "Specification Groups (LEGACY)", "Specifications (LEGACY)"
     ];
     
-    // Example: iPhone 17 Pro Max
-    // Storage: 256GB, 512GB
-    // Color: Đen, Bạc
+    const demoJson = `[{"title":"Cấu hình & Bộ nhớ","items":[{"label":"Hệ điều hành","value":"iOS 18"},{"label":"RAM","value":"8 GB"}]},{"title":"Màn hình","items":[{"label":"Kích thước","value":"6.9 inch"}]}]`;
     const demoRow1 = [
       "iPhone 17 Pro Max", "Điện thoại", "Apple", "Siêu phẩm Apple", "34990000",
       "256GB|512GB", "34990000|37990000", "32990000|35990000",
       "Đen|Bạc", "#1c1c1e|#e5e5e5", "black.jpg|silver.jpg",
       "", "",
       "https://example.com/ip17pm.jpg", "", "active",
-      "6.9 inch", "A19 Pro", "", "48MP", "4800mAh", "iOS 18", ""
+      `"${demoJson.replace(/"/g, '""')}"`, "", ""
     ];
 
-    // Example: Laptop
+    const demoJson2 = `[{"title":"Màn hình","items":[{"label":"Kích thước","value":"16 inch"}]},{"title":"Hiệu năng","items":[{"label":"CPU","value":"M3 Max"}]}]`;
     const demoRow2 = [
       "MacBook Pro 16", "Laptop", "Apple", "Laptop cao cấp", "50000000",
       "", "", "",
       "Space Gray|Silver", "#555555|#cccccc", "space.jpg|silver.jpg",
       "32GB|64GB", "1TB|2TB",
       "https://example.com/mac.jpg", "", "active",
-      "16 inch", "M3 Max", "M3 Max GPU", "1080p", "100Wh", "macOS", "3456x2234"
+      `"${demoJson2.replace(/"/g, '""')}"`, "", ""
     ];
     
     const csvContent = "data:text/csv;charset=utf-8,\uFEFF" 
@@ -342,6 +339,26 @@ export function ProductImportModal({ isOpen, onClose, onSuccess, token }: Produc
                                 ))}
                               </tbody>
                             </table>
+                            {prod.specifications && prod.specifications.length > 0 && (
+                              <div className="p-4 border-t border-white/10">
+                                <h4 className="text-white text-sm font-semibold mb-3">Thông số kỹ thuật:</h4>
+                                <div className="space-y-4">
+                                  {prod.specifications.map((group: any, idx: number) => (
+                                    <div key={idx} className="bg-black/30 rounded-lg p-3 border border-white/5">
+                                      <div className="text-emerald-400 text-xs font-bold uppercase tracking-wider mb-2">▾ {group.title || group.key || 'Thông số'}</div>
+                                      <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+                                        {(group.items || [{ label: group.key, value: group.value }]).map((item: any, iIdx: number) => (
+                                          <div key={iIdx} className="text-xs flex gap-2">
+                                            <span className="text-white/50 w-24 shrink-0">{item.label || item.key}:</span>
+                                            <span className="text-white truncate" title={item.value}>{item.value}</span>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
                           </div>
                         )}
                       </div>

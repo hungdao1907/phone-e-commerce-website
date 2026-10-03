@@ -31,7 +31,7 @@ export const CATEGORY_CONFIGS: Record<string, CategoryConfig> = {
       title: 'Mọi thiết bị, mọi thương hiệu, một nơi',
       description: 'Điện thoại thông minh chính hãng. Trả góp 0% và giao hàng trong ngày.',
       badge: 'Giảm đến 30%',
-      buttonText: 'Xem tất cả sản phẩm',
+      buttonText: 'Xem tất cả điện thoại',
       image: '/images/hero/phone-hero.png',
     },
     cards: [
@@ -47,7 +47,7 @@ export const CATEGORY_CONFIGS: Record<string, CategoryConfig> = {
       title: 'Hiệu năng bứt phá, sáng tạo không giới hạn',
       description: 'Laptop chính hãng phục vụ hoàn hảo cho công việc và giải trí.',
       badge: 'Bảo hành 2 năm',
-      buttonText: 'Xem tất cả sản phẩm',
+      buttonText: 'Xem tất cả laptop',
       image: '/images/hero/laptop-hero.png',
     },
     cards: [
@@ -63,7 +63,7 @@ export const CATEGORY_CONFIGS: Record<string, CategoryConfig> = {
       title: 'Phong cách và sức khỏe trên cổ tay bạn',
       description: 'Đồng hồ thông minh theo dõi sức khỏe 24/7.',
       badge: 'Mới ra mắt',
-      buttonText: 'Khám phá ngay',
+      buttonText: 'Xem tất cả đồng hồ',
       image: '/images/hero/watch-hero.png',
     },
     cards: [
@@ -79,7 +79,7 @@ export const CATEGORY_CONFIGS: Record<string, CategoryConfig> = {
       title: 'Màn hình lớn hơn, trải nghiệm tuyệt hơn',
       description: 'iPad và Máy tính bảng cho học tập, giải trí và làm việc.',
       badge: 'Tặng bút cảm ứng',
-      buttonText: 'Xem tất cả sản phẩm',
+      buttonText: 'Xem tất cả máy tính bảng',
       image: '/images/hero/tablet-hero.png',
     },
     cards: [

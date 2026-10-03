@@ -104,6 +104,7 @@ model Product {
   category       Category?        @relation(fields: [categoryId], references: [id])
   variants       ProductVariant[]
   homeFeaturedProduct HomeFeaturedProduct?
+  bannerCampaignProducts BannerCampaignProduct[]
   Review         Review[]
   Dispute        Dispute[]
   Wishlist       Wishlist[]
@@ -135,6 +136,7 @@ model ProductVariant {
   OrderItem  OrderItem[]
   Review     Review[]
   Dispute    Dispute[]
+  bannerCampaignProducts BannerCampaignProduct[]
   product    Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
 }
 
@@ -281,7 +283,72 @@ model Campaign {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
   bannerUrl     String?
+
+  // Banner campaign products per category
+  bannerProducts BannerCampaignProduct[]
 }
+
+// Sản phẩm khuyến mãi trong banner theo từng category
+model BannerCampaignProduct {
+  id             String   @id @default(uuid())
+  campaignId     String
+  campaign       Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  // Reference đến product thật
+  productId      String
+  product        Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  // Reference đến variant (dùng để lấy đúng giá)
+  variantId      String?
+  variant        ProductVariant? @relation(fields: [variantId], references: [id], onDelete: SetNull)
+
+  // Category mà sản phẩm này thuộc về trong banner (phone, laptop, tablet, watch)
+  categorySlug   String
+
+  // Ảnh riêng đã cắt nền dành cho banner (cutout image)
+  bannerImage    String
+
+  // Admin chỉ nhập discountPercent, sale price tự tính
+  discountPercent Int     @default(0)
+
+  // Thứ tự hiển thị trong banner (dot navigation)
+  sortOrder      Int      @default(0)
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // Tags liên kết
+  tags           BannerCampaignProductTag[]
+
+  // Unique: mỗi product chỉ xuất hiện 1 lần trong 1 campaign + category
+  @@unique([campaignId, productId, categorySlug])
+  @@index([campaignId, categorySlug, sortOrder])
+}
+
+// Marketing tags (HOT, BEST SELLER, NEW, TRENDING, etc.)
+model MarketingTag {
+  id        String   @id @default(uuid())
+  name      String   @unique  // HOT, BEST SELLER, NEW, TRENDING, LIMITED, SALE
+  color     String?           // Màu hiển thị tag (hex)
+  isActive  Boolean  @default(true)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  productTags BannerCampaignProductTag[]
+}
+
+// Pivot table: liên kết BannerCampaignProduct với MarketingTag
+model BannerCampaignProductTag {
+  id                     String               @id @default(uuid())
+  bannerCampaignProductId String
+  bannerCampaignProduct  BannerCampaignProduct @relation(fields: [bannerCampaignProductId], references: [id], onDelete: Cascade)
+  tagId                  String
+  tag                    MarketingTag          @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@unique([bannerCampaignProductId, tagId])
+}
+
 
 model PromoCode {
   id            String   @id @default(uuid())

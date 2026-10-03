@@ -5,6 +5,7 @@ import { getRouteParam } from '../utils/route-param';
 
 import multer from 'multer';
 import { parseExcelPreview, processImport } from '../services/import.service';
+import * as xlsx from 'xlsx';
 
 import { extractFiltersFromProducts, normalizeKey, extractAdminFiltersFromProducts } from '../services/filter.service';
 
@@ -443,6 +444,76 @@ router.post('/import/confirm', authenticateToken, async (req, res) => {
   } catch (error: any) {
     console.error('Import confirm error:', error);
     res.status(500).json({ message: 'Lỗi khi import dữ liệu: ' + error.message });
+  }
+});
+
+// GET /export - Export Products to Excel
+router.get('/export', authenticateToken, async (req, res) => {
+  try {
+    const products = await prisma.product.findMany({
+      include: {
+        category: true,
+        variants: true
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    const exportData: any[] = [];
+    for (const p of products) {
+      if (p.variants && p.variants.length > 0) {
+        for (const v of p.variants) {
+          const row: any = {
+            "Product Name": p.name,
+            "Category": p.category?.name || '',
+            "Brand": p.brand || '',
+            "Description": p.description || '',
+            "Base Price": v.price || '',
+            "Sale Price": v.salePrice || '',
+            "Stock": v.stock || 0,
+            "SKU": v.sku,
+            "Product Image URL": p.image || '',
+            "Gallery Image URLs": p.images?.join('|') || '',
+            "Status": p.status || 'active',
+          };
+          
+          const attrs = (v.attributes as any) || {};
+          if (attrs['Màu sắc'] || attrs['Color']) row['Color'] = attrs['Màu sắc'] || attrs['Color'];
+          if (attrs['Color Code']) row['Color Code'] = attrs['Color Code'];
+          if (v.image) row['Color Image URL'] = v.image;
+          if (attrs['Dung lượng'] || attrs['Storage']) row['Storage'] = attrs['Dung lượng'] || attrs['Storage'];
+          if (attrs['RAM']) row['RAM'] = attrs['RAM'];
+          if (attrs['SSD']) row['SSD'] = attrs['SSD'];
+          
+          row['Specification JSON'] = p.specifications ? JSON.stringify(p.specifications) : '';
+          
+          exportData.push(row);
+        }
+      } else {
+        exportData.push({
+          "Product Name": p.name,
+          "Category": p.category?.name || '',
+          "Brand": p.brand || '',
+          "Description": p.description || '',
+          "Product Image URL": p.image || '',
+          "Gallery Image URLs": p.images?.join('|') || '',
+          "Status": p.status || 'active',
+          "Specification JSON": p.specifications ? JSON.stringify(p.specifications) : ''
+        });
+      }
+    }
+
+    const worksheet = xlsx.utils.json_to_sheet(exportData);
+    const workbook = xlsx.utils.book_new();
+    xlsx.utils.book_append_sheet(workbook, worksheet, "Products");
+    
+    const buffer = xlsx.write(workbook, { type: 'buffer', bookType: 'xlsx' });
+    
+    res.setHeader('Content-Disposition', 'attachment; filename="products_export.xlsx"');
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.send(buffer);
+  } catch (error: any) {
+    console.error('Export error:', error);
+    res.status(500).json({ message: 'Lỗi khi export dữ liệu: ' + error.message });
   }
 });
 

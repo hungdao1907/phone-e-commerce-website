@@ -11,6 +11,52 @@ if (!fs.existsSync(UPLOADS_DIR)) {
   fs.mkdirSync(UPLOADS_DIR, { recursive: true });
 }
 
+export const parseSpecificationJSON = (rawValue: any, productName: string): { specs: any[], error: string | null } => {
+  if (!rawValue) return { specs: [], error: null };
+  try {
+    const parsed = typeof rawValue === 'string' ? JSON.parse(String(rawValue).trim()) : rawValue;
+    if (!Array.isArray(parsed)) {
+      return { specs: [], error: `Sản phẩm [${productName}]: Specification JSON không phải là một Array hợp lệ.` };
+    }
+    
+    const finalSpecs = [];
+    for (let i = 0; i < parsed.length; i++) {
+      const group = parsed[i];
+      if (!group || typeof group !== 'object') continue;
+      
+      const title = group.title ? String(group.title).trim() : '';
+      if (!title) {
+         return { specs: [], error: `Sản phẩm [${productName}]: Nhóm thông số thứ ${i + 1} thiếu title.` };
+      }
+      
+      if (!Array.isArray(group.items)) {
+         return { specs: [], error: `Sản phẩm [${productName}]: Nhóm [${title}] có items không hợp lệ.` };
+      }
+      
+      const validItems = [];
+      for (const item of group.items) {
+         if (!item || typeof item !== 'object') continue;
+         const label = item.label ? String(item.label).trim() : '';
+         const value = item.value ? String(item.value).trim() : '';
+         if (!label || !value) {
+            return { specs: [], error: `Sản phẩm [${productName}]: Nhóm [${title}] có thông số không hợp lệ (thiếu label hoặc value).` };
+         }
+         validItems.push({ label, value });
+      }
+      
+      if (validItems.length > 0) {
+         finalSpecs.push({
+           title,
+           items: validItems
+         });
+      }
+    }
+    return { specs: finalSpecs, error: null };
+  } catch (err) {
+    return { specs: [], error: `Sản phẩm [${productName}]: Specification JSON không phải JSON hợp lệ.` };
+  }
+};
+
 export interface GroupedProduct {
   key: string;
   name: string;
@@ -19,7 +65,7 @@ export interface GroupedProduct {
   brand: string;
   description: string;
   status: string;
-  specifications: { key: string; value: string }[];
+  specifications: any[];
   variants: any[];
   imageUrl: string;
   galleryUrls: string[];
@@ -147,6 +193,61 @@ export const parseExcelPreview = async (buffer: Buffer) => {
       }
     }
 
+    let finalSpecs: any[] = [];
+    
+    const specJsonRaw = raw['Specification JSON'];
+    if (specJsonRaw) {
+      const { specs: parsedSpecs, error: specError } = parseSpecificationJSON(specJsonRaw, productName || `Row ${i+2}`);
+      if (specError) {
+         rowError += specError + ' ';
+      } else {
+         finalSpecs = parsedSpecs;
+      }
+    } else {
+      // Backward Compatibility Priority 2: Specification Groups + Specifications
+      const specGroupsRaw = raw['Specification Groups'] ? String(raw['Specification Groups']).trim() : '';
+      const specsRaw = raw['Specifications'] ? String(raw['Specifications']).trim() : '';
+
+      if (specGroupsRaw && specsRaw) {
+        const groups = specGroupsRaw.split('|').map(s => s.trim()).filter(Boolean);
+        const specsBlocks = specsRaw.split('|').map(s => s.trim());
+
+        for (let g = 0; g < groups.length; g++) {
+          const title = groups[g];
+          const block = specsBlocks[g] || '';
+          const items = block.split(';').map(itemStr => {
+            const colonIdx = itemStr.indexOf(':');
+            if (colonIdx === -1) return null;
+            const label = itemStr.substring(0, colonIdx).trim();
+            const value = itemStr.substring(colonIdx + 1).trim();
+            if (!label || !value) return null;
+            return { label, value };
+          }).filter(Boolean);
+
+          if (items.length > 0) {
+            finalSpecs.push({
+              title,
+              items
+            });
+          }
+        }
+      } else {
+        // Backward Compatibility Priority 3: Legacy fields
+        const specifications: Record<string, string> = {};
+        const specKeys = ['Screen', 'CPU', 'GPU', 'RAM', 'SSD', 'Camera', 'Battery', 'OS', 'Resolution'];
+        for (const key of specKeys) {
+          if (raw[key]) specifications[key] = String(raw[key]).trim();
+        }
+        finalSpecs = Object.entries(specifications).map(([key, value]) => ({
+          key: key === 'Screen' ? 'Màn hình' :
+               key === 'Storage' ? 'Dung lượng' :
+               key === 'Battery' ? 'Pin' :
+               key === 'Resolution' ? 'Độ phân giải' : key,
+          value
+        }));
+      }
+    }
+
     if (rowError || variantHasError) {
        errorRows++;
        groupedProducts.push({
@@ -168,19 +269,6 @@ export const parseExcelPreview = async (buffer: Buffer) => {
 
     validRows++;
 
-    const specifications: Record<string, string> = {};
-    const specKeys = ['Screen', 'CPU', 'GPU', 'RAM', 'SSD', 'Camera', 'Battery', 'OS', 'Resolution'];
-    for (const key of specKeys) {
-      if (raw[key]) specifications[key] = String(raw[key]).trim();
-    }
-    const specsArr = Object.entries(specifications).map(([key, value]) => ({
-      key: key === 'Screen' ? 'Màn hình' :
-           key === 'Storage' ? 'Dung lượng' :
-           key === 'Battery' ? 'Pin' :
-           key === 'Resolution' ? 'Độ phân giải' : key,
-      value
-    }));
-
     groupedProducts.push({
       key: `prod-${i}`,
       name: productName,
@@ -189,7 +277,7 @@ export const parseExcelPreview = async (buffer: Buffer) => {
       brand,
       description: (raw['Description'] || '').toString().trim(),
       status: (raw['Status'] || 'active').toString().toLowerCase().trim(),
-      specifications: specsArr,
+      specifications: finalSpecs,
       variants,
       imageUrl: (raw['Product Image URL'] || '').toString().trim(),
       galleryUrls: raw['Gallery Image URLs'] ? String(raw['Gallery Image URLs']).split('|').map((u: string) => u.trim()).filter(Boolean) : []

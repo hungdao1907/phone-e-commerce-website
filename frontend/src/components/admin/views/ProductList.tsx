@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Plus, Edit2, Trash2, X, Package, RefreshCw, ChevronDown, ChevronRight, ArrowLeft, Image as ImageIcon, Zap, Upload, LayoutGrid, List } from 'lucide-react';
+import { Search, Plus, Edit2, Trash2, X, Package, RefreshCw, ChevronDown, ChevronRight, ArrowLeft, Image as ImageIcon, Zap, Upload, LayoutGrid, List, Download } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 import { AdminProductFilterSidebar } from './products/AdminProductFilterSidebar';
@@ -217,6 +217,25 @@ export function ProductList() {
       console.error(e);
     } finally {
       setIsFetchingList(false);
+    }
+  };
+
+  const handleExport = async () => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/products/export`, { headers: { 'Authorization': `Bearer ${token}` } });
+      if (!res.ok) throw new Error('Lỗi khi export');
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'products_export.xlsx';
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      a.remove();
+    } catch (e) {
+      console.error(e);
+      alert('Không thể export dữ liệu.');
     }
   };
 
@@ -544,23 +563,33 @@ export function ProductList() {
 
     // Parse specifications: support both old flat format and new grouped format
     if (product.specifications) {
-      const specs = product.specifications as any[];
+      const specs = (Array.isArray(product.specifications) ? product.specifications : []) as any[];
       const imageSpecs = specs.filter(s => s.type === 'specImage');
-      if (imageSpecs.length > 0) {
-        setSpecImages(imageSpecs.map(s => s.url || '').filter(Boolean));
-      } else {
-        setSpecImages([]);
-      }
+      setSpecImages(imageSpecs.map(s => s.url || '').filter(Boolean));
 
       const realGroups = specs.filter(s => s.type !== 'specImage');
-      if (realGroups.length > 0 && realGroups[0].title !== undefined) {
-        setSpecGroups(realGroups.map((g: any) => ({
-          title: g.title || '',
-          items: (g.items || []).map((i: any) => ({ label: i.label || '', value: i.value || '' }))
-        })));
-      } else {
+      
+      // Check if it's already in the nested format (has title or items array)
+      const isNested = realGroups.some(g => g.title !== undefined || Array.isArray(g.items));
+      
+      if (isNested) {
+        const parsedGroups = realGroups.map((g: any) => {
+          let title = g.title;
+          if (title === undefined) title = g.key || '';
+          const items = Array.isArray(g.items) 
+            ? g.items.map((i: any) => ({ label: i.label || i.key || '', value: i.value || '' }))
+            : (g.label || g.key ? [{ label: g.label || g.key || '', value: g.value || '' }] : []);
+          return { title, items };
+        });
+        
+        // Filter out completely empty groups
+        setSpecGroups(parsedGroups.filter(g => g.title || g.items.length > 0));
+      } else if (realGroups.length > 0) {
+        // Fallback: It's completely flat
         const items = realGroups.map((s: any) => ({ label: s.key || s.label || '', value: s.value || '' }));
-        setSpecGroups(items.length > 0 ? [{ title: 'Thông số chung', items }] : []);
+        setSpecGroups([{ title: 'Thông số chung', items }]);
+      } else {
+        setSpecGroups([]);
       }
     } else {
       setSpecGroups([]);
@@ -1183,6 +1212,9 @@ export function ProductList() {
             </button>
           </div>
 
+          <button onClick={handleExport} className="h-10 px-4 rounded-xl bg-white/10 hover:bg-white/20 text-white flex items-center gap-2 transition-colors text-sm font-semibold whitespace-nowrap border border-white/10">
+            <Download className="w-4 h-4" /> Export
+          </button>
           <button onClick={() => setIsImportModalOpen(true)} className="h-10 px-4 rounded-xl bg-white/10 hover:bg-white/20 text-white flex items-center gap-2 transition-colors text-sm font-semibold whitespace-nowrap border border-white/10">
             <Upload className="w-4 h-4" /> Import
           </button>

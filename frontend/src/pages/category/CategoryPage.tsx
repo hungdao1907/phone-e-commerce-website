@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useParams, useSearchParams, useNavigate, Navigate } from 'react-router-dom';
 import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { FilteredProductCard } from '@/components/store/FilteredProductCard';
@@ -6,6 +6,8 @@ import { CategoryCards } from '@/components/category/CategoryCards';
 import { CATEGORY_CONFIGS } from './CategoryConfig';
 import { SlidersHorizontal } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { fetchActiveBannerCampaign, formatVND, resolveImageUrl } from '@/services/bannerCampaign.api';
+import type { BannerCampaignProductItem } from '@/services/bannerCampaign.api';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
@@ -72,6 +74,23 @@ export function CategoryPage() {
     return ['Tất cả', ...apiBrands];
   }, [filtersData]);
 
+  // Fetch active banner campaign for this category
+  const { data: bannerCampaignData } = useQuery({
+    queryKey: ['activeBannerCampaign', config.slug],
+    queryFn: () => fetchActiveBannerCampaign(config.slug),
+    staleTime: 60_000, // revalidate every 60s
+  });
+
+  const bannerProducts: BannerCampaignProductItem[] = bannerCampaignData?.products || [];
+  const [activeProductIndex, setActiveProductIndex] = useState(0);
+
+  // Reset active product index when category changes
+  useEffect(() => {
+    setActiveProductIndex(0);
+  }, [config.slug]);
+
+  const activeProduct = bannerProducts[activeProductIndex] ?? null;
+
   const handleBrandClick = (brand: string) => {
     if (brand === 'Tất cả') {
       searchParams.delete('brand');
@@ -99,44 +118,148 @@ export function CategoryPage() {
   return (
     <div className="min-h-screen bg-[#f5f5f7] pt-24 pb-20">
       <div className="max-w-[1200px] mx-auto px-4 md:px-8">
-        
-        {/* Banner Section */}
-        <section 
-          className="bg-white border border-neutral-200 rounded-[20px] p-6 md:p-12 mb-8 flex flex-col md:flex-row items-center gap-8 shadow-sm overflow-hidden relative"
+
+        {/* Banner Section — Campaign-powered or static fallback */}
+        <section
+          className="bg-[#F0F0F0] mb-8 relative flex flex-col md:grid md:grid-cols-4 md:items-stretch overflow-hidden group h-[500px]"
           aria-label="Khuyến mãi"
         >
-          <div className="flex-1 z-10">
-            <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight text-neutral-900 mb-4 leading-tight">
+          {/* LEFT: Banner Title & Description (Col 1-2) */}
+          <div className="md:col-span-2 p-8 md:p-12 z-10 flex flex-col justify-center">
+            <h1 className="text-3xl md:text-[2.75rem] font-extrabold tracking-tight text-neutral-900 mb-4 leading-tight">
               {config.banner.title}
             </h1>
-            <p className="text-neutral-500 mb-8 max-w-md text-base md:text-lg">
+            <p className="text-neutral-600 mb-8 max-w-md text-base md:text-lg">
               {config.banner.description}
             </p>
-            <button 
-              onClick={() => document.getElementById('products-section')?.scrollIntoView({ behavior: 'smooth' })}
-              className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-full transition-colors focus:ring-4 focus:ring-blue-100 outline-none"
-            >
-              {config.banner.buttonText}
-            </button>
-          </div>
-          
-          <div className="flex-1 relative w-full h-[200px] md:h-[300px] z-10 flex items-center justify-center">
-            {/* The badge */}
-            <div className="absolute top-0 right-4 bg-yellow-400 text-yellow-900 font-bold text-xs md:text-sm px-3 py-1.5 rounded-full shadow-sm z-20">
-              {config.banner.badge}
+            <div>
+              <button
+                onClick={() => document.getElementById('products-section')?.scrollIntoView({ behavior: 'smooth' })}
+                className="bg-transparent border-2 border-neutral-800 text-neutral-800 hover:bg-neutral-800 hover:text-white font-semibold py-2 px-6 rounded-full transition-colors outline-none"
+              >
+                {config.banner.buttonText}
+              </button>
             </div>
-            {/* Decorative background circle */}
-            <div className="absolute inset-0 bg-gradient-to-tr from-blue-100 to-emerald-50 rounded-full scale-[0.8] md:scale-100 blur-2xl opacity-60"></div>
-            <img 
-              src={config.banner.image} 
-              alt={config.banner.title} 
-              className="w-full h-full object-contain relative z-10 scale-110 drop-shadow-2xl"
-              onError={(e) => {
-                // Fallback icon if image is missing
-                e.currentTarget.style.display = 'none';
-              }}
-            />
+
+
           </div>
+
+          {/* RIGHT: Product Info Card (Col 3) + Cutout Image (Col 4) */}
+          {activeProduct ? (
+            <motion.div
+              key={activeProduct.id}
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.4 }}
+              className="md:col-span-2 relative flex flex-col md:flex-row items-center py-8 md:py-12 pr-4 md:pr-0"
+            >
+              {/* Product Info Card (Aligns with Col 3) */}
+              <div className="z-20 bg-white rounded-none border border-[#F0F0F0] p-6 w-[85%] md:w-1/2 flex flex-col justify-center min-h-[100px] mt-40">
+                {/* Tags */}
+                {activeProduct.tags && activeProduct.tags.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 mb-2">
+                    {activeProduct.tags.map((tag, idx) => {
+                      const colors = [
+                        'bg-red-500 text-white',
+                        'bg-amber-500 text-white',
+                        'bg-emerald-500 text-white',
+                        'bg-blue-500 text-white',
+                        'bg-purple-500 text-white',
+                      ];
+                      const colorClass = tag.color ? '' : colors[idx % colors.length];
+                      return (
+                        <span
+                          key={tag.id}
+                          className={`text-[10px] font-bold px-2.5 py-0.5 rounded uppercase tracking-wider ${colorClass}`}
+                          style={tag.color ? { backgroundColor: tag.color, color: '#fff' } : {}}
+                        >
+                          {tag.name}
+                        </span>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* Tên sản phẩm */}
+                <h3 className="font-semibold text-base md:text-lg text-neutral-800 mb-2 leading-snug pr-4">
+                  {activeProduct.productName}
+                </h3>
+
+
+
+                {/* Khối Giá */}
+                <div className="flex flex-col mb-4">
+                  {activeProduct.discountPercent > 0 && (
+                    <span className="text-sm text-neutral-400 line-through mb-1">
+                      {formatVND(activeProduct.originalPrice)}
+                    </span>
+                  )}
+                  <span className="text-[24px] font-extrabold text-neutral-900 leading-none">
+                    {formatVND(activeProduct.salePrice)}
+                  </span>
+                </div>
+
+                {/* Nút Xem ngay */}
+                <button className="text-xs font-medium text-neutral-500 flex items-center gap-2 hover:text-neutral-800 transition-colors mt-auto w-max group/btn">
+                  Xem ngay <span className="transition-transform group-hover/btn:translate-x-1">→</span>
+                </button>
+              </div>
+
+              {/* Cutout Image (Aligns with Col 4 + Overlaps) */}
+              <div className="z-30 relative md:absolute md:top-0 md:bottom-0 md:right-0 md:w-[60%] flex items-center justify-center mt-[-40px] md:mt-0 pointer-events-none">
+                <motion.img
+                  key={activeProduct.id + '-img'}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.5 }}
+                  src={resolveImageUrl(activeProduct.bannerImage) || config.banner.image}
+                  alt={activeProduct.productName}
+                  className="w-[200%] md:w-[240%] max-w-none h-auto object-contain drop-shadow-2xl md:-ml-30"
+                  onError={(e) => { e.currentTarget.src = config.banner.image; }}
+                />
+                {/* Floating Discount Badge */}
+                {activeProduct.discountPercent > 0 && (
+                  <div className="absolute top-4 md:top-12 right-4 md:right-25 w-12 h-12 md:w-14 md:h-14 bg-yellow-400 text-yellow-900 font-bold rounded-full flex items-center justify-center text-sm md:text-base shadow-sm">
+                    {activeProduct.discountPercent}%
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          ) : (
+            /* Fallback static banner Right side */
+            <div className="md:col-span-2 relative flex items-center justify-center h-[250px] md:h-[400px]">
+              <div className="absolute top-4 right-4 bg-yellow-400 text-yellow-900 font-bold text-xs px-3 py-1.5 rounded-full shadow-sm z-20">
+                {config.banner.badge}
+              </div>
+              <img
+                src={config.banner.image}
+                alt={config.banner.title}
+                className="w-[80%] h-[80%] object-contain relative z-10 drop-shadow-2xl"
+                onError={(e) => { e.currentTarget.style.display = 'none'; }}
+              />
+            </div>
+          )}
+
+          {/* Right side Dot Navigation */}
+          {activeProduct && bannerProducts.length > 1 && (
+            <div className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 flex flex-col items-center gap-3 z-40" role="group" aria-label="Chọn sản phẩm">
+              {bannerProducts.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setActiveProductIndex(i)}
+                  aria-label={`Sản phẩm ${i + 1}`}
+                  aria-pressed={i === activeProductIndex}
+                  className={`transition-all duration-300 rounded-full focus:outline-none flex items-center justify-center ${
+                    i === activeProductIndex
+                      ? 'w-7 h-7 border-2 border-neutral-400 p-0.5'
+                      : 'w-7 h-7 p-0.5'
+                  }`}
+                >
+                  <div className={`rounded-full transition-all duration-300 ${i === activeProductIndex ? 'w-2 h-2 bg-neutral-600' : 'w-2 h-2 bg-neutral-300 hover:bg-neutral-400'}`} />
+                </button>
+              ))}
+            </div>
+          )}
         </section>
 
         {/* Shortcuts */}
@@ -157,10 +280,10 @@ export function CategoryPage() {
         {/* Category Cards */}
         <h2 className="text-xl font-bold text-neutral-900 mb-4">Danh mục</h2>
         <div className="mb-10">
-          <CategoryCards 
-            items={MAIN_CATEGORIES} 
-            activeId={categorySlug || null} 
-            onSelect={handleCategoryCardClick} 
+          <CategoryCards
+            items={MAIN_CATEGORIES}
+            activeId={categorySlug || null}
+            onSelect={handleCategoryCardClick}
           />
         </div>
 
@@ -173,11 +296,10 @@ export function CategoryPage() {
                 key={brand}
                 aria-pressed={selectedBrand === brand}
                 onClick={() => handleBrandClick(brand)}
-                className={`px-4 py-2 rounded-full border text-sm font-medium transition-colors focus:ring-2 focus:ring-offset-2 focus:ring-neutral-900 outline-none ${
-                  selectedBrand === brand 
-                    ? 'bg-neutral-900 text-white border-neutral-900' 
-                    : 'bg-white text-neutral-700 border-neutral-200 hover:border-neutral-400'
-                }`}
+                className={`px-4 py-2 rounded-full border text-sm font-medium transition-colors focus:ring-2 focus:ring-offset-2 focus:ring-neutral-900 outline-none ${selectedBrand === brand
+                  ? 'bg-neutral-900 text-white border-neutral-900'
+                  : 'bg-white text-neutral-700 border-neutral-200 hover:border-neutral-400'
+                  }`}
               >
                 {brand}
               </button>
@@ -210,7 +332,7 @@ export function CategoryPage() {
         {isError && (
           <div className="bg-red-50 text-red-600 p-4 rounded-xl text-center flex flex-col items-center gap-2">
             <p>Đã xảy ra lỗi khi tải dữ liệu.</p>
-            <button 
+            <button
               onClick={() => refetch()}
               className="bg-red-100 hover:bg-red-200 px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
             >
@@ -232,9 +354,9 @@ export function CategoryPage() {
 
           {!isLoading && productsData?.data && productsData.data.length > 0 && (
             productsData.data.map((product: any) => (
-              <FilteredProductCard 
-                key={product.id} 
-                product={product} 
+              <FilteredProductCard
+                key={product.id}
+                product={product}
                 categorySlug={config.slug}
               />
             ))
