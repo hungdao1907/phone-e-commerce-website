@@ -1,15 +1,9 @@
-import nodemailer from 'nodemailer';
 import dotenv from 'dotenv';
+import { mailer } from './mailer';
 
 dotenv.config();
 
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.SMTP_EMAIL,
-    pass: process.env.SMTP_PASSWORD,
-  },
-});
+const transporter = mailer;
 
 export const sendOrderReceivedEmail = async (order: any) => {
   try {

@@ -2,8 +2,8 @@ import express from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { PrismaClient } from '@prisma/client';
-import nodemailer from 'nodemailer';
 import dns from 'node:dns';
+import { mailer, isEmailConfigured } from '../services/mailer';
 
 // Fix IPv6 timeout issues on Render/Node 18+ by forcing IPv4 resolution first
 dns.setDefaultResultOrder('ipv4first');
@@ -12,13 +12,7 @@ const prisma = new PrismaClient();
 
 import { JWT_SECRET } from '../config/auth';
 
-const smtpTransporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.SMTP_EMAIL || '',
-    pass: process.env.SMTP_PASSWORD || ''
-  }
-});
+const smtpTransporter = mailer;
 
 function generateOTP(): string {
   return Math.floor(100000 + Math.random() * 900000).toString();
@@ -60,7 +54,7 @@ router.post('/customer/register', async (req, res) => {
       });
     }
 
-    if (process.env.SMTP_EMAIL && process.env.SMTP_PASSWORD) {
+    if (isEmailConfigured()) {
       const currentYear = new Date().getFullYear();
       const otp_expiration = 5;
       smtpTransporter.sendMail({
@@ -172,7 +166,7 @@ router.post('/customer/forgot-password', async (req, res) => {
       data: { otp, otpExpiry }
     });
 
-    if (process.env.SMTP_EMAIL && process.env.SMTP_PASSWORD) {
+    if (isEmailConfigured()) {
       const currentYear = new Date().getFullYear();
       const otp_expiration = 5;
       smtpTransporter.sendMail({
