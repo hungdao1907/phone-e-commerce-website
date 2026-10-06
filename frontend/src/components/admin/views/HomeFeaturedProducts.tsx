@@ -286,7 +286,7 @@ export function HomeFeaturedProducts() {
 
                 {/* Dropdown Menu Panel (Text Only) */}
                 {isDropdownOpen && (
-                  <div className="absolute left-0 right-0 top-full z-50 mt-2 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl animate-in fade-in zoom-in-95 duration-150">
+                  <div className="absolute left-0 right-0 top-full z-50 mt-1.5 overflow-hidden rounded-2xl border border-slate-200/90 bg-white/95 backdrop-blur-xl shadow-[0_16px_40px_-8px_rgba(15,23,42,0.18),0_4px_12px_-2px_rgba(15,23,42,0.08)] animate-in fade-in zoom-in-95 duration-150">
                     {/* Search Input Box */}
                     <div className="p-3 border-b border-slate-100 bg-slate-50/50">
                       <div className="relative">
@@ -391,7 +391,7 @@ export function HomeFeaturedProducts() {
                 </button>
 
                 {isPositionDropdownOpen && (
-                  <div className="absolute left-0 right-0 top-full z-50 mt-2 max-h-60 overflow-y-auto rounded-2xl border border-slate-200 bg-white p-1.5 shadow-2xl animate-in fade-in zoom-in-95 duration-150 custom-scrollbar">
+                  <div className="absolute left-0 right-0 top-full z-50 mt-1.5 max-h-60 overflow-y-auto rounded-2xl border border-slate-200/90 bg-white/95 backdrop-blur-xl p-1.5 shadow-[0_16px_40px_-8px_rgba(15,23,42,0.18),0_4px_12px_-2px_rgba(15,23,42,0.08)] animate-in fade-in zoom-in-95 duration-150 custom-scrollbar space-y-0.5">
                     {Array.from({ length: totalPositions }, (_, i) => i + 1).map((pos) => {
                       const isSelected = String(pos) === String(sortOrder);
                       return (

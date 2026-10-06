@@ -1,10 +1,10 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { ChatMessage } from './types';
-import { ProductResultCard } from './ProductResultCard';
+import { ProductCarousel } from './ProductCarousel';
 import { ChatMarkdown } from './ChatMarkdown';
 import { resolveBackendUrl } from '../../services/chatbot.api';
-import { FileText, Download, User, Bot, Sparkles, CheckCircle2 } from 'lucide-react';
+import { FileText, Download, User, Bot, CheckCircle2 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import './chatbot.css';
 
@@ -21,11 +21,11 @@ export function ChatMessageItem({ message }: { message: ChatMessage }) {
       initial={{ opacity: 0, y: 8, scale: 0.98 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ duration: 0.22, ease: 'easeOut' }}
-      className={cn("flex w-full mb-4", isUser ? "justify-end" : "justify-start")}
+      className={cn("flex w-full max-w-full min-w-0 mb-4", isUser ? "justify-end" : "justify-start")}
     >
-      <div className={cn("flex gap-2.5", isUser ? "max-w-[88%] flex-row-reverse" : "max-w-[95%] flex-row")}>
+      <div className={cn("flex gap-2.5 min-w-0", isUser ? "max-w-[85%] sm:max-w-[80%] flex-row-reverse" : "w-full max-w-full flex-row")}>
         {/* Avatar */}
-        <div className="flex-shrink-0 mt-auto mb-1">
+        <div className="flex-shrink-0 mt-0.5">
           {isUser ? (
             <div className="w-8 h-8 rounded-full bg-gradient-to-br from-neutral-800 to-neutral-900 text-white flex items-center justify-center shadow-xs">
               <User className="w-4 h-4" />
@@ -38,11 +38,11 @@ export function ChatMessageItem({ message }: { message: ChatMessage }) {
         </div>
 
         {/* Message Content Body */}
-        <div className={cn("flex flex-col gap-1.5", isUser ? "items-end" : "items-start")}>
+        <div className={cn("flex flex-col gap-1.5 min-w-0 max-w-full flex-1", isUser ? "items-end" : "items-start")}>
           {/* Text Bubble */}
           {message.text && (
             <div className={cn(
-              "px-4 py-3 rounded-2xl text-[13.5px] leading-relaxed break-words shadow-xs",
+              "px-4 py-3 rounded-2xl text-[13.5px] leading-relaxed break-words [overflow-wrap:anywhere] shadow-xs max-w-full",
               isUser
                 ? "bg-gradient-to-r from-blue-600 via-blue-600 to-indigo-600 text-white rounded-br-xs shadow-blue-500/15"
                 : "bg-white/95 backdrop-blur-md border border-neutral-200/90 text-neutral-800 rounded-bl-xs shadow-[0_2px_8px_rgba(0,0,0,0.03)]"
@@ -70,24 +70,9 @@ export function ChatMessageItem({ message }: { message: ChatMessage }) {
             </div>
           )}
 
-          {/* Horizontal Product Search Results */}
+          {/* Horizontal Product Search Results using ProductCarousel */}
           {message.products && message.products.length > 0 && (
-            <div className="w-full mt-1">
-              <div className="flex items-center gap-1.5 mb-2 text-xs font-semibold text-neutral-600">
-                <Sparkles className="w-3.5 h-3.5 text-blue-600" />
-                <span>Gợi ý sản phẩm phù hợp ({message.products.length}):</span>
-              </div>
-              <div
-                data-lenis-prevent="true"
-                className="flex overflow-x-auto pb-2 gap-3 snap-x overscroll-contain -mx-1 px-1 custom-scrollbar"
-              >
-                {message.products.map((product) => (
-                  <div key={product.id || Math.random().toString()} className="snap-start">
-                    <ProductResultCard product={product} />
-                  </div>
-                ))}
-              </div>
-            </div>
+            <ProductCarousel products={message.products} />
           )}
 
           {/* Quotation PDF Card */}

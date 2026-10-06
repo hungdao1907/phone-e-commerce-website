@@ -99,6 +99,37 @@ const BENEFITS_ROW_2: BenefitItem[] = [
   },
 ];
 
+const TONE_THEMES = {
+  warm: {
+    iconText: 'text-amber-300',
+    checkColor: 'text-amber-400',
+    badgeBg: 'bg-amber-400/20 border-amber-400/35 text-white',
+    iconBoxBg: 'bg-amber-500/25 border-amber-400/35 text-amber-300',
+    sparkleColor: 'text-amber-400',
+  },
+  silver: {
+    iconText: 'text-sky-300',
+    checkColor: 'text-sky-400',
+    badgeBg: 'bg-sky-400/20 border-sky-400/35 text-white',
+    iconBoxBg: 'bg-sky-500/25 border-sky-400/35 text-sky-300',
+    sparkleColor: 'text-sky-400',
+  },
+  lavender: {
+    iconText: 'text-purple-200',
+    checkColor: 'text-purple-300',
+    badgeBg: 'bg-purple-400/20 border-purple-400/35 text-white',
+    iconBoxBg: 'bg-purple-500/25 border-purple-400/35 text-purple-200',
+    sparkleColor: 'text-purple-300',
+  },
+  sage: {
+    iconText: 'text-emerald-300',
+    checkColor: 'text-emerald-400',
+    badgeBg: 'bg-emerald-400/20 border-emerald-400/35 text-white',
+    iconBoxBg: 'bg-emerald-500/25 border-emerald-400/35 text-emerald-300',
+    sparkleColor: 'text-emerald-400',
+  },
+} as const;
+
 interface BenefitCardProps {
   benefit: BenefitItem;
   index: number;
@@ -109,6 +140,7 @@ function BenefitCard({ benefit, index }: BenefitCardProps) {
   const [isFlipped, setIsFlipped] = useState(false);
   const hoverTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const Icon = benefit.icon;
+  const theme = TONE_THEMES[benefit.tone] || TONE_THEMES.warm;
 
   const handleMouseEnter = () => {
     if (hoverTimerRef.current) {
@@ -227,32 +259,37 @@ function BenefitCard({ benefit, index }: BenefitCardProps) {
           </div>
         </div>
 
-        {/* BACK FACE (Deep luxury dark tinted card with staggered text reveal) */}
-        <div className={`trust-benefit-card__face trust-benefit-card__face--back trust-benefit-card--${benefit.tone}-back`}>
+        {/* BACK FACE (Deep luxury jewel radiant card with staggered text reveal) */}
+        <div className={`trust-benefit-card__face trust-benefit-card__face--back trust-benefit-card--${benefit.tone}-back text-white`}>
           <div className="trust-benefit-card__ambient" aria-hidden="true" />
 
+          {/* Watermark Icon on Back Face */}
+          <div className="pointer-events-none absolute -right-2 -bottom-2 opacity-[0.08] select-none text-white" aria-hidden="true">
+            <Icon className="w-36 h-36" strokeWidth={1.2} />
+          </div>
+
           <motion.div
-            className="w-full h-full flex flex-col justify-between"
+            className="w-full h-full flex flex-col justify-between relative z-10 text-white"
             variants={backContainerVariants}
             initial="hidden"
             animate={isFlipped ? 'visible' : 'hidden'}
           >
             {/* Header with Title and Subtitle */}
-            <motion.div variants={textItemVariants} className="flex items-center justify-between pb-2.5 border-b border-white/12">
+            <motion.div variants={textItemVariants} className="flex items-center justify-between pb-2.5 border-b border-white/20">
               <div className="flex items-center gap-2.5">
-                <div className="trust-benefit-card__icon-box-back">
-                  <Icon className="w-4 h-4 text-white" strokeWidth={2} />
+                <div className={`w-[32px] h-[32px] rounded-lg backdrop-blur-md flex items-center justify-center border shadow-sm ${theme.iconBoxBg}`}>
+                  <Icon className="w-4 h-4 text-white drop-shadow-[0_0_6px_rgba(255,255,255,0.6)]" strokeWidth={2.4} />
                 </div>
                 <div>
-                  <h4 className="text-[14px] font-bold text-white tracking-tight leading-tight">
+                  <h4 className="text-[14.5px] font-bold text-white tracking-tight leading-tight drop-shadow-[0_1px_3px_rgba(0,0,0,0.85)]">
                     {benefit.title.replace('\n', ' ')}
                   </h4>
-                  <p className="text-[11px] text-white/60 font-medium">
+                  <p className="text-[11.5px] text-white font-medium drop-shadow-[0_1px_2px_rgba(0,0,0,0.75)]">
                     {benefit.subtitle}
                   </p>
                 </div>
               </div>
-              <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-white/10 text-white/90 border border-white/15">
+              <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border text-white shadow-sm drop-shadow-[0_1px_2px_rgba(0,0,0,0.7)] ${theme.badgeBg}`}>
                 {benefit.badge}
               </span>
             </motion.div>
@@ -263,21 +300,21 @@ function BenefitCard({ benefit, index }: BenefitCardProps) {
                 <motion.li
                   key={idx}
                   variants={textItemVariants}
-                  className="flex items-start gap-2 text-[12.5px] leading-snug text-white/90 font-normal"
+                  className="flex items-start gap-2.5 text-[13px] leading-snug text-white font-medium drop-shadow-[0_1px_2px_rgba(0,0,0,0.85)]"
                 >
-                  <CheckCircle2 className="w-3.5 h-3.5 mt-0.5 text-emerald-400 shrink-0" strokeWidth={2.2} />
-                  <span>{point}</span>
+                  <CheckCircle2 className={`w-4 h-4 mt-0.5 shrink-0 ${theme.checkColor} drop-shadow-[0_0_8px_currentColor]`} strokeWidth={2.5} />
+                  <span className="text-white text-shadow-sm">{point}</span>
                 </motion.li>
               ))}
             </ul>
 
             {/* Bottom Highlight & Flip-back Hint */}
-            <motion.div variants={textItemVariants} className="pt-2 border-t border-white/12 flex items-center justify-between text-[11px]">
-              <div className="flex items-center gap-1.5 text-emerald-300 font-medium">
-                <Sparkles className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                <span>{benefit.highlight}</span>
+            <motion.div variants={textItemVariants} className="pt-2 border-t border-white/20 flex items-center justify-between text-[11px]">
+              <div className="flex items-center gap-1.5 font-semibold text-[11.5px] text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.85)]">
+                <Sparkles className={`w-3.5 h-3.5 shrink-0 ${theme.sparkleColor} drop-shadow-[0_0_8px_currentColor]`} />
+                <span className="text-white">{benefit.highlight}</span>
               </div>
-              <span className="text-[10px] text-white/50 flex items-center gap-1 shrink-0 ml-2">
+              <span className="text-[11px] font-semibold text-white/90 hover:text-white flex items-center gap-1 shrink-0 ml-2 transition-colors drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">
                 Lật lại ↺
               </span>
             </motion.div>
@@ -292,7 +329,7 @@ export function TrustBenefitsSection() {
   const shouldReduceMotion = useReducedMotion() === true;
 
   return (
-    <section id="home-trust-benefits" data-home-section="home-trust-benefits" className="trust-benefits" aria-labelledby="trust-benefits-title">
+    <section id="home-trust-benefits" data-home-section="home-trust-benefits" className="trust-benefits bg-white" aria-labelledby="trust-benefits-title">
       <div className="trust-benefits__container">
         {/* Editorial Section Header */}
         <motion.header

@@ -258,7 +258,7 @@ export function AdminChatWidget() {
               className="relative cursor-pointer focus:outline-none select-none group"
               aria-label="Mở trợ lý ảo quản trị"
             >
-              <div className="w-16 h-20 sm:w-[68px] sm:h-[85px] drop-shadow-[0_10px_25px_rgba(16,185,129,0.45)] group-hover:drop-shadow-[0_16px_32px_rgba(16,185,129,0.65)] transition-all duration-300">
+              <div className="w-12 h-[60px] sm:w-[50px] sm:h-[63px] drop-shadow-[0_6px_16px_rgba(16,185,129,0.38)] group-hover:drop-shadow-[0_10px_22px_rgba(16,185,129,0.55)] transition-all duration-300">
                 <MeshGradientSVG
                   className="w-full h-full"
                   colors={[

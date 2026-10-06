@@ -2,7 +2,7 @@ import express from 'express';
 import { PrismaClient } from '@prisma/client';
 import { authenticateToken } from '../middleware/auth.middleware';
 import { getRouteParam } from '../utils/route-param';
-import { sendOrderReceivedEmail, sendOrderConfirmedEmail } from '../services/email.service';
+import { sendOrderReceivedEmail, sendOrderConfirmedEmail, sendTrackingOtpEmail } from '../services/email.service';
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -14,6 +14,255 @@ type PreparedOrderItem = {
   quantity: number;
   unitPrice: number;
 };
+
+// In-memory OTP store for secure order tracking
+interface TrackingOtpRecord {
+  otp: string;
+  expiresAt: number;
+  orderId: string;
+  orderCode: string;
+  email: string;
+  attempts: number;
+}
+const orderTrackingOtpCache = new Map<string, TrackingOtpRecord>();
+
+function maskEmail(email: string): string {
+  if (!email || !email.includes('@')) return email;
+  const [localPart, domain] = email.split('@');
+  if (localPart.length <= 1) {
+    return `${localPart}***@${domain}`;
+  }
+  return `${localPart[0]}***${localPart[localPart.length - 1]}@${domain}`;
+}
+
+function maskPhone(phone: string | null | undefined): string {
+  const digits = (phone || '').replace(/\D/g, '');
+  if (digits.length <= 4) return phone || 'số điện thoại';
+  return digits.slice(0, 3) + '****' + digits.slice(-3);
+}
+
+function cleanDigits(val: string | null | undefined): string {
+  if (!val || val === 'null' || val === 'undefined') return '';
+  return val.replace(/\D/g, '');
+}
+
+function checkPhoneMatch(inputPhone: string, targetPhone: string | null | undefined): boolean {
+  const inDigits = cleanDigits(inputPhone);
+  const tgtDigits = cleanDigits(targetPhone);
+  if (!inDigits || !tgtDigits) return false;
+
+  // Exact digits match
+  if (inDigits === tgtDigits) return true;
+
+  // Compare Vietnamese mobile numbers (last 9 digits)
+  // E.g., +84972501501, 84972501501, 0972501501, 972501501 all end in 972501501
+  const inTail = inDigits.slice(-9);
+  const tgtTail = tgtDigits.slice(-9);
+  if (inTail.length === 9 && tgtTail.length === 9 && inTail === tgtTail) {
+    return true;
+  }
+
+  // Suffix matching for general phones
+  if (inDigits.length >= 8 && tgtDigits.length >= 8) {
+    if (inDigits.endsWith(tgtDigits) || tgtDigits.endsWith(inDigits)) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+// POST request OTP for public order tracking
+router.post('/track/request-otp', async (req, res) => {
+  try {
+    const { orderCode, phoneOrEmail } = req.body;
+
+    if (!orderCode || !phoneOrEmail) {
+      return res.status(400).json({ message: 'Vui lòng nhập đầy đủ Mã đơn hàng và Số điện thoại/Email' });
+    }
+
+    const rawCode = String(orderCode).trim();
+    const cleanCode = rawCode.replace(/^[#]/, '').replace(/[-\s]/g, '').trim();
+
+    // Flexible lookup by orderCode (case-insensitive, with/without prefixes)
+    const order = await prisma.order.findFirst({
+      where: {
+        OR: [
+          { orderCode: { equals: rawCode, mode: 'insensitive' } },
+          { orderCode: { equals: cleanCode, mode: 'insensitive' } },
+          { orderCode: { equals: cleanCode.replace(/^DH/i, ''), mode: 'insensitive' } },
+          { orderCode: { equals: `DH${cleanCode.replace(/^DH/i, '')}`, mode: 'insensitive' } }
+        ]
+      },
+      include: {
+        customer: true
+      }
+    });
+
+    if (!order) {
+      return res.status(404).json({ message: 'Không tìm thấy đơn hàng với mã này. Vui lòng kiểm tra lại mã đơn.' });
+    }
+
+    const input = String(phoneOrEmail).trim().toLowerCase();
+    const isInputEmail = input.includes('@');
+
+    // Phone matching (checks both shippingPhone and customer phone)
+    const phoneMatched = checkPhoneMatch(input, order.shippingPhone) || checkPhoneMatch(input, order.customer?.phone);
+
+    // Email matching
+    const customerEmail = (order.customer?.email || '').trim().toLowerCase();
+    const emailMatched = isInputEmail && Boolean(
+      customerEmail && (
+        customerEmail === input ||
+        (customerEmail.includes('@') && customerEmail.split('@')[0] === input.split('@')[0])
+      )
+    );
+
+    if (!phoneMatched && !emailMatched) {
+      console.warn(`[Order Track OTP] Contact mismatch for Order #${order.orderCode}:`, {
+        input,
+        shippingPhone: order.shippingPhone,
+        customerPhone: order.customer?.phone,
+        customerEmail: order.customer?.email
+      });
+
+      const hint = process.env.NODE_ENV !== 'production'
+        ? ` (Gợi ý test: SĐT ${maskPhone(order.shippingPhone)} hoặc Email ${maskEmail(order.customer?.email || '')})`
+        : '';
+
+      return res.status(400).json({
+        message: `Số điện thoại hoặc email không trùng khớp với thông tin đơn hàng #${order.orderCode}.${hint}`
+      });
+    }
+
+    // Destination determination: prioritize customer email or provided email, fallback to phone
+    const targetEmail = (customerEmail && customerEmail.includes('@')) ? customerEmail : (isInputEmail ? input : null);
+    const targetPhone = order.shippingPhone || order.customer?.phone || (!isInputEmail ? input : null);
+
+    // Generate 6-digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = Date.now() + 5 * 60 * 1000; // 5 mins
+
+    // Store in cache with multiple keys so verify matches regardless of formatting
+    const rawKey = order.orderCode.trim().toUpperCase();
+    const cleanKey = order.orderCode.trim().replace(/[-\s]/g, '').toUpperCase();
+    const record: TrackingOtpRecord = {
+      otp,
+      expiresAt,
+      orderId: order.id,
+      orderCode: order.orderCode,
+      email: targetEmail || targetPhone || 'customer',
+      attempts: 0
+    };
+    orderTrackingOtpCache.set(rawKey, record);
+    orderTrackingOtpCache.set(cleanKey, record);
+
+    let masked = 'thông tin bảo mật';
+    if (targetEmail) {
+      masked = maskEmail(targetEmail);
+      // Attempt sending email (fail-safe without blocking response)
+      sendTrackingOtpEmail(
+        targetEmail,
+        order.customer?.fullName || 'Quý khách',
+        order.orderCode,
+        otp
+      ).catch(err => console.warn('[Order Track OTP] Email send error:', err));
+    } else if (targetPhone) {
+      masked = maskPhone(targetPhone);
+    }
+
+    console.log(`[Order Track OTP] Generated OTP for Order #${order.orderCode}: ${otp} (Destination: ${masked})`);
+
+    res.json({
+      success: true,
+      message: targetEmail ? `Mã xác thực đã được gửi đến ${masked}` : `Mã xác thực đã được tạo cho số ${masked}`,
+      maskedDestination: masked,
+      orderCode: order.orderCode,
+      debugOtp: process.env.NODE_ENV !== 'production' ? otp : undefined
+    });
+  } catch (error) {
+    console.error('Error in track request OTP:', error);
+    res.status(500).json({ message: 'Lỗi server khi gửi mã OTP' });
+  }
+});
+
+// POST verify OTP and retrieve full order details
+router.post('/track/verify-otp', async (req, res) => {
+  try {
+    const { orderCode, otp } = req.body;
+
+    if (!orderCode || !otp) {
+      return res.status(400).json({ message: 'Vui lòng cung cấp mã đơn hàng và mã OTP' });
+    }
+
+    const rawKey = String(orderCode).trim().toUpperCase();
+    const cleanKey = rawKey.replace(/^[#]/, '').replace(/[-\s]/g, '').toUpperCase();
+    const userOtp = String(otp).trim();
+
+    const record = orderTrackingOtpCache.get(cleanKey) || orderTrackingOtpCache.get(rawKey);
+    if (!record) {
+      return res.status(400).json({ message: 'Yêu cầu xác thực đã hết hạn hoặc không tồn tại. Vui lòng bấm tra cứu lại.' });
+    }
+
+    if (Date.now() > record.expiresAt) {
+      orderTrackingOtpCache.delete(cleanKey);
+      orderTrackingOtpCache.delete(rawKey);
+      return res.status(400).json({ message: 'Mã xác thực OTP đã hết hạn (quá 5 phút). Vui lòng yêu cầu mã mới.' });
+    }
+
+    if (record.attempts >= 5) {
+      orderTrackingOtpCache.delete(cleanKey);
+      orderTrackingOtpCache.delete(rawKey);
+      return res.status(400).json({ message: 'Bạn đã nhập sai mã OTP quá 5 lần. Vui lòng yêu cầu mã xác thực mới.' });
+    }
+
+    if (record.otp !== userOtp) {
+      record.attempts += 1;
+      return res.status(400).json({ message: 'Mã xác thực OTP không chính xác. Vui lòng kiểm tra lại.' });
+    }
+
+    // Success! Invalidate OTP
+    orderTrackingOtpCache.delete(cleanKey);
+    orderTrackingOtpCache.delete(rawKey);
+
+    const order = await prisma.order.findUnique({
+      where: { id: record.orderId },
+      include: {
+        customer: {
+          select: { fullName: true, email: true, phone: true }
+        },
+        items: {
+          include: {
+            variant: {
+              include: {
+                product: {
+                  select: { id: true, name: true, image: true, brand: true }
+                }
+              }
+            }
+          }
+        },
+        Payment: {
+          orderBy: { createdAt: 'desc' }
+        },
+        Invoice: true
+      }
+    });
+
+    if (!order) {
+      return res.status(404).json({ message: 'Không tìm thấy thông tin đơn hàng.' });
+    }
+
+    res.json({
+      success: true,
+      order
+    });
+  } catch (error) {
+    console.error('Error verifying OTP for order tracking:', error);
+    res.status(500).json({ message: 'Lỗi server khi xác thực mã OTP' });
+  }
+});
+
 
 // GET payment status polling endpoint
 router.get('/:orderCode/payment-status', authenticateToken, async (req, res) => {

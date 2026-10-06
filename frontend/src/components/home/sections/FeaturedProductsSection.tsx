@@ -83,7 +83,7 @@ interface RevealOptions {
   reduceMotion: boolean;
 }
 
-function makeRevealVariants({ y = 24, delay, duration, reduceMotion }: RevealOptions): Variants {
+function makeRevealVariants({ y = 14, delay, duration, reduceMotion }: RevealOptions): Variants {
   return {
     hidden: reduceMotion ? { opacity: 0 } : { opacity: 0, y },
     visible: {
@@ -155,14 +155,14 @@ export function FeaturedProductsSection() {
   return (
     <section id={HOME_SECTION_IDS.featuredProducts} data-home-section={HOME_SECTION_IDS.featuredProducts} className="featured-products-section overflow-hidden bg-white py-20 sm:py-24 lg:py-28 xl:py-32" aria-labelledby="featured-products-title">
       <div className="mx-auto max-w-[1440px] px-5 sm:px-8 lg:px-12 xl:px-16">
-        <motion.div className="max-w-[1200px]" initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.25 }}>
+        <motion.div className="max-w-[1200px]" initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.12 }}>
           <div className="overflow-hidden py-2 sm:py-3">
             <h2 id="featured-products-title" className="max-w-[1200px] text-[clamp(1.75rem,calc(1.25rem+2vw),3rem)] font-semibold leading-[1.15] tracking-[-0.04em]">
-              <motion.span className="inline-block text-[#1d1d1f]" variants={makeRevealVariants({ y: 32, delay: 0.15, duration: 0.95, reduceMotion: shouldReduceMotion })}>Thiết bị mới nhất.</motion.span>{' '}
-              <motion.span className="inline-block text-[#6e6e73]" variants={makeRevealVariants({ y: 32, delay: 0.3, duration: 0.95, reduceMotion: shouldReduceMotion })}>Trải nghiệm vượt bậc.</motion.span>
+              <motion.span className="inline-block text-[#1d1d1f]" variants={makeRevealVariants({ y: 16, delay: 0.05, duration: 0.45, reduceMotion: shouldReduceMotion })}>Thiết bị mới nhất.</motion.span>{' '}
+              <motion.span className="inline-block text-[#6e6e73]" variants={makeRevealVariants({ y: 16, delay: 0.12, duration: 0.45, reduceMotion: shouldReduceMotion })}>Trải nghiệm vượt bậc.</motion.span>
             </h2>
           </div>
-          <motion.p className="mt-4 max-w-[620px] text-base leading-relaxed text-[#6e6e73] sm:text-lg" variants={makeRevealVariants({ y: 22, delay: 0.45, duration: 0.85, reduceMotion: shouldReduceMotion })}>
+          <motion.p className="mt-4 max-w-[620px] text-base leading-relaxed text-[#6e6e73] sm:text-lg" variants={makeRevealVariants({ y: 12, delay: 0.2, duration: 0.4, reduceMotion: shouldReduceMotion })}>
             Những lựa chọn hàng đầu cho hiệu năng đột phá, thiết kế tinh tế và trải nghiệm mỗi ngày.
           </motion.p>
         </motion.div>

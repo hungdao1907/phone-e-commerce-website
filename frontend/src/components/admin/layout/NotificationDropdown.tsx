@@ -53,43 +53,68 @@ const mockNotifications = [
 ];
 
 export function NotificationDropdown({ isOpen, onClose }: NotificationDropdownProps) {
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (panelRef.current && !panelRef.current.contains(event.target as Node)) {
+        onClose();
+      }
+    };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('keydown', handleKeyDown);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isOpen, onClose]);
+
   return (
     <AnimatePresence>
       {isOpen && (
         <motion.div
-          initial={{ opacity: 0, y: -10, scale: 0.95 }}
+          ref={panelRef}
+          initial={{ opacity: 0, y: -8, scale: 0.96 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: -10, scale: 0.95 }}
-          transition={{ type: "spring", stiffness: 400, damping: 30 }}
-          className="absolute top-14 right-0 w-96 bg-white border border-slate-200 rounded-3xl shadow-2xl z-[999] overflow-hidden"
+          exit={{ opacity: 0, y: -8, scale: 0.96 }}
+          transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
+          className="absolute top-14 right-0 w-96 bg-white/95 backdrop-blur-xl border border-slate-200/90 rounded-3xl shadow-[0_20px_50px_-12px_rgba(15,23,42,0.22),0_4px_16px_-4px_rgba(15,23,42,0.08)] z-[999] overflow-hidden"
         >
           {/* Header */}
-          <div className="p-5 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center border border-blue-200">
+          <div className="p-5 border-b border-slate-100 bg-slate-50/60 backdrop-blur-md flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center border border-blue-200/80 shadow-xs">
                 <Bell className="w-4 h-4 text-blue-600" />
               </div>
-              <h3 className="font-bold text-slate-900 text-lg">Thông báo mới</h3>
+              <h3 className="font-bold text-slate-900 text-base">Thông báo mới</h3>
             </div>
-            <span className="px-2 py-1 bg-red-600 text-white text-[10px] font-bold rounded-full">4 Mới</span>
+            <span className="px-2.5 py-0.5 bg-red-600 text-white text-[10px] font-bold rounded-full shadow-xs">4 Mới</span>
           </div>
 
           {/* List */}
-          <div className="max-h-[400px] overflow-y-auto custom-scrollbar flex flex-col p-2">
+          <div className="max-h-[380px] overflow-y-auto custom-scrollbar flex flex-col p-2 space-y-1">
             {mockNotifications.map((notif) => (
               <div 
                 key={notif.id} 
-                className="flex items-start gap-4 p-3 hover:bg-slate-50 rounded-2xl transition-colors cursor-pointer group"
+                className="flex items-start gap-3.5 p-3 hover:bg-slate-50/90 rounded-2xl transition-all cursor-pointer group border border-transparent hover:border-slate-100"
               >
-                <div className={cn("w-10 h-10 rounded-full flex items-center justify-center shrink-0 border border-slate-200/60", notif.bg)}>
+                <div className={cn("w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 border border-slate-200/60 shadow-xs", notif.bg)}>
                   <notif.icon className={cn("w-5 h-5", notif.color)} />
                 </div>
-                <div className="flex-1 flex flex-col gap-0.5 mt-0.5">
+                <div className="flex-1 flex flex-col gap-0.5 mt-0.5 min-w-0">
                   <div className="flex items-center justify-between">
-                    <span className="font-bold text-sm text-slate-800">{notif.title}</span>
-                    <span className="text-[10px] text-slate-400">{notif.time}</span>
+                    <span className="font-bold text-xs text-slate-800 truncate">{notif.title}</span>
+                    <span className="text-[10px] text-slate-400 shrink-0 ml-1">{notif.time}</span>
                   </div>
-                  <p className="text-xs text-slate-500 leading-relaxed line-clamp-2 pr-4">{notif.message}</p>
+                  <p className="text-xs text-slate-500 leading-relaxed line-clamp-2 pr-2">{notif.message}</p>
                 </div>
               </div>
             ))}
@@ -99,7 +124,7 @@ export function NotificationDropdown({ isOpen, onClose }: NotificationDropdownPr
           <div className="p-3 border-t border-slate-100 bg-slate-50/50">
             <button 
               onClick={onClose}
-              className="w-full py-2.5 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 hover:text-slate-900 text-xs font-bold rounded-xl flex items-center justify-center transition-colors shadow-xs"
+              className="w-full py-2 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 hover:text-slate-900 text-xs font-semibold rounded-xl flex items-center justify-center transition-colors shadow-xs"
             >
               Xem tất cả thông báo
             </button>

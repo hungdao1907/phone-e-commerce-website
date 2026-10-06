@@ -3,6 +3,7 @@ import { useAuthStore } from '@/store/authStore';
 import { Megaphone, Plus, Search, Calendar, Tag, Percent, Trash2, Edit2, Play, Square, Image as ImageIcon, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
+import { AdminSelect } from '@/components/admin/common/AdminSelect';
 
 export function Marketing() {
   const [campaigns, setCampaigns] = useState<any[]>([]);
@@ -311,11 +312,18 @@ export function Marketing() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Phạm vi áp dụng</label>
-                  <select value={formData.appliesTo} onChange={e => setFormData({...formData, appliesTo: e.target.value, targetIds: []})} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-slate-900 outline-none focus:border-emerald-500 focus:bg-white">
-                    <option value="all">Tất cả sản phẩm</option>
-                    <option value="product">Sản phẩm cụ thể</option>
-                  </select>
+                  <label className="block text-sm font-medium text-slate-700 mb-1.5">Phạm vi áp dụng</label>
+                  <AdminSelect
+                    value={formData.appliesTo}
+                    onChange={(v) => setFormData({ ...formData, appliesTo: v, targetIds: [] })}
+                    options={[
+                      { value: 'all', label: 'Tất cả sản phẩm' },
+                      { value: 'product', label: 'Sản phẩm cụ thể' },
+                    ]}
+                    className="w-full"
+                    menuWidth="w-full"
+                    highlightActive={false}
+                  />
                 </div>
 
                 {formData.appliesTo === 'product' && (
@@ -351,11 +359,18 @@ export function Marketing() {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Loại giảm giá</label>
-                    <select value={formData.discountType} onChange={e => setFormData({...formData, discountType: e.target.value})} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-slate-900 outline-none focus:border-emerald-500 focus:bg-white">
-                      <option value="percentage">% Phần trăm</option>
-                      <option value="fixed">Số tiền cố định</option>
-                    </select>
+                    <label className="block text-sm font-medium text-slate-700 mb-1.5">Loại giảm giá</label>
+                    <AdminSelect
+                      value={formData.discountType}
+                      onChange={(v) => setFormData({ ...formData, discountType: v })}
+                      options={[
+                        { value: 'percentage', label: '% Phần trăm', icon: <Percent className="w-3.5 h-3.5" /> },
+                        { value: 'fixed', label: 'Số tiền cố định (₫)', icon: <Tag className="w-3.5 h-3.5" /> },
+                      ]}
+                      className="w-full"
+                      menuWidth="w-full"
+                      highlightActive={false}
+                    />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1">Mức giảm</label>

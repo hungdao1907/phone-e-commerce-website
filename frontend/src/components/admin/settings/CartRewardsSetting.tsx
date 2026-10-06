@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Trash2, Edit2, CheckCircle2 } from 'lucide-react';
 import { useRewardsStore, Milestone } from '@/store/useRewardsStore';
+import { AdminSelect } from '@/components/admin/common/AdminSelect';
 
 export function CartRewardsSetting() {
   const { milestones, setMilestones, fetchMilestones } = useRewardsStore();
@@ -161,15 +162,18 @@ export function CartRewardsSetting() {
             </div>
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-2">Loại phần thưởng</label>
-              <select
+              <AdminSelect
                 value={type}
-                onChange={e => setType(e.target.value)}
-                className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-900 focus:outline-none focus:border-emerald-500 shadow-sm cursor-pointer"
-              >
-                <option value="shipping">Miễn phí vận chuyển (Shipping)</option>
-                <option value="voucher">Giảm giá theo % (Voucher)</option>
-                <option value="gift">Tặng quà (Gift)</option>
-              </select>
+                onChange={setType}
+                options={[
+                  { value: 'shipping', label: 'Miễn phí vận chuyển (Shipping)' },
+                  { value: 'voucher', label: 'Giảm giá theo % (Voucher)' },
+                  { value: 'gift', label: 'Tặng quà (Gift)' },
+                ]}
+                className="w-full"
+                menuWidth="w-full"
+                highlightActive={false}
+              />
             </div>
 
             {type === 'voucher' && (

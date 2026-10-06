@@ -65,6 +65,15 @@ export function ChatWidget() {
       : `session-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
   };
 
+  const getCurrentSessionId = () => {
+    const existingSessionId = sessionStorage.getItem(SESSION_KEY);
+    if (existingSessionId) return existingSessionId;
+
+    const newSessionId = getNewSessionId();
+    sessionStorage.setItem(SESSION_KEY, newSessionId);
+    return newSessionId;
+  };
+
   const initWelcomeMessage = () => {
     const hours = new Date().getHours();
     const greeting = hours < 12 ? 'Chào buổi sáng!' : hours < 18 ? 'Chào buổi chiều!' : 'Chào buổi tối!';
@@ -81,11 +90,7 @@ export function ChatWidget() {
 
   // Initialize session and welcome message
   useEffect(() => {
-    let sessionId = sessionStorage.getItem(SESSION_KEY);
-    if (!sessionId) {
-      sessionId = getNewSessionId();
-      sessionStorage.setItem(SESSION_KEY, sessionId);
-    }
+    getCurrentSessionId();
     initWelcomeMessage();
 
     // Show tooltip after 2.5 seconds if not open
@@ -119,7 +124,7 @@ export function ChatWidget() {
       return;
     }
 
-    const sessionId = sessionStorage.getItem(SESSION_KEY) || getNewSessionId();
+    const sessionId = getCurrentSessionId();
 
     const userMessage: ChatMessage = {
       id: crypto.randomUUID(),
@@ -255,7 +260,7 @@ export function ChatWidget() {
               aria-label="Mở trợ lý ảo AI"
             >
               {/* Dynamic MeshGradient Mascot Icon */}
-              <div className="w-16 h-20 sm:w-[68px] sm:h-[85px] drop-shadow-[0_10px_25px_rgba(79,70,229,0.45)] group-hover:drop-shadow-[0_16px_32px_rgba(79,70,229,0.65)] transition-all duration-300">
+              <div className="w-12 h-[60px] sm:w-[50px] sm:h-[63px] drop-shadow-[0_6px_16px_rgba(79,70,229,0.38)] group-hover:drop-shadow-[0_10px_22px_rgba(79,70,229,0.55)] transition-all duration-300">
                 <MeshGradientSVG className="w-full h-full" speed={1.2} />
               </div>
             </motion.button>
@@ -324,7 +329,7 @@ export function ChatWidget() {
             <div
               ref={messagesContainerRef}
               data-lenis-prevent="true"
-              className="flex-1 overflow-y-auto p-4 sm:p-5 overscroll-contain space-y-2"
+              className="flex-1 overflow-y-auto overflow-x-hidden p-4 sm:p-5 overscroll-contain space-y-2.5 w-full max-w-full min-w-0"
             >
               {messages.map((msg) => (
                 <ChatMessageItem key={msg.id} message={msg} />

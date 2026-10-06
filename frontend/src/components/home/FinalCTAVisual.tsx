@@ -1,5 +1,5 @@
-import { motion, useReducedMotion, AnimatePresence } from 'motion/react';
-import { useMemo, useEffect, useState, type ComponentType } from 'react';
+import { motion, useReducedMotion, AnimatePresence, useInView } from 'motion/react';
+import { useMemo, useEffect, useState, useRef, type ComponentType } from 'react';
 import {
   User,
   Smartphone,
@@ -27,46 +27,52 @@ interface GlowScheme {
   primary: string;
   secondary: string;
   ring: string;
+  secondaryRing: string;
   coreGlow: string;
   tag: string;
 }
 
 const USAGE_THEMES: Record<UsageType, GlowScheme> = {
   everyday: {
-    primary: 'rgba(56, 189, 248, 0.22)',
-    secondary: 'rgba(148, 163, 184, 0.14)',
-    ring: 'rgba(186, 230, 253, 0.30)',
-    coreGlow: 'rgba(56, 189, 248, 0.45)',
+    primary: 'rgba(255, 255, 255, 0.12)',
+    secondary: 'rgba(255, 255, 255, 0.06)',
+    ring: 'rgba(255, 255, 255, 0.55)',
+    secondaryRing: 'rgba(255, 255, 255, 0.4)',
+    coreGlow: 'rgba(255, 255, 255, 0.8)',
     tag: 'Cân bằng & Linh hoạt',
   },
   work: {
-    primary: 'rgba(59, 130, 246, 0.26)',
-    secondary: 'rgba(99, 102, 241, 0.16)',
-    ring: 'rgba(147, 197, 253, 0.32)',
-    coreGlow: 'rgba(59, 130, 246, 0.50)',
+    primary: 'rgba(255, 255, 255, 0.12)',
+    secondary: 'rgba(255, 255, 255, 0.06)',
+    ring: 'rgba(255, 255, 255, 0.55)',
+    secondaryRing: 'rgba(255, 255, 255, 0.4)',
+    coreGlow: 'rgba(255, 255, 255, 0.8)',
     tag: 'Năng suất & Ổn định',
   },
   creative: {
-    primary: 'rgba(168, 85, 247, 0.28)',
-    secondary: 'rgba(236, 72, 153, 0.18)',
-    ring: 'rgba(216, 180, 254, 0.34)',
-    coreGlow: 'rgba(168, 85, 247, 0.52)',
+    primary: 'rgba(255, 255, 255, 0.12)',
+    secondary: 'rgba(255, 255, 255, 0.06)',
+    ring: 'rgba(255, 255, 255, 0.55)',
+    secondaryRing: 'rgba(255, 255, 255, 0.4)',
+    coreGlow: 'rgba(255, 255, 255, 0.8)',
     tag: 'Sáng tạo & Đột phá',
   },
   gaming: {
-    primary: 'rgba(99, 102, 241, 0.32)',
-    secondary: 'rgba(244, 63, 94, 0.16)',
-    ring: 'rgba(165, 180, 252, 0.35)',
-    coreGlow: 'rgba(99, 102, 241, 0.56)',
+    primary: 'rgba(255, 255, 255, 0.12)',
+    secondary: 'rgba(255, 255, 255, 0.06)',
+    ring: 'rgba(255, 255, 255, 0.55)',
+    secondaryRing: 'rgba(255, 255, 255, 0.4)',
+    coreGlow: 'rgba(255, 255, 255, 0.8)',
     tag: 'Tối đa công suất',
   },
 };
 
 const DEFAULT_THEME: GlowScheme = {
-  primary: 'rgba(148, 163, 184, 0.16)',
-  secondary: 'rgba(56, 189, 248, 0.10)',
-  ring: 'rgba(255, 255, 255, 0.18)',
-  coreGlow: 'rgba(255, 255, 255, 0.3)',
+  primary: 'rgba(255, 255, 255, 0.1)',
+  secondary: 'rgba(255, 255, 255, 0.05)',
+  ring: 'rgba(255, 255, 255, 0.45)',
+  secondaryRing: 'rgba(255, 255, 255, 0.35)',
+  coreGlow: 'rgba(255, 255, 255, 0.75)',
   tag: 'Định hình nhu cầu',
 };
 
@@ -116,8 +122,8 @@ const DATA_NODES = [
   { cx: 225, cy: 300, r: 2, id: 'n6' },
 ];
 
-// Number of sample steps for orbital path calculation (smooth 60fps interpolation)
-const NUM_STEPS = 64;
+// Number of sample steps for orbital path calculation
+const NUM_STEPS = 32;
 
 // Orbit A Parameters: Tilted Ellipse -28deg, rx=120, ry=66
 const TILT_A_RAD = (-28 * Math.PI) / 180;
@@ -162,10 +168,13 @@ export function FinalCTAVisual({
   usage,
   priority,
   sweepTrigger = 0,
-  mouseOffset = { x: 0, y: 0 },
+  mouseOffset,
 }: FinalCTAVisualProps) {
   const shouldReduceMotion = useReducedMotion() === true;
+  const visualRef = useRef<HTMLDivElement>(null);
+  const isInView = useInView(visualRef, { amount: 0.1 });
   const [pulseActive, setPulseActive] = useState(false);
+  const [localMouseOffset, setLocalMouseOffset] = useState({ x: 0, y: 0 });
 
   // Trigger quick core pulse upon selection change
   useEffect(() => {
@@ -196,18 +205,35 @@ export function FinalCTAVisual({
   // Priority Icon (Orbit B)
   const PriorityIcon = priority ? PRIORITY_ICON_MAP[priority] : Zap;
 
-  // Pointer parallax offsets (subtle: 1.5px - 5px)
-  const parallaxCore = shouldReduceMotion ? { x: 0, y: 0 } : { x: mouseOffset.x * 4.5, y: mouseOffset.y * 4.5 };
-  const parallaxRings = shouldReduceMotion ? { x: 0, y: 0 } : { x: mouseOffset.x * 2.5, y: mouseOffset.y * 2.5 };
-  const parallaxField = shouldReduceMotion ? { x: 0, y: 0 } : { x: mouseOffset.x * 1.2, y: mouseOffset.y * 1.2 };
+  const activeOffset = mouseOffset?.x !== undefined ? mouseOffset : localMouseOffset;
+  const parallaxCore = shouldReduceMotion ? { x: 0, y: 0 } : { x: activeOffset.x * 3.5, y: activeOffset.y * 3.5 };
+  const parallaxRings = shouldReduceMotion ? { x: 0, y: 0 } : { x: activeOffset.x * 2, y: activeOffset.y * 2 };
+  const parallaxField = shouldReduceMotion ? { x: 0, y: 0 } : { x: activeOffset.x, y: activeOffset.y };
 
   return (
-    <div className="final-cta-visual" aria-hidden="true">
+    <div
+      ref={visualRef}
+      className="final-cta-visual"
+      aria-hidden="true"
+      onPointerMove={(e) => {
+        if (shouldReduceMotion) return;
+        const rect = e.currentTarget.getBoundingClientRect();
+        if (rect.width === 0 || rect.height === 0) return;
+        const x = ((e.clientX - rect.left) / rect.width - 0.5) * 2;
+        const y = ((e.clientY - rect.top) / rect.height - 0.5) * 2;
+        setLocalMouseOffset({ x, y });
+      }}
+      onPointerLeave={() => {
+        setLocalMouseOffset({ x: 0, y: 0 });
+      }}
+    >
       {/* Background Soft Radial Glow Orbs */}
       <motion.div
         className="final-cta-visual__orb-primary"
+        style={{
+          background: `radial-gradient(circle, ${currentTheme.primary} 0%, transparent 70%)`,
+        }}
         animate={{
-          backgroundColor: currentTheme.primary,
           scale: usage ? (priority ? 1.08 : 1.04) : 1,
           x: parallaxField.x * 2,
           y: parallaxField.y * 2,
@@ -216,8 +242,10 @@ export function FinalCTAVisual({
       />
       <motion.div
         className="final-cta-visual__orb-secondary"
+        style={{
+          background: `radial-gradient(circle, ${currentTheme.secondary} 0%, transparent 70%)`,
+        }}
         animate={{
-          backgroundColor: currentTheme.secondary,
           scale: priority ? 1.06 : 1,
           x: parallaxField.x * 1.5,
           y: parallaxField.y * 1.5,
@@ -234,27 +262,49 @@ export function FinalCTAVisual({
         transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
       >
         <svg viewBox="0 0 340 340" fill="none" xmlns="http://www.w3.org/2000/svg" className="final-cta-visual__svg">
+          <defs>
+            {/* Atmospheric Central Halo Glow */}
+            <radialGradient id="user-core-glow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#ffffff" stopOpacity="0.25" />
+              <stop offset="55%" stopColor="#ffffff" stopOpacity="0.08" />
+              <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Clean Monochromatic White Glass Node Gradient */}
+            <radialGradient id="node-white-bg" cx="35%" cy="30%" r="70%">
+              <stop offset="0%" stopColor="#ffffff" stopOpacity="0.28" />
+              <stop offset="45%" stopColor="#1e293b" stopOpacity="0.85" />
+              <stop offset="100%" stopColor="#0b0f19" stopOpacity="0.95" />
+            </radialGradient>
+
+            {/* Soft White Celestial Glow Filter */}
+            <filter id="cosmic-glow-white" x="-30%" y="-30%" width="160%" height="160%">
+              <feGaussianBlur stdDeviation="3.5" result="blur" />
+              <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
+          </defs>
+
           {/* Subtle Radial Coordinate Grid */}
           <motion.g
             animate={{ x: parallaxField.x, y: parallaxField.y }}
             transition={{ duration: 0.2, ease: 'linear' }}
           >
-            <line x1="170" y1="16" x2="170" y2="324" stroke="rgba(0, 0, 0, 0.08)" strokeDasharray="3 4" />
-            <line x1="16" y1="170" x2="324" y2="170" stroke="rgba(0, 0, 0, 0.08)" strokeDasharray="3 4" />
-            <circle cx="170" cy="170" r="154" stroke="rgba(0, 0, 0, 0.06)" strokeDasharray="4 6" />
+            <line x1="170" y1="16" x2="170" y2="324" stroke="rgba(255, 255, 255, 0.12)" strokeDasharray="3 4" />
+            <line x1="16" y1="170" x2="324" y2="170" stroke="rgba(255, 255, 255, 0.12)" strokeDasharray="3 4" />
+            <circle cx="170" cy="170" r="154" stroke="rgba(255, 255, 255, 0.12)" strokeDasharray="4 6" />
           </motion.g>
 
-          {/* Layer 5: Perimeter Data Nodes */}
+          {/* Layer 5: Perimeter Data Nodes (White Star Accents) */}
           {DATA_NODES.map((node) => (
             <motion.circle
               key={node.id}
               cx={node.cx}
               cy={node.cy}
               r={node.r}
-              fill="#1d1d1f"
+              fill="#ffffff"
               animate={{
-                opacity: pulseActive ? 0.4 : 0.12,
-                scale: pulseActive ? 1.3 : 1,
+                opacity: pulseActive ? 0.95 : 0.6,
+                scale: pulseActive ? 1.4 : 1,
               }}
               transition={{ duration: 0.3 }}
               style={{ transformOrigin: `${node.cx}px ${node.cy}px` }}
@@ -267,7 +317,7 @@ export function FinalCTAVisual({
             transition={{ duration: 0.2, ease: 'linear' }}
           >
             {/* Outer Subtle Boundary Ring */}
-            <circle cx="170" cy="170" r="148" stroke="rgba(0, 0, 0, 0.08)" />
+            <circle cx="170" cy="170" r="148" stroke="rgba(255, 255, 255, 0.14)" />
 
             {/* Orbit Track A: Usage Ellipse (Tilted -28deg) */}
             <ellipse
@@ -276,11 +326,11 @@ export function FinalCTAVisual({
               rx={RX_A}
               ry={RY_A}
               transform="rotate(-28, 170, 170)"
-              stroke={currentTheme.ring}
-              strokeWidth="1.2"
+              stroke="rgba(255, 255, 255, 0.45)"
+              strokeWidth="1.5"
               strokeDasharray="4 6"
               fill="none"
-              opacity={usage ? 0.55 : 0.25}
+              opacity={usage ? 0.85 : 0.5}
             />
 
             {/* Orbit Track B: Priority Ellipse (Tilted +36deg) */}
@@ -290,18 +340,18 @@ export function FinalCTAVisual({
               rx={RX_B}
               ry={RY_B}
               transform="rotate(36, 170, 170)"
-              stroke="rgba(0, 0, 0, 0.25)"
-              strokeWidth="1.2"
+              stroke="rgba(255, 255, 255, 0.35)"
+              strokeWidth="1.5"
               strokeDasharray="3 5"
               fill="none"
-              opacity={priority ? 0.5 : 0.22}
+              opacity={priority ? 0.85 : 0.5}
             />
 
             {/* Precision Crosshair Lines (Subtle reference) */}
-            <line x1="170" y1="124" x2="170" y2="138" stroke="rgba(0, 0, 0, 0.3)" strokeWidth="1" />
-            <line x1="170" y1="202" x2="170" y2="216" stroke="rgba(0, 0, 0, 0.3)" strokeWidth="1" />
-            <line x1="124" y1="170" x2="138" y2="170" stroke="rgba(0, 0, 0, 0.3)" strokeWidth="1" />
-            <line x1="202" y1="170" x2="216" y2="170" stroke="rgba(0, 0, 0, 0.3)" strokeWidth="1" />
+            <line x1="170" y1="124" x2="170" y2="138" stroke="rgba(255, 255, 255, 0.35)" strokeWidth="1" />
+            <line x1="170" y1="202" x2="170" y2="216" stroke="rgba(255, 255, 255, 0.35)" strokeWidth="1" />
+            <line x1="124" y1="170" x2="138" y2="170" stroke="rgba(255, 255, 255, 0.35)" strokeWidth="1" />
+            <line x1="202" y1="170" x2="216" y2="170" stroke="rgba(255, 255, 255, 0.35)" strokeWidth="1" />
           </motion.g>
 
           {/* Layer 3: Central User Core (Thin Animated Halo & Fixed Anchor) */}
@@ -314,14 +364,7 @@ export function FinalCTAVisual({
             transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
             style={{ transformOrigin: '170px 170px' }}
           >
-            {/* Subtle Diffuse Atmospheric Halo (Soft Radial Falloff) */}
-            <defs>
-              <radialGradient id="user-core-glow" cx="50%" cy="50%" r="50%">
-                <stop offset="0%" stopColor={currentTheme.primary} stopOpacity="0.4" />
-                <stop offset="55%" stopColor={currentTheme.primary} stopOpacity="0.12" />
-                <stop offset="100%" stopColor={currentTheme.primary} stopOpacity="0" />
-              </radialGradient>
-            </defs>
+            {/* Subtle Diffuse Atmospheric Halo */}
             <circle cx="170" cy="170" r="58" fill="url(#user-core-glow)" opacity="0.9" />
 
             {/* Secondary Outer Thin Ring (r=47) */}
@@ -329,7 +372,7 @@ export function FinalCTAVisual({
               cx="170"
               cy="170"
               r="47"
-              stroke="rgba(0, 0, 0, 0.1)"
+              stroke="rgba(255, 255, 255, 0.18)"
               strokeWidth="0.8"
               strokeDasharray="2 4"
               fill="none"
@@ -340,12 +383,12 @@ export function FinalCTAVisual({
               cx="170"
               cy="170"
               r="47"
-              stroke="rgba(0, 0, 0, 0.3)"
-              strokeWidth="1.2"
+              stroke="rgba(255, 255, 255, 0.45)"
+              strokeWidth="1.4"
               strokeLinecap="round"
               strokeDasharray="48 247"
               fill="none"
-              animate={shouldReduceMotion ? { rotate: 0 } : { rotate: -360 }}
+              animate={isInView && !shouldReduceMotion ? { rotate: -360 } : { rotate: 0 }}
               transition={
                 shouldReduceMotion
                   ? { duration: 0 }
@@ -359,7 +402,7 @@ export function FinalCTAVisual({
               cx="170"
               cy="170"
               r="39"
-              stroke="rgba(0, 0, 0, 0.15)"
+              stroke="rgba(255, 255, 255, 0.22)"
               strokeWidth="1"
               fill="none"
             />
@@ -369,12 +412,12 @@ export function FinalCTAVisual({
               cx="170"
               cy="170"
               r="39"
-              stroke={currentTheme.ring}
-              strokeWidth="1.6"
+              stroke="rgba(255, 255, 255, 0.85)"
+              strokeWidth="1.8"
               strokeLinecap="round"
               strokeDasharray="54 191"
               fill="none"
-              animate={shouldReduceMotion ? { rotate: 0 } : { rotate: 360 }}
+              animate={isInView && !shouldReduceMotion ? { rotate: 360 } : { rotate: 0 }}
               transition={
                 shouldReduceMotion
                   ? { duration: 0 }
@@ -388,33 +431,31 @@ export function FinalCTAVisual({
               cx="170"
               cy="170"
               r="34"
-              fill="rgba(13, 15, 18, 0.96)"
-              stroke="rgba(255, 255, 255, 0.28)"
-              strokeWidth="1.2"
+              fill="url(#node-white-bg)"
+              stroke="rgba(255, 255, 255, 0.85)"
+              strokeWidth="1.5"
             />
             <circle
               cx="170"
               cy="170"
               r="29"
-              fill="rgba(255, 255, 255, 0.03)"
-              stroke="rgba(255, 255, 255, 0.1)"
+              fill="rgba(255, 255, 255, 0.05)"
+              stroke="rgba(255, 255, 255, 0.28)"
               strokeWidth="0.8"
             />
 
-            {/* Center User Icon */}
-            <foreignObject x="157" y="157" width="26" height="26" className="final-cta-visual__user-icon-obj">
-              <div className="final-cta-visual__user-icon-wrapper">
-                <User className="final-cta-visual__user-icon" strokeWidth={2} />
-              </div>
-            </foreignObject>
+            {/* Center User Icon (Pure White) */}
+            <g transform="translate(158, 158)">
+              <User size={24} className="text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.95)] pointer-events-none" strokeWidth={2.2} />
+            </g>
           </motion.g>
 
-          {/* Layer 4: Orbiting Body A (Usage Node on Orbit A) */}
+          {/* Layer 4: Orbiting Body A (Usage Node on Orbit A - Crisp White) */}
           <motion.g
             animate={
-              shouldReduceMotion
-                ? { x: ORBIT_A_POINTS[16].x + parallaxRings.x, y: ORBIT_A_POINTS[16].y + parallaxRings.y }
-                : { x: ORBIT_A_X, y: ORBIT_A_Y }
+              isInView && !shouldReduceMotion
+                ? { x: ORBIT_A_X, y: ORBIT_A_Y }
+                : { x: ORBIT_A_POINTS[8].x + parallaxRings.x, y: ORBIT_A_POINTS[8].y + parallaxRings.y }
             }
             transition={
               shouldReduceMotion
@@ -422,50 +463,39 @@ export function FinalCTAVisual({
                 : { duration: 16, repeat: Infinity, ease: 'linear' }
             }
           >
-            {/* Soft Halo */}
-            <circle cx="0" cy="0" r="26" fill={currentTheme.coreGlow} opacity="0.25" />
+            {/* Soft Radiant Halo */}
+            <circle cx="0" cy="0" r="28" fill="rgba(255, 255, 255, 0.12)" filter="url(#cosmic-glow-white)" />
 
             {/* Usage Glass Node Body (~46px diameter) */}
             <circle
               cx="0"
               cy="0"
               r="22"
-              fill="rgba(13, 15, 18, 0.94)"
-              stroke="rgba(255, 255, 255, 0.35)"
-              strokeWidth="1.2"
+              fill="url(#node-white-bg)"
+              stroke="rgba(255, 255, 255, 0.9)"
+              strokeWidth="1.6"
             />
             <circle
               cx="0"
               cy="0"
               r="18"
-              fill="rgba(255, 255, 255, 0.03)"
-              stroke="rgba(255, 255, 255, 0.1)"
+              fill="none"
+              stroke="rgba(255, 255, 255, 0.35)"
               strokeWidth="1"
             />
 
-            {/* Usage Icon with smooth crossfade on selection change */}
-            <foreignObject x="-12" y="-12" width="24" height="24" className="final-cta-visual__orbit-icon-obj">
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={usage || 'default-usage'}
-                  className="final-cta-visual__orbit-icon-wrapper"
-                  initial={{ scale: 0.8, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  exit={{ scale: 0.8, opacity: 0 }}
-                  transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
-                >
-                  <UsageIcon className="final-cta-visual__orbit-icon" strokeWidth={2} />
-                </motion.div>
-              </AnimatePresence>
-            </foreignObject>
+            {/* Usage Moving Icon (Pure White) */}
+            <g transform="translate(-10, -10)">
+              <UsageIcon size={20} className="text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.95)] pointer-events-none" strokeWidth={2.2} />
+            </g>
           </motion.g>
 
-          {/* Layer 4: Orbiting Body B (Priority Node on Orbit B) */}
+          {/* Layer 4: Orbiting Body B (Priority Node on Orbit B - Crisp White) */}
           <motion.g
             animate={
-              shouldReduceMotion
-                ? { x: ORBIT_B_POINTS[16].x + parallaxRings.x, y: ORBIT_B_POINTS[16].y + parallaxRings.y }
-                : { x: ORBIT_B_X, y: ORBIT_B_Y }
+              isInView && !shouldReduceMotion
+                ? { x: ORBIT_B_X, y: ORBIT_B_Y }
+                : { x: ORBIT_B_POINTS[8].x + parallaxRings.x, y: ORBIT_B_POINTS[8].y + parallaxRings.y }
             }
             transition={
               shouldReduceMotion
@@ -473,42 +503,31 @@ export function FinalCTAVisual({
                 : { duration: 22, repeat: Infinity, ease: 'linear' }
             }
           >
-            {/* Soft Halo */}
-            <circle cx="0" cy="0" r="26" fill={currentTheme.coreGlow} opacity="0.22" />
+            {/* Soft Radiant Halo */}
+            <circle cx="0" cy="0" r="28" fill="rgba(255, 255, 255, 0.12)" filter="url(#cosmic-glow-white)" />
 
-            {/* Priority Glass Node Body (~46px diameter, identical size to Usage Node) */}
+            {/* Priority Glass Node Body (~46px diameter) */}
             <circle
               cx="0"
               cy="0"
               r="22"
-              fill="rgba(13, 15, 18, 0.94)"
-              stroke="rgba(255, 255, 255, 0.35)"
-              strokeWidth="1.2"
+              fill="url(#node-white-bg)"
+              stroke="rgba(255, 255, 255, 0.9)"
+              strokeWidth="1.6"
             />
             <circle
               cx="0"
               cy="0"
               r="18"
-              fill="rgba(255, 255, 255, 0.03)"
-              stroke="rgba(255, 255, 255, 0.1)"
+              fill="none"
+              stroke="rgba(255, 255, 255, 0.35)"
               strokeWidth="1"
             />
 
-            {/* Priority Icon with smooth crossfade on selection change */}
-            <foreignObject x="-12" y="-12" width="24" height="24" className="final-cta-visual__orbit-icon-obj">
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={priority || 'default-priority'}
-                  className="final-cta-visual__orbit-icon-wrapper"
-                  initial={{ scale: 0.8, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  exit={{ scale: 0.8, opacity: 0 }}
-                  transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
-                >
-                  <PriorityIcon className="final-cta-visual__orbit-icon" strokeWidth={2} />
-                </motion.div>
-              </AnimatePresence>
-            </foreignObject>
+            {/* Priority Moving Icon (Pure White) */}
+            <g transform="translate(-10, -10)">
+              <PriorityIcon size={20} className="text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.95)] pointer-events-none" strokeWidth={2.2} />
+            </g>
           </motion.g>
 
           {/* CTA Radial Focus Pulse (triggers on find button click) */}
@@ -517,11 +536,11 @@ export function FinalCTAVisual({
               key={sweepTrigger}
               cx="170"
               cy="170"
-              initial={{ r: 36, opacity: 0.8 }}
+              initial={{ r: 36, opacity: 0.85 }}
               animate={{ r: 155, opacity: 0 }}
               transition={{ duration: 0.55, ease: 'easeOut' }}
-              stroke="#38bdf8"
-              strokeWidth="2"
+              stroke="rgba(255, 255, 255, 0.85)"
+              strokeWidth="2.5"
               fill="none"
             />
           )}

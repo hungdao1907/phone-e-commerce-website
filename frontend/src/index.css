@@ -2,6 +2,12 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+@theme {
+  --color-otp-violet: #7c5cff;
+  --color-otp-teal: #2dd4bf;
+  --color-otp-card: #12152a;
+}
+
 @import "@fontsource-variable/geist";
 
 @custom-variant dark (&:is(.dark *));

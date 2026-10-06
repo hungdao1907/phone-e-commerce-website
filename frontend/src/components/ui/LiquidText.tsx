@@ -117,7 +117,9 @@ const Texts: React.FC<Pick<MorphingTextProps, "texts" | "morphTime" | "cooldownT
       <span
         className="absolute inset-0 flex items-center justify-center whitespace-nowrap text-center text-inherit"
         ref={text1Ref}
-      />
+      >
+        {texts && texts.length > 0 ? texts[0] : ""}
+      </span>
       <span
         className="absolute inset-0 flex items-center justify-center whitespace-nowrap text-center text-inherit"
         ref={text2Ref}

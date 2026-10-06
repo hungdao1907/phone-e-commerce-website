@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Package, DollarSign, ArrowRightLeft, Minus, Plus, CheckSquare, Square, MoreVertical, ArrowDownUp, ChevronLeft, ChevronRight, FileDown, FileUp, ListFilter, Eye, History, Edit3 } from 'lucide-react';
+import { Search, Package, DollarSign, ArrowRightLeft, Minus, Plus, CheckSquare, Square, MoreVertical, ArrowDownUp, ChevronLeft, ChevronRight, FileDown, FileUp, ListFilter, Eye, History, Edit3, Filter } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/store/authStore';
+import { AdminSelect } from '@/components/admin/common/AdminSelect';
 
 // --- TYPES ---
 interface ProductVariant {
@@ -257,36 +258,49 @@ export function Inventory() {
           />
         </div>
 
-        <div className="flex items-center gap-2">
-          <div className="relative">
-            <select value={categoryFilter} onChange={e => setCategoryFilter(e.target.value)} className="h-10 pl-3 pr-8 rounded-xl bg-slate-50 border border-slate-200 text-sm outline-none focus:border-emerald-500 focus:bg-white appearance-none text-slate-700">
-              <option value="all">Tất cả danh mục</option>
-              {categories.map(c => <option key={c} value={c}>{c}</option>)}
-            </select>
-            <ArrowDownUp className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
-          </div>
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Category Filter */}
+          <AdminSelect
+            value={categoryFilter}
+            onChange={setCategoryFilter}
+            options={[
+              { value: 'all', label: 'Tất cả danh mục' },
+              ...categories.map(c => ({ value: c, label: c }))
+            ]}
+            icon={<ListFilter className="w-3.5 h-3.5" />}
+            menuWidth="w-56"
+            searchable={categories.length > 5}
+          />
 
-          <div className="relative">
-            <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="h-10 pl-3 pr-8 rounded-xl bg-slate-50 border border-slate-200 text-sm outline-none focus:border-emerald-500 focus:bg-white appearance-none text-slate-700">
-              <option value="all">Tất cả trạng thái</option>
-              <option value="in_stock">Còn hàng</option>
-              <option value="low_stock">Sắp hết hàng</option>
-              <option value="out_of_stock">Hết hàng</option>
-            </select>
-            <ListFilter className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
-          </div>
+          {/* Status Filter */}
+          <AdminSelect
+            value={statusFilter}
+            onChange={setStatusFilter}
+            options={[
+              { value: 'all', label: 'Tất cả trạng thái' },
+              { value: 'in_stock', label: 'Còn hàng', dotColor: 'bg-emerald-500' },
+              { value: 'low_stock', label: 'Sắp hết hàng', dotColor: 'bg-amber-500' },
+              { value: 'out_of_stock', label: 'Hết hàng', dotColor: 'bg-rose-500' },
+            ]}
+            icon={<Filter className="w-3.5 h-3.5" />}
+            menuWidth="w-48"
+          />
 
-          <div className="relative">
-            <select value={sortOption} onChange={e => setSortOption(e.target.value)} className="h-10 pl-3 pr-8 rounded-xl bg-slate-50 border border-slate-200 text-sm outline-none focus:border-emerald-500 focus:bg-white appearance-none text-slate-700">
-              <option value="updated_desc">Mới cập nhật</option>
-              <option value="stock_asc">Tồn kho thấp → cao</option>
-              <option value="stock_desc">Tồn kho cao → thấp</option>
-              <option value="value_desc">Giá trị tồn kho cao → thấp</option>
-              <option value="name_asc">Tên A → Z</option>
-              <option value="name_desc">Tên Z → A</option>
-            </select>
-            <ArrowDownUp className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
-          </div>
+          {/* Sort Filter */}
+          <AdminSelect
+            value={sortOption}
+            onChange={setSortOption}
+            options={[
+              { value: 'updated_desc', label: 'Mới cập nhật' },
+              { value: 'stock_asc', label: 'Tồn kho thấp → cao' },
+              { value: 'stock_desc', label: 'Tồn kho cao → thấp' },
+              { value: 'value_desc', label: 'Giá trị tồn kho cao → thấp' },
+              { value: 'name_asc', label: 'Tên A → Z' },
+              { value: 'name_desc', label: 'Tên Z → A' },
+            ]}
+            icon={<ArrowDownUp className="w-3.5 h-3.5" />}
+            menuWidth="w-56"
+          />
         </div>
       </div>
 
@@ -435,13 +449,20 @@ export function Inventory() {
           </div>
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
-              <span className="text-slate-500">Hiển thị:</span>
-              <select value={limit} onChange={e => { setLimit(Number(e.target.value)); setPage(1); }} className="bg-white border border-slate-200 rounded-lg px-2 py-1 outline-none focus:border-emerald-500 text-slate-700 shadow-sm text-sm">
-                <option value={10}>10</option>
-                <option value={25}>25</option>
-                <option value={50}>50</option>
-                <option value={100}>100</option>
-              </select>
+              <span className="text-slate-500 text-xs">Hiển thị:</span>
+              <AdminSelect
+                value={String(limit)}
+                onChange={v => { setLimit(Number(v)); setPage(1); }}
+                options={[
+                  { value: '10', label: '10' },
+                  { value: '25', label: '25' },
+                  { value: '50', label: '50' },
+                  { value: '100', label: '100' },
+                ]}
+                size="sm"
+                menuWidth="w-28"
+                highlightActive={false}
+              />
             </div>
             <div className="flex items-center gap-1">
               <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="p-1 rounded-lg hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"><ChevronLeft className="w-5 h-5 text-slate-600" /></button>

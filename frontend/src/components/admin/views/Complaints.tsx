@@ -3,6 +3,7 @@ import { useAuthStore } from '@/store/authStore';
 import { MessageSquareWarning, AlertTriangle, CheckCircle, Clock, XCircle, ChevronRight, Search, Filter } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ComplaintDetail } from './ComplaintDetail'; // We will create this next
+import { AdminSelect } from '@/components/admin/common/AdminSelect';
 
 const STATUS_MAP: Record<string, { label: string, color: string, bg: string, icon: React.ElementType }> = {
   PENDING: { label: 'Chờ xử lý', color: 'text-amber-700', bg: 'bg-amber-50 border-amber-200', icon: Clock },
@@ -110,20 +111,22 @@ export function Complaints() {
 
       {/* FILTERS */}
       <div className="flex flex-wrap items-center gap-4 shrink-0">
-        <div className="flex items-center gap-2 bg-white border border-slate-200 shadow-sm rounded-xl px-4 py-2">
-          <Filter className="w-4 h-4 text-slate-400" />
-          <select 
-            value={statusFilter} 
-            onChange={e => { setStatusFilter(e.target.value); setPage(1); }}
-            className="bg-transparent text-sm text-slate-800 outline-none cursor-pointer"
-          >
-            <option value="" className="text-slate-900">Tất cả trạng thái</option>
-            <option value="PENDING" className="text-slate-900">Chờ xử lý</option>
-            <option value="PROCESSING" className="text-slate-900">Đang xử lý</option>
-            <option value="RESOLVED" className="text-slate-900">Đã giải quyết</option>
-            <option value="REJECTED" className="text-slate-900">Từ chối</option>
-          </select>
-        </div>
+        <AdminSelect
+          value={statusFilter}
+          onChange={(v) => {
+            setStatusFilter(v);
+            setPage(1);
+          }}
+          options={[
+            { value: '', label: 'Tất cả trạng thái' },
+            { value: 'PENDING', label: 'Chờ xử lý', dotColor: 'bg-amber-500' },
+            { value: 'PROCESSING', label: 'Đang xử lý', dotColor: 'bg-blue-500' },
+            { value: 'RESOLVED', label: 'Đã giải quyết', dotColor: 'bg-emerald-500' },
+            { value: 'REJECTED', label: 'Từ chối', dotColor: 'bg-rose-500' },
+          ]}
+          icon={<Filter className="w-3.5 h-3.5" />}
+          menuWidth="w-52"
+        />
       </div>
 
       {/* LIST */}

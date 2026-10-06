@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Search, Filter, RefreshCw, CreditCard, ExternalLink, CheckCircle2, AlertTriangle, AlertCircle, Eye, Link as LinkIcon, Banknote } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/store/authStore';
+import { AdminSelect } from '@/components/admin/common/AdminSelect';
 
 const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
@@ -162,17 +163,19 @@ export function BankHistoryPanel({ isOpen, onClose }: BankHistoryPanelProps) {
                     className="w-full h-10 pl-9 pr-4 rounded-xl bg-slate-50 border border-slate-200 text-sm text-slate-900 outline-none focus:border-emerald-500 focus:bg-white transition-colors placeholder:text-slate-400 shadow-sm"
                   />
                 </div>
-                <select
+                <AdminSelect
                   value={filterStatus}
-                  onChange={e => setFilterStatus(e.target.value)}
-                  className="h-10 px-4 rounded-xl bg-slate-50 border border-slate-200 text-sm text-slate-700 outline-none focus:border-emerald-500 focus:bg-white shadow-sm"
-                >
-                  <option value="all">Tất cả trạng thái</option>
-                  <option value="UNMATCHED">Chưa đối soát</option>
-                  <option value="MATCHED">Đã đối soát</option>
-                  <option value="INVALID_AMOUNT">Sai số tiền</option>
-                  <option value="INVALID_CONTENT">Sai cú pháp</option>
-                </select>
+                  onChange={setFilterStatus}
+                  options={[
+                    { value: 'all', label: 'Tất cả trạng thái' },
+                    { value: 'UNMATCHED', label: 'Chưa đối soát', dotColor: 'bg-slate-400' },
+                    { value: 'MATCHED', label: 'Đã đối soát', dotColor: 'bg-emerald-500' },
+                    { value: 'INVALID_AMOUNT', label: 'Sai số tiền', dotColor: 'bg-amber-500' },
+                    { value: 'INVALID_CONTENT', label: 'Sai cú pháp', dotColor: 'bg-rose-500' },
+                  ]}
+                  icon={<Filter className="w-3.5 h-3.5" />}
+                  menuWidth="w-48"
+                />
               </div>
 
               {/* TABLE */}

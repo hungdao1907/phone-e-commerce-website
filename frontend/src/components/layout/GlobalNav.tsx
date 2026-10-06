@@ -21,6 +21,7 @@ import {
   PhoneCall,
   MessageCircle,
   MapPin,
+  PackageSearch,
 } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
 import { useAuthStore } from '../../store/authStore';
@@ -293,43 +294,43 @@ export function GlobalNav() {
 
     // 3. Service / Support feature icons
     if (n.includes('bảo hành') || n.includes('đổi trả')) {
-      return <ShieldCheck className="w-5 h-5 text-emerald-600 transition-transform duration-200 group-hover:scale-110" />;
+      return <ShieldCheck className="w-5 h-5 text-black transition-transform duration-200 group-hover:scale-110" />;
     }
     if (n.includes('giao hàng') || n.includes('vận chuyển') || n.includes('đơn hàng')) {
-      return <Truck className="w-5 h-5 text-blue-600 transition-transform duration-200 group-hover:scale-110" />;
+      return <Truck className="w-5 h-5 text-black transition-transform duration-200 group-hover:scale-110" />;
     }
     if (n.includes('trả góp') || n.includes('thanh toán')) {
-      return <CreditCard className="w-5 h-5 text-purple-600 transition-transform duration-200 group-hover:scale-110" />;
+      return <CreditCard className="w-5 h-5 text-black transition-transform duration-200 group-hover:scale-110" />;
     }
     if (n.includes('sửa chữa') || n.includes('dịch vụ') || n.includes('bảo dưỡng')) {
-      return <Wrench className="w-5 h-5 text-amber-600 transition-transform duration-200 group-hover:scale-110" />;
+      return <Wrench className="w-5 h-5 text-black transition-transform duration-200 group-hover:scale-110" />;
     }
     if (n.includes('hotline') || n.includes('tổng đài') || n.includes('cskh')) {
-      return <PhoneCall className="w-5 h-5 text-rose-600 transition-transform duration-200 group-hover:scale-110" />;
+      return <PhoneCall className="w-5 h-5 text-black transition-transform duration-200 group-hover:scale-110" />;
     }
     if (n.includes('chat') || n.includes('tư vấn') || n.includes('trực tuyến')) {
-      return <MessageCircle className="w-5 h-5 text-sky-600 transition-transform duration-200 group-hover:scale-110" />;
+      return <MessageCircle className="w-5 h-5 text-black transition-transform duration-200 group-hover:scale-110" />;
     }
     if (n.includes('cửa hàng') || n.includes('showroom') || n.includes('hệ thống')) {
-      return <MapPin className="w-5 h-5 text-red-600 transition-transform duration-200 group-hover:scale-110" />;
+      return <MapPin className="w-5 h-5 text-black transition-transform duration-200 group-hover:scale-110" />;
     }
     if (n.includes('câu hỏi') || n.includes('faq') || n.includes('thường gặp')) {
-      return <HelpCircle className="w-5 h-5 text-teal-600 transition-transform duration-200 group-hover:scale-110" />;
+      return <HelpCircle className="w-5 h-5 text-black transition-transform duration-200 group-hover:scale-110" />;
     }
     if (n.includes('phụ kiện') || n.includes('tai nghe') || n.includes('airpods')) {
-      return <Headphones className="w-5 h-5 text-neutral-700 group-hover:text-black transition-colors" />;
+      return <Headphones className="w-5 h-5 text-black group-hover:text-black transition-colors" />;
     }
     if (n.includes('hỗ trợ') || n.includes('help') || n.includes('trợ giúp')) {
-      return <HelpCircle className="w-5 h-5 text-neutral-700 group-hover:text-black transition-colors" />;
+      return <HelpCircle className="w-5 h-5 text-black group-hover:text-black transition-colors" />;
     }
     if (n.includes('cộng đồng') || n.includes('users') || n.includes('liên hệ')) {
-      return <Users className="w-5 h-5 text-neutral-700 group-hover:text-black transition-colors" />;
+      return <Users className="w-5 h-5 text-black group-hover:text-black transition-colors" />;
     }
     if (n.includes('mới nhất') || n.includes('khám phá')) {
       return <Sparkles className="w-5 h-5 text-amber-500 transition-colors" />;
     }
 
-    return <Smartphone className="w-5 h-5 text-neutral-700 group-hover:text-black transition-colors" />;
+    return <Smartphone className="w-5 h-5 text-black group-hover:text-black transition-colors" />;
   };
 
   const checkIsActive = (item: any) => {
@@ -404,6 +405,19 @@ export function GlobalNav() {
 
             {/* Utility Icons on the far right */}
             <div className="flex items-center space-x-5 ml-6">
+              <Link
+                to="/tra-cuu-don-hang"
+                className={`nav-glow-link transition-colors flex items-center justify-center ${
+                  location.pathname === '/tra-cuu-don-hang'
+                    ? 'text-black drop-shadow-[0_0_8px_rgba(0,0,0,0.4)]'
+                    : 'hover:text-black'
+                }`}
+                title="Tra cứu đơn hàng"
+                aria-label="Tra cứu đơn hàng"
+              >
+                <PackageSearch className="w-[18px] h-[18px]" />
+              </Link>
+
               <button
                 onClick={() => {
                   setActiveMenu(null);
@@ -463,6 +477,19 @@ export function GlobalNav() {
 
           {/* Mobile Right Controls (Visible only on mobile) */}
           <div className="md:hidden flex items-center space-x-4">
+            <Link
+              to="/tra-cuu-don-hang"
+              className={`nav-glow-link transition-colors flex items-center justify-center ${
+                location.pathname === '/tra-cuu-don-hang'
+                  ? 'text-black drop-shadow-[0_0_8px_rgba(0,0,0,0.4)]'
+                  : 'hover:text-black'
+              }`}
+              title="Tra cứu đơn hàng"
+              aria-label="Tra cứu đơn hàng"
+            >
+              <PackageSearch className="w-[18px] h-[18px]" />
+            </Link>
+
             <button
               onClick={() => {
                 setActiveMenu(null);
@@ -590,6 +617,14 @@ export function GlobalNav() {
                 {item.name}
               </Link>
             ))}
+            <Link
+              to="/tra-cuu-don-hang"
+              className="flex items-center gap-2.5 py-2.5 text-neutral-200 hover:text-white border-t border-neutral-800 pt-3"
+              onClick={() => toggleMobileMenu()}
+            >
+              <PackageSearch className="w-4 h-4 text-neutral-400" />
+              <span>Tra cứu đơn hàng</span>
+            </Link>
           </div>
         )}
         {/* Search Modal Overlay */}

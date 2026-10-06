@@ -49,7 +49,7 @@ const STORIES: TechnologyStory[] = [
 
 export function WaveGallery() {
   return (
-    <section id="home-wave-gallery" data-home-section="home-wave-gallery" className="wave-gallery" aria-labelledby="wave-gallery-title">
+    <section id="home-wave-gallery" data-home-section="home-wave-gallery" className="wave-gallery bg-white" aria-labelledby="wave-gallery-title">
       <div className="wave-gallery__grid">
         <div className="wave-gallery__editorial">
           <h2 id="wave-gallery-title">

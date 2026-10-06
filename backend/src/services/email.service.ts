@@ -89,3 +89,49 @@ export const sendOrderConfirmedEmail = async (customerEmail: string, customerNam
     console.error('Error sending order confirmed email:', error);
   }
 };
+
+export const sendTrackingOtpEmail = async (customerEmail: string, customerName: string, orderCode: string, otp: string) => {
+  try {
+    const htmlContent = `
+      <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 520px; margin: 0 auto; padding: 32px 24px; border: 1px solid #e5e7eb; border-radius: 16px; background-color: #ffffff; color: #1f2937;">
+        <div style="text-align: center; margin-bottom: 24px;">
+          <h2 style="margin: 0; font-size: 20px; font-weight: 700; color: #111827;">TRA CỨU ĐƠN HÀNG</h2>
+          <p style="margin: 6px 0 0; font-size: 13px; color: #6b7280;">Mã xác thực bảo mật tra cứu thông tin đơn hàng</p>
+        </div>
+        
+        <p style="font-size: 15px; margin: 0 0 12px;">Xin chào <strong>${customerName}</strong>,</p>
+        <p style="font-size: 14px; line-height: 1.6; color: #4b5563; margin: 0 0 20px;">
+          Bạn vừa yêu cầu tra cứu thông tin và hành trình giao hàng cho mã đơn: <strong>#${orderCode}</strong>.
+          Vui lòng nhập mã OTP dưới đây để hoàn tất bước xác thực bảo mật:
+        </p>
+
+        <div style="background-color: #f3f4f6; border-radius: 12px; padding: 20px; text-align: center; margin: 20px 0; border: 1px solid #e5e7eb;">
+          <span style="font-size: 32px; font-weight: 800; letter-spacing: 8px; color: #000000; font-family: ui-monospace, Menlo, Consolas, monospace;">${otp}</span>
+          <p style="margin: 8px 0 0; font-size: 12px; color: #6b7280;">Mã xác thực có hiệu lực trong 5 phút</p>
+        </div>
+
+        <p style="font-size: 13px; line-height: 1.5; color: #6b7280; margin: 0 0 24px;">
+          Vì lý do bảo mật quyền riêng tư cá nhân và thông tin đơn hàng, mã này chỉ cung cấp cho chủ sở hữu đơn hàng. Nếu bạn không yêu cầu tra cứu, xin hãy bỏ qua email này.
+        </p>
+
+        <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0;" />
+        <p style="font-size: 12px; color: #9ca3af; text-align: center; margin: 0;">AppleWeb Store • Hệ thống xác thực đơn hàng tự động</p>
+      </div>
+    `;
+
+    if (process.env.SMTP_EMAIL && process.env.SMTP_PASSWORD) {
+      await transporter.sendMail({
+        from: `"AppleWeb Store" <${process.env.SMTP_EMAIL}>`,
+        to: customerEmail,
+        subject: `[AppleWeb] Mã xác thực OTP tra cứu đơn hàng #${orderCode}`,
+        html: htmlContent,
+      });
+      console.log(`[Email Service] Tracking OTP sent to ${customerEmail}`);
+    } else {
+      console.log(`[Email Service - Dev fallback] Tracking OTP for Order #${orderCode} sent to ${customerEmail}: ${otp}`);
+    }
+  } catch (error) {
+    console.error('Error sending tracking OTP email:', error);
+  }
+};
+

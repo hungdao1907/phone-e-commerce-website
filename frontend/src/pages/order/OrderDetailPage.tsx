@@ -4,6 +4,7 @@ import { ArrowLeft, Package, MapPin, CreditCard, UploadCloud, CheckCircle2, Aler
 import { useAuthStore } from '../../store/authStore';
 import { OrderDeliveryTimeline, OrderStatus } from '../../components/order/OrderDeliveryTimeline';
 import { cn } from '../../lib/utils';
+import { resolveMediaUrl } from '../../utils/media';
 
 const PAYMENT_STATUS_MAP: Record<string, { label: string, color: string, bg: string, icon: any }> = {
   unpaid: { label: 'Chưa thanh toán', color: 'text-orange-500', bg: 'bg-orange-50', icon: AlertCircle },
@@ -268,11 +269,22 @@ export function OrderDetailPage() {
               </h2>
               <div className="divide-y divide-neutral-100">
                 {order.items?.map((item: any, idx: number) => {
-                  const imageSrc = item.variant?.product?.image || item.productImage || 'https://via.placeholder.com/150';
+                  const imageSrc = resolveMediaUrl(item.variant?.product?.image || item.productImage);
                   return (
                     <div key={idx} className="py-4 flex gap-4">
-                      <div className="w-16 h-16 bg-[#f5f7fb] rounded-xl flex items-center justify-center p-2 border border-neutral-100 shrink-0">
-                        <img src={imageSrc} alt={item.productName} className="w-full h-full object-contain" />
+                      <div className="w-16 h-16 bg-[#f5f7fb] rounded-xl flex items-center justify-center p-2 border border-neutral-100 shrink-0 overflow-hidden text-neutral-400">
+                        {imageSrc ? (
+                          <img
+                            src={imageSrc}
+                            alt={item.productName}
+                            className="w-full h-full object-contain"
+                            onError={(e) => {
+                              (e.target as HTMLElement).style.display = 'none';
+                            }}
+                          />
+                        ) : (
+                          <Package className="w-6 h-6" />
+                        )}
                       </div>
                       <div className="flex-1 flex flex-col justify-center min-w-0">
                         <h3 className="text-sm font-bold text-neutral-900 truncate">{item.productName}</h3>

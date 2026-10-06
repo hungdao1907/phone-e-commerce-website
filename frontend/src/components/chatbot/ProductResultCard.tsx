@@ -20,12 +20,13 @@ export function ProductResultCard({ product }: ProductResultCardProps) {
   return (
     <Link
       to={`/product/${product.id}`}
-      className="group relative flex flex-col w-64 flex-shrink-0 bg-white rounded-2xl border border-neutral-200/90 shadow-[0_2px_10px_rgba(0,0,0,0.04)] hover:shadow-[0_10px_25px_rgba(0,0,0,0.1)] hover:border-blue-400/60 transition-all duration-300 overflow-hidden text-left"
+      draggable={false}
+      className="group relative flex flex-col w-[235px] sm:w-[245px] flex-shrink-0 bg-white rounded-2xl border border-neutral-200/90 shadow-[0_2px_8px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_20px_rgba(0,0,0,0.09)] hover:border-blue-400/60 transition-all duration-300 overflow-hidden text-left select-none cursor-pointer"
     >
       {/* Product Image Area */}
-      <div className="relative aspect-[4/3] bg-gradient-to-b from-neutral-50 to-neutral-100/70 flex items-center justify-center p-3 overflow-hidden">
+      <div className="relative aspect-[4/3] bg-gradient-to-b from-neutral-50 to-neutral-100/70 flex items-center justify-center p-3 overflow-hidden select-none">
         {/* Top Badges */}
-        <div className="absolute top-2.5 left-2.5 z-10 flex items-center gap-1.5">
+        <div className="absolute top-2.5 left-2.5 z-10 flex items-center gap-1.5 pointer-events-none">
           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-white/90 backdrop-blur-md text-blue-600 shadow-xs border border-blue-100">
             <Sparkles className="w-2.5 h-2.5" />
             VN/A
@@ -41,11 +42,12 @@ export function ProductResultCard({ product }: ProductResultCardProps) {
           <img
             src={imageUrl}
             alt={product.name}
-            className="w-full h-full object-contain mix-blend-multiply group-hover:scale-108 transition-transform duration-500 ease-out"
+            draggable={false}
+            className="w-full h-full object-contain mix-blend-multiply group-hover:scale-105 transition-transform duration-500 ease-out pointer-events-none select-none"
             loading="lazy"
           />
         ) : (
-          <div className="w-14 h-14 text-neutral-300 flex items-center justify-center">
+          <div className="w-14 h-14 text-neutral-300 flex items-center justify-center pointer-events-none select-none">
             <ShoppingBag className="w-10 h-10 stroke-[1.5]" />
           </div>
         )}

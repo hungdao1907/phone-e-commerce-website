@@ -205,9 +205,50 @@
 .admin-shell [class*="text-white/30"],
 .admin-shell [class*="text-white/20"] { color: #94a3b8 !important; }
 
+/* ==========================================================================
+   ENHANCED ADMIN DROPDOWN & SELECT SYSTEM
+   ========================================================================== */
+.admin-shell select {
+  background-color: #ffffff !important;
+  border: 1px solid var(--admin-border) !important;
+  border-radius: 0.75rem !important;
+  color: var(--admin-text-primary) !important;
+  font-size: 0.875rem;
+  font-weight: 500;
+  padding: 0.5rem 2.25rem 0.5rem 0.875rem !important;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 0.75rem center !important;
+  background-size: 1rem 1rem !important;
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  cursor: pointer;
+  transition: border-color 150ms ease, box-shadow 150ms ease, background-color 150ms ease;
+}
+
+.admin-shell select:hover {
+  border-color: #cbd5e1 !important;
+  background-color: #f8fafc !important;
+}
+
+.admin-shell select:focus {
+  border-color: #10b981 !important;
+  background-color: #ffffff !important;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15) !important;
+  outline: none !important;
+}
+
+.admin-shell select option,
+.admin-shell select optgroup {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  padding: 8px 12px;
+  font-weight: 500;
+}
+
 /* Forms, tables, and popovers should remain white even in legacy views. */
 .admin-shell input:not([type="checkbox"]):not([type="radio"]),
-.admin-shell select,
 .admin-shell textarea {
   background-color: #ffffff !important;
   border-color: var(--admin-border) !important;

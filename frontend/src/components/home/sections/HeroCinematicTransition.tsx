@@ -47,12 +47,12 @@ export function HeroCinematicTransition({ isIntroPlaying = false }: HeroCinemati
       ref={transitionRef}
       id="home-hero"
       data-home-section="home-hero"
-      className="hero-cinematic-transition relative -mt-[44px] h-[200svh] bg-[#030712]"
+      className="hero-cinematic-transition relative -mt-[44px] h-[200svh] bg-white"
       aria-label="Chuyển cảnh từ giới thiệu sang phim thương hiệu"
     >
       {/* 1. HERO STAGE — Stable Sticky Background Layer (Floating Product Gallery Hero) */}
       <div
-        className="hero-cinematic-transition__hero-stage sticky top-0 z-0 h-[100svh] overflow-hidden bg-[#030712]"
+        className="hero-cinematic-transition__hero-stage sticky top-0 z-0 h-[100svh] overflow-hidden bg-white"
       >
         <div className="absolute inset-0 pt-[44px]">
           <HeroSection scrollYProgress={scrollYProgress} isIntroPlaying={isIntroPlaying} />

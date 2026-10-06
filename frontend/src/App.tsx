@@ -23,6 +23,7 @@ import { CheckoutPage } from './pages/checkout/CheckoutPage';
 import { PaymentPage } from './pages/checkout/PaymentPage';
 import { OrderSuccessPage } from './pages/checkout/OrderSuccessPage';
 import { OrderDetailPage } from './pages/order/OrderDetailPage';
+import { OrderTrackingPage } from './pages/order/OrderTrackingPage';
 
 const WatchPage = lazy(() =>
   import('./pages/watch/WatchPage').then(({ WatchPage: Page }) => ({ default: Page })),
@@ -166,6 +167,7 @@ export default function App() {
                 <Route path="/checkout" element={<CheckoutPage />} />
                 <Route path="/checkout/payment" element={<PaymentPage />} />
                 <Route path="/order-success" element={<OrderSuccessPage />} />
+                <Route path="/tra-cuu-don-hang" element={<OrderTrackingPage />} />
 
                 {/* Legacy / Category Aliases & Redirects */}
                 <Route path="/iphone" element={<Navigate to="/phone/iphone" replace />} />
