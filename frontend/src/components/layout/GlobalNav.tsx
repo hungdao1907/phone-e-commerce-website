@@ -1,5 +1,7 @@
 import React, { useState, useRef, useEffect, useLayoutEffect, useMemo } from 'react';
 import { MorphIcon } from 'morphicons/react';
+import { LottieIcon } from '@/components/ui/LottieIcon';
+import bagAnimation from '../../../public/lottie/bag.json';
 import { Menu, X, Search as SearchIcon } from 'lucide';
 import {
   ShoppingBag,
@@ -39,6 +41,7 @@ export function GlobalNav() {
   const { mobileMenuOpen, toggleMobileMenu } = useAppStore();
   const [activeMenu, setActiveMenu] = useState<any | null>(null);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
   const previousMenuRef = useRef<any | null>(null);
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -56,6 +59,14 @@ export function GlobalNav() {
 
   const items = useCartStore((state: any) => state.items);
   const cartItemCount = items.reduce((total: number, item: any) => total + item.quantity, 0);
+
+  // Trigger animation when cart items change
+  useEffect(() => {
+    if (cartItemCount <= 0) return;
+    setIsPlaying(true);
+    const timer = setTimeout(() => setIsPlaying(false), 1500);
+    return () => clearTimeout(timer);
+  }, [cartItemCount]);
 
   // Fetch Categories from Database
   const [categories, setCategories] = useState<any[]>([]);
@@ -411,6 +422,31 @@ export function GlobalNav() {
             <div className="flex items-center space-x-5 ml-6">
               <button
                 onClick={() => {
+                  setIsPlaying(true);
+                  setTimeout(() => setIsPlaying(false), 1500);
+                  useAppStore.getState().setCartDrawerOpen(true);
+                }}
+                className="relative nav-glow-link hover:text-black transition-colors block px-2 py-1"
+                aria-label="Giỏ hàng"
+                onMouseEnter={() => setIsPlaying(true)}
+                onMouseLeave={() => setIsPlaying(false)}
+              >
+                <div className="relative flex items-center justify-center pointer-events-none w-[18px] h-[18px]">
+                  <LottieIcon
+                    animationData={bagAnimation}
+                    loop={false}
+                    playing={isPlaying}
+                  />
+                  {cartItemCount > 0 && (
+                    <span className={`absolute -top-3 -right-3 min-w-[16px] h-[16px] px-1 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center transition-all duration-300 origin-center ${isPlaying ? 'scale-110 -rotate-12' : 'scale-100 rotate-0'}`}>
+                      {cartItemCount}
+                    </span>
+                  )}
+                </div>
+              </button>
+
+              <button
+                onClick={() => {
                   setActiveMenu(null);
                   setIsSearchOpen((prev) => !prev);
                 }}
@@ -486,6 +522,31 @@ export function GlobalNav() {
 
           {/* Mobile Right Controls (Visible only on mobile) */}
           <div className="md:hidden flex items-center space-x-4">
+            <button
+              onClick={() => {
+                setIsPlaying(true);
+                setTimeout(() => setIsPlaying(false), 1500);
+                useAppStore.getState().setCartDrawerOpen(true);
+              }}
+              className="relative nav-glow-link hover:text-black transition-colors block px-1"
+              aria-label="Giỏ hàng"
+              onMouseEnter={() => setIsPlaying(true)}
+              onMouseLeave={() => setIsPlaying(false)}
+            >
+              <div className="relative flex items-center justify-center pointer-events-none w-[18px] h-[18px]">
+                <LottieIcon
+                  animationData={bagAnimation}
+                  loop={false}
+                  playing={isPlaying}
+                />
+                {cartItemCount > 0 && (
+                  <span className={`absolute -top-3 -right-3 min-w-[16px] h-[16px] px-1 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center transition-all duration-300 origin-center ${isPlaying ? 'scale-110 -rotate-12' : 'scale-100 rotate-0'}`}>
+                    {cartItemCount}
+                  </span>
+                )}
+              </div>
+            </button>
+
             <button
               onClick={() => {
                 setActiveMenu(null);

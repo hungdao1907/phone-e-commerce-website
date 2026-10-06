@@ -63,7 +63,7 @@ const ProductsFilterPage = lazy(() =>
 const queryClient = new QueryClient();
 
 import { CartDrawer } from './components/cart/CartDrawer';
-import { FloatingCartButton } from './components/cart/FloatingCartButton';
+// FloatingCartButton removed
 import { ChatWidget } from './components/chatbot/ChatWidget';
 import { readHomeSectionReturn } from './lib/homeSectionHistory';
 
@@ -111,7 +111,6 @@ function MainLayout() {
         <RouteScrollManager />
         <GlobalNav />
         <CartDrawer />
-        <FloatingCartButton />
         <ChatWidget />
         <Outlet />
         <Footer />

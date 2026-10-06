@@ -3,6 +3,7 @@ import { create } from 'zustand';
 interface DeliveryInfo {
   fullName: string;
   phone: string;
+  email: string;
   city: string;
   cityCode?: number;
   district: string;
@@ -34,6 +35,7 @@ interface CheckoutState {
 const defaultDeliveryInfo: DeliveryInfo = {
   fullName: '',
   phone: '',
+  email: '',
   city: '',
   district: '',
   ward: '',

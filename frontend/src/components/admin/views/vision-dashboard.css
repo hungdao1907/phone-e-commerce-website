@@ -1,0 +1,45 @@
+/* Import 1 lần trong main.tsx:  import './vision-dashboard.css' */
+.vd {
+  --bg-base:#060B26; --bg-deep:#0F1535; --card-inner:#0B1030;
+  --primary:#0075FF; --info:#2CD9FF; --violet:#4318FF;
+  --success:#01B574; --warning:#FFB547; --danger:#E31A1A;
+  --text:#fff; --muted:#A0AEC0; --line:rgba(255,255,255,.08);
+  min-height:100vh; padding:24px; color:var(--text);
+  font-family:'Plus Jakarta Sans','Inter',system-ui,sans-serif;
+  background:
+    radial-gradient(ellipse at 85% 100%, rgba(67,24,255,.5), transparent 55%),
+    radial-gradient(ellipse at 15% 100%, rgba(0,117,255,.25), transparent 50%),
+    linear-gradient(180deg,var(--bg-base),var(--bg-deep));
+  background-attachment:fixed;
+}
+.vd-card{
+  background:linear-gradient(127deg,rgba(6,11,40,.94) 28%,rgba(10,14,35,.49) 91%);
+  border:1px solid var(--line); border-radius:20px; padding:20px;
+  backdrop-filter:blur(20px);
+}
+.vd-inner{background:var(--card-inner);border-radius:14px;padding:12px 14px}
+.vd-grid-stats{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+.vd-grid-main{display:grid;gap:16px;margin-top:16px;grid-template-columns:1.4fr 1fr}
+.vd-grid-bottom{display:grid;gap:16px;margin-top:16px;grid-template-columns:1.6fr 1fr}
+@media(max-width:1024px){.vd-grid-main,.vd-grid-bottom{grid-template-columns:1fr}}
+.vd-label{color:var(--muted);font-size:13px}
+.vd-value{font-size:26px;font-weight:700;margin-top:4px}
+.vd-icon{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;
+  background:var(--primary);box-shadow:0 0 20px rgba(0,117,255,.45)}
+.vd-up{color:var(--success)} .vd-down{color:var(--danger)}
+.vd-badge{font-size:12px;padding:3px 10px;border-radius:999px;
+  background:rgba(255,181,71,.15);color:var(--warning)}
+.vd-bar{height:6px;border-radius:99px;background:rgba(255,255,255,.08);margin-top:8px;overflow:hidden}
+.vd-bar>i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--primary),var(--info))}
+.vd-row{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.vd-table-row{display:grid;grid-template-columns:1.2fr 1.4fr .6fr;gap:12px;padding:12px 0;border-top:1px solid var(--line);align-items:center}
+.vd-avatar{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:700;
+  background:linear-gradient(135deg,var(--primary),var(--violet))}
+.vd-notice{border-left:3px solid var(--primary);background:var(--card-inner);border-radius:12px;padding:12px 14px}
+/* Sidebar */
+.vd-side{position:fixed;left:16px;top:16px;bottom:16px;width:64px;border-radius:20px;
+  background:rgba(6,11,40,.7);border:1px solid var(--line);display:flex;flex-direction:column;align-items:center;gap:10px;padding:14px 0}
+.vd-side button{width:40px;height:40px;border-radius:12px;border:0;background:transparent;color:var(--muted);cursor:pointer}
+.vd-side button.on{background:var(--primary);color:#fff;box-shadow:0 0 20px rgba(0,117,255,.5)}
+.vd-side button:focus-visible{outline:2px solid var(--info)}
+.vd-main{margin-left:84px}

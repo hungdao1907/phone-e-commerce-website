@@ -17,6 +17,8 @@ export function CheckoutPage() {
 
   const [profileAddress, setProfileAddress] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [redirectProgress, setRedirectProgress] = useState(0);
 
   const applySavedAddress = async (addrString: string) => {
     setErrors({});
@@ -68,13 +70,13 @@ export function CheckoutPage() {
   };
 
   useEffect(() => {
-    if (!token || !user) {
-      alert('Vui lòng đăng nhập để thanh toán');
-      navigate('/login');
-      return;
-    }
     if (items.length === 0) {
       navigate('/');
+      return;
+    }
+    
+    if (!token || !user) {
+      // Allow guest users to fill checkout form
       return;
     }
     
@@ -100,6 +102,9 @@ export function CheckoutPage() {
       if (data.fullName && !deliveryInfo.fullName) {
         setDeliveryInfo({ fullName: data.fullName });
       }
+      if (data.email && !deliveryInfo.email) {
+        setDeliveryInfo({ email: data.email });
+      }
     })
     .catch(console.error);
   }, [token, items, navigate, provinces.length]);
@@ -114,6 +119,13 @@ export function CheckoutPage() {
       newErrors.phone = 'Vui lòng nhập số điện thoại';
     } else if (!phoneRegex.test(deliveryInfo.phone)) {
       newErrors.phone = 'Số điện thoại không hợp lệ (10 số, bắt đầu bằng 03,05,07,08,09)';
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!deliveryInfo.email) {
+      newErrors.email = 'Vui lòng nhập email';
+    } else if (!emailRegex.test(deliveryInfo.email)) {
+      newErrors.email = 'Địa chỉ email không hợp lệ';
     }
 
     if (deliveryInfo.deliveryMethod === 'shipping') {
@@ -138,7 +150,20 @@ export function CheckoutPage() {
 
   const handleNextStep = () => {
     if (validate()) {
-      navigate('/checkout/payment');
+      if (!user || !token) {
+        setShowLoginModal(true);
+        let progress = 0;
+        const interval = setInterval(() => {
+          progress += 5;
+          setRedirectProgress(progress);
+          if (progress >= 100) {
+            clearInterval(interval);
+            navigate('/login?returnUrl=/checkout');
+          }
+        }, 75); // 75ms * 20 = 1500ms (1.5s)
+      } else {
+        navigate('/checkout/payment');
+      }
     }
   };
 
@@ -150,7 +175,8 @@ export function CheckoutPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#f8f9fc] py-8 px-4 sm:px-6 lg:px-8 pt-20">
+    <>
+      <div className="min-h-screen bg-[#f8f9fc] py-8 px-4 sm:px-6 lg:px-8 pt-20">
       <div className="max-w-[1000px] mx-auto">
         <CheckoutProgress currentStep="delivery" />
 
@@ -207,6 +233,45 @@ export function CheckoutPage() {
                     className={`w-full h-11 px-4 bg-white border ${errors.phone ? 'border-red-500 focus:ring-red-500' : 'border-neutral-200 focus:ring-black'} rounded-xl text-sm text-neutral-900 focus:outline-none focus:ring-2 focus:border-transparent transition-shadow`} 
                   />
                   {errors.phone && <p className="text-xs text-red-500 mt-1.5 font-medium">{errors.phone}</p>}
+                </div>
+
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-bold text-neutral-700 mb-1.5">Email *</label>
+                  <input 
+                    type="email" 
+                    value={deliveryInfo.email}
+                    onChange={(e) => {
+                      setDeliveryInfo({ email: e.target.value });
+                      if(errors.email) setErrors({...errors, email: ''});
+                    }}
+                    placeholder="Nhập địa chỉ email"
+                    className={`w-full h-11 px-4 bg-white border ${errors.email ? 'border-red-500 focus:ring-red-500' : 'border-neutral-200 focus:ring-black'} rounded-xl text-sm text-neutral-900 focus:outline-none focus:ring-2 focus:border-transparent transition-shadow`} 
+                  />
+                  {errors.email && <p className="text-xs text-red-500 mt-1.5 font-medium">{errors.email}</p>}
+                </div>
+
+                <div className="md:col-span-2 mt-2">
+                  <div className="bg-red-50 border border-red-100 rounded-xl p-4 flex gap-3 items-start">
+                    <div className="text-red-500 mt-0.5">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="8" x2="12" y2="12"></line>
+                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="text-sm text-red-800 leading-relaxed mb-2 font-medium">
+                        Bằng việc bấm "Đặt hàng", bạn đồng ý cho phép hệ thống gửi email xác thực và thông tin đơn hàng đến email đã cung cấp để xác minh và tiếp tục mua hàng.
+                      </p>
+                      <button 
+                        type="button"
+                        onClick={() => navigate('/login?returnUrl=/checkout')} 
+                        className="text-sm font-bold text-[#99e300] hover:text-[#88c900] bg-black/90 hover:bg-black px-4 py-1.5 rounded-lg transition-colors"
+                      >
+                        Đăng nhập hoặc đăng ký ngay
+                      </button>
+                    </div>
+                  </div>
                 </div>
 
                 {/* PHƯƠNG THỨC NHẬN HÀNG */}
@@ -469,15 +534,48 @@ export function CheckoutPage() {
             <CheckoutSidebar 
               buttonText={
                 <div className="flex items-center gap-2">
-                  Tiếp tục thanh toán <ArrowRight className="w-4 h-4" />
+                  Đặt hàng <ArrowRight className="w-4 h-4" />
                 </div> as any
               }
               onNext={handleNextStep}
               shippingFeeOverride={deliveryInfo.deliveryMethod === 'store_pickup' ? 0 : undefined}
             />
           </div>
+          </div>
         </div>
       </div>
-    </div>
+
+      {/* GUEST REDIRECT MODAL */}
+      {showLoginModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
+          
+          <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-[440px] p-8 overflow-hidden animate-in zoom-in-95 duration-300">
+            <div className="flex flex-col items-center text-center">
+              <div className="w-16 h-16 bg-neutral-100 rounded-full flex items-center justify-center mb-5">
+                <svg className="w-8 h-8 text-neutral-900" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-bold text-neutral-900 mb-2">Đang chuyển hướng...</h3>
+              <p className="text-neutral-500 mb-6 font-medium">Bạn cần đăng nhập để tiếp tục đặt hàng.</p>
+              
+              <div className="w-full text-left space-y-2">
+                <div className="flex justify-between text-xs font-semibold text-neutral-500 uppercase tracking-wider">
+                  <span>Chuyển hướng</span>
+                  <span>{Math.round(redirectProgress)}%</span>
+                </div>
+                <div className="w-full bg-neutral-100 h-2 rounded-full overflow-hidden">
+                  <div 
+                    className="bg-[#99e300] h-full rounded-full transition-all duration-75 ease-linear"
+                    style={{ width: `${redirectProgress}%` }}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }

@@ -2,6 +2,7 @@ import express from 'express';
 import { PrismaClient } from '@prisma/client';
 import crypto from 'crypto';
 import { authenticateToken } from '../middleware/auth.middleware';
+import { sendPaymentSuccessEmail } from '../services/email.service';
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -177,6 +178,15 @@ router.post('/webhook', async (req, res) => {
               }
             });
           } catch(e) {}
+
+          // Get order with customer info to send email
+          const orderWithCustomer = await txPrisma.order.findUnique({
+            where: { id: order.id },
+            include: { customer: true, items: true }
+          });
+          if (orderWithCustomer && orderWithCustomer.customer && orderWithCustomer.customer.email) {
+            sendPaymentSuccessEmail(orderWithCustomer).catch(console.error);
+          }
         });
 
       } else {
@@ -357,6 +367,15 @@ router.post('/transactions/:id/match', authenticateToken, async (req, res) => {
         }
       });
     });
+
+    // Send Payment Success Email if customer exists
+    const orderWithCustomer = await prisma.order.findUnique({
+      where: { id: orderId },
+      include: { customer: true, items: true }
+    });
+    if (orderWithCustomer && orderWithCustomer.customer && orderWithCustomer.customer.email) {
+      sendPaymentSuccessEmail(orderWithCustomer).catch(console.error);
+    }
 
     res.json({ success: true, message: 'Matched successfully' });
   } catch (error) {
