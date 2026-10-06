@@ -63,7 +63,7 @@ router.get('/', authenticateToken, async (req, res) => {
         items: {
           include: {
             variant: {
-              include: { product: { select: { id: true, name: true, image: true } } }
+              include: { product: { select: { id: true, name: true, image: true, images: true } } }
             }
           }
         },

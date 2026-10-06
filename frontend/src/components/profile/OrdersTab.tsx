@@ -28,7 +28,9 @@ export function OrdersTab({ orders, onReview, onComplete, onOpenComplaint }: Ord
 
   const getStatusDisplay = (status: string) => {
     switch(status) {
-      case 'pending': return { text: 'Chờ xác nhận', classes: 'bg-amber-100 text-amber-700' };
+      case 'pending': return { text: 'Chờ duyệt', classes: 'bg-amber-100 text-amber-700' };
+      case 'pending_payment': return { text: 'Chờ thanh toán', classes: 'bg-orange-100 text-orange-700' };
+      case 'confirmed': return { text: 'Đã xác nhận', classes: 'bg-indigo-100 text-indigo-700' };
       case 'shipping': return { text: 'Đang giao', classes: 'bg-blue-100 text-blue-700' };
       case 'delivered': return { text: 'Chờ nhận hàng', classes: 'bg-emerald-100 text-emerald-700' };
       case 'completed': return { text: 'Hoàn thành', classes: 'bg-green-100 text-green-700' };
@@ -109,7 +111,7 @@ export function OrdersTab({ orders, onReview, onComplete, onOpenComplaint }: Ord
                 <div className="space-y-4">
                   {order.items.map((item: any) => {
                     const productId = item.productId || item.variant?.product?.id || item.variant?.productId || item.variant?.product?.slug;
-                    const productImage = item.variant?.product?.image || item.variant?.image || item.image;
+                    const productImage = item.variant?.product?.image || item.variant?.product?.images?.[0] || item.variant?.image || item.image;
                     const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
                     const imgSrc = productImage?.startsWith('/uploads') ? `${apiUrl}${productImage}` : productImage;
 

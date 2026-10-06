@@ -87,8 +87,17 @@ export function OverviewTab({ orders, onChangeTab }: OverviewTabProps) {
                     </span>
                   </div>
                   <div className="flex items-center gap-3 mb-3">
-                    <div className="w-12 h-12 bg-neutral-100 rounded-lg flex items-center justify-center shrink-0">
-                      <ShoppingBag className="w-5 h-5 text-neutral-400" />
+                    <div className="w-12 h-12 bg-neutral-100 rounded-lg flex items-center justify-center shrink-0 overflow-hidden">
+                      {(() => {
+                        const productImage = order.items?.[0]?.variant?.product?.image || order.items?.[0]?.variant?.product?.images?.[0];
+                        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+                        const imgSrc = productImage?.startsWith('/uploads') ? `${apiUrl}${productImage}` : productImage;
+                        
+                        if (imgSrc) {
+                          return <img src={imgSrc} alt="Product" className="w-full h-full object-cover" />;
+                        }
+                        return <ShoppingBag className="w-5 h-5 text-neutral-400" />;
+                      })()}
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-bold text-neutral-900 truncate">
@@ -106,11 +115,15 @@ export function OverviewTab({ orders, onChangeTab }: OverviewTabProps) {
                   </p>
                   <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${
                     order.status === 'pending' ? 'bg-amber-100 text-amber-700' : 
+                    order.status === 'pending_payment' ? 'bg-orange-100 text-orange-700' :
+                    order.status === 'confirmed' ? 'bg-indigo-100 text-indigo-700' :
                     order.status === 'shipping' ? 'bg-blue-100 text-blue-700' : 
                     order.status === 'delivered' ? 'bg-emerald-100 text-emerald-700' :
                     order.status === 'completed' ? 'bg-green-100 text-green-700' : 'bg-neutral-100 text-neutral-700'
                   }`}>
                     {order.status === 'pending' ? 'Chờ duyệt' : 
+                     order.status === 'pending_payment' ? 'Chờ thanh toán' :
+                     order.status === 'confirmed' ? 'Đã xác nhận' :
                      order.status === 'shipping' ? 'Đang giao' : 
                      order.status === 'delivered' ? 'Chờ nhận' :
                      order.status === 'completed' ? 'Đã giao' : order.status}

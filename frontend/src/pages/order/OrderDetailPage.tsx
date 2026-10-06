@@ -21,6 +21,7 @@ const PAYMENT_STATUS_MAP: Record<string, { label: string, color: string, bg: str
 
 const ORDER_STATUS_MAP: Record<string, { label: string, color: string, bg: string }> = {
   pending: { label: 'Đang xử lý', color: 'text-yellow-700', bg: 'bg-yellow-50' },
+  pending_payment: { label: 'Chờ thanh toán', color: 'text-orange-700', bg: 'bg-orange-50' },
   confirmed: { label: 'Đã xác nhận', color: 'text-blue-700', bg: 'bg-blue-50' },
   processing: { label: 'Đang chuẩn bị', color: 'text-blue-700', bg: 'bg-blue-50' },
   shipping: { label: 'Đang giao hàng', color: 'text-blue-700', bg: 'bg-blue-50' },
@@ -296,7 +297,9 @@ export function OrderDetailPage() {
               <h2 className="text-sm font-bold text-neutral-900 uppercase tracking-wider mb-5">Sản phẩm</h2>
               <div className="divide-y divide-neutral-100">
                 {order.items?.map((item: any, idx: number) => {
-                  const imageSrc = item.variant?.product?.image || item.productImage || 'https://via.placeholder.com/150';
+                  const rawImage = item.variant?.product?.image || item.variant?.product?.images?.[0] || item.productImage;
+                  const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+                  const imageSrc = rawImage ? (rawImage.startsWith('/uploads') ? `${apiUrl}${rawImage}` : rawImage) : 'https://via.placeholder.com/150';
                   return (
                     <div key={idx} className="py-5 flex gap-5">
                       <div className="w-20 h-20 bg-[#f7f8fa] rounded-lg flex items-center justify-center p-2 border border-neutral-100 shrink-0">
