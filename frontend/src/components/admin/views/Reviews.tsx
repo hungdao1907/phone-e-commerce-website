@@ -75,7 +75,7 @@ export function Reviews() {
                 <div className="flex justify-between items-start mb-4">
                   <div>
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="text-sm font-semibold text-slate-900">{review.customer.fullName}</span>
+                      <span className="text-sm font-semibold text-slate-900">{review.customer?.fullName || 'Khách hàng'}</span>
                       <span className="text-sm text-slate-400">({review.customer.email})</span>
                     </div>
                     <div className="flex items-center gap-1">

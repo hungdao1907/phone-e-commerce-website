@@ -266,7 +266,7 @@ router.post('/', authenticateToken, async (req, res) => {
 
     // 📩 Send "Order Received" Email asynchronously
     if (newOrder.customer && newOrder.customer.email) {
-      sendOrderReceivedEmail(newOrder.customer.email, newOrder.customer.fullName, newOrder.orderCode).catch(console.error);
+      sendOrderReceivedEmail(newOrder.customer.email, newOrder.customer.fullName ?? 'Khách hàng', newOrder.orderCode).catch(console.error);
     }
 
     // 🔔 Create notification for new order
@@ -351,7 +351,7 @@ router.put('/:id/status', authenticateToken, async (req, res) => {
     if (status === 'shipping' && updatedOrder.customer && updatedOrder.customer.email) {
       sendOrderConfirmedEmail(
         updatedOrder.customer.email, 
-        updatedOrder.customer.fullName, 
+        updatedOrder.customer.fullName ?? 'Khách hàng',
         updatedOrder.orderCode, 
         updatedOrder.estimatedDelivery
       ).catch(console.error);

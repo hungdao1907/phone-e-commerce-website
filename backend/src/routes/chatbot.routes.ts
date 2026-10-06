@@ -3,8 +3,201 @@ import crypto from 'crypto';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
+import { Prisma } from '@prisma/client';
+import prisma from '../config/prisma';
 
 const router = express.Router();
+
+const CHAT_CONTEXT_MESSAGE_LIMIT = 12;
+
+type ChatContextMessage = {
+  role: 'user' | 'assistant';
+  content: string;
+};
+
+type ChatConversationState = Record<string, unknown>;
+
+type ChatContextSnapshot = {
+  history: ChatContextMessage[];
+  state: ChatConversationState | null;
+};
+
+function isChatConversationState(value: unknown): value is ChatConversationState {
+  return Boolean(value && typeof value === 'object' && !Array.isArray(value));
+}
+
+type PublicChatbotRecord = Record<string, unknown>;
+
+const CUSTOMER_RESPONSE_SCALAR_FIELDS = [
+  'response',
+  'message',
+  'result_type',
+  'response_type',
+  'success',
+  'total',
+  'ready_to_compare',
+  'quote_status',
+  'quote_number',
+  'file_name',
+  'mime_type',
+  'download_url',
+  'total_display'
+] as const;
+
+const CUSTOMER_PRODUCT_SCALAR_FIELDS = [
+  'id',
+  'name',
+  'brand',
+  'description',
+  'image_url',
+  'price',
+  'original_price',
+  'stock',
+  'availability',
+  'storage_gb',
+  'ram_gb',
+  'color'
+] as const;
+
+function isPublicChatbotRecord(value: unknown): value is PublicChatbotRecord {
+  return Boolean(value && typeof value === 'object' && !Array.isArray(value));
+}
+
+function isPublicChatbotScalar(value: unknown): value is string | number | boolean | null {
+  return value === null || typeof value === 'string' || typeof value === 'boolean' ||
+    (typeof value === 'number' && Number.isFinite(value));
+}
+
+function projectPublicScalars<T extends readonly string[]>(
+  source: PublicChatbotRecord,
+  fields: T
+): PublicChatbotRecord {
+  const projected: PublicChatbotRecord = {};
+
+  for (const field of fields) {
+    const value = source[field];
+    if (isPublicChatbotScalar(value)) projected[field] = value;
+  }
+
+  return projected;
+}
+
+/** Build the customer-facing payload without forwarding n8n's internal state. */
+export function sanitizeCustomerChatbotResponse(value: unknown, sessionId: string): unknown {
+  if (Array.isArray(value)) {
+    return value
+      .filter(isPublicChatbotRecord)
+      .map((item) => sanitizeCustomerChatbotResponse(item, sessionId));
+  }
+
+  if (!isPublicChatbotRecord(value)) return value;
+
+  const publicResponse: PublicChatbotRecord = { sessionId };
+
+  for (const field of CUSTOMER_RESPONSE_SCALAR_FIELDS) {
+    const fieldValue = value[field];
+    if (isPublicChatbotScalar(fieldValue)) publicResponse[field] = fieldValue;
+  }
+
+  if (Array.isArray(value.products)) {
+    publicResponse.products = value.products
+      .filter(isPublicChatbotRecord)
+      .map((product) => projectPublicScalars(product, CUSTOMER_PRODUCT_SCALAR_FIELDS))
+      .filter((product) => Object.keys(product).length > 0);
+  }
+
+  if (value.product === null) {
+    publicResponse.product = null;
+  } else if (isPublicChatbotRecord(value.product)) {
+    const product = projectPublicScalars(value.product, CUSTOMER_PRODUCT_SCALAR_FIELDS);
+    if (Object.keys(product).length > 0) publicResponse.product = product;
+  }
+
+  if (Array.isArray(value.missing_products)) {
+    publicResponse.missing_products = value.missing_products
+      .map((product) => {
+        if (typeof product === 'string') return product;
+        if (!isPublicChatbotRecord(product)) return null;
+
+        const projected = projectPublicScalars(product, CUSTOMER_PRODUCT_SCALAR_FIELDS);
+        return Object.keys(projected).length > 0 ? projected : null;
+      })
+      .filter((product) => product !== null);
+  }
+
+  return publicResponse;
+}
+
+function toPrismaConversationState(value: unknown): Prisma.InputJsonObject | null {
+  return isChatConversationState(value)
+    ? JSON.parse(JSON.stringify(value)) as Prisma.InputJsonObject
+    : null;
+}
+
+async function saveUserMessageAndLoadHistory(sessionId: string, content: string): Promise<ChatContextSnapshot> {
+  try {
+    return await prisma.$transaction(async (tx) => {
+      const conversation = await tx.chatConversation.upsert({
+        where: { sessionId },
+        create: { sessionId },
+        update: {}
+      });
+
+      const previousMessages = await tx.chatMessage.findMany({
+        where: { conversationId: conversation.id },
+        orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+        take: CHAT_CONTEXT_MESSAGE_LIMIT,
+        select: { role: true, content: true }
+      });
+
+      await tx.chatMessage.create({
+        data: {
+          conversationId: conversation.id,
+          role: 'user',
+          content
+        }
+      });
+
+      return {
+        history: previousMessages
+          .reverse()
+          .filter((message): message is ChatContextMessage => message.role === 'user' || message.role === 'assistant')
+          .map((message) => ({ role: message.role, content: message.content })),
+        state: isChatConversationState(conversation.context) ? conversation.context : null
+      };
+    });
+  } catch (error) {
+    // Chat should remain usable if the optional history store is unavailable.
+    console.warn('[Chatbot Route] Conversation context unavailable; continuing stateless.');
+    return { history: [], state: null };
+  }
+}
+
+async function saveAssistantMessage(sessionId: string, content: string, state?: unknown) {
+  const trimmedContent = content.trim();
+  const nextState = toPrismaConversationState(state);
+  if (!trimmedContent && !nextState) return;
+
+  try {
+    const conversation = await prisma.chatConversation.upsert({
+      where: { sessionId },
+      create: nextState ? { sessionId, context: nextState } : { sessionId },
+      update: nextState ? { context: nextState } : {}
+    });
+
+    if (nextState && !trimmedContent) return;
+
+    await prisma.chatMessage.create({
+      data: {
+        conversationId: conversation.id,
+        role: 'assistant',
+        content: trimmedContent
+      }
+    });
+  } catch (error) {
+    console.warn('[Chatbot Route] Assistant message could not be stored.');
+  }
+}
 
 // Setup directories for quotation uploads
 const uploadsDir = path.resolve(__dirname, '..', '..', 'uploads');
@@ -73,17 +266,24 @@ router.post('/message', async (req, res) => {
       sessionId = sessionId.trim();
     }
 
-    // 3. Ensure Environment Variable
+    // 3. Load bounded, session-scoped context and record the current user turn.
+    const contextSnapshot = await saveUserMessageAndLoadHistory(sessionId, trimmedMessage);
+    const history = contextSnapshot.history;
+
+    // 4. Ensure Environment Variable
     const n8nUrl = process.env.N8N_CHAT_WEBHOOK_URL;
     if (!n8nUrl) {
       console.error('[Chatbot Route] N8N_CHAT_WEBHOOK_URL is not configured.');
       return res.status(503).json({ result_type: 'error', response_type: 'text', success: false, response: 'Chat service is temporarily unavailable', sessionId });
     }
 
-    // 4. Prepare n8n Request
+    // 5. Prepare n8n Request
     const n8nPayload = {
       chatInput: trimmedMessage,
       sessionId: sessionId,
+      conversationId: sessionId,
+      history,
+      conversationState: contextSnapshot.state,
       source: 'web_chat'
     };
 
@@ -112,13 +312,13 @@ router.post('/message', async (req, res) => {
 
     clearTimeout(timeoutId);
 
-    // 5. Handle non-2xx Response
+    // 6. Handle non-2xx Response
     if (!n8nResponse.ok) {
       console.error(`[Chatbot Route] n8n returned status ${n8nResponse.status} ${n8nResponse.statusText}`);
       return res.status(502).json({ result_type: 'error', response_type: 'text', success: false, response: 'Chat service encountered an error.', sessionId });
     }
 
-    // 6. Check Content-Type for Binary/PDF
+    // 7. Check Content-Type for Binary/PDF
     const contentType = n8nResponse.headers.get('content-type') || '';
 
     if (contentType.includes('application/pdf') || contentType.includes('application/octet-stream') || contentType.includes('application/vnd.')) {
@@ -136,10 +336,12 @@ router.post('/message', async (req, res) => {
       const arrayBuffer = await n8nResponse.arrayBuffer();
       const buffer = Buffer.from(arrayBuffer);
 
+      await saveAssistantMessage(sessionId, 'Báo giá đã được tạo thành công.');
+
       return res.send(buffer);
     }
 
-    // 7. Handle JSON Response
+    // 8. Handle JSON Response
     let responseData;
     try {
       responseData = await n8nResponse.json();
@@ -163,7 +365,15 @@ router.post('/message', async (req, res) => {
        res.setHeader('X-Chat-Session-Id', sessionId);
     }
 
-    return res.status(200).json(responseData);
+    const assistantContent = typeof responseData?.response === 'string'
+      ? responseData.response
+      : typeof responseData?.message === 'string'
+        ? responseData.message
+        : '';
+    await saveAssistantMessage(sessionId, assistantContent, responseData?.conversation_state);
+
+    const publicResponse = sanitizeCustomerChatbotResponse(responseData, sessionId);
+    return res.status(200).json(publicResponse);
 
   } catch (err: any) {
     console.error('[Chatbot Route] Unexpected error:', err.message);

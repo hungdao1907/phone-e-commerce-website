@@ -3,7 +3,7 @@ import { Plus, UserCircle, MapPin, Mail, Phone, Trash2 } from 'lucide-react';
 
 interface Customer {
   id: string;
-  fullName: string;
+  fullName: string | null;
   email: string;
   phone: string | null;
   address: string | null;
@@ -207,7 +207,7 @@ export function CustomerManager() {
               <tbody>
                 {customers.map((c) => (
                   <tr key={c.id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
-                    <td className="p-4 font-semibold text-slate-900">{c.fullName}</td>
+                    <td className="p-4 font-semibold text-slate-900">{c.fullName || 'Khách hàng'}</td>
                     <td className="p-4 text-sm text-slate-600">{c.email}</td>
                     <td className="p-4 text-sm text-slate-600">{c.phone || <span className="text-slate-400 italic">Trống</span>}</td>
                     <td className="p-4 text-sm text-slate-800 font-semibold">{c.Order?.length || 0}</td>
@@ -220,7 +220,7 @@ export function CustomerManager() {
                     <td className="p-4 text-right">
                       <button
                         onClick={async () => {
-                          if (!confirm(`Bạn có chắc muốn xóa khách hàng ${c.fullName}?`)) return;
+                          if (!confirm(`Bạn có chắc muốn xóa khách hàng ${c.fullName || 'Khách hàng'}?`)) return;
                           try {
                             const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/customers/${c.id}`, {
                               method: 'DELETE'

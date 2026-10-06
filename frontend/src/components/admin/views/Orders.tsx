@@ -16,7 +16,7 @@ interface OrderItem {
 }
 
 interface Customer {
-  fullName: string;
+  fullName: string | null;
   email: string;
   phone: string | null;
 }
@@ -165,7 +165,7 @@ export function Orders() {
       const q = search.toLowerCase();
       result = result.filter(o =>
         o.orderCode.toLowerCase().includes(q) ||
-        o.customer.fullName.toLowerCase().includes(q) ||
+        (o.customer.fullName ?? '').toLowerCase().includes(q) ||
         o.customer.phone?.includes(q) ||
         o.customer.email?.toLowerCase().includes(q)
       );
@@ -474,10 +474,10 @@ export function Orders() {
                       <td className="p-4">
                         <div className="flex items-center gap-3">
                           <div className="w-8 h-8 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center shrink-0 text-slate-600 text-xs font-bold">
-                            {order.customer.fullName.charAt(0).toUpperCase()}
+                            {(order.customer.fullName || 'Khách hàng').charAt(0).toUpperCase()}
                           </div>
                           <div className="flex flex-col">
-                            <span className="font-medium text-slate-900 truncate max-w-[150px]">{order.customer.fullName}</span>
+                            <span className="font-medium text-slate-900 truncate max-w-[150px]">{order.customer.fullName || 'Khách hàng'}</span>
                             <span className="text-xs text-slate-400">{order.customer.phone}</span>
                           </div>
                         </div>
@@ -599,7 +599,7 @@ export function Orders() {
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-full bg-white border border-slate-200 flex items-center justify-center shrink-0 shadow-sm"><User className="w-4 h-4 text-slate-500" /></div>
                         <div>
-                          <p className="font-medium text-slate-900 text-sm">{selectedOrder.customer.fullName}</p>
+                          <p className="font-medium text-slate-900 text-sm">{selectedOrder.customer.fullName || 'Khách hàng'}</p>
                           {selectedOrder.customer.email && <p className="text-xs text-slate-500 mt-0.5">{selectedOrder.customer.email}</p>}
                         </div>
                       </div>

@@ -163,7 +163,7 @@ export function Complaints() {
                     </div>
                     
                     <div className="col-span-3 flex flex-col gap-0.5">
-                      <span className="text-sm font-medium text-slate-900">{complaint.customer?.fullName}</span>
+                      <span className="text-sm font-medium text-slate-900">{complaint.customer?.fullName || 'Khách hàng'}</span>
                       <span className="text-xs text-slate-500">{complaint.customer?.phone}</span>
                     </div>
 

@@ -12,7 +12,7 @@ interface Review {
   createdAt: string;
   adminReply: string | null;
   adminReplyAt: string | null;
-  customer: { id: string; fullName: string };
+  customer: { id: string; fullName: string | null };
   variant: { attributes: any; colorCode?: string };
   experienceRatings?: Record<string, number>;
   isVerifiedPurchase: boolean;
@@ -520,11 +520,11 @@ export function ProductReviews({ productId, categorySlug }: { productId?: string
           <div key={review.id} className="pb-6 border-b border-neutral-100 last:border-0 last:pb-0">
             <div className="flex items-start gap-4">
               <div className="w-12 h-12 rounded-full bg-neutral-100 flex items-center justify-center font-bold text-neutral-500 shrink-0 uppercase">
-                {review.customer.fullName.charAt(0)}
+                {(review.customer.fullName || 'Khách hàng').charAt(0)}
               </div>
               <div className="flex-1">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-1">
-                  <h4 className="font-bold text-neutral-900">{review.customer.fullName}</h4>
+                  <h4 className="font-bold text-neutral-900">{review.customer.fullName || 'Khách hàng'}</h4>
                   <span className="text-sm text-neutral-500">
                     {new Date(review.createdAt).toLocaleDateString('vi-VN', { year: 'numeric', month: '2-digit', day: '2-digit' })}
                   </span>

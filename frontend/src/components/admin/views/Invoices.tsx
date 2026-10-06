@@ -38,7 +38,7 @@ export function Invoices() {
   const filteredInvoices = invoices.filter(inv => 
     inv.invoiceCode.toLowerCase().includes(search.toLowerCase()) ||
     inv.order.orderCode.toLowerCase().includes(search.toLowerCase()) ||
-    inv.order.customer.fullName.toLowerCase().includes(search.toLowerCase())
+    (inv.order.customer.fullName ?? '').toLowerCase().includes(search.toLowerCase())
   );
 
   return (
@@ -92,7 +92,7 @@ export function Invoices() {
               >
                 <div className="col-span-2 font-mono text-sm font-semibold text-emerald-600 pl-2">{inv.invoiceCode}</div>
                 <div className="col-span-2 font-mono text-sm text-slate-500">{inv.order.orderCode}</div>
-                <div className="col-span-3 font-medium text-slate-900 truncate">{inv.order.customer.fullName}</div>
+                <div className="col-span-3 font-medium text-slate-900 truncate">{inv.order.customer.fullName || 'Khách hàng'}</div>
                 <div className="col-span-2 text-sm text-slate-600">{formatDate(inv.issuedAt)}</div>
                 <div className="col-span-2 text-right font-bold text-slate-900">{formatCurrency(inv.total)}</div>
                 <div className="col-span-1 flex justify-center">
@@ -148,7 +148,7 @@ export function Invoices() {
                   <div className="flex justify-between mb-10 pb-6 border-b border-slate-200">
                     <div>
                       <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Thông tin khách hàng</h3>
-                      <p className="font-bold text-slate-900 text-lg mb-1">{selectedInvoice.order.customer.fullName}</p>
+                      <p className="font-bold text-slate-900 text-lg mb-1">{selectedInvoice.order.customer.fullName || 'Khách hàng'}</p>
                       <p className="text-sm text-slate-600 mb-1">{selectedInvoice.order.shippingPhone}</p>
                       <p className="text-sm text-slate-600 max-w-[250px]">{selectedInvoice.order.shippingAddress}</p>
                     </div>

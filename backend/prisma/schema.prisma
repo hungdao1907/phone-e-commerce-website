@@ -44,8 +44,9 @@ model User {
 
 model Customer {
   id        String    @id @default(uuid())
-  fullName  String
+  fullName  String?
   email     String    @unique
+  username  String?   @unique
   phone     String?
   address   String?
   createdAt DateTime  @default(now())
@@ -103,6 +104,7 @@ model Product {
   category       Category?        @relation(fields: [categoryId], references: [id])
   variants       ProductVariant[]
   homeFeaturedProduct HomeFeaturedProduct?
+  bannerCampaignProducts BannerCampaignProduct[]
   Review         Review[]
   Dispute        Dispute[]
   Wishlist       Wishlist[]
@@ -131,6 +133,7 @@ model ProductVariant {
   createdAt  DateTime    @default(now())
   updatedAt  DateTime    @updatedAt
   salePrice  Int?
+  bannerCampaignProducts BannerCampaignProduct[]
   OrderItem  OrderItem[]
   Review     Review[]
   Dispute    Dispute[]
@@ -280,6 +283,7 @@ model Campaign {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
   bannerUrl     String?
+  bannerCampaignProducts BannerCampaignProduct[]
 }
 
 model PromoCode {
@@ -310,6 +314,50 @@ model Banner {
   endDate   DateTime?
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
+}
+
+model BannerCampaignProduct {
+  id             String   @id @default(uuid())
+  campaignId     String
+  productId      String
+  variantId      String?
+  categorySlug   String
+  discountPercent Int     @default(0)
+  sortOrder      Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @default(now())
+  bannerImage    String
+
+  campaign       Campaign       @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  product        Product        @relation(fields: [productId], references: [id], onDelete: Cascade)
+  variant        ProductVariant? @relation(fields: [variantId], references: [id], onDelete: SetNull)
+  tags           BannerCampaignProductTag[]
+
+  @@unique([campaignId, productId, categorySlug])
+  @@index([campaignId, categorySlug, sortOrder])
+}
+
+model BannerCampaignProductTag {
+  id                       String                @id @default(uuid())
+  bannerCampaignProductId  String
+  tagId                    String
+
+  bannerCampaignProduct BannerCampaignProduct @relation(fields: [bannerCampaignProductId], references: [id], onDelete: Cascade)
+  tag                   MarketingTag           @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@unique([bannerCampaignProductId, tagId])
+}
+
+model MarketingTag {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  color     String?
+  isActive  Boolean  @default(true)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+
+  bannerCampaignProductTags BannerCampaignProductTag[]
 }
 
 model FooterSection {
@@ -438,4 +486,28 @@ model BankTransaction {
 
   @@index([transactionId])
   @@index([status])
+}
+
+// ========== CUSTOMER CHAT CONTEXT ==========
+
+model ChatConversation {
+  id        String        @id @default(uuid())
+  sessionId String        @unique
+  context   Json?
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  messages  ChatMessage[]
+
+  @@index([updatedAt])
+}
+
+model ChatMessage {
+  id             String          @id @default(uuid())
+  conversationId String
+  role           String          // user, assistant
+  content        String
+  createdAt      DateTime        @default(now())
+  conversation   ChatConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId, createdAt])
 }

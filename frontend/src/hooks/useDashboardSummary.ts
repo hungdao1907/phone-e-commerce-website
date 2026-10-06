@@ -46,7 +46,7 @@ export interface PendingOrder {
   id: string;
   orderCode: string;
   customer: {
-    fullName: string;
+    fullName: string | null;
   };
   items: {
     productName: string;

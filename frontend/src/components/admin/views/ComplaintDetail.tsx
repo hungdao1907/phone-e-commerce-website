@@ -86,7 +86,7 @@ export function ComplaintDetail({ complaint, onBack }: { complaint: any, onBack:
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
                 <span className="text-slate-500 block mb-1">Họ tên</span>
-                <span className="font-semibold text-slate-900">{complaint.customer?.fullName}</span>
+                <span className="font-semibold text-slate-900">{complaint.customer?.fullName || 'Khách hàng'}</span>
               </div>
               <div>
                 <span className="text-slate-500 block mb-1">Số điện thoại</span>
