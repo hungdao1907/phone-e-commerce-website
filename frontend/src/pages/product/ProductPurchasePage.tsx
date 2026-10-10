@@ -4,6 +4,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { ProductConfigurator, ProductGallery, ProductSpecifications, ProductDescription } from '@/components/product';
 import { CrossSellSection } from '@/components/product/CrossSellSection';
 import { ProductReviews } from '@/components/product/ProductReviews';
+import { RelatedProducts } from '@/components/product/RelatedProducts';
 import type { ProductVariant } from '@/types/product';
 import { useCartStore } from '../../store/useCartStore';
 import { useAppStore } from '../../store/useAppStore';
@@ -364,21 +365,12 @@ export function ProductPurchasePage() {
             <ProductReviews productId={product.id} categorySlug={product.categorySlug} />
           </div>
           
-          {/* Related Products Demo */}
-          <section className="rounded-3xl border border-neutral-200 bg-white p-6 sm:p-8 lg:p-10 shadow-sm">
-            <h2 className="text-xl font-bold text-neutral-900 mb-6 uppercase">Sản phẩm liên quan</h2>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-              {[1, 2, 3, 4].map(i => (
-                <div key={i} className="border border-neutral-100 rounded-xl p-4 hover:shadow-md transition-shadow cursor-pointer group">
-                  <div className="aspect-square bg-neutral-50 rounded-lg mb-3 flex items-center justify-center p-4">
-                    <img src={galleryImages[0] || 'https://via.placeholder.com/150'} alt="Related" className="object-contain h-full w-full group-hover:scale-105 transition-transform duration-300" />
-                  </div>
-                  <h3 className="font-semibold text-sm line-clamp-2 mb-2">{product.name}</h3>
-                  <p className="text-red-600 font-bold text-sm">20.000.000 ₫</p>
-                </div>
-              ))}
-            </div>
-          </section>
+          {/* Related Products Section */}
+          <RelatedProducts 
+            currentProductId={product.id}
+            categoryId={product.categorySlug || product.categoryId}
+            brand={product.brand}
+          />
         </div>
 
       </div>

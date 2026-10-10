@@ -1,0 +1,381 @@
+--- frontend/src/components/smartphone/BrandAllProductsSection.tsx	2026-10-09 15:17:06
++++ frontend/src/components/tablet/sections/TabletAllProductsSection.tsx	2026-10-09 15:16:54
+@@ -1,16 +1,11 @@
+-import React, { useRef, useState, useEffect, useMemo } from 'react';
++import React, { useRef, useState, useEffect } from 'react';
+ import { motion, useScroll, useTransform } from 'framer-motion';
+ import {
+   ArrowDownNarrowWide,
+   ArrowUpNarrowWide,
+   BadgePercent,
+-  Layers,
+   Sparkles,
+   Star,
+-  Search,
+-  X,
+-  PhoneCall,
+-  RefreshCw,
+   Filter,
+   AlertCircle
+ } from 'lucide-react';
+\ No newline at end of file
+@@ -20,54 +15,35 @@
+ import { ActiveFilterChips } from '@/components/store/ActiveFilterChips';
+ import { FilteredProductCard } from '@/components/store/FilteredProductCard';
+ import { FilteredProductCardSkeleton } from '@/components/store/FilteredProductCardSkeleton';
+-import type { BrandConfig, BrandModel } from '@/types/smartphone';
++import type { TabletBrandConfig, TabletModel } from '../../../types/tablet/types/index';
+ 
+ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+ 
+-interface BrandAllProductsSectionProps {
+-  config: BrandConfig;
+-  products: BrandModel[]; // We keep this for series extraction
++interface TabletAllProductsSectionProps {
++  config: TabletBrandConfig;
++  products: TabletModel[]; // Kept for compatibility
+ }
+ 
+ 
+-export function BrandAllProductsSection({ config, products }: BrandAllProductsSectionProps) {
+-  const containerRef = useRef<HTMLElement>(null);
+-  const { scrollYProgress } = useScroll({
+-    target: containerRef,
+-    offset: ['start end', 'end start'],
+-  });
+ 
+-  const opacity = useTransform(scrollYProgress, [0, 0.12, 0.88, 1], [0, 1, 1, 0]);
+-  const y = useTransform(scrollYProgress, [0, 0.12], [60, 0]);
+-
++export function TabletAllProductsSection({ config }: TabletAllProductsSectionProps) {
++  const containerRef = useRef<HTMLElement>(null);
+   const [searchParams, setSearchParams] = useSearchParams();
+   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+ 
+-  // Mappings
+-  const categorySlug = 'phone';
++  const categorySlug = 'tablet';
+   let brandSlug = config.id.toLowerCase();
+-  if (brandSlug === 'iphone') brandSlug = 'apple';
++  if (brandSlug === 'ipad') brandSlug = 'apple';
++  else if (brandSlug === 'samsung-tablet') brandSlug = 'samsung';
++  else if (brandSlug === 'xiaomi-tablet') brandSlug = 'xiaomi';
+ 
+-  // Extract all distinct series from the initial 'products' prop to render the Series Tabs
+-  const availableSeries = useMemo(() => {
+-    const seriesSet = new Set<string>();
+-    products.forEach((p) => {
+-      if (p.series) seriesSet.add(p.series);
+-    });
+-    return Array.from(seriesSet);
+-  }, [products]);
+-
+-  const activeSeries = searchParams.get('series') || 'all';
+   const activeSort = searchParams.get('sort') || 'newest';
+-  const searchQuery = searchParams.get('q') || '';
+ 
+   const fetchFilters = async () => {
+     const params = new URLSearchParams(searchParams);
+     params.delete('page');
+     params.delete('limit');
+     params.delete('sort');
+-    params.delete('series');
+-    params.delete('q');
+     params.set('category', categorySlug);
+     params.set('brand', brandSlug);
+     
+\ No newline at end of file
+@@ -106,23 +82,6 @@
+     setSearchParams(searchParams);
+   };
+ 
+-  const handleSeriesChange = (series: string) => {
+-    if (series === 'all') {
+-      searchParams.delete('series');
+-    } else {
+-      searchParams.set('series', series);
+-    }
+-    searchParams.set('page', '1');
+-    setSearchParams(searchParams);
+-  };
+-
+-  const handleSearch = (q: string) => {
+-    if (q) searchParams.set('q', q);
+-    else searchParams.delete('q');
+-    searchParams.set('page', '1');
+-    setSearchParams(searchParams);
+-  };
+-
+   const handlePageChange = (page: number) => {
+     searchParams.set('page', page.toString());
+     if (containerRef.current) {
+\ No newline at end of file
+@@ -138,121 +97,47 @@
+     return () => { document.body.style.overflow = ''; };
+   }, [isMobileSidebarOpen]);
+ 
+-
+   return (
+     <section
+-      id={`${config.id}-all-products`}
++      id="tablet-all-products"
+       ref={containerRef}
+-      className="relative w-full py-20 sm:py-28 bg-[#f8f9fc] text-neutral-900 px-4 sm:px-6 lg:px-8"
++      aria-labelledby="tablet-all-products-title"
++      className="scroll-mt-16 bg-[#f6f7f9] px-4 py-24 sm:px-6 sm:py-32 lg:px-8"
+     >
+-      <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+-        <div
+-          className="absolute top-20 left-1/4 w-[450px] h-[450px] blur-[150px] rounded-full opacity-25"
+-          style={{ backgroundColor: config.accent }}
+-        />
+-        <div
+-          className="absolute bottom-20 right-1/4 w-[450px] h-[450px] blur-[150px] rounded-full opacity-20"
+-          style={{ backgroundColor: config.accentSoft || '#60a5fa' }}
+-        />
+-      </div>
+-
+-      <motion.div style={{ opacity, y }} className="relative z-10 w-full max-w-[1400px] mx-auto flex flex-col">
++      <div className="mx-auto w-full max-w-[1400px]">
+         {/* Section Header */}
+-        <div className="text-center max-w-3xl mx-auto mb-14 space-y-3">
+-          <motion.div
+-            initial={{ opacity: 0, scale: 0.9 }}
+-            whileInView={{ opacity: 1, scale: 1 }}
+-            viewport={{ once: true }}
+-            transition={{ duration: 0.5 }}
+-            className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white border border-neutral-200/80 shadow-sm text-xs font-bold uppercase tracking-wider text-neutral-800"
+-          >
+-            <Sparkles className="w-3.5 h-3.5" style={{ color: config.accent }} />
+-            <span>DANH MỤC TOÀN BỘ SẢN PHẨM</span>
+-          </motion.div>
+-
+-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-neutral-950">
+-            {config.allProductsHeadlinePrefix}{' '}
+-            <span className={config.gradientText}>{config.allProductsHeadlineHighlight}</span>
++        <header className="mx-auto max-w-3xl text-center mb-12">
++          <span className="inline-flex items-center gap-2 rounded-full border border-neutral-200 bg-white px-3 py-1.5 text-xs font-semibold text-neutral-700">
++            <Sparkles className="h-3.5 w-3.5 text-[var(--tablet-accent)]" />
++            TẤT CẢ SẢN PHẨM
++          </span>
++          <h2 id="tablet-all-products-title" className="mt-5 text-3xl font-bold tracking-tight text-neutral-950 sm:text-5xl">
++            Tìm {config.label} dành cho bạn
+           </h2>
+-          <p className="text-neutral-600 text-sm sm:text-base md:text-lg leading-relaxed">
+-            {config.allProductsDescription}
+-          </p>
+-        </div>
++          <p className="mt-4 text-base leading-relaxed text-neutral-600 sm:text-lg">{config.allProductsDescription}</p>
++        </header>
+ 
+-        {/* Search Bar & Series Navigation Tabs (Restored) */}
+-        <div className="w-full mb-10 space-y-4 max-w-7xl mx-auto">
+-          {/* Real-time Search Input */}
+-          <div className="relative max-w-xl mx-auto">
+-            <div className="relative flex items-center">
+-              <Search className="absolute left-4 w-5 h-5 text-neutral-400 pointer-events-none" />
+-              <input
+-                type="text"
+-                value={searchQuery}
+-                onChange={(e) => handleSearch(e.target.value)}
+-                placeholder={`Tìm kiếm điện thoại ${config.brand} (vd: Pro Max, Ultra, 512GB, 48MP...)`}
+-                className="w-full pl-12 pr-10 py-3.5 rounded-2xl bg-white border border-neutral-200/90 focus:border-neutral-900 focus:ring-4 focus:ring-neutral-900/5 text-sm sm:text-base text-neutral-900 placeholder:text-neutral-400 shadow-sm transition-all duration-200 outline-none"
+-              />
+-              {searchQuery && (
+-                <button
+-                  type="button"
+-                  onClick={() => handleSearch('')}
+-                  className="absolute right-3.5 p-1 rounded-full text-neutral-400 hover:text-neutral-700 hover:bg-neutral-100 transition-colors"
+-                >
+-                  <X className="w-4 h-4" />
+-                </button>
+-              )}
+-            </div>
+-          </div>
+-
+-          {/* Series Tabs Filter */}
+-          {availableSeries.length > 1 && (
+-            <div className="flex overflow-x-auto no-scrollbar justify-start sm:justify-center gap-2 pt-2 pb-1">
+-              <button
+-                type="button"
+-                onClick={() => handleSeriesChange('all')}
+-                className={`px-4 py-2 rounded-full text-xs sm:text-sm font-bold whitespace-nowrap transition-all duration-200 cursor-pointer ${
+-                  activeSeries === 'all'
+-                    ? 'bg-neutral-900 text-white shadow-md'
+-                    : 'bg-white text-neutral-700 hover:bg-neutral-100 border border-neutral-200/80'
+-                }`}
+-              >
+-                Tất Cả
+-              </button>
+-              {availableSeries.map((series) => {
+-                const isSelected = activeSeries === series;
+-                return (
+-                  <button
+-                    key={series}
+-                    type="button"
+-                    onClick={() => handleSeriesChange(series)}
+-                    className={`px-4 py-2 rounded-full text-xs sm:text-sm font-bold whitespace-nowrap transition-all duration-200 cursor-pointer ${
+-                      isSelected
+-                        ? 'bg-neutral-900 text-white shadow-md'
+-                        : 'bg-white text-neutral-700 hover:bg-neutral-100 border border-neutral-200/80'
+-                    }`}
+-                  >
+-                    {series}
+-                  </button>
+-                );
+-              })}
+-            </div>
+-          )}
+-
+-          {/* Sorter & Quick Filter Chips */}
+-          <div className="flex overflow-x-auto no-scrollbar justify-start sm:justify-center gap-2 pt-1 pb-1">
++        {/* Quick Filter Chips (Restored) */}
++        <div className="mt-12 mb-10 overflow-x-auto pb-2 no-scrollbar">
++          <div
++            className="flex w-max min-w-full justify-start gap-3 sm:justify-center items-center"
++            role="group"
++            aria-label={'Lọc sản phẩm ' + config.label}
++          >
+             <button
+-              className="md:hidden flex items-center gap-2 bg-white px-4 py-2 rounded-full border border-neutral-200 text-sm font-semibold shadow-sm"
++              className="md:hidden flex items-center gap-2 bg-white px-5 py-3 rounded-full border border-neutral-200 text-base font-medium shadow-sm transition-all hover:border-neutral-300"
+               onClick={() => setIsMobileSidebarOpen(true)}
+             >
+-              <Filter className="w-4 h-4" />
++              <Filter className="w-5 h-5" />
+               Bộ lọc
+             </button>
+ 
++
+           </div>
+         </div>
+ 
+-        {/* Dynamic Filter Layout - Sidebar + Grid */}
+-        <div className="flex flex-col md:flex-row gap-8 max-w-[1400px] mx-auto w-full">
++        {/* Dynamic Filter Layout */}
++        <div className="flex flex-col md:flex-row gap-8">
+           
+           {/* Sidebar Area */}
+           <div className={`
+\ No newline at end of file
+@@ -270,7 +155,7 @@
+                 <h2 className="font-bold text-lg">Bộ lọc sản phẩm</h2>
+                 <button onClick={() => setIsMobileSidebarOpen(false)} className="p-2 bg-neutral-100 rounded-full">
+                   <span className="sr-only">Close</span>
+-                  <X className="w-5 h-5" />
++                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                 </button>
+               </div>
+               <div className="p-4 md:p-0 sidebar-filter-wrapper">
+\ No newline at end of file
+@@ -282,7 +167,6 @@
+                   onCloseMobile={() => setIsMobileSidebarOpen(false)}
+                 />
+               </div>
+-
+             </div>
+           </div>
+ 
+\ No newline at end of file
+@@ -306,7 +190,7 @@
+             </div>
+ 
+             {isProductsLoading ? (
+-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-5">
++              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+                 {[1, 2, 3, 4, 5, 6, 7, 8].map(i => (
+                   <FilteredProductCardSkeleton key={i} />
+                 ))}
+\ No newline at end of file
+@@ -318,7 +202,7 @@
+                 </div>
+                 <h3 className="text-xl font-bold text-neutral-900 mb-2">Không tìm thấy sản phẩm</h3>
+                 <p className="text-neutral-500 max-w-md mx-auto mb-6">
+-                  Rất tiếc, không có sản phẩm nào khớp với các bộ lọc bạn đã chọn.
++                  Rất tiếc, không có sản phẩm nào khớp với các bộ lọc bạn đã chọn. Vui lòng thử xóa bớt bộ lọc để xem thêm kết quả.
+                 </p>
+                 <button 
+                   onClick={() => setSearchParams(new URLSearchParams())}
+\ No newline at end of file
+@@ -329,16 +213,15 @@
+               </div>
+             ) : (
+               <>
+-                  {/* Flattened grid */}
+-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-5">
+-                    {(productsData?.data || []).map((product: any) => (
+-                      <FilteredProductCard 
+-                        key={product.id} 
+-                        product={product} 
+-                        categorySlug={categorySlug} 
+-                      />
+-                    ))}
+-                  </div>
++                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
++                  {productsData?.data?.map((product: any) => (
++                    <FilteredProductCard 
++                      key={product.id} 
++                      product={product} 
++                      categorySlug={categorySlug} 
++                    />
++                  ))}
++                </div>
+ 
+                 {/* Pagination */}
+                 {productsData?.totalPages > 1 && (
+\ No newline at end of file
+@@ -357,7 +240,7 @@
+                           onClick={() => handlePageChange(idx + 1)}
+                           className={`w-10 h-10 rounded-full text-sm font-bold flex items-center justify-center transition-colors ${
+                             productsData.page === idx + 1 
+-                              ? 'bg-neutral-900 text-white' 
++                              ? 'bg-[var(--tablet-accent)] text-white' 
+                               : 'bg-transparent text-neutral-600 hover:bg-neutral-200'
+                           }`}
+                         >
+\ No newline at end of file
+@@ -378,41 +261,7 @@
+             )}
+           </div>
+         </div>
+-
+-        {/* Bottom Consultation & Trade-in Banner */}
+-        <motion.div
+-          initial={{ opacity: 0, y: 30 }}
+-          whileInView={{ opacity: 1, y: 0 }}
+-          viewport={{ once: true }}
+-          transition={{ duration: 0.6 }}
+-          className="mt-20 p-8 sm:p-10 rounded-3xl bg-white border border-neutral-200/90 shadow-[0_10px_30px_rgba(0,0,0,0.04)] flex flex-col md:flex-row items-center justify-between gap-6"
+-        >
+-          <div className="space-y-2 text-center md:text-left">
+-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-bold">
+-              <RefreshCw className="w-3.5 h-3.5" />
+-              <span>THU CŨ ĐỔI MỚI - TRỢ GIÁ TỚI 4.000.000₫</span>
+-            </div>
+-            <h4 className="text-xl sm:text-2xl font-extrabold text-neutral-900">
+-              {config.consultTitle || `Bạn Cần Tư Vấn Chọn Mẫu ${config.brand} Phù Hợp?`}
+-            </h4>
+-            <p className="text-xs sm:text-sm text-neutral-500 max-w-xl">
+-              {config.consultDescription || 'Đội ngũ chuyên viên kỹ thuật luôn sẵn sàng hỗ trợ bạn so sánh cấu hình, lựa chọn phiên bản bộ nhớ và thủ tục trả góp 0% nhanh nhất.'}
+-            </p>
+-          </div>
+-
+-          <div className="flex flex-wrap items-center gap-3 shrink-0">
+-            <a
+-              href="tel:19008888"
+-              className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-neutral-900 hover:bg-black text-white text-xs sm:text-sm font-bold transition-all duration-200 shadow-md hover:scale-105 active:scale-95 cursor-pointer"
+-            >
+-              <PhoneCall className="w-4 h-4" />
+-              <span>Hotline 1900 8888</span>
+-            </a>
+-          </div>
+-        </motion.div>
+-      </motion.div>
++      </div>
+     </section>
+   );
+-}
+-
+-export default BrandAllProductsSection;
++}
+\ No newline at end of file

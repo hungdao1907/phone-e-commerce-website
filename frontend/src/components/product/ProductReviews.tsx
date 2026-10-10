@@ -326,19 +326,7 @@ export function ProductReviews({ productId, categorySlug }: { productId?: string
         </div>
       )}
 
-      {/* Login Modal */}
-      {isLoginModalOpen && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-neutral-900/40 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl w-full max-w-md p-6 shadow-xl text-center">
-            <h3 className="text-xl font-bold mb-3">Đăng nhập để đánh giá</h3>
-            <p className="text-neutral-500 mb-6 text-sm">Vui lòng đăng nhập để chia sẻ trải nghiệm của bạn về sản phẩm này.</p>
-            <div className="flex justify-center gap-3">
-              <button onClick={() => setIsLoginModalOpen(false)} className="px-6 py-2 border border-neutral-200 rounded-full text-sm font-semibold text-neutral-600 hover:bg-neutral-50 transition-colors">Đóng</button>
-              <button onClick={() => navigate('/login')} className="px-6 py-2 rounded-full text-sm font-semibold bg-blue-600 text-white hover:bg-blue-700 transition-colors">Đăng nhập</button>
-            </div>
-          </div>
-        </div>
-      )}
+
 
       {/* Write Review Form Modal */}
       {isWriting && (

@@ -1,4 +1,4 @@
-import { lazy, Suspense, useLayoutEffect, useMemo } from 'react';
+import { lazy, Suspense, useLayoutEffect, useMemo, useRef } from 'react';
 import { BrowserRouter, Routes, Route, Outlet, Navigate, useLocation, useNavigationType } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import ReactLenis from 'lenis/react';
@@ -70,8 +70,16 @@ import { readHomeSectionReturn } from './lib/homeSectionHistory';
 function RouteScrollManager() {
   const location = useLocation();
   const navigationType = useNavigationType();
+  const prevPathname = useRef(location.pathname);
 
   useLayoutEffect(() => {
+    // If only the query parameters changed, don't scroll to top
+    if (prevPathname.current === location.pathname && navigationType !== 'POP') {
+      prevPathname.current = location.pathname;
+      return;
+    }
+    prevPathname.current = location.pathname;
+
     const marker = readHomeSectionReturn();
     const shouldRestoreHomeSection =
       location.pathname === '/' &&

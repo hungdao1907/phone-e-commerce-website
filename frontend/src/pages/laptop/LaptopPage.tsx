@@ -155,7 +155,7 @@ export function LaptopPage({ brand }: LaptopPageProps) {
                   storage: getSpec('ssd') || getSpec('hdd') || getSpec('ổ cứng') || getSpec('lưu trữ') || '256GB SSD',
                   battery: getSpec('pin') || 'Pin cả ngày dài',
                 },
-                featured: idx < 3,
+                featured: idx < 4,
               };
             });
 

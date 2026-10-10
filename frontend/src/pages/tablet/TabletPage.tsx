@@ -32,10 +32,16 @@ export function TabletPage({ brand }: TabletPageProps) {
         if (res.ok) {
           const data = await res.json();
           // Filter by brand (category name or product name)
-          const apiProducts = data.filter((p: any) =>
-            p.category?.name?.toLowerCase().includes(brand.toLowerCase()) ||
-            p.name?.toLowerCase().includes(brand.toLowerCase())
-          );
+          const apiProducts = data.filter((p: any) => {
+            const tabletSlugs = ['ipad', 'samsung-galaxy-tab', 'xiaomi-pad', 'lenovo', 'oppo-pad', 'may-tinh-bang', 'tablet'];
+            const isTablet = tabletSlugs.includes(p.category?.slug) || p.category?.name?.toLowerCase().includes('bảng');
+            const pBrand = (p.brand || '').toLowerCase();
+            
+            if (brand === 'ipad') {
+              return isTablet && (pBrand === 'apple' || p.name?.toLowerCase().includes('ipad'));
+            }
+            return isTablet && (pBrand === brand.toLowerCase() || p.name?.toLowerCase().includes(brand.toLowerCase()));
+          });
 
           if (apiProducts.length > 0) {
             const mappedProducts: TabletModel[] = apiProducts.map((ap: any, idx: number) => {
@@ -148,7 +154,7 @@ export function TabletPage({ brand }: TabletPageProps) {
                   battery: getSpec('pin') || 'Pin cả ngày',
                   storage: getSpec('lưu trữ') || getSpec('dung lượng') || getSpec('rom') || 'Từ 64GB',
                 },
-                featured: idx < 3,
+                featured: idx < 4,
               };
             });
 

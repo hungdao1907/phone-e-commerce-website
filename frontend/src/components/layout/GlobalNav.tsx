@@ -187,9 +187,11 @@ export function GlobalNav() {
         title,
         links: filteredChildren.map((c: any) => c.name),
         slugs: filteredChildren.map((c: any) => {
-          // Force iPad slug mapping just in case db returns 'apple'
-          if (prefix === 'tablet' && c.slug === 'apple') {
-            return `${prefix}/ipad`;
+          // Force iPad/Tablet slug mapping
+          if (prefix === 'tablet') {
+            if (c.slug === 'apple' || c.slug === 'ipad') return `${prefix}/ipad`;
+            if (c.slug.includes('samsung')) return `${prefix}/samsung`;
+            if (c.slug.includes('xiaomi')) return `${prefix}/xiaomi`;
           }
           if (prefix === 'watch') {
             if (c.name.toLowerCase().includes('samsung')) return 'watch/samsung';

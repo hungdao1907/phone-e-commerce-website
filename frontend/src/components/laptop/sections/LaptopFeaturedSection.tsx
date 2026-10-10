@@ -10,11 +10,11 @@ interface LaptopFeaturedSectionProps {
 
 export function LaptopFeaturedSection({ config, products }: LaptopFeaturedSectionProps) {
   const reducedMotion = useReducedMotion();
-  const featuredProducts = products.filter((product) => product.featured).slice(0, 3);
+  const featuredProducts = products.filter((product) => product.featured).slice(0, 4);
 
   return (
     <section aria-labelledby="laptop-featured-title" className="bg-white px-4 py-24 sm:px-6 sm:py-32 lg:px-8">
-      <div className="mx-auto w-full max-w-7xl">
+      <div className="mx-auto w-full max-w-[1400px]">
         <motion.header
           initial={reducedMotion ? false : { opacity: 0, y: 16 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -33,7 +33,7 @@ export function LaptopFeaturedSection({ config, products }: LaptopFeaturedSectio
             Những cấu hình ấn tượng nhất phục vụ nhu cầu xử lý đồ họa, lập trình và sáng tạo nội dung chuyên nghiệp.
           </p>
         </motion.header>
-        <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {featuredProducts.map((product, index) => (
             <motion.div
               key={product.id}

@@ -20,13 +20,44 @@ export function CrossSellSection({ currentProductId, brand, categoryId }: CrossS
         const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/products`);
         if (res.ok) {
           const data = await res.json();
-          // Filter by brand or category, excluding current product
-          const related = data.filter((p: any) => 
-            p.id !== currentProductId &&
-            (p.brand === brand || p.categoryId === categoryId || p.category?.parent?.id === categoryId)
-          ).slice(0, 4); // Limit to 4 items for 2x2 grid
           
-          setProducts(related);
+          // 1. Find the current product to know its category
+          const currentProduct = data.find((p: any) => p.id === currentProductId);
+          const currentCategorySlug = currentProduct?.category?.slug || '';
+          
+          // 2. Filter products of the same brand, excluding the current product
+          const sameBrandProducts = data.filter((p: any) => 
+            p.id !== currentProductId && 
+            p.brand === brand &&
+            p.status === 'active'
+          );
+
+          // 3. Group by category slug
+          const byCategory: Record<string, any[]> = {};
+          sameBrandProducts.forEach((p: any) => {
+            const catSlug = p.category?.slug || 'other';
+            if (!byCategory[catSlug]) byCategory[catSlug] = [];
+            byCategory[catSlug].push(p);
+          });
+
+          // 4. Ecosystem pick: try to pick products from OTHER categories
+          let crossSell: any[] = [];
+          const otherCategories = Object.keys(byCategory).filter(c => c !== currentCategorySlug);
+          
+          // Try to pick one from each other category first
+          for (const cat of otherCategories) {
+            if (crossSell.length < 4 && byCategory[cat].length > 0) {
+              crossSell.push(byCategory[cat][0]);
+            }
+          }
+
+          // If we still need more to fill 4 slots, pick from the same category or remaining products
+          if (crossSell.length < 4 && byCategory[currentCategorySlug]) {
+            const remainingSameCat = byCategory[currentCategorySlug].slice(0, 4 - crossSell.length);
+            crossSell = [...crossSell, ...remainingSameCat];
+          }
+
+          setProducts(crossSell.slice(0, 4));
         }
       } catch (err) {
         console.error('Error fetching cross-sell products:', err);
@@ -34,12 +65,12 @@ export function CrossSellSection({ currentProductId, brand, categoryId }: CrossS
         setLoading(false);
       }
     };
-    if (brand || categoryId) {
+    if (brand) {
       fetchProducts();
     } else {
       setLoading(false);
     }
-  }, [currentProductId, brand, categoryId]);
+  }, [currentProductId, brand]);
 
   if (loading || products.length === 0) return null;
 

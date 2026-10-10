@@ -14,6 +14,7 @@ import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { SidebarFilter } from '@/components/store/SidebarFilter';
 import { ActiveFilterChips } from '@/components/store/ActiveFilterChips';
 import { FilteredProductCard } from '@/components/store/FilteredProductCard';
+import { FilteredProductCardSkeleton } from '@/components/store/FilteredProductCardSkeleton';
 import type { LaptopBrandConfig, LaptopModel } from '../../../types/laptop/types/index';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
@@ -23,12 +24,6 @@ interface LaptopAllProductsSectionProps {
   products: LaptopModel[];
 }
 
-const PRODUCT_FILTERS = [
-  { id: 'popular', label: 'Phổ biến', icon: Star, sortValue: 'newest' },
-  { id: 'promotion', label: 'Khuyến mãi HOT', icon: BadgePercent, sortValue: 'promotion' },
-  { id: 'price-asc', label: 'Giá Thấp - Cao', icon: ArrowUpNarrowWide, sortValue: 'price_asc' },
-  { id: 'price-desc', label: 'Giá Cao - Thấp', icon: ArrowDownNarrowWide, sortValue: 'price_desc' },
-] as const;
 
 export function LaptopAllProductsSection({ config }: LaptopAllProductsSectionProps) {
   const containerRef = useRef<HTMLElement>(null);
@@ -58,6 +53,7 @@ export function LaptopAllProductsSection({ config }: LaptopAllProductsSectionPro
     const params = new URLSearchParams(searchParams);
     params.set('category', categorySlug);
     params.set('brand', brandSlug);
+    params.set('limit', '8');
 
     const res = await fetch(`${API_URL}/api/products/search?${params.toString()}`);
     if (!res.ok) throw new Error('Failed to fetch products');
@@ -70,11 +66,12 @@ export function LaptopAllProductsSection({ config }: LaptopAllProductsSectionPro
     placeholderData: keepPreviousData,
   });
 
-  const { data: productsData, isLoading: isLoadingProducts } = useQuery({
+  const { data: productsData, isLoading: isLoadingProducts, isFetching: isFetchingProducts } = useQuery({
     queryKey: ['productsSearch', categorySlug, brandSlug, searchParams.toString()],
     queryFn: fetchProducts,
-    placeholderData: keepPreviousData,
   });
+
+  const isProductsLoading = isLoadingProducts || isFetchingProducts;
 
   const handleSortChange = (sortValue: string) => {
     searchParams.set('sort', sortValue);
@@ -102,9 +99,9 @@ export function LaptopAllProductsSection({ config }: LaptopAllProductsSectionPro
       id="laptop-all-products"
       ref={containerRef}
       aria-labelledby="laptop-all-products-title"
-      className="scroll-mt-16 bg-[#f6f7f9] px-4 py-24 sm:px-6 sm:py-32 lg:px-8 overflow-hidden"
+      className="scroll-mt-16 bg-[#f6f7f9] px-4 py-24 sm:px-6 sm:py-32 lg:px-8"
     >
-      <div className="mx-auto w-full max-w-[1400px]">
+      <div className="relative z-10 mx-auto w-full max-w-[1400px]">
         {/* Section Header */}
         <header className="mx-auto max-w-3xl text-center mb-12">
           <span className="inline-flex items-center gap-2 rounded-full border border-neutral-200 bg-white px-3 py-1.5 text-xs font-semibold text-neutral-700">
@@ -132,27 +129,6 @@ export function LaptopAllProductsSection({ config }: LaptopAllProductsSectionPro
               Bộ lọc
             </button>
 
-            {PRODUCT_FILTERS.map((filter) => {
-              const Icon = filter.icon;
-              const isActive = activeSort === filter.sortValue;
-              return (
-                <button
-                  key={filter.id}
-                  type="button"
-                  aria-pressed={isActive}
-                  onClick={() => handleSortChange(filter.sortValue)}
-                  className={
-                    'inline-flex items-center gap-2.5 whitespace-nowrap rounded-full border px-5 py-3 text-base font-medium transition-all ' +
-                    (isActive
-                      ? 'border-[var(--laptop-accent)] bg-white text-[var(--laptop-accent)] shadow-[0_4px_14px_rgba(15,23,42,0.08)] font-bold'
-                      : 'border-neutral-200 bg-white text-neutral-800 hover:border-neutral-300')
-                  }
-                >
-                  <Icon className="h-5 w-5" />
-                  {filter.label}
-                </button>
-              );
-            })}
           </div>
         </div>
 
@@ -161,11 +137,14 @@ export function LaptopAllProductsSection({ config }: LaptopAllProductsSectionPro
           
           {/* Sidebar Area */}
           <div className={`
-            fixed inset-0 z-50 bg-black/50 md:bg-transparent md:static md:w-64 md:flex-shrink-0 transition-opacity duration-300
+            fixed inset-0 z-50 bg-black/50 md:bg-transparent md:sticky md:top-24 md:h-[calc(100vh-120px)] md:w-64 md:flex-shrink-0 transition-opacity duration-300
             ${isMobileSidebarOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none md:opacity-100 md:pointer-events-auto'}
           `}>
-            <div className={`
-              absolute md:static inset-y-0 left-0 w-[85%] max-w-sm bg-[#f5f5f7] md:bg-transparent h-full md:h-auto md:w-full transition-transform duration-300 transform overflow-y-auto md:overflow-visible
+            <div 
+              data-lenis-prevent="true"
+              className={`
+              absolute md:static inset-y-0 left-0 w-[85%] max-w-sm bg-[#f5f5f7] md:bg-transparent h-full md:w-full transition-transform duration-300 transform overflow-y-auto
+              [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-neutral-200 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-neutral-300
               ${isMobileSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
             `}>
               <div className="md:hidden flex items-center justify-between p-4 bg-white border-b border-neutral-200 sticky top-0 z-10">
@@ -181,12 +160,8 @@ export function LaptopAllProductsSection({ config }: LaptopAllProductsSectionPro
                   isLoading={isLoadingFilters} 
                   hideCategoryAndBrand={true} 
                   categorySlug={categorySlug}
+                  onCloseMobile={() => setIsMobileSidebarOpen(false)}
                 />
-              </div>
-              <div className="md:hidden sticky bottom-0 p-4 bg-white border-t border-neutral-200">
-                <button onClick={() => setIsMobileSidebarOpen(false)} className="w-full bg-[var(--laptop-accent)] text-white font-bold py-3 rounded-xl">
-                  Xem kết quả
-                </button>
               </div>
             </div>
           </div>
@@ -210,10 +185,10 @@ export function LaptopAllProductsSection({ config }: LaptopAllProductsSectionPro
               )}
             </div>
 
-            {isLoadingProducts ? (
+            {isProductsLoading ? (
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
-                {[1, 2, 3, 4, 5, 6].map(i => (
-                  <div key={i} className="bg-white rounded-2xl h-80 animate-pulse border border-neutral-100"></div>
+                {[1, 2, 3, 4, 5, 6, 7, 8].map(i => (
+                  <FilteredProductCardSkeleton key={i} />
                 ))}
               </div>
             ) : productsData?.data?.length === 0 ? (

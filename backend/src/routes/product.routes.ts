@@ -193,8 +193,8 @@ router.get('/filters', async (req, res) => {
         whereClause.category = { slug: { in: ['iphone', 'samsung', 'xiaomi', 'oppo', 'ien-thoai', 'dien-thoai', 'phone'] } };
       } else if (catSlug === 'laptop') {
         whereClause.category = { slug: { in: ['macbook', 'asus', 'lenovo', 'laptop'] } };
-      } else if (catSlug === 'tablet') {
-        whereClause.category = { slug: { in: ['ipad', 'samsung-tablet', 'xiaomi-tablet', 'tablet'] } };
+      } else if (catSlug === 'tablet' || catSlug === 'may-tinh-bang') {
+        whereClause.category = { slug: { in: ['ipad', 'samsung-galaxy-tab', 'xiaomi-pad', 'lenovo', 'oppo-pad', 'may-tinh-bang', 'tablet'] } };
       } else if (catSlug === 'watch' || catSlug === 'dong-ho-thong-minh' || catSlug === 'ong-ho-thong-minh') {
         whereClause.category = { slug: { in: ['apple-watch', 'samsung-watch', 'xiaomi-watch', 'dong-ho-thong-minh', 'ong-ho-thong-minh'] } };
       } else {
@@ -214,7 +214,20 @@ router.get('/filters', async (req, res) => {
     });
 
     const filters = extractFiltersFromProducts(products);
-    res.json(filters);
+
+    // Real price bounds — same effective price (salePrice || price) used by /search price filter
+    const allPrices: number[] = [];
+    for (const p of products as any[]) {
+      for (const v of p.variants || []) {
+        const vp = v.salePrice || v.price || 0;
+        if (vp > 0) allPrices.push(vp);
+      }
+    }
+    const priceRange = allPrices.length
+      ? { min: Math.min(...allPrices), max: Math.max(...allPrices) }
+      : null;
+
+    res.json({ ...filters, priceRange });
   } catch (error) {
     console.error('Error fetching filters:', error);
     res.status(500).json({ message: 'Lỗi server' });
@@ -563,7 +576,7 @@ router.get('/search', async (req, res) => {
     const { 
       category, brand, minPrice, maxPrice, 
       ram, storage, cpu, gpu, screenSize, color, 
-      size, connectivity, material,
+      size, connectivity, material, os,
       sort, page = '1', limit = '12' 
     } = req.query;
 
@@ -579,8 +592,8 @@ router.get('/search', async (req, res) => {
         whereClause.category = { slug: { in: ['iphone', 'samsung', 'xiaomi', 'oppo', 'ien-thoai', 'dien-thoai', 'phone'] } };
       } else if (catSlug === 'laptop') {
         whereClause.category = { slug: { in: ['macbook', 'asus', 'lenovo', 'laptop'] } };
-      } else if (catSlug === 'tablet') {
-        whereClause.category = { slug: { in: ['ipad', 'samsung-tablet', 'xiaomi-tablet', 'tablet'] } };
+      } else if (catSlug === 'tablet' || catSlug === 'may-tinh-bang') {
+        whereClause.category = { slug: { in: ['ipad', 'samsung-galaxy-tab', 'xiaomi-pad', 'lenovo', 'oppo-pad', 'may-tinh-bang', 'tablet'] } };
       } else if (catSlug === 'watch' || catSlug === 'dong-ho-thong-minh' || catSlug === 'ong-ho-thong-minh') {
         whereClause.category = { slug: { in: ['apple-watch', 'samsung-watch', 'xiaomi-watch', 'dong-ho-thong-minh', 'ong-ho-thong-minh'] } };
       } else {
@@ -589,7 +602,10 @@ router.get('/search', async (req, res) => {
     }
 
     if (brand) {
-      whereClause.brand = { equals: brand as string, mode: 'insensitive' };
+      const brands = (brand as string).split(',').map(b => b.trim()).filter(Boolean);
+      if (brands.length > 0) {
+        whereClause.OR = brands.map(b => ({ brand: { equals: b, mode: 'insensitive' } }));
+      }
     }
 
     let products = await prisma.product.findMany({
@@ -614,6 +630,7 @@ router.get('/search', async (req, res) => {
     const sizeArr = parseArrayParam(size);
     const connArr = parseArrayParam(connectivity);
     const matArr = parseArrayParam(material);
+    const osArr = parseArrayParam(os);
     const hasMinPrice = minPrice !== undefined && minPrice !== '';
     const hasMaxPrice = maxPrice !== undefined && maxPrice !== '';
     const minP = hasMinPrice ? parseInt(minPrice as string, 10) : 0;
@@ -623,6 +640,7 @@ router.get('/search', async (req, res) => {
       ramArr.length > 0 || storageArr.length > 0 || cpuArr.length > 0 ||
       gpuArr.length > 0 || screenArr.length > 0 || colorArr.length > 0 ||
       sizeArr.length > 0 || connArr.length > 0 || matArr.length > 0 ||
+      osArr.length > 0 ||
       hasMinPrice || hasMaxPrice;
 
     if (hasAnyFilter) {
@@ -671,6 +689,12 @@ router.get('/search', async (req, res) => {
           const sMatch = rawScreen.match(/([\d,.]+)\s*(?:inch|inches|"|″)/i);
           const shortScreen = sMatch ? sMatch[1].replace(',', '.') + '"' : rawScreen;
           if (!screenArr.includes(shortScreen) && !screenArr.includes(rawScreen)) return false;
+        }
+
+        // OS
+        if (osArr.length > 0) {
+          const rawOs = specs['os'] || specs['hệ điều hành'] || '';
+          if (!osArr.some(o => rawOs.includes(o) || o.includes(rawOs))) return false;
         }
 
         // Camera - extract short value for matching
