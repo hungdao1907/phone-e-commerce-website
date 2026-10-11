@@ -1,13 +1,13 @@
 import express from 'express';
-import { PrismaClient } from '@prisma/client';
+import prisma from '../config/prisma';
 import { authenticateToken } from '../middleware/auth.middleware';
+import { requireRoles } from '../middleware/authorization.middleware';
 import { getRouteParam } from '../utils/route-param';
 
 const router = express.Router();
-const prisma = new PrismaClient();
 
-// GET all campaigns
-router.get('/', async (req, res) => {
+// Admin/Staff campaign management includes inactive/scheduled campaigns.
+router.get('/', authenticateToken, requireRoles('staff', 'admin', 'superadmin'), async (req, res) => {
   try {
     const campaigns = await prisma.campaign.findMany({
       orderBy: { createdAt: 'desc' }
@@ -21,7 +21,7 @@ router.get('/', async (req, res) => {
 
 
 // POST create campaign
-router.post('/', async (req, res) => {
+router.post('/', authenticateToken, requireRoles('staff', 'admin', 'superadmin'), async (req, res) => {
   try {
     const { name, description, discountType, discountValue, startDate, endDate, isActive, appliesTo, targetIds, bannerUrl } = req.body;
 
@@ -48,7 +48,7 @@ router.post('/', async (req, res) => {
 });
 
 // PUT update campaign
-router.put('/:id', async (req, res) => {
+router.put('/:id', authenticateToken, requireRoles('staff', 'admin', 'superadmin'), async (req, res) => {
   try {
     const { name, description, discountType, discountValue, startDate, endDate, isActive, appliesTo, targetIds, bannerUrl } = req.body;
 
@@ -76,7 +76,7 @@ router.put('/:id', async (req, res) => {
 });
 
 // DELETE campaign
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', authenticateToken, requireRoles('staff', 'admin', 'superadmin'), async (req, res) => {
   try {
     await prisma.campaign.delete({
       where: { id: getRouteParam(req.params.id) }

@@ -69,10 +69,13 @@ export function ProductPurchasePage() {
             const storageLabel = v.attributes?.['Dung lượng'] || 'Tiêu chuẩn';
             if (!uniqueStorages.has(storageLabel)) {
               const basePrice = v.price || dbProduct.price || 0;
+              const effectivePrice = Number.isSafeInteger(v.effectivePrice)
+                ? v.effectivePrice
+                : (v.salePrice != null && v.salePrice < basePrice ? v.salePrice : basePrice);
               uniqueStorages.set(storageLabel, {
                 id: `storage-${storageLabel}`,
                 label: storageLabel,
-                price: basePrice,
+                price: effectivePrice,
                 originalPrice: basePrice,
                 stockByColor: colors.map(() => v.stock || 0)
               });
@@ -88,12 +91,15 @@ export function ProductPurchasePage() {
             const colorName = v.attributes?.['Màu sắc'] || 'Màu mặc định';
             const storageLabel = v.attributes?.['Dung lượng'] || 'Tiêu chuẩn';
             const basePrice = v.price || dbProduct.price || 0;
+            const effectivePrice = Number.isSafeInteger(v.effectivePrice)
+              ? v.effectivePrice
+              : (v.salePrice != null && v.salePrice < basePrice ? v.salePrice : basePrice);
             return {
               id: v.id,
               sku: v.sku || dbProduct.id,
               colorId: `color-${colorName}`,
               storageId: `storage-${storageLabel}`,
-              price: basePrice,
+              price: effectivePrice,
               originalPrice: basePrice,
               stock: v.stock || 0
             };

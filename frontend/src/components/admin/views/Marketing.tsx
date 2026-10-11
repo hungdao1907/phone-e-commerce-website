@@ -17,7 +17,8 @@ export function Marketing() {
   const [isProductSelectorOpen, setIsProductSelectorOpen] = useState(false);
   const [productSearch, setProductSearch] = useState('');
 
-  const { token } = useAuthStore();
+  const { token, user } = useAuthStore();
+  const isStaff = user?.role === 'staff';
 
   const [formData, setFormData] = useState({
     name: '',

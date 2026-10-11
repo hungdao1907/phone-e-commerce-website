@@ -1,6 +1,4 @@
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import prisma from '../config/prisma';
 
 // Normalization mappings
 const SPEC_MAPPINGS: Record<string, string> = {

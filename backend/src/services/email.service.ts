@@ -3,13 +3,22 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.SMTP_EMAIL,
-    pass: process.env.SMTP_PASSWORD,
-  },
-});
+const transporter = process.env.SMTP_HOST
+  ? nodemailer.createTransport({
+      host: process.env.SMTP_HOST,
+      port: Number(process.env.SMTP_PORT || 1025),
+      secure: process.env.SMTP_SECURE === 'true',
+      ...(process.env.SMTP_EMAIL && process.env.SMTP_PASSWORD
+        ? { auth: { user: process.env.SMTP_EMAIL, pass: process.env.SMTP_PASSWORD } }
+        : {}),
+    })
+  : nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: process.env.SMTP_EMAIL,
+        pass: process.env.SMTP_PASSWORD,
+      },
+    });
 
 export const sendOrderReceivedEmail = async (customerEmail: string, customerName: string, orderCode: string) => {
   try {
@@ -32,7 +41,6 @@ export const sendOrderReceivedEmail = async (customerEmail: string, customerName
       subject: `[AppleWeb] Xác nhận yêu cầu đặt hàng #${orderCode}`,
       html: htmlContent,
     });
-    console.log(`Email "Order Received" sent to ${customerEmail}`);
   } catch (error) {
     console.error('Error sending order received email:', error);
   }
@@ -84,7 +92,6 @@ export const sendOrderConfirmedEmail = async (customerEmail: string, customerNam
       subject: `[AppleWeb] Đơn hàng #${orderCode} đã được xác nhận và đang giao`,
       html: htmlContent,
     });
-    console.log(`Email "Order Confirmed" sent to ${customerEmail}`);
   } catch (error) {
     console.error('Error sending order confirmed email:', error);
   }
@@ -119,19 +126,16 @@ export const sendTrackingOtpEmail = async (customerEmail: string, customerName: 
       </div>
     `;
 
-    if (process.env.SMTP_EMAIL && process.env.SMTP_PASSWORD) {
-      await transporter.sendMail({
-        from: `"AppleWeb Store" <${process.env.SMTP_EMAIL}>`,
-        to: customerEmail,
-        subject: `[AppleWeb] Mã xác thực OTP tra cứu đơn hàng #${orderCode}`,
-        html: htmlContent,
-      });
-      console.log(`[Email Service] Tracking OTP sent to ${customerEmail}`);
-    } else {
-      console.log(`[Email Service - Dev fallback] Tracking OTP for Order #${orderCode} sent to ${customerEmail}: ${otp}`);
-    }
+    if (!process.env.SMTP_HOST && (!process.env.SMTP_EMAIL || !process.env.SMTP_PASSWORD)) return;
+
+    await transporter.sendMail({
+      from: `"AppleWeb Store" <${process.env.SMTP_EMAIL || 'no-reply@localhost'}>`,
+      to: customerEmail,
+      subject: `[AppleWeb] Mã xác thực OTP tra cứu đơn hàng #${orderCode}`,
+      html: htmlContent,
+    });
   } catch (error) {
-    console.error('Error sending tracking OTP email:', error);
+    console.error('Error sending tracking OTP email.');
   }
 };
 

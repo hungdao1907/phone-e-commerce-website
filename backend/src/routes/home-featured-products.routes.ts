@@ -2,6 +2,7 @@ import { Prisma } from '@prisma/client';
 import { Router } from 'express';
 import prisma from '../config/prisma';
 import { authenticateToken } from '../middleware/auth.middleware';
+import { requireRoles } from '../middleware/authorization.middleware';
 import { getRouteParam } from '../utils/route-param';
 
 const router = Router();
@@ -51,8 +52,8 @@ router.get('/', async (_req, res) => {
   }
 });
 
-// Admin list deliberately includes inactive selections and inactive products for management.
-router.get('/admin', authenticateToken, async (_req, res) => {
+// Admin/Staff list deliberately includes inactive selections and inactive products for management.
+router.get('/admin', authenticateToken, requireRoles('staff', 'admin', 'superadmin'), async (_req, res) => {
   try {
     const featuredProducts = await prisma.homeFeaturedProduct.findMany({
       include: productInclude,
@@ -66,7 +67,7 @@ router.get('/admin', authenticateToken, async (_req, res) => {
   }
 });
 
-router.post('/admin', authenticateToken, async (req, res) => {
+router.post('/admin', authenticateToken, requireRoles('staff', 'admin', 'superadmin'), async (req, res) => {
   try {
     const productId = typeof req.body?.productId === 'string' ? req.body.productId.trim() : '';
     const isActive = readIsActive(req.body?.isActive);
@@ -137,7 +138,7 @@ router.post('/admin', authenticateToken, async (req, res) => {
 });
 
 // Product selection is immutable after creation; edit only featured-specific configuration.
-router.put('/admin/:id', authenticateToken, async (req, res) => {
+router.put('/admin/:id', authenticateToken, requireRoles('staff', 'admin', 'superadmin'), async (req, res) => {
   try {
     const id = getRouteParam(req.params.id);
     if (!id) return res.status(400).json({ message: 'ID san pham noi bat khong hop le.' });
@@ -207,7 +208,7 @@ router.put('/admin/:id', authenticateToken, async (req, res) => {
   }
 });
 
-router.delete('/admin/:id', authenticateToken, async (req, res) => {
+router.delete('/admin/:id', authenticateToken, requireRoles('staff', 'admin', 'superadmin'), async (req, res) => {
   try {
     const id = getRouteParam(req.params.id);
     if (!id) return res.status(400).json({ message: 'ID san pham noi bat khong hop le.' });

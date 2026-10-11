@@ -3,8 +3,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { MessageSquare, X, Send, Bot, RotateCcw, Sparkles, HelpCircle, Loader2 } from 'lucide-react';
 import { ChatMessage, QuickPrompt } from './types';
 import { ChatMessageItem } from './ChatMessageItem';
-import { sendChatMessage } from '../../services/chatbot.api';
+import { extractSuggestedProductIds, fetchChatbotCatalogProducts, sendChatMessage } from '../../services/chatbot.api';
+import { resolveQuotationIntent } from './quotation-intent';
 import { MeshGradientSVG } from '../ui/shader-svg';
+import { CustomerQuotationPanel } from './CustomerQuotationPanel';
 
 const SESSION_KEY = 'webphone_chat_session_id';
 
@@ -161,22 +163,36 @@ export function ChatWidget() {
         createdAt: Date.now(),
       };
 
-      if (response.result_type === 'product_search') {
+      const previousProducts = [...messages].reverse().find(message => message.products?.length)?.products || [];
+      const quotationResult = await resolveQuotationIntent(text, response, previousProducts);
+
+      if (quotationResult) {
+        assistantMessage.text = quotationResult.text;
+        assistantMessage.products = quotationResult.products;
+        assistantMessage.isError = quotationResult.isError;
+      } else if (response.result_type === 'product_search') {
         assistantMessage.text = response.response;
-        assistantMessage.products = response.products;
+        const suggestedIds = extractSuggestedProductIds(response);
+        try {
+          assistantMessage.products = await fetchChatbotCatalogProducts(suggestedIds);
+          if (suggestedIds.length > 0 && assistantMessage.products.length === 0) {
+            assistantMessage.text = 'Không thể xác minh các sản phẩm gợi ý trong danh mục hiện tại. Vui lòng xem danh mục WebPhone để biết thông tin mới nhất.';
+          }
+        } catch {
+          assistantMessage.text = 'Danh mục hiện chưa thể xác minh. Vui lòng xem trực tiếp trang sản phẩm để biết thông tin mới nhất.';
+        }
       } else if (response.result_type === 'quotation') {
-        assistantMessage.text = response.response || response.message;
-        if (response.response_type === 'file') {
-          assistantMessage.quotation = {
-            responseType: 'file',
-            success: response.success,
-            quoteStatus: response.quote_status,
-            quoteNumber: response.quote_number,
-            fileName: response.file_name,
-            mimeType: response.mime_type,
-            downloadUrl: response.download_url,
-            totalDisplay: response.total_display
-          };
+        const suggestedIds = extractSuggestedProductIds(response);
+        assistantMessage.text = suggestedIds.length
+          ? 'Đã xác minh sản phẩm từ danh mục Backend. Hãy chọn phiên bản và số lượng trên thẻ để tiếp tục yêu cầu báo giá.'
+          : 'Bạn muốn báo giá mẫu máy nào? Hãy cho biết tên hoặc dòng máy để tìm trong danh mục WebPhone.';
+        try {
+          assistantMessage.products = await fetchChatbotCatalogProducts(suggestedIds);
+          if (suggestedIds.length > 0 && assistantMessage.products.length === 0) {
+            assistantMessage.text = 'Không xác minh được sản phẩm trong danh mục hiện tại. Hãy tìm lại sản phẩm để tiếp tục yêu cầu báo giá.';
+          }
+        } catch {
+          assistantMessage.text = 'Danh mục Backend hiện chưa thể xác minh; chưa có báo giá hoặc PDF nào được tạo.';
         }
       } else if (response.result_type === 'error') {
         assistantMessage.isError = true;
@@ -188,11 +204,15 @@ export function ChatWidget() {
 
       setMessages(prev => prev.map(m => m.id === loadingId ? assistantMessage : m));
     } catch (error) {
+      const previousProducts = [...messages].reverse().find(message => message.products?.length)?.products || [];
+      const quotationFallback = await resolveQuotationIntent(text, {}, previousProducts);
       setMessages(prev => prev.map(m => m.id === loadingId ? {
         id: crypto.randomUUID(),
         role: 'assistant',
         createdAt: Date.now(),
-        isError: true
+        isError: quotationFallback?.isError ?? !quotationFallback,
+        text: quotationFallback?.text || 'Không thể kết nối chatbot. Vui lòng thử lại.' ,
+        products: quotationFallback?.products,
       } : m));
     } finally {
       setIsSending(false);
@@ -334,6 +354,7 @@ export function ChatWidget() {
               {messages.map((msg) => (
                 <ChatMessageItem key={msg.id} message={msg} />
               ))}
+              <CustomerQuotationPanel />
 
               {/* Quick Prompts Hub (shown when starting a conversation) */}
               {isOnlyWelcomeMessage && (

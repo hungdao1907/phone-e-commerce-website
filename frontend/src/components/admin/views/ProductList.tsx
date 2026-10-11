@@ -141,12 +141,13 @@ const PREDEFINED_OPTIONS: Record<string, string[]> = {
   "Chất liệu": ["Nhôm", "Nhôm Armor", "Titan", "Thép không gỉ", "Hợp kim nhôm"]
 };
 
-export function ProductList() {
+export function ProductList({ readOnly }: { readOnly?: boolean } = {}) {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [search, setSearch] = useState('');
   const [isLoading, setIsLoading] = useState(true);
-  const { token } = useAuthStore();
+  const { token, user } = useAuthStore();
+  const isStaff = user?.role === 'staff';
   const [view, setView] = useState<'list' | 'form'>('list');
 
   // --- Admin List State ---
@@ -412,7 +413,7 @@ export function ProductList() {
     try {
       const uploadData = new FormData();
       uploadData.append('image', file);
-      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/upload`, { method: 'POST', body: uploadData });
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/upload`, { method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: uploadData });
       const data = await res.json();
       if (data.imageUrl) {
         setVariantOptions(prev => {
@@ -454,7 +455,7 @@ export function ProductList() {
       if (file.size > 5 * 1024 * 1024) throw new Error(`Ảnh vượt quá 5MB`);
       const uploadData = new FormData();
       uploadData.append('image', file);
-      const res = await fetch(`${API_BASE_URL}/api/upload`, { method: 'POST', body: uploadData });
+      const res = await fetch(`${API_BASE_URL}/api/upload`, { method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: uploadData });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Lỗi tải ảnh');
 
@@ -495,7 +496,7 @@ export function ProductList() {
         const file = files[i];
         const uploadData = new FormData();
         uploadData.append('image', file);
-        const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/upload`, { method: 'POST', body: uploadData });
+        const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/upload`, { method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: uploadData });
 
         if (!res.ok) throw new Error('Upload failed');
 
@@ -1223,12 +1224,20 @@ export function ProductList() {
             </button>
           </div>
 
-          <button onClick={() => setIsImportModalOpen(true)} className="h-10 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center gap-2 transition-colors text-sm font-semibold whitespace-nowrap border border-slate-200">
-            <Upload className="w-4 h-4" /> Import
-          </button>
-          <button onClick={handleOpenCreate} className="h-10 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white flex items-center gap-2 transition-colors text-sm font-bold shadow-sm whitespace-nowrap">
-            <Plus className="w-4 h-4" /> Thêm mới
-          </button>
+          {!readOnly ? (
+            <>
+              <button onClick={() => setIsImportModalOpen(true)} className="h-10 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center gap-2 transition-colors text-sm font-semibold whitespace-nowrap border border-slate-200">
+                <Upload className="w-4 h-4" /> Import
+              </button>
+              <button onClick={handleOpenCreate} className="h-10 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white flex items-center gap-2 transition-colors text-sm font-bold shadow-sm whitespace-nowrap">
+                <Plus className="w-4 h-4" /> Thêm mới
+              </button>
+            </>
+          ) : (
+            <span className="h-10 px-4 rounded-xl bg-blue-50 text-blue-700 border border-blue-200 flex items-center text-xs font-semibold whitespace-nowrap">
+              Chế độ chỉ xem
+            </span>
+          )}
         </div>
       </div>
 
@@ -1302,6 +1311,7 @@ export function ProductList() {
                     }}
                     onManageVariants={() => setShowVariantModalFor(product)}
                     viewMode="grid"
+                    canDelete={true}
                   />
                 ))}
               </div>
@@ -1338,6 +1348,7 @@ export function ProductList() {
                         }}
                         onManageVariants={() => setShowVariantModalFor(product)}
                         viewMode="list"
+                        canDelete={true}
                       />
                     ))}
                   </tbody>

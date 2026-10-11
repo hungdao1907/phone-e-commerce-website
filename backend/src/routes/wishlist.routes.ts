@@ -1,12 +1,12 @@
 import express from 'express';
-import { PrismaClient } from '@prisma/client';
+import prisma from '../config/prisma';
 import { authenticateToken, AuthRequest } from '../middleware/auth.middleware';
+import { requireRoles } from '../middleware/authorization.middleware';
 
 const router = express.Router();
-const prisma = new PrismaClient();
 
 // GET /api/wishlist - Get current user's wishlist
-router.get('/', authenticateToken, async (req: AuthRequest, res) => {
+router.get('/', authenticateToken, requireRoles('customer'), async (req: AuthRequest, res) => {
   try {
     const userId = (req.user?.id || req.user?.customerId) as string;
     if (!userId) return res.status(401).json({ message: 'Unauthorized' });
@@ -32,7 +32,7 @@ router.get('/', authenticateToken, async (req: AuthRequest, res) => {
 });
 
 // GET /api/wishlist/ids - Get just product IDs in wishlist (lightweight)
-router.get('/ids', authenticateToken, async (req: AuthRequest, res) => {
+router.get('/ids', authenticateToken, requireRoles('customer'), async (req: AuthRequest, res) => {
   try {
     const userId = (req.user?.id || req.user?.customerId) as string;
     if (!userId) return res.status(401).json({ message: 'Unauthorized' });
@@ -50,7 +50,7 @@ router.get('/ids', authenticateToken, async (req: AuthRequest, res) => {
 });
 
 // POST /api/wishlist/toggle - Toggle a product in wishlist
-router.post('/toggle', authenticateToken, async (req: AuthRequest, res) => {
+router.post('/toggle', authenticateToken, requireRoles('customer'), async (req: AuthRequest, res) => {
   try {
     const userId = (req.user?.id || req.user?.customerId) as string;
     if (!userId) return res.status(401).json({ message: 'Unauthorized' });
@@ -81,7 +81,7 @@ router.post('/toggle', authenticateToken, async (req: AuthRequest, res) => {
 });
 
 // DELETE /api/wishlist/:productId - Remove specific product
-router.delete('/:productId', authenticateToken, async (req: AuthRequest, res) => {
+router.delete('/:productId', authenticateToken, requireRoles('customer'), async (req: AuthRequest, res) => {
   try {
     const userId = (req.user?.id || req.user?.customerId) as string;
     if (!userId) return res.status(401).json({ message: 'Unauthorized' });

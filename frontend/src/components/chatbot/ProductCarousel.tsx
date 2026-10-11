@@ -3,12 +3,14 @@ import { ChatbotProduct } from './types';
 import { ProductResultCard } from './ProductResultCard';
 import { Sparkles, ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '../../lib/utils';
+import { dedupeChatbotProducts } from './catalog-products';
 
 interface ProductCarouselProps {
   products: ChatbotProduct[];
 }
 
 export function ProductCarousel({ products }: ProductCarouselProps) {
+  const uniqueProducts = dedupeChatbotProducts(products || []);
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
@@ -39,7 +41,7 @@ export function ProductCarousel({ products }: ProductCarouselProps) {
       el.removeEventListener('scroll', checkScrollability);
       window.removeEventListener('resize', checkScrollability);
     };
-  }, [checkScrollability, products]);
+  }, [checkScrollability, uniqueProducts.length]);
 
   // Handle global mouse up to stop drag even if mouse leaves the container
   useEffect(() => {
@@ -105,7 +107,7 @@ export function ProductCarousel({ products }: ProductCarouselProps) {
     });
   };
 
-  if (!products || products.length === 0) return null;
+  if (uniqueProducts.length === 0) return null;
 
   return (
     <div className="w-full max-w-full min-w-0 overflow-hidden mt-1.5 select-none">
@@ -113,11 +115,11 @@ export function ProductCarousel({ products }: ProductCarouselProps) {
       <div className="flex items-center justify-between mb-2 px-0.5">
         <div className="flex items-center gap-1.5 text-xs font-semibold text-neutral-700">
           <Sparkles className="w-3.5 h-3.5 text-blue-600 flex-shrink-0" />
-          <span>Gợi ý sản phẩm phù hợp ({products.length}):</span>
+          <span>Gợi ý sản phẩm phù hợp ({uniqueProducts.length}):</span>
         </div>
 
         {/* Scroll Buttons */}
-        {products.length > 1 && (
+        {uniqueProducts.length > 1 && (
           <div className="flex items-center gap-1">
             <button
               type="button"
@@ -168,9 +170,9 @@ export function ProductCarousel({ products }: ProductCarouselProps) {
           WebkitOverflowScrolling: 'touch'
         }}
       >
-        {products.map((product) => (
+        {uniqueProducts.map((product) => (
           <div
-            key={product.id || Math.random().toString()}
+            key={product.id}
             className="flex-shrink-0"
             style={{ scrollSnapAlign: 'start' }}
           >

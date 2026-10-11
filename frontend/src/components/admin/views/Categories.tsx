@@ -107,7 +107,8 @@ export function Categories() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [activeCategory, setActiveCategory] = useState<Category | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const { token } = useAuthStore();
+  const { token, user } = useAuthStore();
+  const isStaff = user?.role === 'staff';
 
   // Modal states
   const [isCatModalOpen, setIsCatModalOpen] = useState(false);
@@ -193,16 +194,22 @@ export function Categories() {
   };
 
   const handleDeleteCat = async (id: string, name: string) => {
-    if (!window.confirm(`Xóa danh mục "${name}" và toàn bộ danh mục con?`)) return;
+    if (!window.confirm(`Xóa danh mục "${name}"? Chỉ danh mục không có sản phẩm, danh mục con hoặc thuộc tính mới có thể xóa.`)) return;
     try {
-      await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/categories/${id}`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/categories/${id}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(data.message || (response.status === 409
+          ? 'Không thể xóa danh mục đang được dữ liệu khác tham chiếu.'
+          : `Xóa danh mục thất bại (HTTP ${response.status}).`));
+      }
       if (activeCategory?.id === id) setActiveCategory(null);
       await fetchCategories();
     } catch (err) {
-      alert('Lỗi khi xóa danh mục');
+      window.alert(err instanceof Error ? err.message : 'Lỗi khi xóa danh mục.');
     }
   };
 

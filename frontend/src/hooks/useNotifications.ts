@@ -13,19 +13,23 @@ function getHeaders(token: string | null) {
 
 // ─── Top 3 notifications cho Dashboard Widget ──────────────────────────────
 export function useTopNotifications() {
-  const token = useAuthStore((s) => s.token);
+  const { token, user } = useAuthStore();
+  const isStaff = user?.role === 'staff';
 
   return useQuery<{ data: Notification[]; unreadCount: number }, Error>({
-    queryKey: ['notifications', 'top3'],
+    queryKey: ['notifications', 'top3', isStaff ? 'staff' : 'admin'],
     queryFn: async () => {
-      const res = await fetch(`${API_BASE}/api/notifications?limit=3&page=1`, {
+      const endpoint = isStaff
+        ? `${API_BASE}/api/notifications/my?limit=3&page=1`
+        : `${API_BASE}/api/notifications?limit=3&page=1`;
+      const res = await fetch(endpoint, {
         headers: getHeaders(token),
       });
-      if (!res.ok) throw new Error('Failed to fetch notifications');
+      if (!res.ok) return { data: [], unreadCount: 0 };
       return res.json();
     },
     staleTime: 60_000, // 1 phút
-    enabled: !!token,
+    enabled: !!token && (user?.role === 'admin' || user?.role === 'superadmin' || isStaff),
   });
 }
 
@@ -36,7 +40,7 @@ export function useNotificationCenter(
   limit: number = 20,
   enabled: boolean = false,
 ) {
-  const token = useAuthStore((s) => s.token);
+  const { token, user } = useAuthStore();
   const typeParam = type === 'ALL' ? '' : `&type=${type}`;
 
   return useQuery<NotificationPage, Error>({
@@ -50,7 +54,7 @@ export function useNotificationCenter(
       return res.json();
     },
     staleTime: 30_000, // 30 giây
-    enabled: !!token && enabled,
+    enabled: !!token && (user?.role === 'admin' || user?.role === 'superadmin') && enabled,
   });
 }
 

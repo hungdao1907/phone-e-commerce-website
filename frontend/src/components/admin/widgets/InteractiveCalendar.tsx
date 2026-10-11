@@ -144,7 +144,10 @@ const MeetingActions = ({ mIndex, day, meeting, fetchPlans, onEdit }: { mIndex: 
               <button
                 onClick={async () => {
                   try {
-                    await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/plans/${meeting.id}`, { method: 'DELETE' });
+                    await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/plans/${meeting.id}`, {
+                      method: 'DELETE',
+                      headers: { Authorization: `Bearer ${localStorage.getItem('token') || ''}` },
+                    });
                     fetchPlans();
                   } catch (e) { console.error(e); }
                 }}
@@ -212,10 +215,10 @@ const generateDays = (date: Date): DayType[] => {
   return days;
 };
 
-type InteractiveCalendarProps = HTMLMotionProps<"div">;
+type InteractiveCalendarProps = HTMLMotionProps<"div"> & { isStaff?: boolean };
 
 const InteractiveCalendar = React.forwardRef((
-  { className, ...props }: InteractiveCalendarProps, ref: React.Ref<HTMLDivElement>
+  { className, isStaff = false, ...props }: InteractiveCalendarProps, ref: React.Ref<HTMLDivElement>
 ) => {
   const [moreView, setMoreView] = useState(false);
   const [hoveredDay, setHoveredDay] = useState<string | null>(null);
@@ -233,9 +236,16 @@ const InteractiveCalendar = React.forwardRef((
 
   const fetchPlans = async () => {
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/plans`);
+      const endpoint = isStaff ? '/api/plans/assigned' : '/api/plans';
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}${endpoint}`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token') || ''}` },
+      });
       const data = await res.json();
-      setFetchedPlans(data);
+      if (Array.isArray(data)) {
+        setFetchedPlans(data);
+      } else {
+        setFetchedPlans([]);
+      }
     } catch (err) { console.error(err); }
   };
 
@@ -290,7 +300,7 @@ const InteractiveCalendar = React.forwardRef((
     try {
       await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/plans`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('token') || ''}` },
         body: JSON.stringify({
           ...formData,
           participants: formData.participants.split(',').map(p => p.trim())
@@ -325,7 +335,7 @@ const InteractiveCalendar = React.forwardRef((
     try {
       await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/plans/${editingPlanId}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('token') || ''}` },
         body: JSON.stringify({
           ...formData,
           participants: formData.participants.split(',').map(p => p.trim())
@@ -433,7 +443,7 @@ const InteractiveCalendar = React.forwardRef((
                 onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1))}
               />
               <motion.div layout className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-                {!isAddingPlan && (
+                {!isStaff && !isAddingPlan && (
                   <motion.div
                     layoutId="add-plan-morph"
                     onClick={() => {
@@ -580,9 +590,13 @@ const InteractiveCalendar = React.forwardRef((
           >
             <motion.div key="more-view" className="flex w-full flex-col gap-4">
               <div className="flex flex-col">
-                <h2 className="mb-1 text-4xl font-bold tracking-wider text-slate-900">Kế hoạch</h2>
+                <h2 className="mb-1 text-4xl font-bold tracking-wider text-slate-900">
+                  {isStaff ? "Lịch phân công" : "Kế hoạch"}
+                </h2>
                 <p className="text-sm font-medium text-slate-500">
-                  Xem các sự kiện, kế hoạch sắp tới và đã hoàn thành của bạn.
+                  {isStaff
+                    ? "Xem các sự kiện, lịch phân công công việc của bạn."
+                    : "Xem các sự kiện, kế hoạch sắp tới và đã hoàn thành của bạn."}
                 </p>
               </div>
               <motion.div
@@ -642,14 +656,16 @@ const InteractiveCalendar = React.forwardRef((
                                 <span className="text-xs">{meeting.location}</span>
                               </div>
 
-                              {/* Action Morphing Button */}
-                              <MeetingActions
-                                mIndex={mIndex}
-                                day={day.day}
-                                meeting={meeting}
-                                fetchPlans={fetchPlans}
-                                onEdit={handleEditClick}
-                              />
+                              {/* Action Morphing Button - Admin only */}
+                              {!isStaff && (
+                                <MeetingActions
+                                  mIndex={mIndex}
+                                  day={day.day}
+                                  meeting={meeting}
+                                  fetchPlans={fetchPlans}
+                                  onEdit={handleEditClick}
+                                />
+                              )}
                             </motion.div>
                           ))}
                         </motion.div>

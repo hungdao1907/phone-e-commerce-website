@@ -3,13 +3,17 @@ import { motion } from 'framer-motion';
 import { ChatMessage } from './types';
 import { ProductCarousel } from './ProductCarousel';
 import { ChatMarkdown } from './ChatMarkdown';
-import { resolveBackendUrl } from '../../services/chatbot.api';
-import { FileText, Download, User, Bot, CheckCircle2 } from 'lucide-react';
+import { FileText, User, Bot, AlertCircle } from 'lucide-react';
 import { cn } from '../../lib/utils';
+import { Link } from 'react-router-dom';
+import { useAuthStore } from '../../store/authStore';
 import './chatbot.css';
 
 export function ChatMessageItem({ message }: { message: ChatMessage }) {
   const isUser = message.role === 'user';
+  const user = useAuthStore(state => state.user);
+  const quotationHref = user?.role === 'customer' ? '/profile' : '/login';
+  const quotationAction = user?.role === 'customer' ? 'Mở khu vực báo giá' : 'Đăng nhập để tiếp tục';
 
   const timeFormatted = message.timeString || new Intl.DateTimeFormat('vi-VN', {
     hour: '2-digit',
@@ -75,42 +79,24 @@ export function ChatMessageItem({ message }: { message: ChatMessage }) {
             <ProductCarousel products={message.products} />
           )}
 
-          {/* Quotation PDF Card */}
-          {message.quotation?.responseType === 'file' && message.quotation.downloadUrl && (
-            <div className="bg-gradient-to-b from-white to-neutral-50/80 border border-neutral-200 rounded-2xl p-4 min-w-[260px] max-w-[340px] shadow-[0_4px_16px_rgba(0,0,0,0.06)] mt-1">
-              <div className="flex items-start gap-3 mb-3.5">
-                <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-rose-500 to-red-600 text-white flex items-center justify-center flex-shrink-0 shadow-md shadow-rose-500/20">
-                  <FileText className="w-6 h-6 stroke-[1.8]" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-[13px] font-bold text-neutral-900 truncate">Báo giá chính thức</span>
-                    <CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0" />
-                  </div>
-                  {message.quotation.quoteNumber && (
-                    <div className="mt-0.5">
-                      <span className="inline-block px-2 py-0.5 bg-neutral-100 rounded text-[11px] font-mono font-medium text-neutral-700">
-                        {message.quotation.quoteNumber}
-                      </span>
-                    </div>
-                  )}
-                  {message.quotation.totalDisplay && (
-                    <div className="mt-1.5 text-sm font-bold text-rose-600">
-                      Tổng: {message.quotation.totalDisplay}
-                    </div>
-                  )}
-                </div>
+          {/* Chatbot output can never stand in for an authenticated Backend quotation. */}
+          {message.quotation?.quoteStatus === 'NOT_ACTIVATED' && (
+            <div className="mt-1 flex max-w-[360px] gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-amber-950">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-amber-700">
+                <FileText className="h-5 w-5" />
               </div>
-
-              <a
-                href={resolveBackendUrl(message.quotation.downloadUrl)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group flex items-center justify-center gap-2 w-full py-2.5 px-4 bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-700 hover:to-indigo-800 text-white text-xs font-semibold rounded-xl shadow-md shadow-blue-500/20 hover:shadow-lg hover:shadow-blue-500/30 transition-all duration-200"
-              >
-                <Download className="w-4 h-4 group-hover:-translate-y-0.5 transition-transform duration-200" />
-                <span>Tải Báo Giá PDF</span>
-              </a>
+              <div className="min-w-0">
+                <div className="flex items-center gap-1.5 text-sm font-bold">
+                  <AlertCircle className="h-4 w-4" />
+                  <span>Chưa có báo giá chính thức</span>
+                </div>
+                <p className="mt-1 text-xs leading-relaxed text-amber-900">
+                  Báo giá và PDF chỉ được phát hành từ Backend sau khi Quotation API được kích hoạt.
+                </p>
+                <Link to={quotationHref} className="mt-2 inline-flex text-xs font-semibold text-blue-700 underline underline-offset-2">
+                  {quotationAction}
+                </Link>
+              </div>
             </div>
           )}
 

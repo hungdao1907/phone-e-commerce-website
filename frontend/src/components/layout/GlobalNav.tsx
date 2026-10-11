@@ -1,9 +1,8 @@
 import React, { useState, useRef, useEffect, useLayoutEffect, useMemo } from 'react';
 import { MorphIcon } from 'morphicons/react';
-import { Menu, X, Search as SearchIcon } from 'lucide';
+import { Menu, X, Search as SearchIcon, User as UserIcon } from 'lucide';
 import {
   ShoppingBag,
-  User,
   ChevronDown,
   ChevronRight,
   Smartphone,
@@ -31,10 +30,14 @@ import { NavSearchModal } from './NavSearchModal';
 
 export function GlobalNav() {
   const { mobileMenuOpen, toggleMobileMenu } = useAppStore();
+  const { user, logout } = useAuthStore();
   const [activeMenu, setActiveMenu] = useState<any | null>(null);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const previousMenuRef = useRef<any | null>(null);
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const userMenuRef = useRef<HTMLDivElement>(null);
+  const mobileUserMenuRef = useRef<HTMLDivElement>(null);
 
   const location = useLocation();
   const isIphonePage =
@@ -46,7 +49,29 @@ export function GlobalNav() {
   useEffect(() => {
     setIsSearchOpen(false);
     setActiveMenu(null);
+    setIsUserMenuOpen(false);
   }, [location.pathname]);
+
+  // Click outside listener for user account popover
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent | TouchEvent) => {
+      const target = e.target as Node;
+      if (
+        userMenuRef.current && !userMenuRef.current.contains(target) &&
+        (!mobileUserMenuRef.current || !mobileUserMenuRef.current.contains(target))
+      ) {
+        setIsUserMenuOpen(false);
+      }
+    };
+    if (isUserMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('touchstart', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+    };
+  }, [isUserMenuOpen]);
 
   const items = useCartStore((state: any) => state.items);
   const cartItemCount = items.reduce((total: number, item: any) => total + item.quantity, 0);
@@ -432,43 +457,103 @@ export function GlobalNav() {
                 <MorphIcon icon={isSearchOpen ? X : SearchIcon} size={18} strokeWidth={2} />
               </button>
 
-              <div className="relative group">
-                <Link
-                  to={useAuthStore.getState().user ? "/profile" : "/login"}
-                  className="nav-glow-link hover:text-black transition-colors block"
+              <div className="relative" ref={userMenuRef}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveMenu(null);
+                    setIsSearchOpen(false);
+                    setIsUserMenuOpen((prev) => !prev);
+                  }}
+                  className={`nav-glow-link transition-colors flex items-center justify-center p-1 cursor-pointer ${
+                    isUserMenuOpen ? 'text-black drop-shadow-[0_0_8px_rgba(0,0,0,0.4)]' : 'hover:text-black'
+                  }`}
                   aria-label="Tài khoản"
+                  aria-expanded={isUserMenuOpen}
                 >
-                  <User className="w-[18px] h-[18px]" />
-                </Link>
+                  <MorphIcon icon={isUserMenuOpen ? X : UserIcon} size={18} strokeWidth={2} />
+                </button>
 
-                {useAuthStore.getState().user && (
-                  <div className="absolute right-0 top-full pt-4 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
-                    <div className="w-56 bg-white border border-neutral-100 rounded-2xl shadow-xl overflow-hidden">
-                      <div className="px-5 py-3 border-b border-neutral-100 bg-neutral-50/80">
-                        <p className="text-[13px] font-semibold text-neutral-900 truncate">
-                          {useAuthStore.getState().user?.username}
-                        </p>
-                      </div>
-                      <div className="py-2">
-                        <Link to="/profile" className="block px-5 py-2.5 text-[13px] font-medium text-neutral-700 hover:bg-neutral-50 hover:text-black">
-                          Hồ sơ của tôi
-                        </Link>
-                        {useAuthStore.getState().user?.role !== 'customer' && (
-                          <Link to="/dashboard" className="block px-5 py-2.5 text-[13px] font-medium text-neutral-700 hover:bg-neutral-50 hover:text-black">
-                            Vào Dashboard
+                {isUserMenuOpen && (
+                  <div className="absolute right-0 top-[calc(100%+12px)] w-60 bg-white/95 backdrop-blur-2xl border border-neutral-200/90 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.15)] overflow-hidden z-50 animate-in fade-in zoom-in-95 duration-200">
+                    {user ? (
+                      <div>
+                        <div className="px-5 py-3.5 border-b border-neutral-100 bg-neutral-50/80">
+                          <p className="text-[11px] font-semibold uppercase tracking-wider text-neutral-400">
+                            Đã đăng nhập
+                          </p>
+                          <p className="text-[14px] font-bold text-neutral-900 truncate mt-0.5">
+                            {user.username}
+                          </p>
+                          <span className="inline-block mt-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-cyan-50 text-cyan-700 border border-cyan-200">
+                            {user.role === 'admin' ? 'Quản trị viên' : user.role === 'staff' ? 'Nhân viên' : 'Khách hàng'}
+                          </span>
+                        </div>
+                        <div className="py-2 text-[13px] font-medium text-neutral-700">
+                          <Link
+                            to={user?.role === 'staff' ? '/dashboard/profile' : '/profile'}
+                            onClick={() => setIsUserMenuOpen(false)}
+                            className="flex items-center justify-between px-5 py-2.5 hover:bg-neutral-50 hover:text-black transition-colors"
+                          >
+                            <span>Hồ sơ của tôi</span>
+                            <ChevronRight className="w-4 h-4 text-neutral-400" />
                           </Link>
-                        )}
-                        <button
-                          onClick={() => {
-                            useAuthStore.getState().logout();
-                            window.location.href = '/login';
-                          }}
-                          className="block w-full text-left px-5 py-2.5 text-[13px] font-medium text-red-600 hover:bg-red-50"
-                        >
-                          Đăng xuất
-                        </button>
+                          <Link
+                            to="/tra-cuu-don-hang"
+                            onClick={() => setIsUserMenuOpen(false)}
+                            className="flex items-center justify-between px-5 py-2.5 hover:bg-neutral-50 hover:text-black transition-colors"
+                          >
+                            <span>Tra cứu đơn hàng</span>
+                            <PackageSearch className="w-4 h-4 text-neutral-400" />
+                          </Link>
+                          {user.role !== 'customer' && (
+                            <Link
+                              to="/dashboard"
+                              onClick={() => setIsUserMenuOpen(false)}
+                              className="flex items-center justify-between px-5 py-2.5 hover:bg-neutral-50 hover:text-black transition-colors"
+                            >
+                              <span>Vào Dashboard</span>
+                              <ChevronRight className="w-4 h-4 text-neutral-400" />
+                            </Link>
+                          )}
+                          <div className="border-t border-neutral-100 my-1" />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setIsUserMenuOpen(false);
+                              logout();
+                              window.location.href = '/login';
+                            }}
+                            className="w-full text-left px-5 py-2.5 text-rose-600 hover:bg-rose-50/80 transition-colors cursor-pointer font-semibold flex items-center justify-between"
+                          >
+                            <span>Đăng xuất</span>
+                          </button>
+                        </div>
                       </div>
-                    </div>
+                    ) : (
+                      <div className="p-4">
+                        <div className="mb-3 text-center">
+                          <p className="text-[13px] font-bold text-neutral-900">Tài khoản & Đơn hàng</p>
+                          <p className="text-[11px] text-neutral-500 mt-0.5">Đăng nhập để theo dõi giỏ hàng và ưu đãi</p>
+                        </div>
+                        <div className="space-y-2">
+                          <Link
+                            to="/login"
+                            onClick={() => setIsUserMenuOpen(false)}
+                            className="block w-full py-2.5 text-center text-[13px] font-semibold text-white bg-neutral-900 hover:bg-neutral-800 rounded-xl transition-colors shadow-sm"
+                          >
+                            Đăng nhập
+                          </Link>
+                          <Link
+                            to="/tra-cuu-don-hang"
+                            onClick={() => setIsUserMenuOpen(false)}
+                            className="block w-full py-2 text-center text-[12px] font-medium text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100 rounded-xl transition-colors"
+                          >
+                            Tra cứu đơn hàng
+                          </Link>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -493,6 +578,7 @@ export function GlobalNav() {
             <button
               onClick={() => {
                 setActiveMenu(null);
+                setIsUserMenuOpen(false);
                 setIsSearchOpen((prev) => !prev);
               }}
               className={`nav-glow-link transition-colors flex items-center justify-center ${
@@ -504,16 +590,98 @@ export function GlobalNav() {
               <MorphIcon icon={isSearchOpen ? X : SearchIcon} size={18} strokeWidth={2} />
             </button>
 
-            <Link
-              to={useAuthStore.getState().user ? "/profile" : "/login"}
-              className="nav-glow-link hover:text-black transition-colors block"
-              aria-label="Tài khoản"
-            >
-              <User className="w-[18px] h-[18px]" />
-            </Link>
+            <div className="relative" ref={mobileUserMenuRef}>
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveMenu(null);
+                  setIsSearchOpen(false);
+                  setIsUserMenuOpen((prev) => !prev);
+                }}
+                className={`nav-glow-link transition-colors flex items-center justify-center p-1 cursor-pointer ${
+                  isUserMenuOpen ? 'text-black drop-shadow-[0_0_8px_rgba(0,0,0,0.4)]' : 'hover:text-black'
+                }`}
+                aria-label="Tài khoản"
+                aria-expanded={isUserMenuOpen}
+              >
+                <MorphIcon icon={isUserMenuOpen ? X : UserIcon} size={18} strokeWidth={2} />
+              </button>
+
+              {isUserMenuOpen && (
+                <div className="absolute right-0 top-[calc(100%+12px)] w-56 bg-white/95 backdrop-blur-2xl border border-neutral-200/90 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.2)] overflow-hidden z-50 animate-in fade-in zoom-in-95 duration-200">
+                  {user ? (
+                    <div>
+                      <div className="px-4 py-3 border-b border-neutral-100 bg-neutral-50/80">
+                        <p className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">Tài khoản</p>
+                        <p className="text-[13px] font-bold text-neutral-900 truncate mt-0.5">{user.username}</p>
+                      </div>
+                      <div className="py-1 text-[13px] font-medium text-neutral-700">
+                        <Link
+                          to={user?.role === 'staff' ? '/dashboard/profile' : '/profile'}
+                          onClick={() => setIsUserMenuOpen(false)}
+                          className="block px-4 py-2 hover:bg-neutral-50 hover:text-black"
+                        >
+                          Hồ sơ của tôi
+                        </Link>
+                        <Link
+                          to="/tra-cuu-don-hang"
+                          onClick={() => setIsUserMenuOpen(false)}
+                          className="block px-4 py-2 hover:bg-neutral-50 hover:text-black"
+                        >
+                          Tra cứu đơn hàng
+                        </Link>
+                        {user.role !== 'customer' && (
+                          <Link
+                            to="/dashboard"
+                            onClick={() => setIsUserMenuOpen(false)}
+                            className="block px-4 py-2 hover:bg-neutral-50 hover:text-black"
+                          >
+                            Vào Dashboard
+                          </Link>
+                        )}
+                        <div className="border-t border-neutral-100 my-1" />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setIsUserMenuOpen(false);
+                            logout();
+                            window.location.href = '/login';
+                          }}
+                          className="block w-full text-left px-4 py-2 text-rose-600 hover:bg-rose-50 font-medium"
+                        >
+                          Đăng xuất
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="p-3.5 space-y-2 text-center">
+                      <p className="text-[13px] font-bold text-neutral-900">Tài khoản</p>
+                      <Link
+                        to="/login"
+                        onClick={() => setIsUserMenuOpen(false)}
+                        className="block w-full py-2 text-[12px] font-semibold text-white bg-neutral-900 rounded-xl"
+                      >
+                        Đăng nhập
+                      </Link>
+                      <Link
+                        to="/tra-cuu-don-hang"
+                        onClick={() => setIsUserMenuOpen(false)}
+                        className="block w-full py-1.5 text-[12px] text-neutral-600 hover:text-black"
+                      >
+                        Tra cứu đơn hàng
+                      </Link>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
 
             <button
-              onClick={toggleMobileMenu}
+              onClick={() => {
+                setIsUserMenuOpen(false);
+                setIsSearchOpen(false);
+                toggleMobileMenu();
+              }}
               className="hover:text-black transition-colors focus:outline-none flex items-center justify-center p-1"
               aria-label="Toggle Navigation"
               aria-expanded={mobileMenuOpen}

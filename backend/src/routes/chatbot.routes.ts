@@ -1,14 +1,14 @@
 import express from 'express';
 import crypto from 'crypto';
-import multer from 'multer';
-import path from 'path';
-import fs from 'fs';
 import { Prisma } from '@prisma/client';
 import prisma from '../config/prisma';
+import { ChatbotCatalogInputError, resolveChatbotCatalogProducts } from '../services/chatbot-catalog.service';
+import { safeErrorSummary } from '../utils/safe-error-summary';
 
 const router = express.Router();
 
-const CHAT_CONTEXT_MESSAGE_LIMIT = 12;
+const CHAT_CONTEXT_MESSAGE_LIMIT = 6;
+const CHAT_CONTEXT_MESSAGE_CHAR_LIMIT = 600;
 
 type ChatContextMessage = {
   role: 'user' | 'assistant';
@@ -28,36 +28,19 @@ function isChatConversationState(value: unknown): value is ChatConversationState
 
 type PublicChatbotRecord = Record<string, unknown>;
 
-const CUSTOMER_RESPONSE_SCALAR_FIELDS = [
-  'response',
-  'message',
-  'result_type',
-  'response_type',
-  'success',
-  'total',
-  'ready_to_compare',
-  'quote_status',
-  'quote_number',
-  'file_name',
-  'mime_type',
-  'download_url',
-  'total_display'
-] as const;
+export const CHATBOT_QUOTATION_NOT_ACTIVATED_MESSAGE =
+  'Hãy cho biết tên hoặc dòng sản phẩm cần báo giá để WebPhone tìm trong danh mục; bạn sẽ chọn phiên bản trước khi tiếp tục.';
 
-const CUSTOMER_PRODUCT_SCALAR_FIELDS = [
-  'id',
-  'name',
-  'brand',
-  'description',
-  'image_url',
-  'price',
-  'original_price',
-  'stock',
-  'availability',
-  'storage_gb',
-  'ram_gb',
-  'color'
-] as const;
+const CHATBOT_PRODUCT_SEARCH_MESSAGE =
+  'Danh sách dưới đây được xác minh từ danh mục WebPhone. Giá và tình trạng hiện tại do Backend cung cấp; vui lòng mở chi tiết sản phẩm để kiểm tra trước khi mua.';
+const CHATBOT_UNVERIFIED_TEXT_MESSAGE =
+  'Tôi chưa thể xác minh thông tin sản phẩm hoặc giá trong câu trả lời này. Hãy chọn một sản phẩm trong danh mục WebPhone để xem dữ liệu hiện tại do Backend cung cấp.';
+const PRODUCT_ADVICE_TYPES = new Set(['product_search', 'product_detail', 'product_compare', 'recommendation']);
+const WORKFLOW_SECRET_KEY = /(?:jwt|bearer|token|password|passwd|credential|authorization|\botp\b|private.*pdf|pdf.*url|download.*url)/i;
+const PRIVATE_QUOTATION_FILE_URL = /(?:https?:\/\/[^\s"'<>]+|\/)[^\s"'<>]*(?:\/api\/(?:staff\/|admin\/)?quotations\/[^/\s"'<>]+\/pdf|\/uploads\/quotations\/)[^\s"'<>]*/gi;
+
+const CUSTOMER_RESPONSE_SCALAR_FIELDS = ['response', 'message', 'result_type', 'response_type'] as const;
+const CUSTOMER_PRODUCT_SCALAR_FIELDS = ['id'] as const;
 
 function isPublicChatbotRecord(value: unknown): value is PublicChatbotRecord {
   return Boolean(value && typeof value === 'object' && !Array.isArray(value));
@@ -82,6 +65,100 @@ function projectPublicScalars<T extends readonly string[]>(
   return projected;
 }
 
+function redactWorkflowText(value: string): string {
+  return value
+    .replace(/\bBearer\s+[A-Za-z0-9._~+/-]+=*/gi, 'Bearer [REDACTED]')
+    .replace(/\beyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\b/g, '[JWT REDACTED]')
+    .replace(/((?:password|passwd|passcode|otp|one[- ]time code|verification code|m(?:ã|a)\s*x(?:ã|a)c th(?:ự|u)c|bearer|access[_ -]?token)\s*[:=]?\s*)[^\s,;]+/gi, '$1[REDACTED]')
+    .replace(PRIVATE_QUOTATION_FILE_URL, '[PRIVATE QUOTATION PDF URL REDACTED]');
+}
+
+function redactWorkflowValue(value: unknown, depth = 0): unknown {
+  if (depth > 8) return undefined;
+  if (typeof value === 'string') return redactWorkflowText(value);
+  if (Array.isArray(value)) return value.slice(0, 100).map(item => redactWorkflowValue(item, depth + 1));
+  if (value && typeof value === 'object') {
+    const safe: Record<string, unknown> = {};
+    for (const [key, nested] of Object.entries(value as Record<string, unknown>).slice(0, 100)) {
+      if (!WORKFLOW_SECRET_KEY.test(key)) safe[key] = redactWorkflowValue(nested, depth + 1);
+    }
+    return safe;
+  }
+  return value;
+}
+
+export function sanitizeChatbotWorkflowContext(history: ChatContextMessage[], state: ChatConversationState | null) {
+  return {
+    history: history.slice(-CHAT_CONTEXT_MESSAGE_LIMIT).map(message => ({
+      role: message.role,
+      content: redactWorkflowText(message.content).slice(-CHAT_CONTEXT_MESSAGE_CHAR_LIMIT),
+    })),
+    state: state ? projectChatbotConversationState(state) : null,
+  };
+}
+
+function boundedText(value: unknown, limit = 160): string | null {
+  return typeof value === 'string' && value.trim() ? value.trim().slice(0, limit) : null;
+}
+
+/** Allowlist conversational state; never forward customer identity, prices, stock, or arbitrary nested text. */
+function projectChatbotConversationState(state: ChatConversationState): ChatConversationState {
+  const projected: ChatConversationState = {};
+  const category = boundedText(state.category, 40);
+  if (category) projected.category = category;
+
+  const sourceFilters = isPublicChatbotRecord(state.active_filters) ? state.active_filters : {};
+  const filters: Record<string, unknown> = {};
+  for (const key of ['brand', 'model', 'color', 'use_case', 'condition_type'] as const) {
+    const value = boundedText(sourceFilters[key]);
+    if (value) filters[key] = value;
+  }
+  for (const key of ['storage_gb', 'ram_gb', 'price_max'] as const) {
+    const value = sourceFilters[key];
+    if (typeof value === 'number' && Number.isFinite(value) && value >= 0) filters[key] = value;
+  }
+  if (Object.keys(filters).length) projected.active_filters = filters;
+
+  for (const key of ['preferred_brands', 'excluded_brands'] as const) {
+    const values = Array.isArray(state[key])
+      ? (state[key] as unknown[]).map(value => boundedText(value, 80)).filter((value): value is string => Boolean(value)).slice(0, 10)
+      : [];
+    if (values.length) projected[key] = values;
+  }
+
+  const lastResults = Array.isArray(state.last_result_set) ? state.last_result_set : [];
+  projected.last_result_set = lastResults.slice(0, 12).flatMap(value => {
+    if (!isPublicChatbotRecord(value)) return [];
+    const id = boundedText(value.id, 128);
+    if (!id) return [];
+    const item: Record<string, string> = { id };
+    for (const key of ['name', 'brand', 'model', 'category'] as const) {
+      const text = boundedText(value[key]);
+      if (text) item[key] = text;
+    }
+    return [item];
+  });
+
+  const selectedProductId = boundedText(state.selected_product_id, 128);
+  if (selectedProductId) projected.selected_product_id = selectedProductId;
+  for (const key of ['last_intent', 'last_turn_action'] as const) {
+    const value = boundedText(state[key], 40);
+    if (value) projected[key] = value;
+  }
+  if (typeof state.state_version === 'number' && Number.isSafeInteger(state.state_version)) {
+    projected.state_version = state.state_version;
+  }
+  if (isPublicChatbotRecord(state.pending_question)) {
+    const pending: Record<string, string> = {};
+    for (const key of ['type', 'field'] as const) {
+      const value = boundedText(state.pending_question[key], 40);
+      if (value) pending[key] = value;
+    }
+    if (Object.keys(pending).length) projected.pending_question = pending;
+  }
+  return projected;
+}
+
 /** Build the customer-facing payload without forwarding n8n's internal state. */
 export function sanitizeCustomerChatbotResponse(value: unknown, sessionId: string): unknown {
   if (Array.isArray(value)) {
@@ -92,40 +169,86 @@ export function sanitizeCustomerChatbotResponse(value: unknown, sessionId: strin
 
   if (!isPublicChatbotRecord(value)) return value;
 
+  const resultType = typeof value.result_type === 'string' ? value.result_type.trim().toLowerCase() : '';
+  const claimsQuotation = resultType === 'quotation'
+    || value.response_type === 'file'
+    || typeof value.download_url === 'string';
+  if (claimsQuotation) {
+    const suggestedProducts = Array.isArray(value.products) ? value.products : [];
+    const productIds = suggestedProducts
+      .filter(isPublicChatbotRecord)
+      .map(product => projectPublicScalars(product, CUSTOMER_PRODUCT_SCALAR_FIELDS))
+      .filter(product => typeof product.id === 'string' && product.id.length > 0)
+      .slice(0, 12);
+    if (productIds.length > 0) {
+      return {
+        sessionId,
+        result_type: 'product_search',
+        response: CHATBOT_QUOTATION_NOT_ACTIVATED_MESSAGE,
+        products: productIds,
+      };
+    }
+    return {
+      sessionId,
+      result_type: 'text',
+      response_type: 'text',
+      response: CHATBOT_QUOTATION_NOT_ACTIVATED_MESSAGE,
+    };
+  }
+
   const publicResponse: PublicChatbotRecord = { sessionId };
+
+  if (PRODUCT_ADVICE_TYPES.has(resultType)) {
+    const suggestedProducts = [
+      ...(Array.isArray(value.products) ? value.products : []),
+      ...(isPublicChatbotRecord(value.product) ? [value.product] : []),
+    ];
+    const productIds = suggestedProducts
+      .filter(isPublicChatbotRecord)
+      .map(product => projectPublicScalars(product, CUSTOMER_PRODUCT_SCALAR_FIELDS))
+      .filter(product => typeof product.id === 'string' && product.id.length > 0)
+      .slice(0, 12);
+
+    return {
+      sessionId,
+      result_type: 'product_search',
+      response: CHATBOT_PRODUCT_SEARCH_MESSAGE,
+      products: productIds,
+    };
+  }
+
+  if (resultType === 'text') {
+    return {
+      sessionId,
+      result_type: 'text',
+      response: CHATBOT_UNVERIFIED_TEXT_MESSAGE,
+    };
+  }
 
   for (const field of CUSTOMER_RESPONSE_SCALAR_FIELDS) {
     const fieldValue = value[field];
     if (isPublicChatbotScalar(fieldValue)) publicResponse[field] = fieldValue;
   }
 
-  if (Array.isArray(value.products)) {
-    publicResponse.products = value.products
-      .filter(isPublicChatbotRecord)
-      .map((product) => projectPublicScalars(product, CUSTOMER_PRODUCT_SCALAR_FIELDS))
-      .filter((product) => Object.keys(product).length > 0);
-  }
-
-  if (value.product === null) {
-    publicResponse.product = null;
-  } else if (isPublicChatbotRecord(value.product)) {
-    const product = projectPublicScalars(value.product, CUSTOMER_PRODUCT_SCALAR_FIELDS);
-    if (Object.keys(product).length > 0) publicResponse.product = product;
-  }
-
-  if (Array.isArray(value.missing_products)) {
-    publicResponse.missing_products = value.missing_products
-      .map((product) => {
-        if (typeof product === 'string') return product;
-        if (!isPublicChatbotRecord(product)) return null;
-
-        const projected = projectPublicScalars(product, CUSTOMER_PRODUCT_SCALAR_FIELDS);
-        return Object.keys(projected).length > 0 ? projected : null;
-      })
-      .filter((product) => product !== null);
-  }
-
   return publicResponse;
+}
+
+/** No authenticated identity or bearer token is ever sent to the chatbot workflow. */
+export function buildCustomerN8nPayload(input: {
+  message: string;
+  sessionId: string;
+  history: ChatContextMessage[];
+  conversationState: ChatConversationState | null;
+}) {
+  const sanitizedContext = sanitizeChatbotWorkflowContext(input.history, input.conversationState);
+  return {
+    chatInput: redactWorkflowText(input.message),
+    sessionId: input.sessionId,
+    conversationId: input.sessionId,
+    history: sanitizedContext.history,
+    conversationState: sanitizedContext.state,
+    source: 'web_chat',
+  };
 }
 
 function toPrismaConversationState(value: unknown): Prisma.InputJsonObject | null {
@@ -199,45 +322,17 @@ async function saveAssistantMessage(sessionId: string, content: string, state?: 
   }
 }
 
-// Setup directories for quotation uploads
-const uploadsDir = path.resolve(__dirname, '..', '..', 'uploads');
-const quotationsDir = path.resolve(uploadsDir, 'quotations');
-
-if (!fs.existsSync(quotationsDir)) {
-  fs.mkdirSync(quotationsDir, { recursive: true });
-}
-
-// Configure multer for PDF quotations
-const quotationStorage = multer.diskStorage({
-  destination: (_req, _file, cb) => {
-    cb(null, quotationsDir);
-  },
-  filename: (req, file, cb) => {
-    // Do not rely on req.body for multipart uploads as it may not be parsed yet.
-    // Instead, extract a safe name from file.originalname
-    let safeName = 'UNNAMED';
-    if (file.originalname) {
-      const baseName = path.basename(file.originalname, '.pdf');
-      const sanitized = baseName.replace(/[^a-zA-Z0-9-]/g, '');
-      if (sanitized) {
-        safeName = sanitized;
-      }
+router.post('/catalog', async (req, res) => {
+  try {
+    const products = await resolveChatbotCatalogProducts(prisma, req.body?.productIds);
+    res.setHeader('Cache-Control', 'no-store');
+    return res.json({ products });
+  } catch (error) {
+    if (error instanceof ChatbotCatalogInputError) {
+      return res.status(400).json({ message: error.message });
     }
-
-    const randomHex = crypto.randomBytes(4).toString('hex');
-    cb(null, `${safeName}-${randomHex}.pdf`);
-  }
-});
-
-const quotationUpload = multer({
-  storage: quotationStorage,
-  limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB limit
-  fileFilter: (_req, file, cb) => {
-    if (file.mimetype === 'application/pdf' && path.extname(file.originalname).toLowerCase() === '.pdf') {
-      cb(null, true);
-    } else {
-      cb(new Error('Only PDF files are allowed'));
-    }
+    console.error('[Chatbot Route] Backend catalog lookup failed.', safeErrorSummary(error));
+    return res.status(503).json({ message: 'Current product catalog is unavailable.' });
   }
 });
 
@@ -278,14 +373,12 @@ router.post('/message', async (req, res) => {
     }
 
     // 5. Prepare n8n Request
-    const n8nPayload = {
-      chatInput: trimmedMessage,
-      sessionId: sessionId,
-      conversationId: sessionId,
+    const n8nPayload = buildCustomerN8nPayload({
+      message: trimmedMessage,
+      sessionId,
       history,
       conversationState: contextSnapshot.state,
-      source: 'web_chat'
-    };
+    });
 
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 90000); // 90 seconds timeout
@@ -322,23 +415,17 @@ router.post('/message', async (req, res) => {
     const contentType = n8nResponse.headers.get('content-type') || '';
 
     if (contentType.includes('application/pdf') || contentType.includes('application/octet-stream') || contentType.includes('application/vnd.')) {
-      // Proxy binary response
-      res.setHeader('Content-Type', contentType);
-
-      const contentDisposition = n8nResponse.headers.get('content-disposition');
-      if (contentDisposition) {
-        res.setHeader('Content-Disposition', contentDisposition);
-      }
-
-      res.setHeader('X-Chat-Session-Id', sessionId);
-
-      // Convert web stream to node stream or send buffer
-      const arrayBuffer = await n8nResponse.arrayBuffer();
-      const buffer = Buffer.from(arrayBuffer);
-
-      await saveAssistantMessage(sessionId, 'Báo giá đã được tạo thành công.');
-
-      return res.send(buffer);
+      await saveAssistantMessage(sessionId, CHATBOT_QUOTATION_NOT_ACTIVATED_MESSAGE);
+      res.setHeader('Cache-Control', 'private, no-store');
+      res.setHeader('X-Content-Type-Options', 'nosniff');
+      return res.status(200).json({
+        sessionId,
+        result_type: 'quotation',
+        response_type: 'text',
+        success: false,
+        quote_status: 'NOT_ACTIVATED',
+        response: CHATBOT_QUOTATION_NOT_ACTIVATED_MESSAGE,
+      });
     }
 
     // 8. Handle JSON Response
@@ -365,14 +452,15 @@ router.post('/message', async (req, res) => {
        res.setHeader('X-Chat-Session-Id', sessionId);
     }
 
-    const assistantContent = typeof responseData?.response === 'string'
-      ? responseData.response
-      : typeof responseData?.message === 'string'
-        ? responseData.message
-        : '';
-    await saveAssistantMessage(sessionId, assistantContent, responseData?.conversation_state);
-
     const publicResponse = sanitizeCustomerChatbotResponse(responseData, sessionId);
+    const assistantContent = isPublicChatbotRecord(publicResponse)
+      ? typeof publicResponse.response === 'string'
+        ? publicResponse.response
+        : typeof publicResponse.message === 'string'
+          ? publicResponse.message
+          : ''
+      : '';
+    await saveAssistantMessage(sessionId, assistantContent, responseData?.conversation_state);
     return res.status(200).json(publicResponse);
 
   } catch (err: any) {
@@ -381,80 +469,21 @@ router.post('/message', async (req, res) => {
   }
 });
 
-// n8n uploads generated PDF
-router.post('/quotation-files', (req, res) => {
-  // Auth Check
-  const expectedToken = process.env.CHATBOT_INTEGRATION_TOKEN;
-  if (!expectedToken) {
-    return res.status(503).json({ result_type: 'error', response_type: 'text', success: false, response: 'Server integration token is not configured.' });
-  }
-
-  const authHeader = req.headers.authorization || '';
-  const token = authHeader.replace(/^Bearer\s+/, '').trim();
-
-  if (token !== expectedToken) {
-    return res.status(401).json({ result_type: 'error', response_type: 'text', success: false, response: 'Unauthorized.' });
-  }
-
-  // Handle upload
-  quotationUpload.single('file')(req, res, (err) => {
-    if (err instanceof multer.MulterError) {
-      if (err.code === 'LIMIT_FILE_SIZE') {
-        return res.status(413).json({ result_type: 'error', response_type: 'text', success: false, response: 'File is too large (max 10MB).' });
-      }
-      return res.status(400).json({ result_type: 'error', response_type: 'text', success: false, response: `Upload error: ${err.message}` });
-    }
-    if (err) {
-      return res.status(400).json({ result_type: 'error', response_type: 'text', success: false, response: err.message || 'Invalid file format.' });
-    }
-
-    if (!req.file) {
-      return res.status(400).json({ result_type: 'error', response_type: 'text', success: false, response: 'No file uploaded.' });
-    }
-
-    const downloadUrl = `/api/chatbot/quotation-files/${req.file.filename}`;
-
-    return res.status(201).json({
-      success: true,
-      file_name: req.file.filename,
-      mime_type: 'application/pdf',
-      download_url: downloadUrl
+// Block the legacy n8n upload and unauthenticated filename-based download endpoints.
+router.use('/quotation-files', (req, res) => {
+  res.setHeader('Cache-Control', 'private, no-store');
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  if (req.method === 'POST' && req.path === '/') {
+    return res.status(410).json({
+      result_type: 'error',
+      response_type: 'text',
+      success: false,
+      response: 'Legacy quotation PDF upload is disabled. Create the PDF from a backend Quotation snapshot.',
     });
-  });
+  }
+  return res.status(404).json({ message: 'Quotation PDF not found.' });
 });
 
-// Client downloads PDF
-router.get('/quotation-files/:fileName', (req, res) => {
-  const fileName = req.params.fileName;
-
-  // Basic sanitization
-  if (!fileName || fileName.includes('/') || fileName.includes('\\') || fileName.includes('..')) {
-    return res.status(400).json({ result_type: 'error', response_type: 'text', success: false, response: 'Invalid file name.' });
-  }
-
-  const filePath = path.resolve(quotationsDir, fileName);
-
-  // Prevent path traversal
-  if (!filePath.startsWith(quotationsDir)) {
-    return res.status(400).json({ result_type: 'error', response_type: 'text', success: false, response: 'Invalid file path.' });
-  }
-
-  if (!fs.existsSync(filePath)) {
-    return res.status(404).json({ result_type: 'error', response_type: 'text', success: false, response: 'File not found.' });
-  }
-
-  res.setHeader('Content-Type', 'application/pdf');
-  res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
-
-  const stream = fs.createReadStream(filePath);
-  stream.on('error', (err) => {
-    console.error('[Chatbot Route] Error streaming quotation file:', err);
-    if (!res.headersSent) {
-      res.status(500).json({ result_type: 'error', response_type: 'text', success: false, response: 'Error reading file.' });
-    }
-  });
-
-  stream.pipe(res);
-});
+// Legacy file handlers were removed; the guard above returns 410/404 without touching storage.
 
 export default router;

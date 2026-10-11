@@ -56,7 +56,11 @@ export function RichTextEditor({ content, onChange, placeholder }: RichTextEdito
       try {
         const uploadData = new FormData();
         uploadData.append('image', file);
-        const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/upload`, { method: 'POST', body: uploadData });
+        const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/upload`, {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${localStorage.getItem('token') || ''}` },
+          body: uploadData,
+        });
         
         if (!res.ok) throw new Error('Upload failed');
         

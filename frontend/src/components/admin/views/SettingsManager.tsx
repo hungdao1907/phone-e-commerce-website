@@ -4,17 +4,34 @@ import { CartRewardsSetting } from '../settings/CartRewardsSetting';
 import { PromoCodesSetting } from '../settings/PromoCodesSetting';
 import { FooterManagement } from './FooterManagement';
 
+import { useAuthStore } from '@/store/authStore';
+
 type SettingsTab = 'general' | 'cart-rewards' | 'promo-codes' | 'footer';
 
-export function SettingsManager() {
-  const [activeTab, setActiveTab] = useState<SettingsTab>('cart-rewards');
+interface SettingsManagerProps {
+  initialTab?: SettingsTab;
+}
 
-  const tabs = [
+export function SettingsManager({ initialTab }: SettingsManagerProps = {}) {
+  const isStaff = useAuthStore((state) => state.user?.role === 'staff');
+  const [activeTab, setActiveTab] = useState<SettingsTab>(() => {
+    if (initialTab && (isStaff ? initialTab !== 'general' : true)) return initialTab;
+    return 'cart-rewards';
+  });
+
+  React.useEffect(() => {
+    if (initialTab && (isStaff ? initialTab !== 'general' : true)) {
+      setActiveTab(initialTab);
+    }
+  }, [initialTab, isStaff]);
+
+  const allTabs = [
     { id: 'general', label: 'Cài đặt chung', icon: Settings },
     { id: 'cart-rewards', label: 'Mốc thưởng Giỏ hàng', icon: Gift },
     { id: 'promo-codes', label: 'Mã giảm giá', icon: Tag },
     { id: 'footer', label: 'Quản lý Footer', icon: PanelBottom }
   ];
+  const tabs = isStaff ? allTabs.filter(t => t.id !== 'general') : allTabs;
 
   return (
     <div className="flex h-[calc(100vh-140px)] bg-white rounded-3xl overflow-hidden border border-slate-200 shadow-sm">

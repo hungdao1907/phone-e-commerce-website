@@ -83,7 +83,7 @@ const PAYMENT_STATUS_MAP: Record<string, { label: string, color: string, bg: str
   REFUNDED: { label: 'Đã hoàn tiền', color: 'text-rose-700', bg: 'bg-rose-50 border-rose-200' }
 };
 
-export function Orders() {
+export function Orders({ isStaff }: { isStaff?: boolean } = {}) {
   const [orders, setOrders] = useState<Order[]>([]);
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
@@ -110,7 +110,10 @@ export function Orders() {
   const fetchOrders = async () => {
     try {
       setIsLoading(true);
-      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/orders`, {
+      const url = isStaff
+        ? `${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/orders/assigned`
+        : `${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/orders`;
+      const res = await fetch(url, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.ok) setOrders(await res.json());

@@ -1,10 +1,11 @@
 import express from 'express';
-import { PrismaClient } from '@prisma/client';
+import prisma from '../config/prisma';
 import { authenticateToken } from '../middleware/auth.middleware';
+import { requireRoles } from '../middleware/authorization.middleware';
+import { categoryDeleteDatabaseStatus, deleteCategorySafely } from '../services/category-deletion.service';
 import { getRouteParam } from '../utils/route-param';
 
 const router = express.Router();
-const prisma = new PrismaClient();
 
 // Helper: Generate slug from Vietnamese name
 const generateSlug = (name: string): string => {
@@ -65,7 +66,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // POST create category
-router.post('/', authenticateToken, async (req, res) => {
+router.post('/', authenticateToken, requireRoles('staff', 'admin', 'superadmin'), async (req, res) => {
   try {
     const { name, icon, parentId, isActive } = req.body;
     const slug = generateSlug(name);
@@ -100,7 +101,7 @@ router.post('/', authenticateToken, async (req, res) => {
 });
 
 // PUT update category
-router.put('/:id', authenticateToken, async (req, res) => {
+router.put('/:id', authenticateToken, requireRoles('staff', 'admin', 'superadmin'), async (req, res) => {
   try {
     const { name, icon, isActive, sortOrder } = req.body;
     const data: any = {};
@@ -125,11 +126,23 @@ router.put('/:id', authenticateToken, async (req, res) => {
 });
 
 // DELETE category
-router.delete('/:id', authenticateToken, async (req, res) => {
+router.delete('/:id', authenticateToken, requireRoles('staff', 'admin', 'superadmin'), async (req, res) => {
   try {
-    await prisma.category.delete({ where: { id: getRouteParam(req.params.id) } });
+    await deleteCategorySafely(prisma, getRouteParam(req.params.id));
     res.json({ message: 'Xóa danh mục thành công' });
   } catch (error) {
+    if (error && typeof error === 'object' && 'httpStatus' in error) {
+      const status = Number((error as { httpStatus?: unknown }).httpStatus);
+      const message = (error as { message?: unknown }).message;
+      if (status === 404 || status === 409) {
+        return res.status(status).json({ message: typeof message === 'string' ? message : 'Không thể xóa danh mục.' });
+      }
+    }
+    const databaseStatus = categoryDeleteDatabaseStatus(error);
+    if (databaseStatus === 404) return res.status(404).json({ message: 'Không tìm thấy danh mục.' });
+    if (databaseStatus === 409) {
+      return res.status(409).json({ message: 'Danh mục vừa được liên kết với dữ liệu khác; không có dữ liệu nào bị xóa. Hãy tải lại và kiểm tra các liên kết.' });
+    }
     console.error('Error deleting category:', error);
     res.status(500).json({ message: 'Lỗi server' });
   }
@@ -138,7 +151,7 @@ router.delete('/:id', authenticateToken, async (req, res) => {
 // ========== ATTRIBUTE ROUTES ==========
 
 // POST add attribute to category
-router.post('/:id/attributes', authenticateToken, async (req, res) => {
+router.post('/:id/attributes', authenticateToken, requireRoles('staff', 'admin', 'superadmin'), async (req, res) => {
   try {
     const { name, values, colorCodes } = req.body;
     const maxOrder = await prisma.categoryAttribute.aggregate({
@@ -163,7 +176,7 @@ router.post('/:id/attributes', authenticateToken, async (req, res) => {
 });
 
 // PUT update attribute
-router.put('/attributes/:attrId', authenticateToken, async (req, res) => {
+router.put('/attributes/:attrId', authenticateToken, requireRoles('staff', 'admin', 'superadmin'), async (req, res) => {
   try {
     const { name, values, colorCodes } = req.body;
     const data: any = {};
@@ -183,7 +196,7 @@ router.put('/attributes/:attrId', authenticateToken, async (req, res) => {
 });
 
 // DELETE attribute
-router.delete('/attributes/:attrId', authenticateToken, async (req, res) => {
+router.delete('/attributes/:attrId', authenticateToken, requireRoles('staff', 'admin', 'superadmin'), async (req, res) => {
   try {
     await prisma.categoryAttribute.delete({ where: { id: getRouteParam(req.params.attrId) } });
     res.json({ message: 'Xóa thuộc tính thành công' });

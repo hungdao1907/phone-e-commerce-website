@@ -36,7 +36,8 @@ function ProductThumbnail({ product, size = 'md' }: { product: HomeFeaturedProdu
 }
 
 export function HomeFeaturedProducts() {
-  const { token } = useAuthStore();
+  const { token, user } = useAuthStore();
+  const isStaff = user?.role === 'staff';
   const authHeaders = useMemo(() => token ? { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } : { 'Content-Type': 'application/json' }, [token]);
   const [featuredProducts, setFeaturedProducts] = useState<HomeFeaturedProduct[]>([]);
   const [products, setProducts] = useState<HomeFeaturedProductData[]>([]);

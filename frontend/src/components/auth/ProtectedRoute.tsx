@@ -3,9 +3,10 @@ import { useAuthStore } from '../../store/authStore';
 
 interface ProtectedRouteProps {
   allowedRoles?: string[];
+  unauthorizedTo?: string;
 }
 
-export const ProtectedRoute = ({ allowedRoles }: ProtectedRouteProps) => {
+export const ProtectedRoute = ({ allowedRoles, unauthorizedTo }: ProtectedRouteProps) => {
   const { token, user } = useAuthStore();
 
   // If there is no token, redirect to the login page
@@ -15,9 +16,12 @@ export const ProtectedRoute = ({ allowedRoles }: ProtectedRouteProps) => {
 
   // If roles are specified and user's role is not in the list, redirect them
   if (allowedRoles && !allowedRoles.includes(user.role)) {
-    // If a customer tries to access dashboard, send to profile
+    if (unauthorizedTo) return <Navigate to={unauthorizedTo} replace />;
     if (user.role === 'customer') {
       return <Navigate to="/profile" replace />;
+    }
+    if (user.role === 'staff' || ['admin', 'superadmin', 'manager', 'user'].includes(user.role)) {
+      return <Navigate to="/dashboard" replace />;
     }
     // Otherwise send to home
     return <Navigate to="/" replace />;

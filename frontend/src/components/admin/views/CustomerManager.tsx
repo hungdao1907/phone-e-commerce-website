@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useAuthStore } from '@/store/authStore';
 import { Plus, UserCircle, MapPin, Mail, Phone, Trash2 } from 'lucide-react';
 
 interface Customer {
@@ -24,14 +25,20 @@ export function CustomerManager() {
   const [isAdding, setIsAdding] = useState(false);
   const [newFullName, setNewFullName] = useState('');
   const [newEmail, setNewEmail] = useState('');
+  const [newPassword, setNewPassword] = useState('');
   const [newPhone, setNewPhone] = useState('');
   const [newAddress, setNewAddress] = useState('');
   const [addError, setAddError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { token, user } = useAuthStore();
+  const canAccess = user?.role === 'admin' || user?.role === 'superadmin' || user?.role === 'staff';
+  const isStaff = user?.role === 'staff';
 
   const fetchCustomers = async () => {
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/customers`);
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/customers`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       if (!res.ok) throw new Error('Failed to fetch customers');
       const data = await res.json();
       setCustomers(data);
@@ -43,8 +50,8 @@ export function CustomerManager() {
   };
 
   useEffect(() => {
-    fetchCustomers();
-  }, []);
+    if (canAccess) fetchCustomers();
+  }, [canAccess, token]);
 
   const handleAddCustomer = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,10 +61,11 @@ export function CustomerManager() {
     try {
       const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/customers`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({
           fullName: newFullName,
           email: newEmail,
+          password: newPassword,
           phone: newPhone,
           address: newAddress
         })
@@ -72,6 +80,7 @@ export function CustomerManager() {
       // Reset form and refresh list
       setNewFullName('');
       setNewEmail('');
+      setNewPassword('');
       setNewPhone('');
       setNewAddress('');
       setIsAdding(false);
@@ -83,6 +92,10 @@ export function CustomerManager() {
       setIsSubmitting(false);
     }
   };
+
+  if (!canAccess) {
+    return <div className="rounded-xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-900">Chỉ người dùng có thẩm quyền mới được xem dữ liệu khách hàng.</div>;
+  }
 
   return (
     <div className="flex flex-col gap-6 h-full text-slate-900">
@@ -135,6 +148,21 @@ export function CustomerManager() {
                   />
                 </div>
               </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-slate-700">Mật khẩu ban đầu</label>
+              <input
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                minLength={8}
+                autoComplete="new-password"
+                className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 shadow-sm focus:border-emerald-500 focus:outline-none"
+                placeholder="Ít nhất 8 ký tự"
+                required
+              />
+              <p className="text-xs text-slate-500">Tài khoản được tạo chưa xác thực; đăng ký công khai vẫn dùng quy trình OTP.</p>
             </div>
 
             <div className="flex gap-4">
@@ -223,7 +251,8 @@ export function CustomerManager() {
                           if (!confirm(`Bạn có chắc muốn xóa khách hàng ${c.fullName || 'Khách hàng'}?`)) return;
                           try {
                             const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/customers/${c.id}`, {
-                              method: 'DELETE'
+                              method: 'DELETE',
+                              headers: { Authorization: `Bearer ${token}` },
                             });
                             if (res.ok) fetchCustomers();
                             else alert('Xóa thất bại');

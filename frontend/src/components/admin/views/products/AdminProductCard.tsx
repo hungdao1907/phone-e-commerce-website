@@ -12,6 +12,7 @@ interface AdminProductCardProps {
   onDelete: () => void;
   onManageVariants: () => void;
   viewMode?: 'grid' | 'list';
+  canDelete?: boolean;
 }
 
 export function AdminProductCard({
@@ -21,7 +22,8 @@ export function AdminProductCard({
   onEdit,
   onDelete,
   onManageVariants,
-  viewMode = 'grid'
+  viewMode = 'grid',
+  canDelete = true,
 }: AdminProductCardProps) {
 
   const [showDropdown, setShowDropdown] = React.useState(false);
@@ -134,13 +136,17 @@ export function AdminProductCard({
                 >
                   <Layers className="w-3.5 h-3.5 text-slate-500" /> Quản lý biến thể
                 </button>
-                <div className="h-px bg-slate-100 my-1" />
-                <button
-                  onClick={() => { setShowDropdown(false); onDelete(); }}
-                  className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 hover:text-rose-700 rounded-xl transition-colors"
-                >
-                  <Trash2 className="w-3.5 h-3.5 text-rose-500" /> Xoá sản phẩm
-                </button>
+                {canDelete && (
+                  <>
+                    <div className="h-px bg-slate-100 my-1" />
+                    <button
+                      onClick={() => { setShowDropdown(false); onDelete(); }}
+                      className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 hover:text-rose-700 rounded-xl transition-colors"
+                    >
+                      <Trash2 className="w-3.5 h-3.5 text-rose-500" /> Xoá sản phẩm
+                    </button>
+                  </>
+                )}
               </motion.div>
             )}
           </AnimatePresence>
@@ -198,13 +204,17 @@ export function AdminProductCard({
               >
                 <Layers className="w-3.5 h-3.5 text-slate-500" /> Quản lý biến thể
               </button>
-              <div className="h-px bg-slate-100 my-1" />
-              <button
-                onClick={(e) => { e.stopPropagation(); setShowDropdown(false); onDelete(); }}
-                className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 hover:text-rose-700 rounded-xl transition-colors"
-              >
-                <Trash2 className="w-3.5 h-3.5 text-rose-500" /> Xoá sản phẩm
-              </button>
+              {canDelete && (
+                <>
+                  <div className="h-px bg-slate-100 my-1" />
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setShowDropdown(false); onDelete(); }}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 hover:text-rose-700 rounded-xl transition-colors"
+                  >
+                    <Trash2 className="w-3.5 h-3.5 text-rose-500" /> Xoá sản phẩm
+                  </button>
+                </>
+              )}
             </motion.div>
           )}
         </AnimatePresence>

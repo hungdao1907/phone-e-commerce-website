@@ -1,5 +1,15 @@
 export type ChatRole = 'user' | 'assistant';
 
+export interface ChatbotVariant {
+  id: string;
+  sku?: string;
+  attributes: Record<string, string | number | boolean>;
+  stock: number;
+  price: number | null;
+  original_price: number | null;
+  availability: 'in_stock' | 'out_of_stock';
+}
+
 export interface ChatbotProduct {
   id?: string;
   name?: string;
@@ -10,6 +20,7 @@ export interface ChatbotProduct {
   original_price?: number;
   stock?: number;
   availability?: string;
+  variants?: ChatbotVariant[];
   storage_gb?: number;
   ram_gb?: number;
   color?: string;
@@ -30,14 +41,7 @@ export interface ChatMessage {
   resultType?: string;
   products?: ChatbotProduct[];
   quotation?: {
-    responseType?: 'text' | 'file';
-    success?: boolean;
     quoteStatus?: string;
-    quoteNumber?: string;
-    fileName?: string;
-    mimeType?: string;
-    downloadUrl?: string;
-    totalDisplay?: string;
   };
   isLoading?: boolean;
   isError?: boolean;

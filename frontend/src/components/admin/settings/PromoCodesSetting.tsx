@@ -16,14 +16,19 @@ interface PromoCode {
   minOrderValue: number;
 }
 
+import { useAuthStore } from '@/store/authStore';
+
 export function PromoCodesSetting() {
+  const isStaff = useAuthStore((state) => state.user?.role === 'staff');
   const [promoCodes, setPromoCodes] = useState<PromoCode[]>([]);
   const [isAdding, setIsAdding] = useState(false);
   
   // Fetch campaigns
   const fetchCampaigns = async () => {
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/promo-codes`);
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/promo-codes`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token') || ''}` },
+      });
       if (res.ok) {
         const data = await res.json();
         setPromoCodes(data);
@@ -50,7 +55,7 @@ export function PromoCodesSetting() {
     try {
       const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/promo-codes`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('token') || ''}` },
         body: JSON.stringify({
           name: code.toUpperCase(),
           description: '',
@@ -84,7 +89,7 @@ export function PromoCodesSetting() {
     try {
       await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/promo-codes/${id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('token') || ''}` },
         body: JSON.stringify({ isActive: !currentActive })
       });
       fetchCampaigns();
@@ -97,7 +102,8 @@ export function PromoCodesSetting() {
     if(confirm('Xóa mã giảm giá này?')) {
       try {
         await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/promo-codes/${id}`, {
-          method: 'DELETE'
+          method: 'DELETE',
+          headers: { Authorization: `Bearer ${localStorage.getItem('token') || ''}` },
         });
         fetchCampaigns();
       } catch (error) {
@@ -211,7 +217,7 @@ export function PromoCodesSetting() {
                       {isExpired && <span className="ml-2 text-[10px] bg-rose-50 text-rose-700 border border-rose-200 px-1.5 py-0.5 rounded uppercase font-bold">Hết hạn</span>}
                     </td>
                     <td className="py-4 px-6 text-right space-x-2">
-                      <button onClick={() => deletePromo(promo.id)} className="p-2 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-lg text-rose-600 transition-colors shadow-sm">
+                      <button onClick={() => deletePromo(promo.id)} className="p-2 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-lg text-rose-600 transition-colors shadow-sm cursor-pointer" title="Xóa mã giảm giá">
                         <Trash2 className="w-4 h-4" />
                       </button>
                     </td>

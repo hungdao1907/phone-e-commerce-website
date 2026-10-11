@@ -167,7 +167,8 @@ const getErrorMessage = async (response: Response, fallback: string) => {
 const isValidCustomLink = (value: string) => value.startsWith('/') || /^https?:\/\//i.test(value);
 
 export function Banners() {
-  const { token } = useAuthStore();
+  const { token, user } = useAuthStore();
+  const isStaff = user?.role === 'staff';
   const [banners, setBanners] = useState<Banner[]>([]);
   const [products, setProducts] = useState<ProductOption[]>([]);
   const [categories, setCategories] = useState<CategoryOption[]>([]);
@@ -418,7 +419,7 @@ export function Banners() {
     try {
       const uploadData = new FormData();
       uploadData.append('image', file);
-      const response = await fetch(`${API_BASE_URL}/api/upload`, { method: 'POST', body: uploadData });
+      const response = await fetch(`${API_BASE_URL}/api/upload`, { method: 'POST', headers: authHeaders, body: uploadData });
       if (!response.ok) throw new Error(await getErrorMessage(response, 'Không thể tải ảnh lên.'));
       const data = (await response.json()) as { url?: unknown; imageUrl?: unknown };
       const imageUrl = (typeof data.url === 'string' && data.url)
@@ -706,7 +707,7 @@ export function Banners() {
             const group = banners.filter((item) => item.position === banner.position).sort((first, second) => first.sortOrder - second.sortOrder || first.createdAt.localeCompare(second.createdAt));
             const itemIndex = group.findIndex((item) => item.id === banner.id);
             return <BannerRow key={banner.id} banner={banner} index={index} canMoveUp={itemIndex > 0} canMoveDown={itemIndex < group.length - 1}
-              onPreview={() => setPreviewBanner(banner)} onEdit={() => openEdit(banner)} onToggle={() => void handleToggleBanner(banner)} onDelete={() => setBannerPendingDelete(banner)} onMove={(direction) => void moveBanner(banner, direction)} isUpdating={updatingBannerId === banner.id} />;
+              onPreview={() => setPreviewBanner(banner)} onEdit={() => openEdit(banner)} onToggle={() => void handleToggleBanner(banner)} onDelete={() => setBannerPendingDelete(banner)} onMove={(direction) => void moveBanner(banner, direction)} isUpdating={updatingBannerId === banner.id} canDelete={true} />;
           })}</div>}
       </div>
 
@@ -1870,7 +1871,7 @@ function NoMatches({ onReset }: { onReset: () => void }) {
   );
 }
 
-function BannerRow({ banner, index, canMoveUp, canMoveDown, onPreview, onEdit, onToggle, onDelete, onMove, isUpdating }: { banner: Banner; index: number; canMoveUp: boolean; canMoveDown: boolean; onPreview: () => void; onEdit: () => void; onToggle: () => void; onDelete: () => void; onMove: (direction: 'up' | 'down') => void; isUpdating?: boolean }) {
+function BannerRow({ banner, index, canMoveUp, canMoveDown, onPreview, onEdit, onToggle, onDelete, onMove, isUpdating, canDelete = true }: { banner: Banner; index: number; canMoveUp: boolean; canMoveDown: boolean; onPreview: () => void; onEdit: () => void; onToggle: () => void; onDelete: () => void; onMove: (direction: 'up' | 'down') => void; isUpdating?: boolean; canDelete?: boolean }) {
   const status = getBannerStatus(banner);
   const statusConfig = STATUS_CONFIG[status];
   return (
@@ -1952,9 +1953,11 @@ function BannerRow({ banner, index, canMoveUp, canMoveDown, onPreview, onEdit, o
             )}
           </span>
         </button>
-        <button type="button" onClick={onDelete} className="icon-action hover:!border-red-300 hover:!bg-red-50 hover:!text-red-600" aria-label={`Xóa ${banner.title}`}>
-          <Trash2 className="h-4 w-4" />
-        </button>
+        {canDelete && (
+          <button type="button" onClick={onDelete} className="icon-action hover:!border-red-300 hover:!bg-red-50 hover:!text-red-600" aria-label={`Xóa ${banner.title}`}>
+            <Trash2 className="h-4 w-4" />
+          </button>
+        )}
       </div>
     </motion.article>
   );

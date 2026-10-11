@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Plus, Trash2, Edit2, CheckCircle2 } from 'lucide-react';
 import { useRewardsStore, Milestone } from '@/store/useRewardsStore';
 import { AdminSelect } from '@/components/admin/common/AdminSelect';
+import { useAuthStore } from '@/store/authStore';
 
 export function CartRewardsSetting() {
+  const isStaff = useAuthStore((state) => state.user?.role === 'staff');
   const { milestones, setMilestones, fetchMilestones } = useRewardsStore();
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -25,7 +27,7 @@ export function CartRewardsSetting() {
       if (editingId !== null) {
         const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/rewards/${editingId}`, {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('token') || ''}` },
           body: JSON.stringify({
             amount,
             label,
@@ -39,7 +41,7 @@ export function CartRewardsSetting() {
       } else {
         const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/rewards`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('token') || ''}` },
           body: JSON.stringify({
             amount,
             label,
@@ -86,7 +88,7 @@ export function CartRewardsSetting() {
     try {
       const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/rewards/${id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('token') || ''}` },
         body: JSON.stringify({ isActive: !currentStatus })
       });
       if (response.ok) {
@@ -101,7 +103,8 @@ export function CartRewardsSetting() {
     if(confirm('Bạn có chắc chắn muốn xóa mốc thưởng này?')) {
       try {
         const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/rewards/${id}`, {
-          method: 'DELETE'
+          method: 'DELETE',
+          headers: { Authorization: `Bearer ${localStorage.getItem('token') || ''}` },
         });
         if (response.ok) {
           fetchMilestones();
@@ -242,7 +245,7 @@ export function CartRewardsSetting() {
                     <button onClick={() => handleEditClick(milestone)} className="p-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg text-slate-600 transition-colors shadow-sm">
                       <Edit2 className="w-4 h-4" />
                     </button>
-                    <button onClick={() => deleteMilestone(milestone.id)} className="p-2 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-lg text-rose-600 transition-colors shadow-sm">
+                    <button onClick={() => deleteMilestone(milestone.id)} className="p-2 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-lg text-rose-600 transition-colors shadow-sm cursor-pointer" title="Xóa mốc thưởng">
                       <Trash2 className="w-4 h-4" />
                     </button>
                   </td>

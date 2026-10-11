@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { ShoppingBag, Package } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 interface OrdersTabProps {
   orders: any[];
@@ -166,12 +167,12 @@ export function OrdersTab({ orders, onReview, onComplete, onOpenComplaint }: Ord
                 {/* Actions */}
                 <div className="mt-5 pt-4 flex flex-wrap items-center justify-between border-t border-neutral-100">
                   <div>
-                    <a 
-                      href={`/profile/orders/${order.id}`}
+                    <Link
+                      to={`/profile/orders/${encodeURIComponent(order.id)}`}
                       className="text-sm font-bold text-blue-600 hover:text-blue-800 transition-colors"
                     >
                       Xem chi tiết đơn hàng &rarr;
-                    </a>
+                    </Link>
                   </div>
                   <div className="flex flex-wrap gap-3">
                     {order.status === 'delivered' && (

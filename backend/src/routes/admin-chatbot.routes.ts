@@ -1,10 +1,11 @@
 import express from 'express';
 import crypto from 'crypto';
 import { authenticateToken, AuthRequest } from '../middleware/auth.middleware';
+import { requireRoles } from '../middleware/authorization.middleware';
 
 const router = express.Router();
 
-router.post('/message', authenticateToken, async (req: AuthRequest, res) => {
+router.post('/message', authenticateToken, requireRoles('admin', 'superadmin'), async (req: AuthRequest, res) => {
   try {
     // Role check: Only allow users with access to the Admin Dashboard
     const ADMIN_DASHBOARD_ROLES = new Set(['superadmin', 'admin', 'manager', 'user']);

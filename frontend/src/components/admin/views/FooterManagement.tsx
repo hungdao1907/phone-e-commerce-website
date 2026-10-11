@@ -45,6 +45,8 @@ const createEmptyForm = (defaultType: FooterSectionType = 'column'): FooterSecti
 
 export function FooterManagement() {
   const token = useAuthStore((state) => state.token);
+  const user = useAuthStore((state) => state.user);
+  const isStaff = user?.role === 'staff';
   const authHeaders = useMemo<Record<string, string>>(() => {
     return token ? { Authorization: `Bearer ${token}` } : {};
   }, [token]);
@@ -711,6 +713,7 @@ export function FooterManagement() {
                   onDelete={() => setSectionPendingDelete(sec)}
                   onMove={(dir) => void moveSection(sec, dir)}
                   isUpdating={updatingSectionId === sec.id}
+                  canDelete={true}
                 />
               );
             })}
@@ -1452,6 +1455,7 @@ function FooterSectionRow({
   onDelete,
   onMove,
   isUpdating,
+  canDelete = true,
 }: {
   section: FooterSection;
   index: number;
@@ -1463,6 +1467,7 @@ function FooterSectionRow({
   onDelete: () => void;
   onMove: (direction: 'up' | 'down') => void;
   isUpdating?: boolean;
+  canDelete?: boolean;
 }) {
   const isColumn = section.type === 'column';
   const activeLinksCount = section.links.filter((l) => l.isActive).length;
@@ -1638,15 +1643,17 @@ function FooterSectionRow({
         </button>
 
         {/* Delete Button */}
-        <button
-          type="button"
-          onClick={onDelete}
-          className="p-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-600 transition-colors hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600 shadow-sm cursor-pointer"
-          aria-label={`Xóa ${section.title || section.copyrightText}`}
-          title="Xóa nội dung"
-        >
-          <Trash2 className="h-4 w-4" />
-        </button>
+        {canDelete && (
+          <button
+            type="button"
+            onClick={onDelete}
+            className="p-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-600 transition-colors hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600 shadow-sm cursor-pointer"
+            aria-label={`Xóa ${section.title || section.copyrightText}`}
+            title="Xóa nội dung"
+          >
+            <Trash2 className="h-4 w-4" />
+          </button>
+        )}
       </div>
     </motion.article>
   );

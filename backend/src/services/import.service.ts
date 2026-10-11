@@ -2,9 +2,8 @@ import * as xlsx from 'xlsx';
 import axios from 'axios';
 import fs from 'fs';
 import path from 'path';
-import { PrismaClient } from '@prisma/client';
+import prisma from '../config/prisma';
 
-const prisma = new PrismaClient();
 const UPLOADS_DIR = path.resolve(__dirname, '..', '..', 'uploads', 'products');
 
 if (!fs.existsSync(UPLOADS_DIR)) {

@@ -1,10 +1,10 @@
 import express from 'express';
-import { PrismaClient } from '@prisma/client';
+import prisma from '../config/prisma';
 import crypto from 'crypto';
 import { authenticateToken } from '../middleware/auth.middleware';
+import { requireRoles } from '../middleware/authorization.middleware';
 
 const router = express.Router();
-const prisma = new PrismaClient();
 
 // Provider-agnostic webhook for processing bank transactions
 // In production, this would be secured by provider-specific IP allowlists, signatures, or secret tokens.
@@ -48,7 +48,8 @@ router.post('/webhook', async (req, res) => {
         return res.status(403).json({ success: false, message: 'Test webhook not allowed in production' });
       }
       const parsedBody = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
-      if (parsedBody.provider_secret !== process.env.BANK_WEBHOOK_SECRET) {
+      const testSecret = process.env.BANK_WEBHOOK_SECRET;
+      if (!testSecret || typeof parsedBody.provider_secret !== 'string' || parsedBody.provider_secret !== testSecret) {
         return res.status(401).json({ message: 'Unauthorized test webhook' });
       }
     }
@@ -218,7 +219,7 @@ router.post('/webhook', async (req, res) => {
 });
 
 // DEV-ONLY: Trigger a mock webhook
-router.post('/webhook/test', async (req, res) => {
+router.post('/webhook/test', authenticateToken, requireRoles('admin', 'superadmin'), async (req, res) => {
   if (process.env.NODE_ENV === 'production') {
     return res.status(403).json({ message: 'Endpoint is not available in production' });
   }
@@ -243,7 +244,7 @@ router.post('/webhook/test', async (req, res) => {
 });
 
 // GET all bank transactions (Admin)
-router.get('/transactions', authenticateToken, async (req, res) => {
+router.get('/transactions', authenticateToken, requireRoles('admin', 'superadmin'), async (req, res) => {
   try {
     const { status, limit = 50, page = 1 } = req.query;
     const skip = (Number(page) - 1) * Number(limit);
@@ -270,7 +271,7 @@ router.get('/transactions', authenticateToken, async (req, res) => {
 });
 
 // GET transaction stats
-router.get('/transactions/stats', authenticateToken, async (req, res) => {
+router.get('/transactions/stats', authenticateToken, requireRoles('admin', 'superadmin'), async (req, res) => {
   try {
     const totalTransactions = await prisma.bankTransaction.count();
     const matchedCount = await prisma.bankTransaction.count({ where: { status: 'MATCHED' } });
@@ -295,7 +296,7 @@ router.get('/transactions/stats', authenticateToken, async (req, res) => {
 });
 
 // GET single transaction
-router.get('/transactions/:id', authenticateToken, async (req, res) => {
+router.get('/transactions/:id', authenticateToken, requireRoles('admin', 'superadmin'), async (req, res) => {
   try {
     const txId = req.params.id as string;
     const tx = await prisma.bankTransaction.findUnique({
@@ -319,7 +320,7 @@ router.get('/transactions/:id', authenticateToken, async (req, res) => {
 });
 
 // Manual Match Transaction to Order
-router.post('/transactions/:id/match', authenticateToken, async (req, res) => {
+router.post('/transactions/:id/match', authenticateToken, requireRoles('admin', 'superadmin'), async (req, res) => {
   try {
     const { orderId } = req.body;
     const txId = req.params.id as string;

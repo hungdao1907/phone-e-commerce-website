@@ -40,19 +40,11 @@ export function LaptopPage({ brand }: LaptopPageProps) {
           if (apiProducts.length > 0) {
             const mappedProducts: LaptopModel[] = apiProducts.map((ap: any, idx: number) => {
               // 1. Price
-              const prices = ap.variants?.map((v: any) => v.price).filter((p: any) => p != null && p > 0) || [];
-              const basePrice = prices.length > 0 ? Math.min(...prices) : (ap.basePrice || 0);
-              let finalPrice = basePrice;
-              let originalPrice = undefined;
-
-              if (ap.activeCampaign) {
-                originalPrice = basePrice;
-                if (ap.activeCampaign.discountType === 'percentage') {
-                  finalPrice = Math.max(0, basePrice - (basePrice * ap.activeCampaign.discountValue / 100));
-                } else {
-                  finalPrice = Math.max(0, basePrice - ap.activeCampaign.discountValue);
-                }
-              }
+              const rawPrices = ap.variants?.map((v: any) => v.price).filter((p: any) => p != null && p > 0) || [];
+              const basePrice = rawPrices.length > 0 ? Math.min(...rawPrices) : (ap.basePrice || 0);
+              const effectivePrices = ap.variants?.map((v: any) => v.effectivePrice ?? (v.salePrice != null && v.salePrice < v.price ? v.salePrice : v.price)).filter((p: number) => p > 0) || [];
+              const finalPrice = effectivePrices.length > 0 ? Math.min(...effectivePrices) : basePrice;
+              const originalPrice = finalPrice < basePrice ? basePrice : undefined;
 
               // 2. Specifications
               const getSpec = (keyword: string) => {

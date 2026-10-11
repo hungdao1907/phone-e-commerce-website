@@ -1,8 +1,9 @@
 import { Router, Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
+import prisma from '../config/prisma';
+import { authenticateToken } from '../middleware/auth.middleware';
+import { requireRoles } from '../middleware/authorization.middleware';
 
 const router = Router();
-const prisma = new PrismaClient();
 
 // Get all milestones
 router.get('/', async (req: Request, res: Response) => {
@@ -20,7 +21,7 @@ router.get('/', async (req: Request, res: Response) => {
 });
 
 // Create a new milestone
-router.post('/', async (req: Request, res: Response) => {
+router.post('/', authenticateToken, requireRoles('staff', 'admin', 'superadmin'), async (req: Request, res: Response) => {
   try {
     const { amount, label, type, discount, isActive } = req.body;
     
@@ -46,7 +47,7 @@ router.post('/', async (req: Request, res: Response) => {
 });
 
 // Update a milestone
-router.put('/:id', async (req: Request, res: Response) => {
+router.put('/:id', authenticateToken, requireRoles('staff', 'admin', 'superadmin'), async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const { amount, label, type, discount, isActive } = req.body;
@@ -70,7 +71,7 @@ router.put('/:id', async (req: Request, res: Response) => {
 });
 
 // Delete a milestone
-router.delete('/:id', async (req: Request, res: Response) => {
+router.delete('/:id', authenticateToken, requireRoles('staff', 'admin', 'superadmin'), async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     await prisma.rewardMilestone.delete({

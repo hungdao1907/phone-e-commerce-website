@@ -191,7 +191,7 @@ export default function App() {
                 <Route path="/laptop/apple" element={<Navigate to="/laptop/macbook" replace />} />
 
                 {/* Customer Profile Route (Protected inside MainLayout) */}
-                <Route element={<ProtectedRoute allowedRoles={['customer']} />}>
+                <Route element={<ProtectedRoute allowedRoles={['customer']} unauthorizedTo="/login" />}>
                   <Route path="/profile" element={<CustomerProfile />} />
                   <Route path="/profile/orders/:orderId" element={<OrderDetailPage />} />
                 </Route>
@@ -200,10 +200,16 @@ export default function App() {
               {/* Standalone Login Route */}
               <Route path="/login" element={<LoginPage />} />
               
-              {/* Dashboard Route Protected by Authentication (Standalone) */}
-              <Route element={<ProtectedRoute allowedRoles={['superadmin', 'admin', 'manager', 'user']} />}>
+              {/* Dashboard Route Protected by Authentication */}
+              <Route element={<ProtectedRoute allowedRoles={['superadmin', 'admin', 'manager', 'user', 'staff']} />}>
                 <Route path="/dashboard" element={<DashboardLayout />} />
                 <Route path="/dashboard/:view" element={<DashboardLayout />} />
+                <Route path="/staff" element={<Navigate to="/dashboard" replace />} />
+                <Route path="/staff/quotations" element={<Navigate to="/dashboard/quotations" replace />} />
+                <Route path="/staff/orders" element={<Navigate to="/dashboard/orders" replace />} />
+                <Route path="/staff/notifications" element={<Navigate to="/dashboard/notifications" replace />} />
+                <Route path="/staff/profile" element={<Navigate to="/dashboard/profile" replace />} />
+                <Route path="/staff/*" element={<Navigate to="/dashboard" replace />} />
               </Route>
             </Routes>
           </Suspense>

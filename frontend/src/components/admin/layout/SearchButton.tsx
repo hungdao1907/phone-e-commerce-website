@@ -20,9 +20,12 @@ import {
   MessageSquareWarning,
   UserPlus,
   ArrowLeft,
+  Bell,
+  UserCheck,
 } from 'lucide-react';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { LottieIcon } from '@/components/ui/LottieIcon';
+import { useAuthStore } from '@/store/authStore';
 
 // ─── Types ──────────────────────────────────────────────────────
 
@@ -69,7 +72,7 @@ const NAV_TREE: BreadcrumbNode[] = [
     icon: <Package size={16} />,
     children: [
       {
-        label: 'Danh sách',
+        label: 'Danh sách sản phẩm',
         icon: <Package size={16} />,
         viewId: 'product-list',
         apiEndpoint: '/api/products',
@@ -172,6 +175,33 @@ const NAV_TREE: BreadcrumbNode[] = [
           viewId: 'banners',
         }),
       },
+      {
+        label: 'Sản phẩm nổi bật',
+        icon: <Package size={16} />,
+        viewId: 'home-featured-products',
+      },
+    ],
+  },
+  {
+    label: 'Báo giá Chatbot',
+    icon: <FileText size={16} />,
+    viewId: 'quotations',
+    children: [
+      {
+        label: 'Danh sách báo giá',
+        icon: <FileText size={16} />,
+        viewId: 'quotations-list',
+      },
+      {
+        label: 'Báo giá chờ duyệt',
+        icon: <FileText size={16} />,
+        viewId: 'quotations-pending',
+      },
+      {
+        label: 'Báo giá đã xử lý',
+        icon: <FileText size={16} />,
+        viewId: 'quotations-processed',
+      },
     ],
   },
   {
@@ -195,20 +225,50 @@ const NAV_TREE: BreadcrumbNode[] = [
     label: 'Cài đặt',
     icon: <Settings size={16} />,
     viewId: 'settings',
+    children: [
+      {
+        label: 'Mốc thưởng Giỏ hàng',
+        icon: <Settings size={16} />,
+        viewId: 'cart-rewards',
+      },
+      {
+        label: 'Mã giảm giá',
+        icon: <Settings size={16} />,
+        viewId: 'promo-codes',
+      },
+      {
+        label: 'Quản lý Footer',
+        icon: <Settings size={16} />,
+        viewId: 'footer',
+      },
+    ],
   },
 ];
 
-// Lottie shortcut icons (the 4 floating buttons)
-const SHORTCUT_ICONS: { label: string; lottiePath: string; treeIndex: number }[] = [
-  { label: 'Tổng quan', lottiePath: '/lottie/dashboard.json', treeIndex: 0 },
-  { label: 'Lịch', lottiePath: '/lottie/calendar.json', treeIndex: 1 },
-  { label: 'Sản phẩm', lottiePath: '/lottie/product.json', treeIndex: 2 },
-  { label: 'Đơn hàng', lottiePath: '/lottie/orders.json', treeIndex: 3 },
+const ADMIN_SHORTCUTS = [
+  { label: 'Tổng quan', lottiePath: '/lottie/dashboard.json', targetLabel: 'Tổng quan' },
+  { label: 'Lịch', lottiePath: '/lottie/calendar.json', targetLabel: 'Lịch' },
+  { label: 'Sản phẩm', lottiePath: '/lottie/product.json', targetLabel: 'Sản phẩm' },
+  { label: 'Đơn hàng', lottiePath: '/lottie/orders.json', targetLabel: 'Đơn hàng' },
+];
+
+const STAFF_SHORTCUTS = [
+  { label: 'Tổng quan', lottiePath: '/lottie/dashboard.json', targetLabel: 'Tổng quan' },
+  { label: 'Sản phẩm', lottiePath: '/lottie/product.json', targetLabel: 'Sản phẩm' },
+  { label: 'Đơn hàng', lottiePath: '/lottie/orders.json', targetLabel: 'Đơn hàng' },
+  { label: 'CRM', lottiePath: '/lottie/user.json', targetLabel: 'CRM' },
 ];
 
 // ─── Component ──────────────────────────────────────────────────
 
 export const SearchButton = ({ onNavigate }: SearchButtonProps) => {
+  const token = useAuthStore((state) => state.token);
+  const currentUser = useAuthStore((state) => state.user);
+  const isStaff = currentUser?.role === 'staff';
+  const navTree = isStaff
+    ? NAV_TREE.filter((item) => item.label !== 'Nhân sự' && item.label !== 'Lịch')
+    : NAV_TREE;
+  const shortcutIcons = isStaff ? STAFF_SHORTCUTS : ADMIN_SHORTCUTS;
   const [hovered, setHovered] = useState(false);
   const [hoveredShortcut, setHoveredShortcut] = useState<number | null>(null);
 
@@ -236,7 +296,9 @@ export const SearchButton = ({ onNavigate }: SearchButtonProps) => {
       return;
     }
     setIsLoadingApi(true);
-    fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}${currentNode.apiEndpoint}`)
+    fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}${currentNode.apiEndpoint}`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    })
       .then(r => r.json())
       .then(data => {
         if (Array.isArray(data)) setApiData(data);
@@ -244,7 +306,7 @@ export const SearchButton = ({ onNavigate }: SearchButtonProps) => {
       })
       .catch(() => setApiData([]))
       .finally(() => setIsLoadingApi(false));
-  }, [currentNode?.apiEndpoint]);
+  }, [currentNode?.apiEndpoint, token]);
 
   // Build dropdown items
   const dropdownItems = React.useMemo(() => {
@@ -253,7 +315,7 @@ export const SearchButton = ({ onNavigate }: SearchButtonProps) => {
 
     if (!currentNode) {
       // Level 0: show top-level tree items
-      NAV_TREE.forEach(node => {
+      navTree.forEach(node => {
         if (q && !node.label.toLowerCase().includes(q)) return;
         items.push({
           icon: node.icon,
@@ -362,8 +424,10 @@ export const SearchButton = ({ onNavigate }: SearchButtonProps) => {
   }, [resetSearch]);
 
   // Handle shortcut button click
-  const handleShortcutClick = useCallback((treeIndex: number) => {
-    const node = NAV_TREE[treeIndex];
+  const handleShortcutClick = useCallback((shortcutIndex: number) => {
+    const shortcut = shortcutIcons[shortcutIndex];
+    if (!shortcut) return;
+    const node = navTree.find((n) => n.label === shortcut.targetLabel);
     if (!node) return;
     if (node.viewId && !node.children) {
       onNavigate?.(node.viewId);
@@ -374,7 +438,7 @@ export const SearchButton = ({ onNavigate }: SearchButtonProps) => {
       setHovered(true);
       setTimeout(() => inputRef.current?.focus(), 100);
     }
-  }, [onNavigate, resetSearch]);
+  }, [navTree, onNavigate, resetSearch, shortcutIcons]);
 
   return (
     <div
@@ -416,7 +480,7 @@ export const SearchButton = ({ onNavigate }: SearchButtonProps) => {
                 {!displayValue && (
                   <div className="absolute inset-0 flex items-center pointer-events-none z-10 text-slate-400">
                     <span className="block truncate w-full">
-                      {hoveredShortcut !== null ? SHORTCUT_ICONS[hoveredShortcut].label : 'Tìm kiếm sản phẩm, đơn hàng...'}
+                      {hoveredShortcut !== null ? shortcutIcons[hoveredShortcut]?.label : isStaff ? 'Tìm kiếm công việc, đơn hàng...' : 'Tìm kiếm sản phẩm, đơn hàng...'}
                     </span>
                   </div>
                 )}
@@ -516,7 +580,7 @@ export const SearchButton = ({ onNavigate }: SearchButtonProps) => {
 
           {/* ─── Shortcut floating buttons ─── */}
           {hovered && !isDropdownVisible &&
-            SHORTCUT_ICONS.map((shortcut, index) => (
+            shortcutIcons.map((shortcut, index) => (
               <motion.div
                 key={`shortcut-${index}`}
                 onMouseEnter={() => setHoveredShortcut(index)}

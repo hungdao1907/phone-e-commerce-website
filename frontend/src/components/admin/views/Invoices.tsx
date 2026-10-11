@@ -19,7 +19,8 @@ export function Invoices() {
   const [invoices, setInvoices] = useState<any[]>([]);
   const [search, setSearch] = useState('');
   const [isLoading, setIsLoading] = useState(true);
-  const { token } = useAuthStore();
+  const { token, user } = useAuthStore();
+  const canAccess = user?.role === 'admin' || user?.role === 'superadmin' || user?.role === 'staff';
 
   const [selectedInvoice, setSelectedInvoice] = useState<any>(null);
 
@@ -33,7 +34,13 @@ export function Invoices() {
     }
   };
 
-  useEffect(() => { fetchInvoices(); }, []);
+  useEffect(() => {
+    if (canAccess) fetchInvoices();
+  }, [canAccess, token]);
+
+  if (!canAccess) {
+    return <div className="rounded-xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-900">Chỉ người dùng có thẩm quyền mới được xem hóa đơn tổng hợp.</div>;
+  }
 
   const filteredInvoices = invoices.filter(inv => 
     inv.invoiceCode.toLowerCase().includes(search.toLowerCase()) ||

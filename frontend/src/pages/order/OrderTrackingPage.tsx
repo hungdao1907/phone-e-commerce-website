@@ -32,18 +32,11 @@ import { SettigationOtpInput } from '../../components/ui/SettigationOtpInput';
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
 interface OrderItem {
-  id: string;
   productName: string;
   variantInfo: string;
   quantity: number;
   unitPrice: number;
-  variant?: {
-    image?: string;
-    product?: {
-      name: string;
-      image?: string;
-    };
-  };
+  image?: string | null;
 }
 
 interface OrderData {
@@ -57,15 +50,9 @@ interface OrderData {
   totalAmount: number;
   shippingFee?: number;
   discountAmount?: number;
-  note?: string;
   estimatedDelivery?: string;
   createdAt: string;
-  customer?: {
-    fullName?: string;
-    email?: string;
-    phone?: string;
-    address?: string;
-  };
+  recipientName?: string | null;
   items?: OrderItem[];
 }
 
@@ -99,12 +86,11 @@ export function OrderTrackingPage() {
 
   // Form Inputs
   const [orderCode, setOrderCode] = useState('');
-  const [phoneOrEmail, setPhoneOrEmail] = useState('');
+  const [contact, setContact] = useState('');
 
   // OTP State
   const [otpValues, setOtpValues] = useState<string[]>(['', '', '', '', '', '']);
-  const [maskedDestination, setMaskedDestination] = useState('');
-  const [debugOtp, setDebugOtp] = useState<string | null>(null);
+  const [challengeId, setChallengeId] = useState<string | null>(null);
   const [countdown, setCountdown] = useState(60);
   const [canResend, setCanResend] = useState(false);
   const otpInputRefs = useRef<(HTMLInputElement | null)[]>([]);
@@ -113,6 +99,8 @@ export function OrderTrackingPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isVerified, setIsVerified] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [requestMessage, setRequestMessage] = useState('');
+  const [lookupProof, setLookupProof] = useState<string | null>(null);
   const [verifiedOrder, setVerifiedOrder] = useState<OrderData | null>(null);
   const [copiedCode, setCopiedCode] = useState(false);
 
@@ -146,9 +134,10 @@ export function OrderTrackingPage() {
   const handleRequestOtp = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     setErrorMsg(null);
+    setRequestMessage('');
 
     const trimmedCode = orderCode.trim();
-    const trimmedContact = phoneOrEmail.trim();
+    const trimmedContact = contact.trim();
 
     if (!trimmedCode) {
       setErrorMsg('Vui lòng nhập Mã đơn hàng của bạn.');
@@ -166,7 +155,7 @@ export function OrderTrackingPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           orderCode: trimmedCode,
-          phoneOrEmail: trimmedContact,
+          contact: trimmedContact,
         }),
       });
 
@@ -175,10 +164,8 @@ export function OrderTrackingPage() {
         throw new Error(data.message || 'Không tìm thấy thông tin đơn hàng');
       }
 
-      setMaskedDestination(data.maskedDestination || 'email của bạn');
-      if (data.debugOtp) {
-        setDebugOtp(data.debugOtp);
-      }
+      setChallengeId(data.challengeId);
+      setRequestMessage(data.message || 'Nếu thông tin đơn hàng khớp, mã xác thực đã được gửi tới email liên hệ của đơn hàng.');
       setOtpValues(['', '', '', '', '', '']);
       setCountdown(60);
       setCanResend(false);
@@ -205,11 +192,15 @@ export function OrderTrackingPage() {
     setIsLoading(true);
     setIsVerified(false);
     try {
+      if (!challengeId) {
+        throw new Error('Phiên xác thực không còn hợp lệ. Vui lòng yêu cầu mã mới.');
+      }
+
       const res = await fetch(`${API_BASE_URL}/api/orders/track/verify-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          orderCode: orderCode.trim(),
+          challengeId,
           otp: fullOtp,
         }),
       });
@@ -219,8 +210,17 @@ export function OrderTrackingPage() {
         throw new Error(data.message || 'Mã xác thực không hợp lệ');
       }
 
+      const detailsRes = await fetch(`${API_BASE_URL}/api/orders/track/details`, {
+        headers: { Authorization: `Bearer ${data.accessToken}` },
+      });
+      const detailsData = await detailsRes.json();
+      if (!detailsRes.ok) {
+        throw new Error(detailsData.message || 'Không thể tải thông tin đơn hàng');
+      }
+
+      setLookupProof(data.accessToken);
       setIsVerified(true);
-      setVerifiedOrder(data.order);
+      setVerifiedOrder(detailsData.order);
 
       // Smooth pause so the user enjoys the single unified verified box animation
       setTimeout(() => {
@@ -250,11 +250,13 @@ export function OrderTrackingPage() {
   const handleReset = () => {
     setStep(1);
     setOrderCode('');
-    setPhoneOrEmail('');
+    setContact('');
     setOtpValues(['', '', '', '', '', '']);
+    setChallengeId(null);
+    setLookupProof(null);
     setVerifiedOrder(null);
     setErrorMsg(null);
-    setDebugOtp(null);
+    setRequestMessage('');
   };
 
   // Helper for generating order timeline
@@ -363,15 +365,15 @@ export function OrderTrackingPage() {
                     </div>
                     <input
                       type="text"
-                      value={phoneOrEmail}
-                      onChange={(e) => setPhoneOrEmail(e.target.value)}
+                      value={contact}
+                      onChange={(e) => setContact(e.target.value)}
                       placeholder="Nhập số điện thoại hoặc email lúc đặt hàng"
                       className="w-full pl-12 pr-4 py-3.5 rounded-2xl bg-neutral-50/80 border border-neutral-200 focus:border-neutral-900 focus:bg-white focus:outline-none focus:ring-4 focus:ring-neutral-900/5 text-sm sm:text-base font-medium transition-all placeholder:text-neutral-400"
                     />
                   </div>
                   <p className="text-xs text-neutral-500 mt-2 flex items-center gap-1.5">
                     <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                    Dùng để đối chiếu và gửi mã OTP bảo mật trước khi hiển thị dữ liệu.
+                    Dùng để đối chiếu và gửi mã OTP bảo mật tới email liên hệ trước khi hiển thị dữ liệu.
                   </p>
                 </div>
 
@@ -410,7 +412,7 @@ export function OrderTrackingPage() {
               <div className="mt-8 pt-6 border-t border-neutral-100 flex items-start gap-3.5 text-neutral-500 text-xs leading-relaxed bg-neutral-50/70 p-4 rounded-2xl border border-neutral-100">
                 <ShieldCheck className="w-5 h-5 text-neutral-700 shrink-0 mt-0.5" />
                 <p>
-                  <strong className="text-neutral-800">Cơ chế bảo mật 2 lớp:</strong> Sau khi kiểm tra thông tin hợp lệ, hệ thống sẽ gửi một mã OTP 6 chữ số đến email hoặc số điện thoại của bạn nhằm ngăn ngừa việc lộ thông tin địa chỉ và đơn hàng cá nhân.
+                  <strong className="text-neutral-800">Cơ chế bảo mật 2 lớp:</strong> Nếu thông tin khớp, hệ thống sẽ gửi một mã OTP 6 chữ số tới email liên hệ của đơn hàng nhằm ngăn ngừa việc lộ thông tin địa chỉ và đơn hàng cá nhân.
                 </p>
               </div>
             </div>
@@ -455,12 +457,9 @@ export function OrderTrackingPage() {
                     <h2 className="text-2xl sm:text-3xl font-extrabold text-neutral-900 tracking-tight">
                       XÁC THỰC BẢO MẬT
                     </h2>
-                    <div className="mt-3 text-sm text-neutral-600">
-                      <p>Mã xác thực đã được gửi đến</p>
-                      <div className="inline-block mt-2 px-4 py-1.5 rounded-full bg-neutral-100 border border-neutral-200/80 font-mono font-semibold text-neutral-900 text-sm tracking-wide shadow-inner">
-                        {maskedDestination}
-                      </div>
-                    </div>
+                    <p className="mt-3 text-sm text-neutral-600">
+                      {requestMessage || 'Nếu thông tin đơn hàng khớp, mã xác thực đã được gửi tới email liên hệ của đơn hàng.'}
+                    </p>
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -498,23 +497,6 @@ export function OrderTrackingPage() {
                     autoFocus={true}
                   />
 
-                  {/* Quick autofill helper for dev testing */}
-                  {debugOtp && !isVerified && (
-                    <div className="mt-4 p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs text-center flex items-center justify-center gap-2">
-                      <span>Mã thử nghiệm (Dev): <strong className="font-mono text-amber-900">{debugOtp}</strong></span>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setOtpValues(debugOtp.split(''));
-                          if (errorMsg) setErrorMsg(null);
-                          handleVerifyOtp(undefined, debugOtp);
-                        }}
-                        className="ml-2 px-2.5 py-0.5 rounded-lg bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300 font-semibold cursor-pointer text-xs transition-colors"
-                      >
-                        Tự động điền & Xác thực
-                      </button>
-                    </div>
-                  )}
                 </div>
 
                 <AnimatePresence>
@@ -721,7 +703,7 @@ export function OrderTrackingPage() {
                       return (
                         <div key={idx} className="py-4.5 flex items-center gap-4">
                           <OrderItemThumbnail
-                            src={item.variant?.image || item.variant?.product?.image}
+                            src={item.image}
                             alt={item.productName}
                           />
 
@@ -761,19 +743,14 @@ export function OrderTrackingPage() {
                   </h4>
                   <div className="space-y-2 text-xs sm:text-sm">
                     <p className="font-bold text-neutral-900">
-                      {verifiedOrder.customer?.fullName || 'Khách hàng'}
+                      {verifiedOrder.recipientName || 'Khách hàng'}
                     </p>
                     <p className="text-neutral-600 font-mono">
-                      {verifiedOrder.shippingPhone || verifiedOrder.customer?.phone || 'Chưa có SĐT'}
+                      {verifiedOrder.shippingPhone || 'Chưa có SĐT'}
                     </p>
                     <p className="text-neutral-600 leading-relaxed">
                       {verifiedOrder.shippingAddress || 'Chưa cập nhật địa chỉ'}
                     </p>
-                    {verifiedOrder.note && (
-                      <p className="text-neutral-500 italic pt-2 border-t border-neutral-100 text-xs">
-                        Ghi chú: &ldquo;{verifiedOrder.note}&rdquo;
-                      </p>
-                    )}
                   </div>
                 </div>
 

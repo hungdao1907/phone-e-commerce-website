@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { MoreVertical } from 'lucide-react';
+import { useAuthStore } from '@/store/authStore';
 
 interface TopProduct {
   name: string;
@@ -11,11 +12,14 @@ interface TopProduct {
 const COLORS = ['#DDEB9D', '#ACD99C', '#E0CD39', '#15919B'];
 
 export function TopProductsWidget() {
+  const token = useAuthStore((state) => state.token);
   const [products, setProducts] = useState<TopProduct[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/dashboard/top-products`)
+    fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/dashboard/top-products`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    })
       .then(res => res.json())
       .then(data => {
         if (Array.isArray(data)) {
@@ -24,7 +28,7 @@ export function TopProductsWidget() {
       })
       .catch(err => console.error('Failed to fetch top products:', err))
       .finally(() => setIsLoading(false));
-  }, []);
+  }, [token]);
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(value);

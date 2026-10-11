@@ -1,13 +1,19 @@
 import React, { useState, useEffect } from 'react';
+import { useAuthStore } from '@/store/authStore';
 import { Plus, Search, Filter, Phone, Mail, CheckCircle, XCircle } from 'lucide-react';
 
 export function LeadManager() {
+  const { token, user } = useAuthStore();
+  const isAdmin = user?.role === 'admin' || user?.role === 'superadmin';
+  const canManageAssignedLeads = isAdmin || user?.role === 'staff';
   const [leads, setLeads] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchLeads = async () => {
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/leads`);
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/leads`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       if (res.ok) {
         const data = await res.json();
         setLeads(data);
@@ -20,15 +26,15 @@ export function LeadManager() {
   };
 
   useEffect(() => {
-    fetchLeads();
-  }, []);
+    if (canManageAssignedLeads) fetchLeads();
+  }, [canManageAssignedLeads, token]);
 
   const handleConvert = async (leadId: string) => {
     // Basic converting just updates status for now, since user said no need to auto-create auth account.
     try {
       const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/leads/${leadId}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ status: 'converted' })
       });
       if (res.ok) {
@@ -46,7 +52,8 @@ export function LeadManager() {
     if (!confirm('Xóa Lead này?')) return;
     try {
       const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/leads/${leadId}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
       });
       if (res.ok) {
         alert('Đã xóa Lead');
@@ -77,6 +84,10 @@ export function LeadManager() {
     if (score >= 50) return <span className="text-amber-600 font-bold">{score} (Warm)</span>;
     return <span className="text-blue-600 font-bold">{score} (Cold)</span>;
   };
+
+  if (!canManageAssignedLeads) {
+    return <div className="rounded-xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-900">Vai trò này chưa được cấp quyền xem dữ liệu Lead.</div>;
+  }
 
   return (
     <div className="flex flex-col gap-6 h-full text-slate-900">
@@ -188,12 +199,15 @@ export function LeadManager() {
                             Convert
                           </button>
                         )}
-                        <button 
-                          onClick={() => handleDelete(lead.id)}
-                          className="p-1.5 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition-colors"
-                        >
-                          <XCircle className="w-4 h-4" />
-                        </button>
+                        {canManageAssignedLeads && (
+                          <button
+                            onClick={() => handleDelete(lead.id)}
+                            className="p-1.5 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                            aria-label="Xóa lead"
+                          >
+                            <XCircle className="w-4 h-4" />
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>

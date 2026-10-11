@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Calendar, MapPin, Clock, MoreVertical, Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useAuthStore } from '@/store/authStore';
 
 interface Plan {
   id: string;
@@ -13,11 +14,16 @@ interface Plan {
 }
 
 export function PlanScheduleWidget() {
+  const user = useAuthStore((state) => state.user);
+  const isStaff = user?.role === 'staff';
   const [plans, setPlans] = useState<Plan[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/plans`)
+    const endpoint = isStaff ? '/api/plans/assigned' : '/api/plans';
+    fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}${endpoint}`, {
+      headers: { Authorization: `Bearer ${localStorage.getItem('token') || ''}` },
+    })
       .then(res => res.json())
       .then(data => {
         if (Array.isArray(data)) {
