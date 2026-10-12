@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { MessageSquare, X, Send, Bot, RotateCcw, Sparkles, HelpCircle, Loader2 } from 'lucide-react';
 import { ChatMessage, QuickPrompt } from './types';
 import { ChatMessageItem } from './ChatMessageItem';
-import { extractSuggestedProductIds, fetchChatbotCatalogProducts, sendChatMessage } from '../../services/chatbot.api';
+import { extractSuggestedProductIds, fetchChatbotCatalogProducts, readVerifiedChatbotProducts, resolveChatbotProductResponse, sendChatMessage } from '../../services/chatbot.api';
 import { resolveQuotationIntent } from './quotation-intent';
 import { MeshGradientSVG } from '../ui/shader-svg';
 import { CustomerQuotationPanel } from './CustomerQuotationPanel';
@@ -164,23 +164,21 @@ export function ChatWidget() {
       };
 
       const previousProducts = [...messages].reverse().find(message => message.products?.length)?.products || [];
-      const quotationResult = await resolveQuotationIntent(text, response, previousProducts);
+      const verifiedProducts = readVerifiedChatbotProducts(response);
+      const quotationResult = await resolveQuotationIntent(text, response, previousProducts, verifiedProducts
+        ? { byIds: async ids => verifiedProducts.filter(p => ids.includes(p.id!)) } : {});
+      assistantMessage.resultType = response.result_type;
 
       if (quotationResult) {
         assistantMessage.text = quotationResult.text;
         assistantMessage.products = quotationResult.products;
         assistantMessage.isError = quotationResult.isError;
-      } else if (response.result_type === 'product_search') {
-        assistantMessage.text = response.response;
-        const suggestedIds = extractSuggestedProductIds(response);
-        try {
-          assistantMessage.products = await fetchChatbotCatalogProducts(suggestedIds);
-          if (suggestedIds.length > 0 && assistantMessage.products.length === 0) {
-            assistantMessage.text = 'Không thể xác minh các sản phẩm gợi ý trong danh mục hiện tại. Vui lòng xem danh mục WebPhone để biết thông tin mới nhất.';
-          }
-        } catch {
-          assistantMessage.text = 'Danh mục hiện chưa thể xác minh. Vui lòng xem trực tiếp trang sản phẩm để biết thông tin mới nhất.';
-        }
+      } else if (['product_search', 'product_detail', 'product_compare', 'recommendation'].includes(response.result_type)
+        || extractSuggestedProductIds(response).length > 0) {
+        const result = await resolveChatbotProductResponse(response);
+        assistantMessage.text = result.text;
+        assistantMessage.products = result.products;
+        assistantMessage.isError = result.isError;
       } else if (response.result_type === 'quotation') {
         const suggestedIds = extractSuggestedProductIds(response);
         assistantMessage.text = suggestedIds.length

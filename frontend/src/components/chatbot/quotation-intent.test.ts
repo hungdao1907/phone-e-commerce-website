@@ -6,6 +6,8 @@ import { MemoryRouter } from 'react-router-dom';
 import { dedupeChatbotProducts } from './catalog-products';
 import { parseQuotationIntent, resolveQuotationIntent } from './quotation-intent';
 import type { ChatbotProduct } from './types';
+import { ChatMarkdown } from './ChatMarkdown';
+import { resolveChatbotProductResponse } from '../../services/chatbot.api';
 
 const storage = new Map<string, string>();
 const storageStub = {
@@ -26,6 +28,18 @@ const product: ChatbotProduct = {
     price: 25000000, original_price: 26000000, availability: 'in_stock',
   }],
 };
+
+test('natural product introduction and one verified carousel render without duplicated Markdown product lists', async () => {
+  const cards = Array.from({ length: 5 }, (_, i) => ({ ...product, id: `catalog-${i + 1}`, name: `Backend Phone ${i + 1}`, stock: 4, price: 25000000 }));
+  const dto = { result_type: 'product_search', response: 'WebPhone có bán iPhone.\n\nBạn muốn xem mẫu nào?', products: cards, total: 5, catalog_verified: true };
+  const result = await resolveChatbotProductResponse(dto);
+  const html = renderToStaticMarkup(React.createElement(MemoryRouter, null,
+    React.createElement(ChatMarkdown, { content: result.text }), React.createElement(ProductCarousel, { products: result.products })));
+  assert.ok(html.includes('WebPhone có bán iPhone')); assert.ok(html.includes('Bạn muốn xem mẫu nào?'));
+  assert.ok(html.includes('Gợi ý sản phẩm phù hợp')); assert.equal(result.products.length, 5);
+  for (const card of cards) assert.equal((html.match(new RegExp(card.name, 'g')) || []).length, 1);
+  assert.ok(!html.includes('Danh sách dưới đây được xác minh'));
+});
 
 test('A: natural quotation intent searches Backend by extracted name when n8n has no product IDs', async () => {
   let searched = '';

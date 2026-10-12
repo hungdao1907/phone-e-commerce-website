@@ -1,4 +1,5 @@
 import type { ChatbotProduct } from '../components/chatbot/types';
+import { dedupeChatbotProducts } from '../components/chatbot/catalog-products';
 
 const API_BASE_URL = import.meta.env?.VITE_API_URL || 'http://localhost:3001';
 
@@ -19,7 +20,8 @@ export async function sendChatMessage(message: string, sessionId: string) {
 /** Only opaque product IDs cross from n8n; Backend rehydrates all catalog data. */
 export function extractSuggestedProductIds(value: unknown): string[] {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return [];
-  const products = (value as Record<string, unknown>).products;
+  const record = value as Record<string, unknown>;
+  const products = Array.isArray(record.products) ? record.products : record.product ? [record.product] : [];
   if (!Array.isArray(products)) return [];
 
   return [...new Set(products
@@ -27,6 +29,29 @@ export function extractSuggestedProductIds(value: unknown): string[] {
     .map(product => product.id)
     .filter((id): id is string => typeof id === 'string' && id.trim().length > 0 && id.length <= 128)
     .map(id => id.trim()))].slice(0, 12);
+}
+
+/** Only the Backend can set this marker after catalog rehydration; never consume raw workflow prices. */
+export function readVerifiedChatbotProducts(value: any): ChatbotProduct[] | null {
+  if (value?.catalog_verified !== true || !Array.isArray(value.products)) return null;
+  if (value.products.some((p: any) => typeof p?.id !== 'string' || typeof p?.name !== 'string' || !Array.isArray(p.variants)
+    || !Number.isSafeInteger(p.stock) || p.stock < 0 || (p.price !== undefined && (!Number.isSafeInteger(p.price) || p.price < 0))
+    || p.variants.some((v: any) => typeof v?.id !== 'string' || !Number.isSafeInteger(v.stock) || v.stock < 0
+      || (v.price !== null && (!Number.isSafeInteger(v.price) || v.price < 0))))) return null;
+  return dedupeChatbotProducts(value.products);
+}
+
+export async function resolveChatbotProductResponse(response: any, loader = fetchChatbotCatalogProducts) {
+  const cached = readVerifiedChatbotProducts(response);
+  const ids = extractSuggestedProductIds(response);
+  try {
+    const products = cached ?? dedupeChatbotProducts(await loader(ids));
+    if (ids.length && !products.length) return { text: 'Không xác minh được các sản phẩm gợi ý trong danh mục hiện tại. Vui lòng tìm lại sản phẩm.', products: [], isError: true };
+    return { text: typeof response.response === 'string' ? response.response : '', products,
+      isError: response.catalog_verified === false };
+  } catch {
+    return { text: 'Danh mục Backend tạm thời không khả dụng. Vui lòng thử lại.', products: [], isError: true };
+  }
 }
 
 /** Resolve chatbot suggestions through the public, Backend-owned active catalog. */

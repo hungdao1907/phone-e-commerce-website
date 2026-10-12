@@ -58,6 +58,9 @@ export async function resolveChatbotCatalogProducts(
         brand: true,
         description: true,
         image: true,
+        images: true,
+        specifications: true,
+        category: { select: { name: true, slug: true, isActive: true } },
         categoryId: true,
         status: true,
         variants: { select: { id: true, sku: true, attributes: true, price: true, salePrice: true, stock: true } },
@@ -68,7 +71,11 @@ export async function resolveChatbotCatalogProducts(
     }),
   ]);
 
-  return products.map(product => {
+  const byId = new Map(products.filter(product => product.status === 'active' && product.category?.isActive !== false).map(product => [product.id, product]));
+  // PostgreSQL IN queries have no input ordering guarantee. Keep n8n's displayed order.
+  return ids.flatMap(id => {
+    const product = byId.get(id);
+    if (!product) return [];
     const variants = (Array.isArray(product.variants) ? product.variants : []).map((variant: any) => {
       const originalPrice = Number.isSafeInteger(variant.price) && variant.price >= 0 ? variant.price : null;
       let effectivePrice: number | null = null;
@@ -98,16 +105,18 @@ export async function resolveChatbotCatalogProducts(
     const lowestPrice = priceOptions[0];
     const stock = variants.reduce((sum: number, variant: any) => sum + variant.stock, 0);
 
-    return {
+    return [{
       id: product.id,
       name: product.name,
       brand: product.brand,
       description: product.description,
-      image_url: product.image,
+      image_url: product.image || product.images?.[0] || null,
+      ...(product.category ? { category: { name: product.category.name, slug: product.category.slug } } : {}),
+      ...(Array.isArray(product.specifications) ? { specifications: product.specifications } : {}),
       ...(lowestPrice ? { price: lowestPrice.effectivePrice, original_price: lowestPrice.originalPrice } : {}),
       variants,
       stock,
       availability: stock > 0 ? 'in_stock' : 'out_of_stock',
-    };
+    }];
   });
 }
