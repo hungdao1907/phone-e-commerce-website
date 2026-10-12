@@ -97,6 +97,27 @@ export const WATCH_BRAND_PRODUCTS: WatchBrandModel[] = [
       storage: '32GB',
     },
   ),
+  createWatchBrand(
+    'apple-watch-series-11',
+    'apple-watch',
+    'Apple Watch Series',
+    'Apple Watch Series 11',
+    'Đột phá kết nối và thiết kế mỏng nhẹ.',
+    'Trang bị kết nối mạnh mẽ, sạc nhanh vượt trội và các tính năng theo dõi sức khỏe thế hệ mới.',
+    14990000,
+    appleImage,
+    [
+      { name: 'Midnight', hex: '#1C232B' },
+      { name: 'Starlight', hex: '#EEE9DE' },
+      { name: 'Silver', hex: '#E2E3E4' },
+    ],
+    {
+      display: 'Màn hình OLED Always-On',
+      chipset: 'Chip S10 SiP',
+      battery: 'Pin lên đến 24 giờ',
+      storage: '64GB',
+    },
+  ),
 
   // Samsung Galaxy Watch products
   createWatchBrand(
@@ -222,6 +243,26 @@ export const WATCH_BRAND_PRODUCTS: WatchBrandModel[] = [
       chipset: 'Hiệu năng mượt mà',
       battery: 'Pin lên đến 20 ngày',
       storage: '8GB',
+    },
+  ),
+  createWatchBrand(
+    'redmi-watch-5-active',
+    'xiaomi',
+    'Redmi Watch',
+    'Redmi Watch 5 Active',
+    'Màn hình lớn rõ nét, đàm thoại Bluetooth rõ ràng.',
+    'Màn hình LCD 2.0 inch, thời lượng pin ấn tượng lên đến 18 ngày cùng khả năng kháng nước 5ATM.',
+    790000,
+    xiaomiImage,
+    [
+      { name: 'Midnight Black', hex: '#1F2022' },
+      { name: 'Matte Silver', hex: '#D6D8DA' },
+    ],
+    {
+      display: 'Màn hình 2.0 inch rõ nét',
+      chipset: 'Xử lý ổn định',
+      battery: 'Pin lên đến 18 ngày',
+      storage: 'Kháng nước 5ATM',
     },
   ),
 ];

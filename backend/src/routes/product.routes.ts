@@ -197,6 +197,12 @@ router.get('/filters', async (req, res) => {
         whereClause.category = { slug: { in: ['ipad', 'samsung-galaxy-tab', 'xiaomi-pad', 'lenovo', 'oppo-pad', 'may-tinh-bang', 'tablet'] } };
       } else if (catSlug === 'watch' || catSlug === 'dong-ho-thong-minh' || catSlug === 'ong-ho-thong-minh') {
         whereClause.category = { slug: { in: ['apple-watch', 'samsung-watch', 'xiaomi-watch', 'dong-ho-thong-minh', 'ong-ho-thong-minh'] } };
+      } else if (catSlug === 'apple-watch') {
+        whereClause.category = { slug: { in: ['apple-watch', 'dong-ho-thong-minh', 'ong-ho-thong-minh'] } };
+      } else if (catSlug === 'samsung-watch') {
+        whereClause.category = { slug: { in: ['samsung-watch', 'dong-ho-thong-minh', 'ong-ho-thong-minh'] } };
+      } else if (catSlug === 'xiaomi-watch') {
+        whereClause.category = { slug: { in: ['xiaomi-watch', 'dong-ho-thong-minh', 'ong-ho-thong-minh'] } };
       } else {
         whereClause.category = { slug: catSlug };
       }
@@ -596,6 +602,12 @@ router.get('/search', async (req, res) => {
         whereClause.category = { slug: { in: ['ipad', 'samsung-galaxy-tab', 'xiaomi-pad', 'lenovo', 'oppo-pad', 'may-tinh-bang', 'tablet'] } };
       } else if (catSlug === 'watch' || catSlug === 'dong-ho-thong-minh' || catSlug === 'ong-ho-thong-minh') {
         whereClause.category = { slug: { in: ['apple-watch', 'samsung-watch', 'xiaomi-watch', 'dong-ho-thong-minh', 'ong-ho-thong-minh'] } };
+      } else if (catSlug === 'apple-watch') {
+        whereClause.category = { slug: { in: ['apple-watch', 'dong-ho-thong-minh', 'ong-ho-thong-minh'] } };
+      } else if (catSlug === 'samsung-watch') {
+        whereClause.category = { slug: { in: ['samsung-watch', 'dong-ho-thong-minh', 'ong-ho-thong-minh'] } };
+      } else if (catSlug === 'xiaomi-watch') {
+        whereClause.category = { slug: { in: ['xiaomi-watch', 'dong-ho-thong-minh', 'ong-ho-thong-minh'] } };
       } else {
         whereClause.category = { slug: catSlug };
       }
@@ -606,6 +618,20 @@ router.get('/search', async (req, res) => {
       if (brands.length > 0) {
         whereClause.OR = brands.map(b => ({ brand: { equals: b, mode: 'insensitive' } }));
       }
+    }
+
+    const searchQuery = (req.query.q || req.query.search || req.query.series) as string | undefined;
+    if (searchQuery && typeof searchQuery === 'string' && searchQuery.trim()) {
+      const qLower = searchQuery.trim().toLowerCase();
+      whereClause.AND = [
+        ...(whereClause.AND || []),
+        {
+          OR: [
+            { name: { contains: qLower, mode: 'insensitive' } },
+            { description: { contains: qLower, mode: 'insensitive' } }
+          ]
+        }
+      ];
     }
 
     let products = await prisma.product.findMany({
@@ -649,8 +675,12 @@ router.get('/search', async (req, res) => {
         const specs: Record<string, string> = {};
         if (Array.isArray(p.specifications)) {
           for (const s of (p.specifications as any[])) {
-            if (s && s.key && typeof s.value === 'string' && s.value.trim()) {
-              specs[normalizeKey(s.key).toLowerCase()] = s.value.trim().toLowerCase();
+            if (!s || typeof s !== 'object') continue;
+            const items = Array.isArray(s.items) ? s.items : [s];
+            for (const it of items) {
+              if (it && (it.key || it.label) && typeof it.value === 'string' && it.value.trim()) {
+                specs[normalizeKey(it.key || it.label).toLowerCase()] = it.value.trim().toLowerCase();
+              }
             }
           }
         }

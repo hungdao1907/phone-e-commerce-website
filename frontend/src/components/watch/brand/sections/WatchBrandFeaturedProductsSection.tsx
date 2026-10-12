@@ -10,11 +10,11 @@ interface WatchBrandFeaturedProductsSectionProps {
 
 export function WatchBrandFeaturedProductsSection({ config, products }: WatchBrandFeaturedProductsSectionProps) {
   const reducedMotion = useReducedMotion();
-  const featuredProducts = products.filter((product) => product.featured).slice(0, 3);
+  const featuredProducts = products.filter((product) => product.featured).slice(0, 4);
 
   return (
     <section aria-labelledby="watch-featured-title" className="bg-white px-4 py-24 sm:px-6 sm:py-32 lg:px-8">
-      <div className="mx-auto w-full max-w-7xl">
+      <div className="mx-auto w-full max-w-[1400px]">
         <motion.header
           initial={reducedMotion ? false : { opacity: 0, y: 16 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -30,10 +30,10 @@ export function WatchBrandFeaturedProductsSection({ config, products }: WatchBra
             {config.label} nổi bật
           </h2>
           <p className="mt-4 text-base leading-relaxed text-neutral-600 sm:text-lg">
-            Ba lựa chọn tiêu biểu cho những cách làm việc, sáng tạo và giải trí khác nhau.
+            Những lựa chọn tiêu biểu cho những cách làm việc, sáng tạo và theo dõi sức khỏe.
           </p>
         </motion.header>
-        <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {featuredProducts.map((product, index) => (
             <motion.div
               key={product.id}

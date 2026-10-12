@@ -181,15 +181,19 @@ export function extractFiltersFromProducts(products: any[]) {
     if (Array.isArray(product.specifications)) {
       for (const spec of product.specifications) {
         if (!spec || typeof spec !== 'object') continue;
-        const key = spec.key || spec.label || spec.name;
-        const value = spec.value;
-        if (!key || !value || typeof value !== 'string') continue;
-        const normKey = normalizeKey(key);
-        
-        // Add SHORTENED value to corresponding filter set
-        if (filters[normKey]) {
-          const shortVal = shortenSpecValue(normKey, spec.value);
-          if (shortVal) filters[normKey].add(shortVal);
+        const itemsToProcess = Array.isArray(spec.items) ? spec.items : [spec];
+        for (const item of itemsToProcess) {
+          if (!item || typeof item !== 'object') continue;
+          const key = item.key || item.label || item.name;
+          const value = item.value;
+          if (!key || !value || typeof value !== 'string') continue;
+          const normKey = normalizeKey(key);
+          
+          // Add SHORTENED value to corresponding filter set
+          if (filters[normKey]) {
+            const shortVal = shortenSpecValue(normKey, item.value);
+            if (shortVal) filters[normKey].add(shortVal);
+          }
         }
       }
     }
