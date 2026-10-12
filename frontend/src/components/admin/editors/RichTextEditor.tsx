@@ -34,7 +34,7 @@ export function RichTextEditor({ content, onChange, placeholder }: RichTextEdito
     },
     editorProps: {
       attributes: {
-        class: 'prose prose-sm max-w-none min-h-[200px] focus:outline-none px-4 py-3 text-slate-900',
+        class: 'prose prose-sm prose-invert max-w-none min-h-[200px] focus:outline-none px-4 py-3 text-white/90',
       },
     },
   });
@@ -43,7 +43,7 @@ export function RichTextEditor({ content, onChange, placeholder }: RichTextEdito
 
   const addImage = useCallback(() => {
     if (!editor) return;
-    
+
     // Create a hidden file input
     const input = document.createElement('input');
     input.type = 'file';
@@ -61,9 +61,9 @@ export function RichTextEditor({ content, onChange, placeholder }: RichTextEdito
           headers: { Authorization: `Bearer ${localStorage.getItem('token') || ''}` },
           body: uploadData,
         });
-        
+
         if (!res.ok) throw new Error('Upload failed');
-        
+
         const data = await res.json();
         const url = data.url || data.imageUrl;
         if (url) {
@@ -103,16 +103,16 @@ export function RichTextEditor({ content, onChange, placeholder }: RichTextEdito
       type="button"
       onClick={onClick}
       title={title}
-      className={`p-1.5 rounded-lg transition-colors ${isActive ? 'bg-emerald-50 text-emerald-700 font-bold border border-emerald-200' : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100'}`}
+      className={`p-1.5 rounded-lg transition-colors ${isActive ? 'bg-emerald-500/30 text-emerald-400' : 'text-white/50 hover:text-white/80 hover:bg-white/10'}`}
     >
       {children}
     </button>
   );
 
   return (
-    <div className="border border-slate-200 rounded-xl overflow-hidden bg-white shadow-sm">
+    <div className="border border-white/10 rounded-xl overflow-hidden bg-black/20">
       {/* Toolbar */}
-      <div className="flex flex-wrap items-center gap-0.5 px-2 py-1.5 border-b border-slate-200 bg-slate-50">
+      <div className="flex flex-wrap items-center gap-0.5 px-2 py-1.5 border-b border-white/10 bg-white/5">
         <ToolButton onClick={() => editor.chain().focus().toggleBold().run()} isActive={editor.isActive('bold')} title="Bold">
           <Bold className="w-3.5 h-3.5" />
         </ToolButton>
@@ -123,7 +123,7 @@ export function RichTextEditor({ content, onChange, placeholder }: RichTextEdito
           <UnderlineIcon className="w-3.5 h-3.5" />
         </ToolButton>
 
-        <div className="w-px h-4 bg-slate-200 mx-1" />
+        <div className="w-px h-4 bg-white/10 mx-1" />
 
         <ToolButton onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()} isActive={editor.isActive('heading', { level: 1 })} title="Heading 1">
           <Heading1 className="w-3.5 h-3.5" />
@@ -132,7 +132,7 @@ export function RichTextEditor({ content, onChange, placeholder }: RichTextEdito
           <Heading2 className="w-3.5 h-3.5" />
         </ToolButton>
 
-        <div className="w-px h-4 bg-slate-200 mx-1" />
+        <div className="w-px h-4 bg-white/10 mx-1" />
 
         <ToolButton onClick={() => editor.chain().focus().toggleBulletList().run()} isActive={editor.isActive('bulletList')} title="Danh sách">
           <List className="w-3.5 h-3.5" />
@@ -141,7 +141,7 @@ export function RichTextEditor({ content, onChange, placeholder }: RichTextEdito
           <ListOrdered className="w-3.5 h-3.5" />
         </ToolButton>
 
-        <div className="w-px h-4 bg-slate-200 mx-1" />
+        <div className="w-px h-4 bg-white/10 mx-1" />
 
         <ToolButton onClick={() => editor.chain().focus().setTextAlign('left').run()} isActive={editor.isActive({ textAlign: 'left' })} title="Căn trái">
           <AlignLeft className="w-3.5 h-3.5" />
@@ -153,16 +153,16 @@ export function RichTextEditor({ content, onChange, placeholder }: RichTextEdito
           <AlignRight className="w-3.5 h-3.5" />
         </ToolButton>
 
-        <div className="w-px h-4 bg-slate-200 mx-1" />
+        <div className="w-px h-4 bg-white/10 mx-1" />
 
         <ToolButton onClick={setLink} isActive={editor.isActive('link')} title="Liên kết">
           <LinkIcon className="w-3.5 h-3.5" />
         </ToolButton>
         <ToolButton onClick={addImage} title={isUploading ? "Đang tải ảnh..." : "Chèn ảnh từ máy tính"}>
-          {isUploading ? <div className="w-3.5 h-3.5 rounded-full border-2 border-emerald-600 border-t-transparent animate-spin" /> : <ImageIcon className="w-3.5 h-3.5" />}
+          {isUploading ? <div className="w-3.5 h-3.5 rounded-full border-2 border-emerald-500 border-t-transparent animate-spin" /> : <ImageIcon className="w-3.5 h-3.5" />}
         </ToolButton>
 
-        <div className="w-px h-4 bg-slate-200 mx-1" />
+        <div className="w-px h-4 bg-white/10 mx-1" />
 
         <ToolButton onClick={() => editor.chain().focus().clearNodes().unsetAllMarks().run()} title="Xóa format">
           <RemoveFormatting className="w-3.5 h-3.5" />

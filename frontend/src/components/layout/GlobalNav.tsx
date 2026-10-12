@@ -1,5 +1,7 @@
 import React, { useState, useRef, useEffect, useLayoutEffect, useMemo } from 'react';
 import { MorphIcon } from 'morphicons/react';
+import { LottieIcon } from '@/components/ui/LottieIcon';
+import bagAnimation from '../../../public/lottie/bag.json';
 import { Menu, X, Search as SearchIcon, User as UserIcon } from 'lucide';
 import {
   ShoppingBag,
@@ -28,12 +30,20 @@ import { useCartStore } from '../../store/useCartStore';
 import { Link, useLocation } from 'react-router-dom';
 import { NavSearchModal } from './NavSearchModal';
 
+export const getCategoryPrefix = (slug: string) => {
+  if (slug === 'ien-thoai' || slug === 'dien-thoai') return 'phone';
+  if (slug === 'may-tinh-bang' || slug === 'tablet') return 'tablet';
+  if (slug === 'ong-ho-thong-minh' || slug === 'dong-ho-thong-minh' || slug === 'watch') return 'watch';
+  return slug;
+};
+
 export function GlobalNav() {
   const { mobileMenuOpen, toggleMobileMenu } = useAppStore();
   const { user, logout } = useAuthStore();
   const [activeMenu, setActiveMenu] = useState<any | null>(null);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
   const previousMenuRef = useRef<any | null>(null);
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const userMenuRef = useRef<HTMLDivElement>(null);
@@ -76,6 +86,14 @@ export function GlobalNav() {
   const items = useCartStore((state: any) => state.items);
   const cartItemCount = items.reduce((total: number, item: any) => total + item.quantity, 0);
 
+  // Trigger animation when cart items change
+  useEffect(() => {
+    if (cartItemCount <= 0) return;
+    setIsPlaying(true);
+    const timer = setTimeout(() => setIsPlaying(false), 1500);
+    return () => clearTimeout(timer);
+  }, [cartItemCount]);
+
   // Fetch Categories from Database
   const [categories, setCategories] = useState<any[]>([]);
   useEffect(() => {
@@ -90,12 +108,15 @@ export function GlobalNav() {
   const { leftItems, rightItems, visibleItems, navItems } = useMemo(() => {
     const rootCats = categories.filter(c => c.parentId === null && c.isActive);
     rootCats.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
-    
+
     const TARGET_SLUGS = ['dien-thoai', 'ien-thoai', 'may-tinh-bang', 'tablet', 'laptop', 'ong-ho-thong-minh', 'dong-ho-thong-minh', 'watch', 'phone'];
 
     const visible = [
       { id: 'store', name: 'Cửa Hàng', slug: '', isStatic: true },
-      ...rootCats.filter(c => TARGET_SLUGS.includes(c.slug.toLowerCase())),
+      ...rootCats.filter(c => TARGET_SLUGS.includes(c.slug.toLowerCase())).map(c => ({
+        ...c,
+        slug: getCategoryPrefix(c.slug.toLowerCase())
+      })),
       { id: 'support', name: 'Hỗ Trợ', slug: 'support', isStatic: true }
     ];
 
@@ -125,12 +146,7 @@ export function GlobalNav() {
     }, 150);
   };
 
-  const getCategoryPrefix = (slug: string) => {
-    if (slug === 'ien-thoai' || slug === 'dien-thoai') return 'phone';
-    if (slug === 'may-tinh-bang' || slug === 'tablet') return 'tablet';
-    if (slug === 'ong-ho-thong-minh' || slug === 'watch') return 'watch';
-    return slug;
-  };
+
 
   const getMegaMenuGroups = (item: any) => {
     if (!item) return [];
@@ -161,7 +177,7 @@ export function GlobalNav() {
 
     const groups = [];
     const prefix = getCategoryPrefix(item.slug);
-    
+
     if (prefix === 'phone') {
       groups.push({
         title: 'KHÁM PHÁ',
@@ -197,9 +213,11 @@ export function GlobalNav() {
         title,
         links: filteredChildren.map((c: any) => c.name),
         slugs: filteredChildren.map((c: any) => {
-          // Force iPad slug mapping just in case db returns 'apple'
-          if (prefix === 'tablet' && c.slug === 'apple') {
-            return `${prefix}/ipad`;
+          // Force iPad/Tablet slug mapping
+          if (prefix === 'tablet') {
+            if (c.slug === 'apple' || c.slug === 'ipad') return `${prefix}/ipad`;
+            if (c.slug.includes('samsung')) return `${prefix}/samsung`;
+            if (c.slug.includes('xiaomi')) return `${prefix}/xiaomi`;
           }
           if (prefix === 'watch') {
             if (c.name.toLowerCase().includes('samsung')) return 'watch/samsung';
@@ -403,7 +421,7 @@ export function GlobalNav() {
         }`}
         onMouseLeave={handleMouseLeave}
       >
-        <div className="max-w-[1300px] mx-auto px-4 lg:px-8 h-[54px] flex items-center justify-between">
+        <div className="max-w-[1200px] mx-auto px-4 lg:px-8 h-[54px] flex items-center justify-between">
           {/* Desktop Left Nav Links (Split Left) */}
           <div className="hidden md:flex flex-1 items-center justify-end h-full">
             <ul className="flex items-center space-x-6 lg:space-x-8 h-full">
@@ -442,6 +460,31 @@ export function GlobalNav() {
               >
                 <PackageSearch className="w-[18px] h-[18px]" />
               </Link>
+
+              <button
+                onClick={() => {
+                  setIsPlaying(true);
+                  setTimeout(() => setIsPlaying(false), 1500);
+                  useAppStore.getState().setCartDrawerOpen(true);
+                }}
+                className="relative nav-glow-link hover:text-black transition-colors block px-2 py-1"
+                aria-label="Giỏ hàng"
+                onMouseEnter={() => setIsPlaying(true)}
+                onMouseLeave={() => setIsPlaying(false)}
+              >
+                <div className="relative flex items-center justify-center pointer-events-none w-[18px] h-[18px]">
+                  <LottieIcon
+                    animationData={bagAnimation}
+                    loop={false}
+                    playing={isPlaying}
+                  />
+                  {cartItemCount > 0 && (
+                    <span className={`absolute -top-3 -right-3 min-w-[16px] h-[16px] px-1 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center transition-all duration-300 origin-center ${isPlaying ? 'scale-110 -rotate-12' : 'scale-100 rotate-0'}`}>
+                      {cartItemCount}
+                    </span>
+                  )}
+                </div>
+              </button>
 
               <button
                 onClick={() => {
@@ -574,6 +617,31 @@ export function GlobalNav() {
             >
               <PackageSearch className="w-[18px] h-[18px]" />
             </Link>
+
+            <button
+              onClick={() => {
+                setIsPlaying(true);
+                setTimeout(() => setIsPlaying(false), 1500);
+                useAppStore.getState().setCartDrawerOpen(true);
+              }}
+              className="relative nav-glow-link hover:text-black transition-colors block px-1"
+              aria-label="Giỏ hàng"
+              onMouseEnter={() => setIsPlaying(true)}
+              onMouseLeave={() => setIsPlaying(false)}
+            >
+              <div className="relative flex items-center justify-center pointer-events-none w-[18px] h-[18px]">
+                <LottieIcon
+                  animationData={bagAnimation}
+                  loop={false}
+                  playing={isPlaying}
+                />
+                {cartItemCount > 0 && (
+                  <span className={`absolute -top-3 -right-3 min-w-[16px] h-[16px] px-1 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center transition-all duration-300 origin-center ${isPlaying ? 'scale-110 -rotate-12' : 'scale-100 rotate-0'}`}>
+                    {cartItemCount}
+                  </span>
+                )}
+              </div>
+            </button>
 
             <button
               onClick={() => {

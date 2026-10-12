@@ -2,7 +2,6 @@ import express from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import prisma from '../config/prisma';
-import nodemailer from 'nodemailer';
 import dns from 'node:dns';
 import { authenticateToken } from '../middleware/auth.middleware';
 import { requireRoles } from '../middleware/authorization.middleware';
@@ -16,6 +15,7 @@ import {
   parseCustomerRegistrationOtpChallenge,
   verifyCustomerRegistrationOtpAttempt,
 } from '../services/customer-registration-otp';
+import { mailer, isEmailConfigured } from '../services/mailer';
 
 // Fix IPv6 timeout issues on Render/Node 18+ by forcing IPv4 resolution first
 dns.setDefaultResultOrder('ipv4first');
@@ -23,22 +23,7 @@ const router = express.Router();
 
 import { JWT_SECRET } from '../config/auth';
 
-const smtpTransporter = process.env.SMTP_HOST
-  ? nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
-      port: Number(process.env.SMTP_PORT || 1025),
-      secure: process.env.SMTP_SECURE === 'true',
-      ...(process.env.SMTP_EMAIL && process.env.SMTP_PASSWORD
-        ? { auth: { user: process.env.SMTP_EMAIL, pass: process.env.SMTP_PASSWORD } }
-        : {}),
-    })
-  : nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user: process.env.SMTP_EMAIL || '',
-        pass: process.env.SMTP_PASSWORD || '',
-      },
-    });
+const smtpTransporter = mailer;
 
 function escapeHtml(value: string): string {
   return value.replace(/[&<>"']/g, character => ({
@@ -54,20 +39,27 @@ function escapeHtml(value: string): string {
 // CUSTOMER OTP REGISTRATION ROUTES
 // ----------------------------------------------------
 router.post('/customer/register', async (req, res) => {
-  const { fullName, email, password } = req.body;
+  const { email, password } = req.body;
+  const username = typeof req.body.username === 'string' ? req.body.username.trim() : undefined;
+  const fullName = typeof req.body.fullName === 'string' ? req.body.fullName : username;
 
   if (typeof fullName !== 'string' || !fullName.trim() || typeof email !== 'string' || !email.trim() || typeof password !== 'string' || !password) {
     return res.status(400).json({ message: 'Vui lòng điền đủ thông tin.' });
   }
 
-  if (!process.env.SMTP_HOST && (!process.env.SMTP_EMAIL || !process.env.SMTP_PASSWORD)) {
+  if (!isEmailConfigured()) {
     return res.status(503).json({ message: 'Dịch vụ gửi mã xác thực hiện không khả dụng.' });
   }
 
   try {
     const existing = await prisma.customer.findUnique({ where: { email } });
+    const existingUsername = username ? await prisma.customer.findUnique({ where: { username } }) : null;
+    if (existingUsername && existingUsername.id !== existing?.id) {
+      return res.status(409).json({ message: 'Tên đăng nhập này đã được sử dụng.' });
+    }
+
     if (existing && existing.verified) {
-      return res.status(409).json({ message: 'Email này đã được đăng ký.' });
+      return res.status(409).json({ message: 'Email này đã được sử dụng.' });
     }
 
     const now = new Date();
@@ -90,7 +82,7 @@ router.post('/customer/register', async (req, res) => {
         async (expectedChallenge, challengeUpdate) => {
           const updated = await prisma.customer.updateMany({
             where: { id: existing.id, verified: false, otp: expectedChallenge },
-            data: { fullName: fullName.trim(), password: hashedPassword, ...challengeUpdate }
+            data: { fullName: fullName.trim(), ...(username ? { username } : {}), password: hashedPassword, ...challengeUpdate }
           });
           return updated.count === 1;
         }
@@ -101,7 +93,7 @@ router.post('/customer/register', async (req, res) => {
       customerId = existing.id;
     } else {
       const customer = await prisma.customer.create({
-        data: { fullName: fullName.trim(), email, password: hashedPassword, otp: storedChallenge, otpExpiry }
+        data: { fullName: fullName.trim(), ...(username ? { username } : {}), email, password: hashedPassword, otp: storedChallenge, otpExpiry }
       });
       customerId = customer.id;
     }
@@ -110,7 +102,7 @@ router.post('/customer/register', async (req, res) => {
       await smtpTransporter.sendMail({
         from: `"AppleWeb" <${process.env.SMTP_EMAIL || 'no-reply@localhost'}>`,
         to: email,
-        subject: 'AppleWeb - Mã xác thực OTP của bạn',
+        subject: '[H&M Phone Store] Mã xác thực đăng ký tài khoản',
         html: `
           <div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;padding:24px;background:#f9f9f9;border-radius:8px">
             <h2 style="color:#000;margin-bottom:16px">AppleWeb</h2>
@@ -119,8 +111,6 @@ router.post('/customer/register', async (req, res) => {
             <div style="font-size:32px;font-weight:bold;text-align:center;padding:16px;background:#99e300;color:black;border-radius:8px;letter-spacing:8px;margin:16px 0">
               ${otp}
             </div>
-            <p style="color:#666;font-size:14px">Mã này có hiệu lực trong 5 phút. Không chia sẻ mã này với bất kỳ ai.</p>
-            <p style="color:#999;font-size:12px;margin-top:24px">— AppleWeb Team</p>
           </div>
         `
       });
@@ -205,6 +195,146 @@ router.post('/customer/verify-otp', async (req, res) => {
   }
 });
 
+// ----------------------------------------------------
+// CUSTOMER FORGOT PASSWORD ROUTES
+// ----------------------------------------------------
+router.post('/customer/forgot-password', async (req, res) => {
+  const { email } = req.body;
+  if (typeof email !== 'string' || !email.trim()) {
+    return res.status(400).json({ message: 'Dữ liệu không hợp lệ.' });
+  }
+
+  try {
+    const customer = await prisma.customer.findUnique({ where: { email } });
+    if (!customer || !customer.verified || !isEmailConfigured()) {
+      // Security: Do not reveal if email exists.
+      return res.json({ message: 'Nếu email này đã được đăng ký, mã xác thực sẽ được gửi đến email của bạn.' });
+    }
+
+    const otp = generateCustomerRegistrationOtp();
+    const otpExpiry = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
+    const storedResetChallenge = hashCustomerRegistrationOtp(otp, JWT_SECRET + ':password-reset');
+    const issued = await issueCustomerRegistrationOtpChallenge(customer.otp, customer.otpExpiry, storedResetChallenge, otpExpiry, new Date(),
+      async (expected, data) => (await prisma.customer.updateMany({ where: { id: customer.id, verified: true, otp: expected }, data })).count === 1);
+    if (issued !== 'issued') return res.status(429).json({ message: 'Please wait before requesting another code.' });
+
+    if (isEmailConfigured()) {
+      const currentYear = new Date().getFullYear();
+      const otp_expiration = 5;
+      await smtpTransporter.sendMail({
+        from: `"H&M Phone Store" <${process.env.SMTP_EMAIL}>`,
+        to: email,
+        subject: '[H&M Phone Store] Mã xác thực khôi phục mật khẩu',
+        html: `
+          <div style="font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;max-width:600px;margin:0 auto;padding:32px;background:#ffffff;border:1px solid #eaeaea;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,0.04)">
+            <div style="text-align:center;margin-bottom:32px">
+              <h1 style="color:#000;font-size:24px;font-weight:800;margin:0;letter-spacing:-0.5px">H&M Phone Store</h1>
+            </div>
+
+            <h2 style="color:#111;font-size:20px;font-weight:600;margin:0 0 16px 0;text-align:center">Xác thực yêu cầu khôi phục mật khẩu</h2>
+
+            <p style="color:#444;font-size:15px;line-height:1.6;margin:0 0 16px 0">Xin chào <strong>${customer.username}</strong>,</p>
+
+            <p style="color:#444;font-size:15px;line-height:1.6;margin:0 0 24px 0">Chúng tôi nhận được yêu cầu khôi phục mật khẩu cho tài khoản H&M Phone Store của bạn.<br><br>Nếu đây là yêu cầu của bạn, hãy nhập mã xác thực gồm 6 chữ số bên dưới để tiếp tục đặt lại mật khẩu.</p>
+
+            <div style="margin:32px 0;text-align:center">
+              <div style="display:inline-block;padding:20px 40px;background:#99e300;border-radius:12px;box-shadow:0 8px 16px rgba(153,227,0,0.2)">
+                <span style="color:#000;font-size:36px;font-weight:800;letter-spacing:12px;display:block;margin-right:-12px">${otp}</span>
+              </div>
+            </div>
+
+            <p style="color:#666;font-size:14px;line-height:1.5;margin:0 0 8px 0;text-align:center">Mã xác thực có hiệu lực trong <strong>${otp_expiration}</strong> phút.</p>
+
+            <div style="background:#fff8f8;border-left:4px solid #ef4444;padding:16px;margin:32px 0;border-radius:0 8px 8px 0">
+              <p style="color:#ef4444;font-size:14px;line-height:1.5;margin:0 0 8px 0"><strong>Cảnh báo:</strong> Không chia sẻ mã OTP này với bất kỳ ai.</p>
+              <p style="color:#ef4444;font-size:14px;line-height:1.5;margin:0">Nếu bạn không yêu cầu khôi phục mật khẩu, vui lòng bỏ qua email này. Tài khoản của bạn vẫn an toàn và mật khẩu hiện tại sẽ không bị thay đổi.</p>
+            </div>
+
+            <hr style="border:none;border-top:1px solid #eaeaea;margin:32px 0">
+
+            <div style="text-align:center;color:#888;font-size:12px;line-height:1.6">
+              <p style="margin:0 0 8px 0">H&M Phone Store</p>
+              <p style="margin:0 0 16px 0">Email này được gửi tự động, vui lòng không trả lời trực tiếp email này.</p>
+              <p style="margin:0">© ${currentYear} H&M Phone Store. All rights reserved.</p>
+            </div>
+          </div>
+        `
+      });
+    } else {
+      console.warn('Password recovery email is not configured.');
+    }
+
+    res.json({ message: 'Nếu email này đã được đăng ký, mã xác thực sẽ được gửi đến email của bạn.' });
+  } catch (error) {
+    console.error('Forgot password error:', error);
+    res.status(500).json({ message: 'Đã xảy ra lỗi hệ thống. Vui lòng thử lại sau.' });
+  }
+});
+
+router.post('/customer/verify-reset-otp', async (req, res) => {
+  const { email, otp } = req.body;
+  if (typeof email !== 'string' || typeof otp !== 'string' || !/^\d{6}$/.test(otp)) {
+    return res.status(400).json({ message: 'Dữ liệu không hợp lệ.' });
+  }
+
+  try {
+    const customer = await prisma.customer.findUnique({ where: { email } });
+    if (!customer || !customer.verified) {
+      return res.status(400).json({ message: 'Mã xác thực không chính xác. Vui lòng thử lại.' });
+    }
+
+    if (isCustomerRegistrationOtpExpired(customer.otpExpiry)) {
+      return res.status(400).json({ message: 'Mã xác thực đã hết hạn. Vui lòng yêu cầu mã mới.' });
+    }
+
+    const verified = await verifyCustomerRegistrationOtpAttempt(customer.otp, otp, JWT_SECRET + ':password-reset',
+      async (expected, data) => (await prisma.customer.updateMany({ where: { id: customer.id, verified: true, otp: expected, otpExpiry: { gt: new Date() } }, data })).count === 1);
+    if (verified !== 'verified') return res.status(verified === 'locked' ? 429 : 400).json({ message: 'Invalid or consumed verification code.' });
+
+    const resetSecret = JWT_SECRET + customer.password;
+    const resetToken = jwt.sign({ email, purpose: 'password-reset' }, resetSecret, { expiresIn: '15m', subject: customer.id, audience: 'customer-password-reset' });
+
+    res.json({ resetToken });
+  } catch (error) {
+    console.error('Verify reset OTP error:', error);
+    res.status(500).json({ message: 'Đã xảy ra lỗi hệ thống. Vui lòng thử lại sau.' });
+  }
+});
+
+router.post('/customer/reset-password', async (req, res) => {
+  const { email, resetToken, newPassword } = req.body;
+  if (typeof email !== 'string' || typeof resetToken !== 'string' || typeof newPassword !== 'string' || newPassword.length < 6) {
+    return res.status(400).json({ message: 'Dữ liệu không hợp lệ.' });
+  }
+
+  try {
+    const customer = await prisma.customer.findUnique({ where: { email } });
+    if (!customer) {
+      return res.status(400).json({ message: 'Phiên đặt lại mật khẩu đã hết hạn hoặc không hợp lệ. Vui lòng thực hiện lại từ đầu.' });
+    }
+
+    const resetSecret = JWT_SECRET + customer.password;
+    try {
+      const claims = jwt.verify(resetToken, resetSecret, { audience: 'customer-password-reset', subject: customer.id });
+      if (typeof claims === 'string' || claims.email !== email || claims.purpose !== 'password-reset') throw new Error('Invalid reset claims');
+    } catch (err) {
+      return res.status(400).json({ message: 'Phiên đặt lại mật khẩu đã hết hạn. Vui lòng thực hiện lại từ đầu.' });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    const changed = await prisma.customer.updateMany({
+      where: { id: customer.id, password: customer.password, verified: true },
+      data: { password: hashedPassword }
+    });
+    if (changed.count !== 1) return res.status(409).json({ message: 'Password was already changed; request a new reset.' });
+
+    res.json({ message: 'Mật khẩu đã được đặt lại thành công.' });
+  } catch (error) {
+    console.error('Reset password error:', error);
+    res.status(500).json({ message: 'Đã xảy ra lỗi hệ thống. Vui lòng thử lại sau.' });
+  }
+});
+
 // Login Endpoint
 router.post('/login', async (req, res) => {
   try {
@@ -223,12 +353,12 @@ router.post('/login', async (req, res) => {
 
     // If not found in User, try finding a Customer (using username field as email)
     if (!accountInfo) {
-      accountInfo = await prisma.customer.findUnique({
-        where: { email: username }
+      accountInfo = await prisma.customer.findFirst({
+        where: { OR: [{ email: username }, { username }] }
       });
       if (accountInfo) {
         role = 'customer'; // Assign a virtual role for customers
-        
+
         // Ensure customer is verified
         if (!accountInfo.verified) {
           return res.status(403).json({ message: 'Tài khoản chưa được xác thực email.' });
@@ -242,17 +372,17 @@ router.post('/login', async (req, res) => {
 
     // Check password
     const isPasswordValid = await bcrypt.compare(password, accountInfo.password);
-    
+
     if (!isPasswordValid) {
       return res.status(401).json({ message: 'Sai thông tin đăng nhập' });
     }
 
     // Generate token
     const token = jwt.sign(
-      { 
-        id: accountInfo.id, 
-        username: accountInfo.username || accountInfo.email, 
-        role: role 
+      {
+        id: accountInfo.id,
+        username: accountInfo.username || accountInfo.email,
+        role: role
       },
       JWT_SECRET,
       { expiresIn: '24h' }

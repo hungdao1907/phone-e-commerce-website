@@ -146,7 +146,7 @@ export function AppleWatchWeatherFace() {
     return isDayHour(dialHour) ? <SunIcon size={iconSize} /> : <MoonIcon size={iconSize} />;
   }
 
-  /* 
+  /*
     ASPECT = 180 / 220 ≈ 0.818
   */
   const ASPECT = 180 / 220;
@@ -178,7 +178,7 @@ export function AppleWatchWeatherFace() {
 
   return (
     <div
-      className="admin-visual-dark w-full h-full relative select-none"
+      className="w-full h-full relative select-none"
       style={{
         backgroundImage: "url('/images/bgWatch.jpg')",
         backgroundSize: 'cover',

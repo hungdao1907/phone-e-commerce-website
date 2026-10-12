@@ -127,7 +127,7 @@ export function VerticalDock({ activeView, onNavigate }: { activeView: string; o
           mass: 1
         }}
         style={{ transformOrigin: "top left" }}
-        className="h-full flex flex-col p-3 bg-white/80 backdrop-blur-xl border border-slate-200/80 shadow-xl rounded-3xl overflow-hidden transform-gpu will-change-transform"
+        className="h-full flex flex-col p-3 bg-black/20 backdrop-blur-sm border border-white/5 rounded-3xl shadow-2xl overflow-hidden transform-gpu will-change-transform"
       >
 
         {/* Brand Logo Box */}
@@ -139,7 +139,7 @@ export function VerticalDock({ activeView, onNavigate }: { activeView: string; o
             initial={{ opacity: 0 }}
             animate={{ opacity: isExpanded ? 1 : 0 }}
             transition={{ duration: 0.2 }}
-            className="whitespace-nowrap ml-4 text-slate-900 font-extrabold text-xl tracking-tighter"
+            className="whitespace-nowrap ml-4 text-white font-extrabold text-xl tracking-tighter"
           >
             HM STORE
           </motion.div>
@@ -164,17 +164,22 @@ export function VerticalDock({ activeView, onNavigate }: { activeView: string; o
               <div key={item.id} className="w-full flex flex-col">
                 <button
                   onClick={handleParentClick}
-                  className={cn(
-                    "relative group outline-none flex items-center w-full rounded-2xl transition-all duration-200",
-                    isActive
-                      ? "bg-gradient-to-r from-transparent via-slate-100 to-slate-200/90"
-                      : isItemHovered
-                      ? "bg-gradient-to-r from-transparent via-slate-50 to-slate-100/90"
-                      : "hover:bg-gradient-to-r hover:from-transparent hover:via-slate-50 hover:to-slate-100/90"
-                  )}
+                  className="relative group outline-none flex items-center w-full rounded-2xl"
                   onMouseEnter={() => setHoveredId(item.id)}
                   onMouseLeave={() => setHoveredId(null)}
                 >
+                  {/* Gradient background — same effect as sub-items */}
+                  <motion.div
+                    className="absolute inset-0 rounded-2xl pointer-events-none"
+                    animate={{
+                      opacity: isActive ? 1 : isItemHovered ? 0.5 : 0
+                    }}
+                    style={{
+                      background: "linear-gradient(to right, transparent 0%, rgba(255,255,255,0.04) 35%, rgba(255,255,255,0.12) 100%)"
+                    }}
+                    transition={{ duration: 0.35, ease: "easeOut" }}
+                  />
+
                   {/* Icon Container */}
                   <motion.div
                     animate={{ scale: isItemHovered ? 1.2 : 1 }}
@@ -182,11 +187,11 @@ export function VerticalDock({ activeView, onNavigate }: { activeView: string; o
                     className="w-10 h-10 shrink-0 flex items-center justify-center"
                   >
                     {item.isLottie ? (
-                      <div className="w-7 h-7 flex items-center justify-center [filter:brightness(0)]">
+                      <div className="w-7 h-7 flex items-center justify-center">
                         <LottieIcon path={item.icon as string} playing={isItemHovered} />
                       </div>
                     ) : (
-                      <item.icon className={cn("w-6 h-6", isActive ? "text-black" : "text-slate-800")} />
+                      <item.icon className="w-6 h-6 text-white/80" />
                     )}
                   </motion.div>
 
@@ -196,14 +201,13 @@ export function VerticalDock({ activeView, onNavigate }: { activeView: string; o
                     animate={{ opacity: isExpanded ? 1 : 0 }}
                     transition={{ duration: 0.2 }}
                     className={cn(
-                      "whitespace-nowrap ml-4 transition-all duration-200 flex-1 flex items-center justify-between",
-                      isActive ? "text-black font-bold" : "text-slate-800 font-medium"
+                      "whitespace-nowrap ml-4 font-medium transition-colors duration-200 flex-1 flex items-center justify-between",
+                      isActive ? "text-white" : "text-white/60 group-hover:text-white/90"
                     )}
-                    style={isActive ? { textShadow: "0 0 1px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.45), 0 0 18px rgba(0,0,0,0.2)" } : undefined}
                   >
                     <span>{item.label}</span>
                     {hasSubItems && (
-                      <ChevronRight className={cn("w-4 h-4 transition-transform mr-4", isSubMenuOpen ? "rotate-90" : "", isActive ? "text-black" : "text-slate-800")} />
+                      <ChevronRight className={cn("w-4 h-4 transition-transform mr-4", isSubMenuOpen ? "rotate-90" : "")} />
                     )}
                   </motion.div>
                 </button>
@@ -244,8 +248,7 @@ export function VerticalDock({ activeView, onNavigate }: { activeView: string; o
                                   left: "20px",
                                   width: "2px",
                                   borderRadius: "999px",
-                                  background: "linear-gradient(to bottom, rgba(0,0,0,0.6), rgba(0,0,0,0.1))",
-                                  zIndex: 10
+                                  background: "linear-gradient(to bottom, rgba(158,255,0,0.7), rgba(158,255,0,0.15))"
                                 }}
                                 initial={{ height: 0 }}
                                 animate={{ height: lineH }}
@@ -260,8 +263,8 @@ export function VerticalDock({ activeView, onNavigate }: { activeView: string; o
                                   width: "8px",
                                   height: "8px",
                                   borderRadius: "50%",
-                                  backgroundColor: "#000000",
-                                  boxShadow: "0 0 6px 1px rgba(0,0,0,0.25)",
+                                  backgroundColor: "#9eff00",
+                                  boxShadow: "0 0 8px 2px rgba(158,255,0,0.8)",
                                   zIndex: 20
                                 }}
                                 initial={{ y: 0, opacity: 0 }}
@@ -279,34 +282,28 @@ export function VerticalDock({ activeView, onNavigate }: { activeView: string; o
                             <button
                               key={sub.id}
                               onClick={() => onNavigate(sub.id)}
-                              className="relative flex items-center h-9 pr-4 group overflow-hidden rounded-2xl text-left w-full transition-all duration-150"
-                              style={{
-                                paddingLeft: "56px",
-                                background: isSubActive
-                                  ? "linear-gradient(to right, transparent 0%, transparent 36px, #f1f5f9 50%, #e2e8f0 100%)"
-                                  : undefined
-                              }}
+                              className="relative flex items-center h-9 pr-4 group overflow-hidden rounded-2xl text-left w-full"
+                              style={{ paddingLeft: "56px" }}
                             >
-                              {/* Hover gradient layer (trong suốt từ 0 đến 36px để không che line đen) */}
-                              <div
-                                className={cn(
-                                  "absolute inset-0 rounded-2xl transition-opacity duration-150 pointer-events-none opacity-0 group-hover:opacity-100",
-                                  isSubActive ? "hidden" : ""
-                                )}
-                                style={{
-                                  background: "linear-gradient(to right, transparent 0%, transparent 36px, rgba(241, 245, 249, 0.9) 50%, rgba(226, 232, 240, 0.9) 100%)"
-                                }}
-                              />
+                               {/* Gradient fade-in background: trong suốt bên trái, sáng dần bên phải */}
+                               <motion.div
+                                 className="absolute inset-0 rounded-2xl"
+                                 style={{
+                                   background: isSubActive
+                                     ? "linear-gradient(to right, transparent 0%, rgba(255,255,255,0.04) 35%, rgba(255,255,255,0.12) 100%)"
+                                     : "transparent"
+                                 }}
+                                 initial={{ opacity: 0 }}
+                                 animate={{ opacity: isSubActive ? 1 : 0 }}
+                                 transition={{ duration: 0.4, ease: "easeOut" }}
+                               />
 
-                              <span
-                                className={cn(
-                                  "relative z-10 text-sm whitespace-nowrap transition-all",
-                                  isSubActive ? "text-black font-bold" : "text-slate-800 font-medium group-hover:text-slate-900"
-                                )}
-                                style={isSubActive ? { textShadow: "0 0 1px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.45), 0 0 18px rgba(0,0,0,0.2)" } : undefined}
-                              >
-                                {sub.label}
-                              </span>
+                               <span className={cn(
+                                 "relative z-10 text-sm font-medium whitespace-nowrap transition-colors",
+                                 isSubActive ? "text-white" : "text-white/50 group-hover:text-white/80"
+                               )}>
+                                 {sub.label}
+                               </span>
                             </button>
                           );
                         })}
@@ -378,7 +375,7 @@ export function VerticalDock({ activeView, onNavigate }: { activeView: string; o
                 title="Hồ sơ cá nhân"
               >
                 <motion.div
-                  className="absolute inset-0 rounded-2xl pointer-events-none group-hover:bg-slate-100/70 transition-colors"
+                  className="absolute inset-0 rounded-2xl pointer-events-none group-hover:bg-white/5 transition-colors"
                 />
                 <div className="w-10 h-10 shrink-0 flex items-center justify-center">
                   <div className="w-8 h-8 rounded-xl overflow-hidden border border-slate-200 group-hover:border-slate-300 transition-colors shadow-sm">

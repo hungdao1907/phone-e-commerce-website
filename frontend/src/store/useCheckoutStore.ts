@@ -3,6 +3,7 @@ import { create } from 'zustand';
 interface DeliveryInfo {
   fullName: string;
   phone: string;
+  email: string;
   city: string;
   cityCode?: number;
   district: string;
@@ -34,6 +35,7 @@ interface CheckoutState {
 const defaultDeliveryInfo: DeliveryInfo = {
   fullName: '',
   phone: '',
+  email: '',
   city: '',
   district: '',
   ward: '',
@@ -52,13 +54,13 @@ const defaultDeliveryInfo: DeliveryInfo = {
 export const useCheckoutStore = create<CheckoutState>()((set) => ({
   deliveryInfo: { ...defaultDeliveryInfo },
   paymentMethod: 'COD',
-  setDeliveryInfo: (info) => set((state) => ({ 
-    deliveryInfo: { ...state.deliveryInfo, ...info } 
+  setDeliveryInfo: (info) => set((state) => ({
+    deliveryInfo: { ...state.deliveryInfo, ...info }
   })),
   setVATInfo: (info) => set((state) => ({
-    deliveryInfo: { 
-      ...state.deliveryInfo, 
-      vatInfo: { ...state.deliveryInfo.vatInfo, ...info } 
+    deliveryInfo: {
+      ...state.deliveryInfo,
+      vatInfo: { ...state.deliveryInfo.vatInfo, ...info }
     }
   })),
   setPaymentMethod: (method) => set({ paymentMethod: method }),

@@ -57,49 +57,49 @@ export function AdminProductCard({
   if (viewMode === 'list') {
     return (
       <tr className={cn(
-        "border-b border-slate-100 hover:bg-slate-50/70 transition-colors group cursor-pointer",
-        isSelected ? "bg-emerald-50/60" : ""
+        "border-b border-white/5 hover:bg-white/[0.02] transition-colors group cursor-pointer",
+        isSelected ? "bg-emerald-500/5" : ""
       )} onClick={onEdit}>
         <td className="p-3" onClick={e => e.stopPropagation()}>
           <input
             type="checkbox"
-            className="rounded border-slate-300 bg-white text-emerald-600 focus:ring-emerald-500 cursor-pointer"
+            className="rounded border-white/20 bg-transparent text-emerald-500 focus:ring-emerald-500 focus:ring-offset-gray-900 cursor-pointer"
             checked={isSelected}
             onChange={onSelect}
           />
         </td>
         <td className="p-3 min-w-[250px]">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-lg bg-slate-50 border border-slate-200 p-1.5 shrink-0 flex items-center justify-center">
+            <div className="w-12 h-12 rounded-lg bg-white/5 p-1.5 shrink-0 flex items-center justify-center">
               <img src={resolveMediaUrl(product.image) || '/placeholder.png'} alt={product.name} className="w-full h-full object-contain" />
             </div>
             <div className="min-w-0">
-              <div className="font-semibold text-slate-800 text-sm line-clamp-1 group-hover:text-emerald-700 transition-colors">{product.name}</div>
-              <div className="text-[11px] text-slate-400 mt-0.5 line-clamp-1">{product.brand || 'No Brand'}</div>
+              <div className="font-semibold text-white/90 text-sm line-clamp-1 group-hover:text-emerald-400 transition-colors">{product.name}</div>
+              <div className="text-[11px] text-white/40 mt-0.5 line-clamp-1">{product.brand || 'No Brand'}</div>
             </div>
           </div>
         </td>
-        <td className="p-3 text-sm text-slate-600 whitespace-nowrap">
+        <td className="p-3 text-sm text-white/70 whitespace-nowrap">
           {product.category?.name || 'Chưa phân loại'}
         </td>
-        <td className="p-3 text-sm font-bold text-emerald-700 whitespace-nowrap">
+        <td className="p-3 text-sm font-bold text-emerald-400 whitespace-nowrap">
           {priceRange}
         </td>
         <td className="p-3 text-center">
           <span className={cn(
-            "text-[11px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap border",
-            isOutOfStock ? "bg-red-50 text-red-700 border-red-200" : isLowStock ? "bg-amber-50 text-amber-700 border-amber-200" : "bg-blue-50 text-blue-700 border-blue-200"
+            "text-[11px] font-semibold px-2 py-1 rounded-full whitespace-nowrap",
+            isOutOfStock ? "bg-red-500/20 text-red-400" : isLowStock ? "bg-orange-500/20 text-orange-400" : "bg-blue-500/20 text-blue-400"
           )}>
             {totalStock}
           </span>
         </td>
-        <td className="p-3 text-center text-sm text-slate-500">
+        <td className="p-3 text-center text-sm text-white/60">
           {product.variants?.length || 0}
         </td>
         <td className="p-3 text-center">
           <span className={cn(
-            "text-[10px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap border",
-            product.status === 'active' ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-slate-100 text-slate-600 border-slate-200"
+            "text-[10px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap",
+            product.status === 'active' ? "bg-emerald-500/20 text-emerald-400" : "bg-white/10 text-white/50"
           )}>
             {product.status === 'active' ? 'Active' : 'Hidden'}
           </span>
@@ -157,19 +157,19 @@ export function AdminProductCard({
 
   return (
     <div className={cn(
-      "group relative flex flex-col bg-white border rounded-2xl overflow-hidden transition-all duration-300 shadow-sm hover:shadow-md",
-      isSelected ? "border-emerald-500 ring-2 ring-emerald-500/20" : "border-slate-200 hover:border-slate-300"
+      "group relative flex flex-col bg-transparent border rounded-2xl overflow-hidden transition-all duration-300",
+      isSelected ? "border-emerald-500 shadow-[0_0_15px_rgba(52,211,153,0.15)]" : "border-white/10 hover:border-white/30"
     )}>
 
       {/* Checkbox Overlay */}
       <div
         onClick={onSelect}
         className={cn(
-          "absolute top-3 left-3 z-10 cursor-pointer transition-opacity duration-200 p-1 rounded-md border",
-          isSelected ? "opacity-100 bg-white shadow-sm border-slate-200" : "opacity-0 group-hover:opacity-100 bg-white/90 hover:bg-white shadow-sm border-slate-200"
+          "absolute top-3 left-3 z-10 cursor-pointer transition-opacity duration-200 p-1 rounded-md",
+          isSelected ? "opacity-100 bg-black/50" : "opacity-0 group-hover:opacity-100 bg-black/50 hover:bg-black/80"
         )}
       >
-        {isSelected ? <CheckSquare className="w-5 h-5 text-emerald-600" /> : <Square className="w-5 h-5 text-slate-400" />}
+        {isSelected ? <CheckSquare className="w-5 h-5 text-emerald-400" /> : <Square className="w-5 h-5 text-white/50" />}
       </div>
 
       {/* Action Dropdown */}
@@ -222,7 +222,7 @@ export function AdminProductCard({
 
       {/* Image */}
       <div
-        className="relative aspect-[4/3] bg-slate-50/60 border-b border-slate-100 overflow-hidden flex items-center justify-center p-6 cursor-pointer"
+        className="relative aspect-[4/3] bg-white overflow-hidden flex items-center justify-center p-6 cursor-pointer"
         onClick={onEdit}
       >
         <img
@@ -233,14 +233,14 @@ export function AdminProductCard({
         {/* Status Badge */}
         <div className="absolute bottom-3 left-3 flex flex-wrap gap-1">
           <span className={cn(
-            "text-[10px] font-semibold px-2 py-0.5 rounded-full border",
-            product.status === 'active' ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-slate-100 text-slate-600 border-slate-200"
+            "text-[10px] font-semibold px-2 py-0.5 rounded-full",
+            product.status === 'active' ? "bg-emerald-500/20 text-emerald-600" : "bg-black/10 text-black/50"
           )}>
             {product.status === 'active' ? 'Active' : 'Hidden'}
           </span>
           <span className={cn(
-            "text-[10px] font-semibold px-2 py-0.5 rounded-full border",
-            isOutOfStock ? "bg-red-50 text-red-700 border-red-200" : isLowStock ? "bg-amber-50 text-amber-700 border-amber-200" : "bg-blue-50 text-blue-700 border-blue-200"
+            "text-[10px] font-semibold px-2 py-0.5 rounded-full",
+            isOutOfStock ? "bg-red-500/20 text-red-600" : isLowStock ? "bg-orange-500/20 text-orange-600" : "bg-blue-500/20 text-blue-600"
           )}>
             {isOutOfStock ? 'Hết hàng' : isLowStock ? `Sắp hết (${totalStock})` : `Kho: ${totalStock}`}
           </span>
@@ -248,25 +248,25 @@ export function AdminProductCard({
       </div>
 
       {/* Info */}
-      <div className="p-4 flex flex-col flex-1 cursor-pointer bg-white" onClick={onEdit}>
+      <div className="p-4 flex flex-col flex-1 cursor-pointer" onClick={onEdit}>
         <div className="flex items-start justify-between gap-2 mb-1">
-          <h3 className="text-sm font-semibold text-slate-900 line-clamp-2 leading-snug group-hover:text-emerald-700 transition-colors">
+          <h3 className="text-sm font-semibold text-[#FFF4B7] line-clamp-2 leading-snug group-hover:text-emerald-400 transition-colors">
             {product.name}
           </h3>
         </div>
 
-        <div className="text-xs text-slate-500 mb-3 flex items-center gap-1.5">
-          <Tag className="w-3 h-3 text-slate-400" /> {product.category?.name || 'Chưa phân loại'}
-          <span className="w-1 h-1 rounded-full bg-slate-300 mx-1"></span>
+        <div className="text-xs text-[#FFF4B7]/70 mb-3 flex items-center gap-1.5">
+          <Tag className="w-3 h-3" /> {product.category?.name || 'Chưa phân loại'}
+          <span className="w-1 h-1 rounded-full bg-[#FFF4B7]/30 mx-1"></span>
           {product.brand || 'No Brand'}
         </div>
 
         <div className="mt-auto">
-          <div className="text-sm font-bold text-emerald-700">
+          <div className="text-[11px] font-bold text-emerald-400">
             {priceRange}
           </div>
-          <div className="text-[11px] text-slate-500 mt-1 flex items-center gap-1">
-            <Package className="w-3.5 h-3.5 text-slate-400" /> {product.variants?.length || 0} biến thể
+          <div className="text-[10px] text-[#FFF4B7]/70 mt-1 flex items-center gap-1">
+            <Package className="w-3 h-3" /> {product.variants?.length || 0} biến thể
           </div>
         </div>
       </div>

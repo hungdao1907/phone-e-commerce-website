@@ -17,8 +17,8 @@ const mockNotifications = [
     message: 'Khách hàng Nguyễn Văn A vừa đặt mua iPhone 15 Pro Max.',
     time: '2 phút trước',
     icon: ShoppingBag,
-    color: 'text-emerald-600',
-    bg: 'bg-emerald-50'
+    color: 'text-emerald-400',
+    bg: 'bg-emerald-500/10'
   },
   {
     id: 2,
@@ -27,8 +27,8 @@ const mockNotifications = [
     message: 'Sản phẩm MacBook Pro 14 M3 chỉ còn 2 máy trong kho.',
     time: '15 phút trước',
     icon: AlertCircle,
-    color: 'text-amber-600',
-    bg: 'bg-amber-50'
+    color: 'text-orange-400',
+    bg: 'bg-orange-500/10'
   },
   {
     id: 3,
@@ -37,8 +37,8 @@ const mockNotifications = [
     message: 'Ticket #TK-1025: Giao nhầm bản 256GB thay vì 512GB.',
     time: '1 giờ trước',
     icon: MessageSquare,
-    color: 'text-red-600',
-    bg: 'bg-red-50'
+    color: 'text-red-400',
+    bg: 'bg-red-500/10'
   },
   {
     id: 4,
@@ -47,8 +47,8 @@ const mockNotifications = [
     message: 'Đơn hàng #ORD-9985 đã được giao thành công.',
     time: '2 giờ trước',
     icon: Package,
-    color: 'text-blue-600',
-    bg: 'bg-blue-50'
+    color: 'text-blue-400',
+    bg: 'bg-blue-500/10'
   }
 ];
 
@@ -102,8 +102,8 @@ export function NotificationDropdown({ isOpen, onClose }: NotificationDropdownPr
           {/* List */}
           <div className="max-h-[380px] overflow-y-auto custom-scrollbar flex flex-col p-2 space-y-1">
             {mockNotifications.map((notif) => (
-              <div 
-                key={notif.id} 
+              <div
+                key={notif.id}
                 className="flex items-start gap-3.5 p-3 hover:bg-slate-50/90 rounded-2xl transition-all cursor-pointer group border border-transparent hover:border-slate-100"
               >
                 <div className={cn("w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 border border-slate-200/60 shadow-xs", notif.bg)}>
@@ -121,8 +121,8 @@ export function NotificationDropdown({ isOpen, onClose }: NotificationDropdownPr
           </div>
 
           {/* Footer */}
-          <div className="p-3 border-t border-slate-100 bg-slate-50/50">
-            <button 
+          <div className="p-3 border-t border-white/10 bg-black/40">
+            <button
               onClick={onClose}
               className="w-full py-2 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 hover:text-slate-900 text-xs font-semibold rounded-xl flex items-center justify-center transition-colors shadow-xs"
             >

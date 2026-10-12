@@ -188,7 +188,7 @@ export function StaffManager() {
   );
 
   return (
-    <div className="flex flex-col gap-6 h-full text-slate-900">
+    <div className="flex flex-col gap-6 h-full text-white">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -308,11 +308,11 @@ export function StaffManager() {
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="border-b border-slate-200 bg-slate-50">
-                  <th className="p-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Tên Đăng Nhập</th>
-                  <th className="p-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Vai Trò</th>
-                  <th className="p-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Ngày Tạo</th>
-                  <th className="p-4 text-xs font-semibold text-slate-500 uppercase tracking-wider text-right">Thao Tác</th>
+                <tr className="border-b border-white/10 bg-black/20">
+                  <th className="p-4 text-sm font-medium text-white/60">Tên Đăng Nhập</th>
+                  <th className="p-4 text-sm font-medium text-white/60">Vai Trò</th>
+                  <th className="p-4 text-sm font-medium text-white/60">Ngày Tạo</th>
+                  <th className="p-4 text-sm font-medium text-white/60 text-right">Thao Tác</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">

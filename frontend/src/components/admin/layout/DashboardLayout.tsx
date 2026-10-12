@@ -31,8 +31,6 @@ import { StaffQuotations } from '@/components/quotations/StaffQuotations';
 import { AdminQuotationAssignments } from '@/components/quotations/AdminQuotationAssignments';
 import { ShieldAlert, Bell } from 'lucide-react';
 
-import '@/css/admin.css';
-
 // Map view IDs to readable titles
 const VIEW_LABELS: Record<string, string> = {
   dashboard: 'Tổng quan',
@@ -232,10 +230,10 @@ export function DashboardLayout() {
               <SettingsManager initialTab={activeView === 'settings' ? undefined : (activeView as any)} />
             ) : (
               <div className="flex flex-col gap-2">
-                <p className="text-slate-400 text-sm">Đang xem</p>
-                <h1 className="text-slate-900 text-2xl font-bold">{VIEW_LABELS[activeView] ?? activeView}</h1>
-                <p className="text-slate-500 text-sm mt-4">
-                  Nội dung của <strong className="text-slate-800">{VIEW_LABELS[activeView]}</strong> sẽ hiển thị ở đây.
+                <p className="text-white/40 text-sm">Đang xem</p>
+                <h1 className="text-white text-2xl font-bold">{VIEW_LABELS[activeView] ?? activeView}</h1>
+                <p className="text-white/40 text-sm mt-4">
+                  Nội dung của <strong className="text-white/60">{VIEW_LABELS[activeView]}</strong> sẽ hiển thị ở đây.
                 </p>
               </div>
             )}

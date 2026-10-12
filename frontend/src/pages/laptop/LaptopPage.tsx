@@ -15,7 +15,7 @@ interface LaptopPageProps {
 export function LaptopPage({ brand }: LaptopPageProps) {
   const config = getLaptopBrandConfig(brand);
   const fallbackProducts = getLaptopProductsByBrand(brand);
-  
+
   const [products, setProducts] = useState<LaptopModel[]>(fallbackProducts);
 
   useEffect(() => {
@@ -147,12 +147,12 @@ export function LaptopPage({ brand }: LaptopPageProps) {
                   storage: getSpec('ssd') || getSpec('hdd') || getSpec('ổ cứng') || getSpec('lưu trữ') || '256GB SSD',
                   battery: getSpec('pin') || 'Pin cả ngày dài',
                 },
-                featured: idx < 3,
+                featured: idx < 4,
               };
             });
 
             const brandMappedProducts = mappedProducts.filter(mp => mp.brand.toLowerCase() === brand.toLowerCase() || mp.name.toLowerCase().includes(brand.toLowerCase()));
-            
+
             if (brandMappedProducts.length > 0) {
                setProducts(brandMappedProducts);
             }

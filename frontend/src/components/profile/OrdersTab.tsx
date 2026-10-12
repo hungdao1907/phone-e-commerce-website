@@ -29,7 +29,9 @@ export function OrdersTab({ orders, onReview, onComplete, onOpenComplaint }: Ord
 
   const getStatusDisplay = (status: string) => {
     switch(status) {
-      case 'pending': return { text: 'Chờ xác nhận', classes: 'bg-amber-100 text-amber-700' };
+      case 'pending': return { text: 'Chờ duyệt', classes: 'bg-amber-100 text-amber-700' };
+      case 'pending_payment': return { text: 'Chờ thanh toán', classes: 'bg-orange-100 text-orange-700' };
+      case 'confirmed': return { text: 'Đã xác nhận', classes: 'bg-indigo-100 text-indigo-700' };
       case 'shipping': return { text: 'Đang giao', classes: 'bg-blue-100 text-blue-700' };
       case 'delivered': return { text: 'Chờ nhận hàng', classes: 'bg-emerald-100 text-emerald-700' };
       case 'completed': return { text: 'Hoàn thành', classes: 'bg-green-100 text-green-700' };
@@ -42,22 +44,22 @@ export function OrdersTab({ orders, onReview, onComplete, onOpenComplaint }: Ord
     <div className="bg-white p-6 sm:p-8 rounded-2xl border border-neutral-200/60 shadow-sm animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="mb-6 space-y-4">
         <h2 className="text-xl font-bold text-neutral-900">Đơn hàng của tôi</h2>
-        
+
         {/* Status Filters */}
         <div className="flex overflow-x-auto no-scrollbar gap-2 pb-2">
           {STATUS_FILTERS.map((filter) => {
             const isActive = activeFilter === filter.id;
-            const count = filter.id === 'all' 
-              ? orders.length 
+            const count = filter.id === 'all'
+              ? orders.length
               : orders.filter(o => o.status === filter.id).length;
-              
+
             return (
               <button
                 key={filter.id}
                 onClick={() => setActiveFilter(filter.id)}
                 className={`flex items-center gap-1.5 px-4 py-2 rounded-full whitespace-nowrap text-sm font-semibold transition-all duration-200 border ${
-                  isActive 
-                    ? 'bg-neutral-900 border-neutral-900 text-white' 
+                  isActive
+                    ? 'bg-neutral-900 border-neutral-900 text-white'
                     : 'bg-white border-neutral-200 text-neutral-600 hover:bg-neutral-50'
                 }`}
               >
@@ -83,7 +85,7 @@ export function OrdersTab({ orders, onReview, onComplete, onOpenComplaint }: Ord
         ) : (
           filteredOrders.map((order) => {
             const statusObj = getStatusDisplay(order.status);
-            
+
             return (
               <div key={order.id} className="border border-neutral-200 rounded-xl p-5 hover:border-neutral-300 transition-colors bg-white">
                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-4 pb-4 border-b border-neutral-100">
@@ -110,7 +112,7 @@ export function OrdersTab({ orders, onReview, onComplete, onOpenComplaint }: Ord
                 <div className="space-y-4">
                   {order.items.map((item: any) => {
                     const productId = item.productId || item.variant?.product?.id || item.variant?.productId || item.variant?.product?.slug;
-                    const productImage = item.variant?.product?.image || item.variant?.image || item.image;
+                    const productImage = item.variant?.product?.image || item.variant?.product?.images?.[0] || item.variant?.image || item.image;
                     const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
                     const imgSrc = productImage?.startsWith('/uploads') ? `${apiUrl}${productImage}` : productImage;
 
@@ -139,19 +141,19 @@ export function OrdersTab({ orders, onReview, onComplete, onOpenComplaint }: Ord
                             {item.unitPrice.toLocaleString('vi-VN')}đ
                           </span>
                         </div>
-                        
+
                         {(order.status === 'completed' || order.status === 'delivered') && (
                           <div className="mt-2 flex items-center gap-2">
                             {validProductId && (
-                              <button 
-                                onClick={() => onReview(order.id, validProductId)} 
+                              <button
+                                onClick={() => onReview(order.id, validProductId)}
                                 className="text-xs font-bold text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-full transition-colors"
                               >
                                 Viết đánh giá
                               </button>
                             )}
-                            <button 
-                              onClick={() => onOpenComplaint(item, order)} 
+                            <button
+                              onClick={() => onOpenComplaint(item, order)}
                               className="text-xs font-bold text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-full transition-colors"
                             >
                               Khiếu nại
@@ -176,8 +178,8 @@ export function OrdersTab({ orders, onReview, onComplete, onOpenComplaint }: Ord
                   </div>
                   <div className="flex flex-wrap gap-3">
                     {order.status === 'delivered' && (
-                      <button 
-                        onClick={() => onComplete(order.id)} 
+                      <button
+                        onClick={() => onComplete(order.id)}
                         className="px-5 py-2 text-sm font-bold bg-black text-white hover:bg-neutral-800 rounded-full transition-colors shadow-sm active:scale-95"
                       >
                         Đã nhận được hàng

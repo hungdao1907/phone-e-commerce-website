@@ -3,6 +3,8 @@ import prisma from '../config/prisma';
 import crypto from 'crypto';
 import { authenticateToken } from '../middleware/auth.middleware';
 import { requireRoles } from '../middleware/authorization.middleware';
+import { sendPaymentSuccessEmail } from '../services/email.service';
+import { markPendingOrderPaid } from '../services/payment-order-transition';
 
 const router = express.Router();
 
@@ -12,7 +14,7 @@ router.post('/webhook', async (req, res) => {
   try {
     const signature = req.headers['x-sepay-signature'] as string;
     const timestampStr = req.headers['x-sepay-timestamp'] as string;
-    
+
     // 1. Verify SePay Webhook Signature & Timestamp
     if (signature && timestampStr) {
       if (typeof req.body !== 'string') {
@@ -21,7 +23,7 @@ router.post('/webhook', async (req, res) => {
       const rawBody = req.body;
       const secret = process.env.SEPAY_WEBHOOK_SECRET;
       if (!secret) return res.status(500).json({ success: false, message: 'Server config error' });
-      
+
       // Replay attack prevention (5 minutes window)
       const reqTime = timestampStr.length > 10 ? parseInt(timestampStr, 10) : parseInt(timestampStr, 10) * 1000;
       if (Math.abs(Date.now() - reqTime) > 5 * 60 * 1000) {
@@ -32,7 +34,7 @@ router.post('/webhook', async (req, res) => {
       const expectedSignature = 'sha256=' + crypto.createHmac('sha256', secret)
         .update(timestampStr + '.' + rawBody)
         .digest('hex');
-      
+
       try {
         const sigBuffer = Buffer.from(signature, 'utf8');
         const expectedBuffer = Buffer.from(expectedSignature, 'utf8');
@@ -143,15 +145,15 @@ router.post('/webhook', async (req, res) => {
       // 5. Match Check
       if (order.totalAmount === amount && ['pending', 'pending_payment'].includes(order.status) && order.paymentMethod === 'BANK_TRANSFER') {
         // LEVEL 1: Exact Match! Process within a transaction
-        await prisma.$transaction(async (txPrisma) => {
+        const paidOrder = await prisma.$transaction(async (txPrisma) => {
           // Update Order Status
-          await txPrisma.order.update({
-            where: { id: order.id },
-            data: { 
-              status: 'confirmed',
-              paymentStatus: 'PAID'
-            }
-          });
+          if (!await markPendingOrderPaid(txPrisma, order.id)) {
+            await txPrisma.bankTransaction.create({ data: {
+              transactionId, amount, description, transactionDate: new Date(transactionDate), bankName, accountNumber,
+              transactionType, status: 'MANUAL_REVIEW', orderId: order.id, orderCode: extractedOrderCode, rawData: tx,
+            } });
+            return null;
+          }
 
           // Create BankTransaction
           await txPrisma.bankTransaction.create({
@@ -178,13 +180,21 @@ router.post('/webhook', async (req, res) => {
               }
             });
           } catch(e) {}
+
+          // Get order with customer info to send email
+          const orderWithCustomer = await txPrisma.order.findUnique({
+            where: { id: order.id },
+            include: { customer: true, items: true }
+          });
+          return orderWithCustomer;
         });
+        if (paidOrder?.customer?.email) sendPaymentSuccessEmail(paidOrder).catch(console.error);
 
       } else {
         // LEVEL 2: Found order, but amount doesn't match or order isn't in waiting state
         const isAlreadyPaid = order.paymentStatus === 'PAID' || order.status === 'confirmed';
         const finalStatus = isAlreadyPaid ? 'MANUAL_REVIEW' : 'INVALID_AMOUNT';
-        
+
         await prisma.bankTransaction.create({
           data: {
             transactionId, amount, description, transactionDate: new Date(transactionDate),
@@ -194,7 +204,7 @@ router.post('/webhook', async (req, res) => {
             rawData: tx
           }
         });
-        
+
         try {
           await prisma.notification.create({
             data: {
@@ -207,7 +217,7 @@ router.post('/webhook', async (req, res) => {
           });
         } catch(e) {}
       }
-      
+
       processedCount++;
     }
 
@@ -223,10 +233,10 @@ router.post('/webhook/test', authenticateToken, requireRoles('admin', 'superadmi
   if (process.env.NODE_ENV === 'production') {
     return res.status(403).json({ message: 'Endpoint is not available in production' });
   }
-  
+
   // Forward to main webhook logic
   req.body.provider_secret = process.env.BANK_WEBHOOK_SECRET;
-  
+
   try {
     const port = process.env.PORT || 3001;
     // Send as JSON since our proxy in index.ts won't trigger for /webhook/test if we call it internally, but wait, we are fetching the self URL /api/bank/webhook which WILL hit index.ts and receive raw body!
@@ -248,12 +258,12 @@ router.get('/transactions', authenticateToken, requireRoles('admin', 'superadmin
   try {
     const { status, limit = 50, page = 1 } = req.query;
     const skip = (Number(page) - 1) * Number(limit);
-    
+
     const where: any = {};
     if (status && status !== 'all') {
       where.status = status;
     }
-    
+
     const transactions = await prisma.bankTransaction.findMany({
       where,
       orderBy: { createdAt: 'desc' },
@@ -303,7 +313,7 @@ router.get('/transactions/:id', authenticateToken, requireRoles('admin', 'supera
       where: { id: txId }
     });
     if (!tx) return res.status(404).json({ message: 'Not found' });
-    
+
     // Manually fetch order if matched
     let orderInfo = null;
     if (tx.orderId) {
@@ -312,7 +322,7 @@ router.get('/transactions/:id', authenticateToken, requireRoles('admin', 'supera
         select: { id: true, orderCode: true, totalAmount: true, status: true, paymentStatus: true }
       });
     }
-    
+
     res.json({ ...tx, order: orderInfo });
   } catch (error) {
     res.status(500).json({ message: 'Server error' });
@@ -327,7 +337,7 @@ router.post('/transactions/:id/match', authenticateToken, requireRoles('admin', 
 
     const tx = await prisma.bankTransaction.findUnique({ where: { id: txId } });
     if (!tx) return res.status(404).json({ message: 'Transaction not found' });
-    
+
     if (tx.status === 'MATCHED') {
       return res.status(400).json({ message: 'Transaction is already matched' });
     }
@@ -338,17 +348,13 @@ router.post('/transactions/:id/match', authenticateToken, requireRoles('admin', 
     // Perform manual match
     await prisma.$transaction(async (txPrisma) => {
       // 1. Update Order Status
-      await txPrisma.order.update({
-        where: { id: order.id },
-        data: { 
-          status: 'confirmed',
-          paymentStatus: 'PAID'
-        }
-      });
+      if (!await markPendingOrderPaid(txPrisma, order.id)) {
+        throw Object.assign(new Error('Order is no longer eligible for payment matching'), { httpStatus: 409 });
+      }
 
       // 2. Update Transaction
-      await txPrisma.bankTransaction.update({
-        where: { id: tx.id },
+      const matched = await txPrisma.bankTransaction.updateMany({
+        where: { id: tx.id, status: { not: 'MATCHED' } },
         data: {
           status: 'MATCHED',
           orderId: order.id,
@@ -357,12 +363,22 @@ router.post('/transactions/:id/match', authenticateToken, requireRoles('admin', 
           matchedBy: 'ADMIN'
         }
       });
+      if (matched.count !== 1) throw Object.assign(new Error('Transaction was already matched'), { httpStatus: 409 });
     });
+
+    // Send Payment Success Email if customer exists
+    const orderWithCustomer = await prisma.order.findUnique({
+      where: { id: orderId },
+      include: { customer: true, items: true }
+    });
+    if (orderWithCustomer && orderWithCustomer.customer && orderWithCustomer.customer.email) {
+      sendPaymentSuccessEmail(orderWithCustomer).catch(console.error);
+    }
 
     res.json({ success: true, message: 'Matched successfully' });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: 'Server error matching transaction' });
+    res.status((error as any)?.httpStatus === 409 ? 409 : 500).json({ message: (error as any)?.httpStatus === 409 ? 'Order or transaction changed; reload before matching.' : 'Server error matching transaction' });
   }
 });
 

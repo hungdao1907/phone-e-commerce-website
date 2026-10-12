@@ -24,10 +24,11 @@ export function SmartphonePage({ brand }: SmartphonePageProps) {
         if (res.ok) {
           const data = await res.json();
           // Filter by brand (category name contains brand or product name contains brand)
-          const apiProducts = data.filter((p: any) =>
-            p.category?.name?.toLowerCase().includes(brand.toLowerCase()) ||
-            p.name?.toLowerCase().includes(brand.toLowerCase())
-          );
+          const apiProducts = data.filter((p: any) => {
+            const isPhone = p.category?.slug === 'phone' || p.category?.name?.toLowerCase().includes('phone') || p.category?.name?.toLowerCase().includes('điện thoại');
+            if (!isPhone) return false;
+            return p.category?.name?.toLowerCase().includes(brand.toLowerCase()) || p.name?.toLowerCase().includes(brand.toLowerCase());
+          });
 
           if (apiProducts.length > 0) {
             // Map API product to BrandModel

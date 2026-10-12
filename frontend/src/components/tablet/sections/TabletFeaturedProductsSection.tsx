@@ -10,7 +10,7 @@ interface TabletFeaturedProductsSectionProps {
 
 export function TabletFeaturedProductsSection({ config, products }: TabletFeaturedProductsSectionProps) {
   const reducedMotion = useReducedMotion();
-  const featuredProducts = products.filter((product) => product.featured).slice(0, 3);
+  const featuredProducts = products.filter((product) => product.featured).slice(0, 4);
 
   return (
     <section aria-labelledby="tablet-featured-title" className="bg-white px-4 py-24 sm:px-6 sm:py-32 lg:px-8">
@@ -33,7 +33,7 @@ export function TabletFeaturedProductsSection({ config, products }: TabletFeatur
             Ba lựa chọn tiêu biểu cho những cách làm việc, sáng tạo và giải trí khác nhau.
           </p>
         </motion.header>
-        <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8 w-full justify-center">
           {featuredProducts.map((product, index) => (
             <motion.div
               key={product.id}

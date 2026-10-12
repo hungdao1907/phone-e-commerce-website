@@ -44,6 +44,7 @@ import {
 } from './order-authorization';
 import { safeErrorSummary } from '../utils/safe-error-summary';
 import { presentCustomerOrderDetail } from '../services/customer-order-detail';
+import { cancelUnpaidOrder, OrderCancellationError } from '../services/order-cancellation.service';
 
 const router = express.Router();
 
@@ -438,7 +439,7 @@ const BASE_ORDER_FIELDS = {
   items: {
     include: {
       variant: {
-        include: { product: { select: { id: true, name: true, image: true } } }
+        include: { product: { select: { id: true, name: true, image: true, images: true, brand: true, status: true } } }
       }
     }
   }
@@ -534,8 +535,14 @@ router.get('/:id', authenticateToken, async (req, res) => {
       where: orderWhere,
       select: selectFields
     });
+
     if (!order) return res.status(404).json({ message: 'Không tìm thấy đơn hàng' });
-    res.json(isCustomerPrincipal(principal) ? presentCustomerOrderDetail(order, principal.id) : order);
+    // Ownership/assignment was checked before reading this order's transfer metadata.
+    // Never expose webhook payloads or another order's transactions.
+    const bankTransaction = await prisma.bankTransaction.findFirst({ where: { orderId }, orderBy: { createdAt: 'desc' },
+      select: { status: true, amount: true, transactionDate: true, transactionId: true } });
+    const detail = { ...order, bankTransaction };
+    res.json(isCustomerPrincipal(principal) ? presentCustomerOrderDetail(detail, principal.id) : detail);
   } catch (error) {
     console.error('Error fetching order:', error);
     res.status(500).json({ message: 'Lỗi server' });
@@ -724,7 +731,7 @@ router.post('/', authenticateToken, async (req, res) => {
 
     // External notifications remain strictly after transaction commit.
     if (!checkoutResult.replayed && newOrder.customer?.email) {
-      sendOrderReceivedEmail(newOrder.customer.email, newOrder.customer.fullName ?? 'Khách hàng', newOrder.orderCode).catch(console.error);
+      sendOrderReceivedEmail(newOrder).catch(console.error);
     }
     if (!checkoutResult.replayed) {
       prisma.notification.create({
@@ -821,12 +828,23 @@ router.put('/:id/status', authenticateToken, async (req, res) => {
     if (status) dataToUpdate.status = status;
     if (paymentStatus) dataToUpdate.paymentStatus = paymentStatus;
 
+    // Admin/Staff's existing status UI must use the same atomic cancellation path.
+    if (status === 'cancelled') {
+      await cancelUnpaidOrder(prisma, principal || {}, orderId, { reason: req.body.reason || 'Cancelled by assigned staff or administrator', note: req.body.note });
+      const cancelled = await prisma.order.findUnique({ where: { id: orderId }, select: BASE_ORDER_FIELDS });
+      return res.json({ message: 'Cập nhật trạng thái thành công', order: cancelled });
+    }
+
+    // A racing status/payment update must never reopen an order whose stock was restored.
+    const updateWhere = { id: orderId, status: isCustomerPrincipal(principal) ? 'delivered' : { not: 'cancelled' },
+      ...(isCustomerPrincipal(principal) ? { customerId: principal.id } : isStaff ? { assignedStaffId: principal!.id as string } : {}) };
+
     // Execute in transaction if status is becoming completed
     let updatedOrder: any;
     if (status === 'completed') {
       updatedOrder = await prisma.$transaction(async (tx) => {
         const order = await tx.order.update({
-          where: { id: orderId },
+          where: updateWhere,
           data: dataToUpdate,
           select: {
             ...BASE_ORDER_FIELDS,
@@ -861,7 +879,7 @@ router.put('/:id/status', authenticateToken, async (req, res) => {
       });
     } else {
       updatedOrder = await prisma.order.update({
-        where: { id: orderId },
+        where: updateWhere,
         data: dataToUpdate,
         select: BASE_ORDER_FIELDS
       });
@@ -869,61 +887,26 @@ router.put('/:id/status', authenticateToken, async (req, res) => {
 
     // 📩 Send "Order Confirmed / Shipping" Email when status changes to 'shipping'
     if (status === 'shipping' && updatedOrder.customer && updatedOrder.customer.email) {
-      sendOrderConfirmedEmail(
-        updatedOrder.customer.email,
-        updatedOrder.customer.fullName ?? 'Khách hàng',
-        updatedOrder.orderCode,
-        updatedOrder.estimatedDelivery
-      ).catch(console.error);
+      sendOrderConfirmedEmail(updatedOrder).catch(console.error);
     }
 
     res.json({ message: 'Cập nhật trạng thái thành công', order: updatedOrder });
   } catch (error) {
     console.error('Error updating order status:', error);
+    if (error instanceof OrderCancellationError) return res.status(error.httpStatus).json({ message: error.message });
+    if ((error as any)?.code === 'P2025') return res.status(409).json({ message: 'Order status changed; reload before updating.' });
     res.status(500).json({ message: 'Lỗi server' });
   }
 });
 
-// DELETE order (Cancel)
-router.delete('/:id', authenticateToken, async (req, res) => {
+// PATCH order (Cancel): authenticated ownership/assignment and atomic restoration.
+router.patch('/:id/cancel', authenticateToken, async (req: AuthRequest, res) => {
   try {
-    const principal = (req as AuthRequest).user;
-    if (!isOrderManagerRole(principal?.role)) {
-      return res.status(403).json({ message: 'Bạn không có quyền hủy hoặc xóa đơn hàng' });
-    }
-
-    // Find order to restore stock
-    const order = await prisma.order.findUnique({
-      where: { id: getRouteParam(req.params.id) },
-      include: { items: true }
-    });
-
-    if (!order) {
-      return res.status(404).json({ message: 'Không tìm thấy đơn hàng' });
-    }
-
-    await prisma.$transaction(async (tx) => {
-      // Restore stock
-      for (const item of order.items) {
-        await tx.productVariant.update({
-          where: { id: item.variantId },
-          data: {
-            stock: {
-              increment: item.quantity
-            }
-          }
-        });
-      }
-
-      // Delete order
-      await tx.order.delete({
-        where: { id: getRouteParam(req.params.id) }
-      });
-    });
-
-    res.json({ message: 'Hủy đơn hàng thành công' });
+    const result = await cancelUnpaidOrder(prisma, req.user || {}, getRouteParam(req.params.id), req.body || {});
+    res.json({ message: 'Hủy đơn hàng thành công', ...result });
   } catch (error) {
-    console.error('Error deleting order:', error);
+    if (error instanceof OrderCancellationError) return res.status(error.httpStatus).json({ message: error.message });
+    console.error('Error cancelling order:', safeErrorSummary(error));
     res.status(500).json({ message: 'Lỗi server' });
   }
 });

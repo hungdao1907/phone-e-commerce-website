@@ -1,4 +1,4 @@
-import { lazy, Suspense, useLayoutEffect, useMemo } from 'react';
+import { lazy, Suspense, useLayoutEffect, useMemo, useRef } from 'react';
 import { BrowserRouter, Routes, Route, Outlet, Navigate, useLocation, useNavigationType } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import ReactLenis from 'lenis/react';
@@ -24,6 +24,7 @@ import { PaymentPage } from './pages/checkout/PaymentPage';
 import { OrderSuccessPage } from './pages/checkout/OrderSuccessPage';
 import { OrderDetailPage } from './pages/order/OrderDetailPage';
 import { OrderTrackingPage } from './pages/order/OrderTrackingPage';
+import { CategoryPage } from './pages/category/CategoryPage';
 
 const WatchPage = lazy(() =>
   import('./pages/watch/WatchPage').then(({ WatchPage: Page }) => ({ default: Page })),
@@ -63,15 +64,23 @@ const ProductsFilterPage = lazy(() =>
 const queryClient = new QueryClient();
 
 import { CartDrawer } from './components/cart/CartDrawer';
-import { FloatingCartButton } from './components/cart/FloatingCartButton';
+// FloatingCartButton removed
 import { ChatWidget } from './components/chatbot/ChatWidget';
 import { readHomeSectionReturn } from './lib/homeSectionHistory';
 
 function RouteScrollManager() {
   const location = useLocation();
   const navigationType = useNavigationType();
+  const prevPathname = useRef(location.pathname);
 
   useLayoutEffect(() => {
+    // If only the query parameters changed, don't scroll to top
+    if (prevPathname.current === location.pathname && navigationType !== 'POP') {
+      prevPathname.current = location.pathname;
+      return;
+    }
+    prevPathname.current = location.pathname;
+
     const marker = readHomeSectionReturn();
     const shouldRestoreHomeSection =
       location.pathname === '/' &&
@@ -111,7 +120,6 @@ function MainLayout() {
         <RouteScrollManager />
         <GlobalNav />
         <CartDrawer />
-        <FloatingCartButton />
         <ChatWidget />
         <Outlet />
         <Footer />
@@ -120,10 +128,13 @@ function MainLayout() {
   );
 }
 
+import { ErrorBoundary } from './ErrorBoundary';
+
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
+        <ErrorBoundary>
           <Suspense
             fallback={(
               <div
@@ -157,7 +168,7 @@ export default function App() {
                 <Route path="/tablet/ipad" element={<TabletPage brand="ipad" />} />
                 <Route path="/tablet/samsung" element={<TabletPage brand="samsung" />} />
                 <Route path="/tablet/xiaomi" element={<TabletPage brand="xiaomi" />} />
-                
+
                 {/* Laptop Routes */}
                 <Route path="/laptop/macbook" element={<LaptopPage brand="macbook" />} />
                 <Route path="/laptop/asus" element={<LaptopPage brand="asus" />} />
@@ -169,25 +180,21 @@ export default function App() {
                 <Route path="/order-success" element={<OrderSuccessPage />} />
                 <Route path="/tra-cuu-don-hang" element={<OrderTrackingPage />} />
 
-                {/* Legacy / Category Aliases & Redirects */}
+                <Route path="/:categorySlug" element={<CategoryPage />} />
                 <Route path="/iphone" element={<Navigate to="/phone/iphone" replace />} />
                 <Route path="/exploreIphone17promax" element={<Navigate to="/phone/exploreIphone17promax" replace />} />
                 <Route path="/samsung" element={<Navigate to="/phone/samsung" replace />} />
                 <Route path="/xiaomi" element={<Navigate to="/phone/xiaomi" replace />} />
                 <Route path="/oppo" element={<Navigate to="/phone/oppo" replace />} />
-                <Route path="/phone" element={<Navigate to="/phone/iphone" replace />} />
                 <Route path="/dien-thoai" element={<Navigate to="/phone/iphone" replace />} />
                 <Route path="/ien-thoai" element={<Navigate to="/phone/iphone" replace />} />
-                <Route path="/watch" element={<Navigate to="/watch/exploreWatch" replace />} />
                 <Route path="/watch/series-11" element={<Navigate to="/watch/exploreSeries-11" replace />} />
                 <Route path="/watch/se-3" element={<Navigate to="/watch/exploreSe-3" replace />} />
                 <Route path="/watch/ultra-3" element={<Navigate to="/watch/exploreUltra-3" replace />} />
                 <Route path="/dong-ho-thong-minh" element={<Navigate to="/watch/exploreWatch" replace />} />
                 <Route path="/ong-ho-thong-minh" element={<Navigate to="/watch/exploreWatch" replace />} />
-                <Route path="/tablet" element={<Navigate to="/tablet/ipad" replace />} />
                 <Route path="/tablet/apple" element={<Navigate to="/tablet/ipad" replace />} />
                 <Route path="/may-tinh-bang" element={<Navigate to="/tablet/ipad" replace />} />
-                <Route path="/laptop" element={<Navigate to="/laptop/macbook" replace />} />
                 <Route path="/laptop/apple" element={<Navigate to="/laptop/macbook" replace />} />
 
                 {/* Customer Profile Route (Protected inside MainLayout) */}
@@ -199,7 +206,7 @@ export default function App() {
 
               {/* Standalone Login Route */}
               <Route path="/login" element={<LoginPage />} />
-              
+
               {/* Dashboard Route Protected by Authentication */}
               <Route element={<ProtectedRoute allowedRoles={['superadmin', 'admin', 'manager', 'user', 'staff']} />}>
                 <Route path="/dashboard" element={<DashboardLayout />} />
@@ -213,6 +220,7 @@ export default function App() {
               </Route>
             </Routes>
           </Suspense>
+        </ErrorBoundary>
         </BrowserRouter>
     </QueryClientProvider>
   );

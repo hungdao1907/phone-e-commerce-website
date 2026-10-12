@@ -19,6 +19,7 @@ import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { SidebarFilter } from '@/components/store/SidebarFilter';
 import { ActiveFilterChips } from '@/components/store/ActiveFilterChips';
 import { FilteredProductCard } from '@/components/store/FilteredProductCard';
+import { FilteredProductCardSkeleton } from '@/components/store/FilteredProductCardSkeleton';
 import type { BrandConfig, BrandModel } from '@/types/smartphone';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
@@ -28,12 +29,6 @@ interface BrandAllProductsSectionProps {
   products: BrandModel[]; // We keep this for series extraction
 }
 
-const PRODUCT_FILTERS = [
-  { id: 'popular', label: 'Phổ biến', icon: Star, sortValue: 'newest' },
-  { id: 'promotion', label: 'Khuyến mãi HOT', icon: BadgePercent, sortValue: 'promotion' },
-  { id: 'price-asc', label: 'Giá Thấp - Cao', icon: ArrowUpNarrowWide, sortValue: 'price_asc' },
-  { id: 'price-desc', label: 'Giá Cao - Thấp', icon: ArrowDownNarrowWide, sortValue: 'price_desc' },
-] as const;
 
 export function BrandAllProductsSection({ config, products }: BrandAllProductsSectionProps) {
   const containerRef = useRef<HTMLElement>(null);
@@ -75,7 +70,7 @@ export function BrandAllProductsSection({ config, products }: BrandAllProductsSe
     params.delete('q');
     params.set('category', categorySlug);
     params.set('brand', brandSlug);
-    
+
     const res = await fetch(`${API_URL}/api/products/filters?${params.toString()}`);
     if (!res.ok) throw new Error('Failed to fetch filters');
     return res.json();
@@ -85,6 +80,7 @@ export function BrandAllProductsSection({ config, products }: BrandAllProductsSe
     const params = new URLSearchParams(searchParams);
     params.set('category', categorySlug);
     params.set('brand', brandSlug);
+    params.set('limit', '8');
 
     const res = await fetch(`${API_URL}/api/products/search?${params.toString()}`);
     if (!res.ok) throw new Error('Failed to fetch products');
@@ -97,11 +93,12 @@ export function BrandAllProductsSection({ config, products }: BrandAllProductsSe
     placeholderData: keepPreviousData,
   });
 
-  const { data: productsData, isLoading: isLoadingProducts } = useQuery({
+  const { data: productsData, isLoading: isLoadingProducts, isFetching: isFetchingProducts } = useQuery({
     queryKey: ['productsSearch', categorySlug, brandSlug, searchParams.toString()],
     queryFn: fetchProducts,
-    placeholderData: keepPreviousData,
   });
+
+  const isProductsLoading = isLoadingProducts || isFetchingProducts;
 
   const handleSortChange = (sortValue: string) => {
     searchParams.set('sort', sortValue);
@@ -141,24 +138,23 @@ export function BrandAllProductsSection({ config, products }: BrandAllProductsSe
     return () => { document.body.style.overflow = ''; };
   }, [isMobileSidebarOpen]);
 
-  // Group products by series if we want to show the grouped layout 
-  // (only if no deep filters/search/sort are active, otherwise flatten)
-  const isDefaultView = !searchQuery && activeSeries === 'all' && activeSort === 'newest' && Array.from(searchParams.keys()).filter(k => !['category','brand','page','sort','series','q'].includes(k)).length === 0;
 
   return (
     <section
       id={`${config.id}-all-products`}
       ref={containerRef}
-      className="relative w-full py-20 sm:py-28 bg-[#f8f9fc] text-neutral-900 px-4 sm:px-6 lg:px-8 overflow-hidden"
+      className="relative w-full py-20 sm:py-28 bg-[#f8f9fc] text-neutral-900 px-4 sm:px-6 lg:px-8"
     >
-      <div
-        className="absolute top-20 left-1/4 w-[450px] h-[450px] blur-[150px] rounded-full pointer-events-none opacity-25"
-        style={{ backgroundColor: config.accent }}
-      />
-      <div
-        className="absolute bottom-20 right-1/4 w-[450px] h-[450px] blur-[150px] rounded-full pointer-events-none opacity-20"
-        style={{ backgroundColor: config.accentSoft || '#60a5fa' }}
-      />
+      <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+        <div
+          className="absolute top-20 left-1/4 w-[450px] h-[450px] blur-[150px] rounded-full opacity-25"
+          style={{ backgroundColor: config.accent }}
+        />
+        <div
+          className="absolute bottom-20 right-1/4 w-[450px] h-[450px] blur-[150px] rounded-full opacity-20"
+          style={{ backgroundColor: config.accentSoft || '#60a5fa' }}
+        />
+      </div>
 
       <motion.div style={{ opacity, y }} className="relative z-10 w-full max-w-[1400px] mx-auto flex flex-col">
         {/* Section Header */}
@@ -251,40 +247,23 @@ export function BrandAllProductsSection({ config, products }: BrandAllProductsSe
               <Filter className="w-4 h-4" />
               Bộ lọc
             </button>
-            
-            {PRODUCT_FILTERS.map((filter) => {
-              const Icon = filter.icon;
-              const isActive = activeSort === filter.sortValue;
-              return (
-                <button
-                  key={filter.id}
-                  type="button"
-                  onClick={() => handleSortChange(filter.sortValue)}
-                  className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-xs sm:text-sm font-semibold whitespace-nowrap transition-all duration-200 cursor-pointer ${
-                    isActive
-                      ? 'bg-white shadow-sm border-neutral-900 text-neutral-950 font-bold'
-                      : 'border-neutral-200 bg-white/80 text-neutral-600 hover:border-neutral-300 hover:bg-white'
-                  }`}
-                  style={isActive ? { borderColor: config.accent, color: config.accent } : undefined}
-                >
-                  <Icon className="h-4 w-4" />
-                  {filter.label}
-                </button>
-              );
-            })}
+
           </div>
         </div>
 
         {/* Dynamic Filter Layout - Sidebar + Grid */}
         <div className="flex flex-col md:flex-row gap-8 max-w-[1400px] mx-auto w-full">
-          
+
           {/* Sidebar Area */}
           <div className={`
-            fixed inset-0 z-50 bg-black/50 md:bg-transparent md:static md:w-64 md:flex-shrink-0 transition-opacity duration-300
+            fixed inset-0 z-50 bg-black/50 md:bg-transparent md:sticky md:top-24 md:h-[calc(100vh-120px)] md:w-64 md:flex-shrink-0 transition-opacity duration-300
             ${isMobileSidebarOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none md:opacity-100 md:pointer-events-auto'}
           `}>
-            <div className={`
-              absolute md:static inset-y-0 left-0 w-[85%] max-w-sm bg-[#f5f5f7] md:bg-transparent h-full md:h-auto md:w-full transition-transform duration-300 transform overflow-y-auto md:overflow-visible
+            <div
+              data-lenis-prevent="true"
+              className={`
+              absolute md:static inset-y-0 left-0 w-[85%] max-w-sm bg-[#f5f5f7] md:bg-transparent h-full md:w-full transition-transform duration-300 transform overflow-y-auto
+              [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-neutral-200 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-neutral-300
               ${isMobileSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
             `}>
               <div className="md:hidden flex items-center justify-between p-4 bg-white border-b border-neutral-200 sticky top-0 z-10">
@@ -295,28 +274,25 @@ export function BrandAllProductsSection({ config, products }: BrandAllProductsSe
                 </button>
               </div>
               <div className="p-4 md:p-0 sidebar-filter-wrapper">
-                <SidebarFilter 
-                  filters={filtersData} 
-                  isLoading={isLoadingFilters} 
-                  hideCategoryAndBrand={true} 
+                <SidebarFilter
+                  filters={filtersData}
+                  isLoading={isLoadingFilters}
+                  hideCategoryAndBrand={true}
                   categorySlug={categorySlug}
+                  onCloseMobile={() => setIsMobileSidebarOpen(false)}
                 />
               </div>
-              <div className="md:hidden sticky bottom-0 p-4 bg-white border-t border-neutral-200">
-                <button onClick={() => setIsMobileSidebarOpen(false)} className="w-full bg-blue-600 text-white font-bold py-3 rounded-xl">
-                  Xem kết quả
-                </button>
-              </div>
+
             </div>
           </div>
 
           {/* Product Grid Area */}
           <div className="flex-1 min-w-0">
             <ActiveFilterChips />
-            
+
             <div className="mb-6 flex items-center justify-between">
               <span className="text-xs sm:text-sm font-bold text-neutral-600">
-                {isLoadingProducts ? 'Đang tải...' : `Tìm thấy ${productsData?.total || 0} sản phẩm phù hợp`}
+                {isProductsLoading ? 'Đang tải...' : `Tìm thấy ${productsData?.total || 0} sản phẩm phù hợp`}
               </span>
               {Array.from(searchParams.keys()).length > 0 && (
                 <button
@@ -329,10 +305,10 @@ export function BrandAllProductsSection({ config, products }: BrandAllProductsSe
               )}
             </div>
 
-            {isLoadingProducts ? (
+            {isProductsLoading ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-5">
-                {[1, 2, 3, 4, 5, 6].map(i => (
-                  <div key={i} className="bg-white rounded-2xl h-80 animate-pulse border border-neutral-100"></div>
+                {[1, 2, 3, 4, 5, 6, 7, 8].map(i => (
+                  <FilteredProductCardSkeleton key={i} />
                 ))}
               </div>
             ) : productsData?.data?.length === 0 ? (
@@ -344,7 +320,7 @@ export function BrandAllProductsSection({ config, products }: BrandAllProductsSe
                 <p className="text-neutral-500 max-w-md mx-auto mb-6">
                   Rất tiếc, không có sản phẩm nào khớp với các bộ lọc bạn đã chọn.
                 </p>
-                <button 
+                <button
                   onClick={() => setSearchParams(new URLSearchParams())}
                   className="bg-neutral-900 text-white px-6 py-2.5 rounded-full font-semibold hover:bg-neutral-800 transition-colors"
                 >
@@ -353,148 +329,21 @@ export function BrandAllProductsSection({ config, products }: BrandAllProductsSe
               </div>
             ) : (
               <>
-                {isDefaultView && config.productGroups ? (
-                  // Render grouped by series if default view
-                  <div className="space-y-16 sm:space-y-20">
-                    {(() => {
-                      const getProductSeries = (p: any) => {
-                        if (p.series) return p.series;
-                        const name = (p.name || '').toLowerCase();
-                        if (brandSlug === 'apple' || brandSlug === 'iphone') {
-                          return name.includes('pro') ? 'iPhone Pro' : 'iPhone';
-                        }
-                        if (brandSlug === 'samsung') {
-                          if (name.includes('fold') || name.includes('flip')) return 'Galaxy Z Series';
-                          if (name.includes('s2') || name.includes('ultra')) return 'Galaxy S Series';
-                          return 'Galaxy Series';
-                        }
-                        if (brandSlug === 'xiaomi') {
-                          if (name.includes('redmi')) return 'Redmi Series';
-                          if (name.includes('ultra') || name.includes('pro')) return 'Xiaomi Flagship';
-                          return 'Xiaomi Series';
-                        }
-                        if (brandSlug === 'oppo') {
-                          if (name.includes('find')) return 'Find Series';
-                          if (name.includes('reno')) return 'Reno Series';
-                          return 'Oppo Series';
-                        }
-                        return 'Dòng Mới';
-                      };
-
-                      const assignedIds = new Set<string>();
-                      const productsList: any[] = productsData?.data || [];
-                      const renderedGroups = config.productGroups.map((groupDef) => {
-                        const matching = productsList.filter((p: any) => {
-                          const pSeries = getProductSeries(p);
-                          return (
-                            pSeries?.toLowerCase() === groupDef.series?.toLowerCase() ||
-                            pSeries?.toLowerCase() === groupDef.title?.toLowerCase()
-                          );
-                        });
-                        if (matching.length === 0) return null;
-                        
-                        matching.forEach((p: any) => assignedIds.add(p.id));
-                        
-                        return (
-                          <div key={groupDef.id} className="scroll-mt-24">
-                            <motion.div
-                              initial={{ opacity: 0, y: 20 }}
-                              whileInView={{ opacity: 1, y: 0 }}
-                              viewport={{ once: true }}
-                              transition={{ duration: 0.5 }}
-                              className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8 pb-4 border-b border-neutral-200"
-                            >
-                              <div className="space-y-1 max-w-2xl">
-                                <span className={`inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${groupDef.tagColor || 'text-neutral-700 bg-neutral-100 border-neutral-200'}`}>
-                                  {groupDef.label || 'DÒNG SẢN PHẨM'}
-                                </span>
-                                <h3 className="text-2xl sm:text-3xl font-bold tracking-tight text-neutral-900">
-                                  {groupDef.title}
-                                </h3>
-                                <p className="text-xs sm:text-sm text-neutral-600 leading-normal">
-                                  {groupDef.description}
-                                </p>
-                              </div>
-                              <div className="hidden md:flex items-center gap-2 text-xs font-semibold text-neutral-500">
-                                <Layers className="w-4 h-4" />
-                                <span>{matching.length} sản phẩm</span>
-                              </div>
-                            </motion.div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-5">
-                              {matching.map((product: any) => (
-                                <FilteredProductCard 
-                                  key={product.id} 
-                                  product={product} 
-                                  categorySlug={categorySlug} 
-                                />
-                              ))}
-                            </div>
-                          </div>
-                        );
-                      });
-
-                      const unassigned = productsList.filter((p: any) => !assignedIds.has(p.id));
-                      
-                      return (
-                        <>
-                          {renderedGroups}
-                          {unassigned.length > 0 && (
-                            <div key="unassigned" className="scroll-mt-24">
-                              <motion.div
-                                initial={{ opacity: 0, y: 20 }}
-                                whileInView={{ opacity: 1, y: 0 }}
-                                viewport={{ once: true }}
-                                transition={{ duration: 0.5 }}
-                                className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8 pb-4 border-b border-neutral-200"
-                              >
-                                <div className="space-y-1 max-w-2xl">
-                                  <span className="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold border text-blue-700 bg-blue-50 border-blue-200">
-                                    DANH MỤC SẢN PHẨM
-                                  </span>
-                                  <h3 className="text-2xl sm:text-3xl font-bold tracking-tight text-neutral-900">
-                                    Bộ Sưu Tập {config.brand}
-                                  </h3>
-                                  <p className="text-xs sm:text-sm text-neutral-600 leading-normal">
-                                    Đầy đủ các thiết bị {config.brand} chính hãng với nhiều tùy chọn hấp dẫn.
-                                  </p>
-                                </div>
-                                <div className="hidden md:flex items-center gap-2 text-xs font-semibold text-neutral-500">
-                                  <Layers className="w-4 h-4" />
-                                  <span>{unassigned.length} sản phẩm</span>
-                                </div>
-                              </motion.div>
-                              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-5">
-                                {unassigned.map((product: any) => (
-                                  <FilteredProductCard 
-                                    key={product.id} 
-                                    product={product} 
-                                    categorySlug={categorySlug} 
-                                  />
-                                ))}
-                              </div>
-                            </div>
-                          )}
-                        </>
-                      );
-                    })()}
-                  </div>
-                ) : (
-                  // Flattened grid
+                  {/* Flattened grid */}
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-5">
                     {(productsData?.data || []).map((product: any) => (
-                      <FilteredProductCard 
-                        key={product.id} 
-                        product={product} 
-                        categorySlug={categorySlug} 
+                      <FilteredProductCard
+                        key={product.id}
+                        product={product}
+                        categorySlug={categorySlug}
                       />
                     ))}
                   </div>
-                )}
 
                 {/* Pagination */}
                 {productsData?.totalPages > 1 && (
                   <div className="flex justify-center items-center gap-2 mt-12">
-                    <button 
+                    <button
                       disabled={productsData.page === 1}
                       onClick={() => handlePageChange(productsData.page - 1)}
                       className="px-4 py-2 border border-neutral-200 rounded-full text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed hover:bg-white transition-colors"
@@ -507,8 +356,8 @@ export function BrandAllProductsSection({ config, products }: BrandAllProductsSe
                           key={idx}
                           onClick={() => handlePageChange(idx + 1)}
                           className={`w-10 h-10 rounded-full text-sm font-bold flex items-center justify-center transition-colors ${
-                            productsData.page === idx + 1 
-                              ? 'bg-neutral-900 text-white' 
+                            productsData.page === idx + 1
+                              ? 'bg-neutral-900 text-white'
                               : 'bg-transparent text-neutral-600 hover:bg-neutral-200'
                           }`}
                         >
@@ -516,7 +365,7 @@ export function BrandAllProductsSection({ config, products }: BrandAllProductsSe
                         </button>
                       ))}
                     </div>
-                    <button 
+                    <button
                       disabled={productsData.page === productsData.totalPages}
                       onClick={() => handlePageChange(productsData.page + 1)}
                       className="px-4 py-2 border border-neutral-200 rounded-full text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed hover:bg-white transition-colors"

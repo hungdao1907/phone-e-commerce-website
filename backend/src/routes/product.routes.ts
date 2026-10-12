@@ -7,6 +7,7 @@ import { getRouteParam } from '../utils/route-param';
 
 import multer from 'multer';
 import { parseExcelPreview, processImport } from '../services/import.service';
+import * as xlsx from 'xlsx';
 
 import { extractFiltersFromProducts, normalizeKey, extractAdminFiltersFromProducts } from '../services/filter.service';
 import { calculateV1EffectiveUnitPrice, resolveV1Campaign } from '../services/checkout-pricing.service';
@@ -54,7 +55,7 @@ const getBestCampaign = (product: any, activeCampaigns: any[]) => {
   return resolveV1Campaign(product, activeCampaigns, variantPrice);
 };
 
-const uploadMemory = multer({ 
+const uploadMemory = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 10 * 1024 * 1024 } // 10MB limit
 });
@@ -82,7 +83,7 @@ router.post('/sync-mock', async (req, res) => {
     /* Retired untrusted creation path; only restore with trusted server-side catalog data.
       const numericPrice = typeof p.price === 'string' ? parseInt(p.price.replace(/\D/g, '')) : (p.price || 0);
       const numericOriginalPrice = typeof p.originalPrice === 'string' ? parseInt(p.originalPrice.replace(/\D/g, '')) : null;
-      
+
       let variantsData = [];
       if (p.colors && p.colors.length > 0) {
         variantsData = p.colors.map((c: any, i: number) => ({
@@ -174,8 +175,8 @@ router.get('/', async (req, res) => {
         ? Number((pReviews.reduce((sum, r) => sum + r.rating, 0) / reviewCount).toFixed(1))
         : 0;
 
-      return { 
-        ...product, 
+      return {
+        ...product,
         variants: product.variants.map(variant => ({
           ...variant,
           effectivePrice: calculateV1EffectiveUnitPrice({ ...variant, product }, activeCampaigns),
@@ -217,8 +218,8 @@ router.get('/filters', async (req, res) => {
         whereClause.category = { slug: { in: ['iphone', 'samsung', 'xiaomi', 'oppo', 'ien-thoai', 'dien-thoai', 'phone'] } };
       } else if (catSlug === 'laptop') {
         whereClause.category = { slug: { in: ['macbook', 'asus', 'lenovo', 'laptop'] } };
-      } else if (catSlug === 'tablet') {
-        whereClause.category = { slug: { in: ['ipad', 'samsung-tablet', 'xiaomi-tablet', 'tablet'] } };
+      } else if (catSlug === 'tablet' || catSlug === 'may-tinh-bang') {
+        whereClause.category = { slug: { in: ['ipad', 'samsung-galaxy-tab', 'xiaomi-pad', 'lenovo', 'oppo-pad', 'may-tinh-bang', 'tablet'] } };
       } else if (catSlug === 'watch' || catSlug === 'dong-ho-thong-minh' || catSlug === 'ong-ho-thong-minh') {
         whereClause.category = { slug: { in: ['apple-watch', 'samsung-watch', 'xiaomi-watch', 'dong-ho-thong-minh', 'ong-ho-thong-minh'] } };
       } else {
@@ -238,7 +239,20 @@ router.get('/filters', async (req, res) => {
     });
 
     const filters = extractFiltersFromProducts(products);
-    res.json(filters);
+
+    // Real price bounds — same effective price (salePrice || price) used by /search price filter
+    const allPrices: number[] = [];
+    for (const p of products as any[]) {
+      for (const v of p.variants || []) {
+        const vp = v.salePrice || v.price || 0;
+        if (vp > 0) allPrices.push(vp);
+      }
+    }
+    const priceRange = allPrices.length
+      ? { min: Math.min(...allPrices), max: Math.max(...allPrices) }
+      : null;
+
+    res.json({ ...filters, priceRange });
   } catch (error) {
     console.error('Error fetching filters:', error);
     res.status(500).json({ message: 'Lỗi server' });
@@ -290,31 +304,31 @@ router.get('/admin/filters', authenticateToken, requireRoles('staff', 'admin', '
 // GET /admin/search - Admin Search & Filter with Pagination
 router.get('/admin/search', authenticateToken, requireRoles('staff', 'admin', 'superadmin'), async (req, res) => {
   try {
-    const { 
-      page = '1', 
-      limit = '10', 
-      search, 
-      category, 
-      brand, 
+    const {
+      page = '1',
+      limit = '10',
+      search,
+      category,
+      brand,
       status,
       stock, // "in_stock", "low_stock", "out_of_stock"
       sort,  // "newest", "price_asc", "price_desc", "name_asc", "name_desc"
-      ...dynamicFilters 
+      ...dynamicFilters
     } = req.query;
 
     const pageNumber = parseInt(page as string, 10);
     const limitNumber = parseInt(limit as string, 10);
-    
+
     let whereClause: any = {};
 
     if (status) {
       whereClause.status = status as string;
     }
-    
+
     if (brand) {
       whereClause.brand = { equals: brand as string, mode: 'insensitive' };
     }
-    
+
     if (category) {
       const catSlug = (category as string).toLowerCase();
       if (catSlug === 'phone' || catSlug === 'ien-thoai' || catSlug === 'dien-thoai') {
@@ -348,7 +362,7 @@ router.get('/admin/search', authenticateToken, requireRoles('staff', 'admin', 's
     }
 
     const dynamicKeys = Object.keys(dynamicFilters).filter(k => k.startsWith('spec_') || k.startsWith('attr_'));
-    
+
     if (dynamicKeys.length > 0) {
       products = products.filter(p => {
         const specsMap: Record<string, string> = {};
@@ -357,7 +371,7 @@ router.get('/admin/search', authenticateToken, requireRoles('staff', 'admin', 's
             if (s.key && s.value) specsMap[normalizeKey(s.key)] = (s.value as string).trim();
           }
         }
-        
+
         const attrsMap: Record<string, Set<string>> = {};
         for (const v of p.variants) {
           if (v.attributes && typeof v.attributes === 'object') {
@@ -462,12 +476,82 @@ router.post('/import/confirm', authenticateToken, requireRoles('staff', 'admin',
     if (!groupedProducts || !Array.isArray(groupedProducts)) {
       return res.status(400).json({ message: 'Dữ liệu không hợp lệ.' });
     }
-    
+
     const result = await processImport(groupedProducts);
     res.json(result);
   } catch (error: any) {
     console.error('Import confirm error:', error);
     res.status(500).json({ message: 'Lỗi khi import dữ liệu: ' + error.message });
+  }
+});
+
+// GET /export - Export Products to Excel
+router.get('/export', authenticateToken, requireRoles('staff', 'admin', 'superadmin'), async (req, res) => {
+  try {
+    const products = await prisma.product.findMany({
+      include: {
+        category: true,
+        variants: true
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    const exportData: any[] = [];
+    for (const p of products) {
+      if (p.variants && p.variants.length > 0) {
+        for (const v of p.variants) {
+          const row: any = {
+            "Product Name": p.name,
+            "Category": p.category?.name || '',
+            "Brand": p.brand || '',
+            "Description": p.description || '',
+            "Base Price": v.price || '',
+            "Sale Price": v.salePrice || '',
+            "Stock": v.stock || 0,
+            "SKU": v.sku,
+            "Product Image URL": p.image || '',
+            "Gallery Image URLs": p.images?.join('|') || '',
+            "Status": p.status || 'active',
+          };
+
+          const attrs = (v.attributes as any) || {};
+          if (attrs['Màu sắc'] || attrs['Color']) row['Color'] = attrs['Màu sắc'] || attrs['Color'];
+          if (attrs['Color Code']) row['Color Code'] = attrs['Color Code'];
+          if (v.image) row['Color Image URL'] = v.image;
+          if (attrs['Dung lượng'] || attrs['Storage']) row['Storage'] = attrs['Dung lượng'] || attrs['Storage'];
+          if (attrs['RAM']) row['RAM'] = attrs['RAM'];
+          if (attrs['SSD']) row['SSD'] = attrs['SSD'];
+
+          row['Specification JSON'] = p.specifications ? JSON.stringify(p.specifications) : '';
+
+          exportData.push(row);
+        }
+      } else {
+        exportData.push({
+          "Product Name": p.name,
+          "Category": p.category?.name || '',
+          "Brand": p.brand || '',
+          "Description": p.description || '',
+          "Product Image URL": p.image || '',
+          "Gallery Image URLs": p.images?.join('|') || '',
+          "Status": p.status || 'active',
+          "Specification JSON": p.specifications ? JSON.stringify(p.specifications) : ''
+        });
+      }
+    }
+
+    const worksheet = xlsx.utils.json_to_sheet(exportData);
+    const workbook = xlsx.utils.book_new();
+    xlsx.utils.book_append_sheet(workbook, worksheet, "Products");
+
+    const buffer = xlsx.write(workbook, { type: 'buffer', bookType: 'xlsx' });
+
+    res.setHeader('Content-Disposition', 'attachment; filename="products_export.xlsx"');
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.send(buffer);
+  } catch (error: any) {
+    console.error('Export error:', error);
+    res.status(500).json({ message: 'Lỗi khi export dữ liệu: ' + error.message });
   }
 });
 
@@ -515,10 +599,10 @@ router.post('/admin/bulk-action', authenticateToken, requireRoles('staff', 'admi
 // GET /search - Search and filter products
 router.get('/search', async (req, res) => {
   try {
-    const { 
-      category, brand, minPrice, maxPrice, 
-      ram, storage, cpu, gpu, screenSize, color, 
-      size, connectivity, material,
+    const {
+      category, brand, minPrice, maxPrice,
+      ram, storage, cpu, gpu, screenSize, color,
+      size, connectivity, material, os,
       sort, search, page = '1', limit = '12'
     } = req.query;
 
@@ -538,8 +622,8 @@ router.get('/search', async (req, res) => {
         whereClause.category = { slug: { in: ['iphone', 'samsung', 'xiaomi', 'oppo', 'ien-thoai', 'dien-thoai', 'phone'] } };
       } else if (catSlug === 'laptop') {
         whereClause.category = { slug: { in: ['macbook', 'asus', 'lenovo', 'laptop'] } };
-      } else if (catSlug === 'tablet') {
-        whereClause.category = { slug: { in: ['ipad', 'samsung-tablet', 'xiaomi-tablet', 'tablet'] } };
+      } else if (catSlug === 'tablet' || catSlug === 'may-tinh-bang') {
+        whereClause.category = { slug: { in: ['ipad', 'samsung-galaxy-tab', 'xiaomi-pad', 'lenovo', 'oppo-pad', 'may-tinh-bang', 'tablet'] } };
       } else if (catSlug === 'watch' || catSlug === 'dong-ho-thong-minh' || catSlug === 'ong-ho-thong-minh') {
         whereClause.category = { slug: { in: ['apple-watch', 'samsung-watch', 'xiaomi-watch', 'dong-ho-thong-minh', 'ong-ho-thong-minh'] } };
       } else {
@@ -548,7 +632,10 @@ router.get('/search', async (req, res) => {
     }
 
     if (brand) {
-      whereClause.brand = { equals: brand as string, mode: 'insensitive' };
+      const brands = (brand as string).split(',').map(b => b.trim()).filter(Boolean);
+      if (brands.length > 0) {
+        whereClause.OR = brands.map(b => ({ brand: { equals: b, mode: 'insensitive' } }));
+      }
     }
 
     let products = await prisma.product.findMany({
@@ -577,6 +664,7 @@ router.get('/search', async (req, res) => {
     const sizeArr = parseArrayParam(size);
     const connArr = parseArrayParam(connectivity);
     const matArr = parseArrayParam(material);
+    const osArr = parseArrayParam(os);
     const hasMinPrice = minPrice !== undefined && minPrice !== '';
     const hasMaxPrice = maxPrice !== undefined && maxPrice !== '';
     const minP = hasMinPrice ? parseInt(minPrice as string, 10) : 0;
@@ -586,6 +674,7 @@ router.get('/search', async (req, res) => {
       ramArr.length > 0 || storageArr.length > 0 || cpuArr.length > 0 ||
       gpuArr.length > 0 || screenArr.length > 0 || colorArr.length > 0 ||
       sizeArr.length > 0 || connArr.length > 0 || matArr.length > 0 ||
+      osArr.length > 0 ||
       hasMinPrice || hasMaxPrice;
 
     if (hasAnyFilter) {
@@ -607,7 +696,7 @@ router.get('/search', async (req, res) => {
           const shortRam = ramMatch ? ramMatch[1] + 'GB' : rawRam.trim();
           if (!ramArr.includes(shortRam) && !ramArr.includes(rawRam)) return false;
         }
-        
+
         // CPU/Chip - extract short value for matching
         if (cpuArr.length > 0) {
           const rawCpu = specs['cpu'] || '';
@@ -621,19 +710,25 @@ router.get('/search', async (req, res) => {
           if (snapMatch) shortCpu = 'Snapdragon ' + snapMatch[1];
           const mMatch = rawCpu.match(/M(\d+)\s*(Pro|Max|Ultra)?/i);
           if (mMatch) { shortCpu = 'M' + mMatch[1]; if (mMatch[2]) shortCpu += ' ' + mMatch[2]; }
-          
+
           if (!cpuArr.includes(shortCpu) && !cpuArr.includes(rawCpu)) return false;
         }
-        
+
         // GPU
         if (gpuArr.length > 0 && !gpuArr.includes(specs['gpu'])) return false;
-        
+
         // Screen Size - extract short value for matching
         if (screenArr.length > 0) {
           const rawScreen = specs['screensize'] || specs['screenSize'] || '';
           const sMatch = rawScreen.match(/([\d,.]+)\s*(?:inch|inches|"|″)/i);
           const shortScreen = sMatch ? sMatch[1].replace(',', '.') + '"' : rawScreen;
           if (!screenArr.includes(shortScreen) && !screenArr.includes(rawScreen)) return false;
+        }
+
+        // OS
+        if (osArr.length > 0) {
+          const rawOs = specs['os'] || specs['hệ điều hành'] || '';
+          if (!osArr.some(o => rawOs.includes(o) || o.includes(rawOs))) return false;
         }
 
         // Camera - extract short value for matching
@@ -749,7 +844,7 @@ router.get('/search', async (req, res) => {
     const paginatedProductsWithReviews = paginatedProducts.map(p => {
       const pReviews = _reviews.filter(r => r.productId === p.id);
       const reviewCount = pReviews.length;
-      const ratingAverage = reviewCount > 0 
+      const ratingAverage = reviewCount > 0
         ? Number((pReviews.reduce((acc, curr) => acc + curr.rating, 0) / reviewCount).toFixed(1))
         : 0;
       const campaign = getBestCampaign(p, activeCampaigns);
@@ -806,12 +901,12 @@ router.get('/:id', async (req, res) => {
       select: { rating: true }
     });
     const reviewCount = _reviews.length;
-    const ratingAverage = reviewCount > 0 
+    const ratingAverage = reviewCount > 0
       ? Number((_reviews.reduce((acc, curr) => acc + curr.rating, 0) / reviewCount).toFixed(1))
       : 0;
 
-    res.json({ 
-      ...product, 
+    res.json({
+      ...product,
       variants: product.variants.map(variant => ({
         ...variant,
         effectivePrice: calculateV1EffectiveUnitPrice({ ...variant, product }, activeCampaigns),

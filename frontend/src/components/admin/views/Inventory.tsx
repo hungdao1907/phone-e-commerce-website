@@ -203,58 +203,58 @@ export function Inventory() {
   };
 
   return (
-    <div className="flex flex-col h-full gap-5 text-slate-900 w-full">
+    <div className="flex flex-col h-full gap-5 text-white w-full">
       {/* HEADER */}
       <div className="flex items-center justify-between shrink-0">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Quản lý Kho hàng</h1>
-          <p className="text-sm text-slate-500 mt-1">Kiểm soát tồn kho theo sản phẩm và biến thể.</p>
+          <h1 className="text-2xl font-bold tracking-tight text-white">Quản lý Kho hàng</h1>
+          <p className="text-sm text-white/50 mt-1">Kiểm soát tồn kho theo sản phẩm và biến thể.</p>
         </div>
-        <button className="h-10 px-5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white flex items-center gap-2 transition-colors text-sm font-semibold shadow-sm">
+        <button className="h-10 px-5 rounded-xl bg-gradient-to-r from-emerald-400 to-cyan-400 text-black flex items-center gap-2 hover:opacity-90 transition-opacity text-sm font-bold shadow-[0_0_20px_rgba(52,211,153,0.3)]">
           <ArrowRightLeft className="w-4 h-4" /> Tạo phiếu Nhập/Xuất
         </button>
       </div>
 
       {/* SUMMARY */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 shrink-0">
-        <div className="bg-white border border-slate-200 rounded-2xl p-5 flex flex-col justify-center relative overflow-hidden shadow-sm">
-          <div className="absolute top-0 right-0 p-4 opacity-5 text-slate-500"><DollarSign className="w-24 h-24" /></div>
-          <p className="text-sm font-medium text-slate-500 mb-2">Tổng giá trị tồn kho</p>
-          <p className="text-3xl lg:text-4xl font-bold tracking-tight text-emerald-600">{formatCurrency(totalValue)}</p>
+        <div className="bg-white/5 border border-white/10 rounded-2xl p-5 flex flex-col justify-center relative overflow-hidden backdrop-blur-md">
+          <div className="absolute top-0 right-0 p-4 opacity-5"><DollarSign className="w-24 h-24" /></div>
+          <p className="text-sm font-medium text-white/60 mb-2">Tổng giá trị tồn kho</p>
+          <p className="text-3xl lg:text-4xl font-bold tracking-tight text-emerald-400">{formatCurrency(totalValue)}</p>
         </div>
 
-        <div className="bg-white border border-slate-200 rounded-2xl p-5 flex flex-col justify-center shadow-sm">
+        <div className="bg-white/5 border border-white/10 rounded-2xl p-5 flex flex-col justify-center backdrop-blur-md">
           <div className="flex justify-between items-end mb-3">
             <div>
-              <p className="text-sm font-medium text-slate-500 mb-1">Tổng sản phẩm / biến thể</p>
-              <p className="text-xl font-bold text-slate-900">{totalVariants} biến thể từ {products.length} sản phẩm</p>
+              <p className="text-sm font-medium text-white/60 mb-1">Tổng sản phẩm / biến thể</p>
+              <p className="text-xl font-bold text-white">{totalVariants} biến thể từ {products.length} sản phẩm</p>
             </div>
           </div>
 
-          <div className="h-2 w-full rounded-full overflow-hidden flex bg-slate-100 mb-3">
-            <div style={{ width: `${inStockPercent}%` }} className="bg-emerald-500 transition-all duration-500" />
-            <div style={{ width: `${lowStockPercent}%` }} className="bg-amber-500 transition-all duration-500" />
-            <div style={{ width: `${outOfStockPercent}%` }} className="bg-rose-500 transition-all duration-500" />
+          <div className="h-2 w-full rounded-full overflow-hidden flex bg-white/10 mb-3">
+            <div style={{ width: `${inStockPercent}%` }} className="bg-[#22C55E] transition-all duration-500" />
+            <div style={{ width: `${lowStockPercent}%` }} className="bg-[#EAB308] transition-all duration-500" />
+            <div style={{ width: `${outOfStockPercent}%` }} className="bg-[#EF4444] transition-all duration-500" />
           </div>
 
           <div className="flex gap-4 text-xs font-medium">
-            <span className="flex items-center gap-1.5 text-slate-600"><span className="w-2 h-2 rounded-full bg-emerald-500" /> Còn hàng: {inStockCount}</span>
-            <span className="flex items-center gap-1.5 text-slate-600"><span className="w-2 h-2 rounded-full bg-amber-500" /> Sắp hết: {lowStockCount}</span>
-            <span className="flex items-center gap-1.5 text-slate-600"><span className="w-2 h-2 rounded-full bg-rose-500" /> Hết hàng: {outOfStockCount}</span>
+            <span className="flex items-center gap-1.5 text-white/80"><span className="w-2 h-2 rounded-full bg-[#22C55E]" /> Còn hàng: {inStockCount}</span>
+            <span className="flex items-center gap-1.5 text-white/80"><span className="w-2 h-2 rounded-full bg-[#EAB308]" /> Sắp hết: {lowStockCount}</span>
+            <span className="flex items-center gap-1.5 text-white/80"><span className="w-2 h-2 rounded-full bg-[#EF4444]" /> Hết hàng: {outOfStockCount}</span>
           </div>
         </div>
       </div>
 
       {/* FILTER BAR */}
-      <div className="bg-white border border-slate-200 p-3 rounded-2xl flex flex-col md:flex-row gap-3 shrink-0 shadow-sm">
+      <div className="bg-white/5 border border-white/10 p-3 rounded-2xl flex flex-col md:flex-row gap-3 shrink-0 backdrop-blur-md">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
           <input
             type="text"
             placeholder="Tìm theo SKU, tên sản phẩm, biến thể..."
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="w-full h-10 pl-9 pr-4 rounded-xl bg-slate-50 border border-slate-200 text-sm text-slate-900 outline-none focus:border-emerald-500 focus:bg-white transition-colors placeholder:text-slate-400"
+            className="w-full h-10 pl-9 pr-4 rounded-xl bg-black/20 border border-transparent text-sm outline-none focus:border-emerald-500 transition-colors placeholder:text-white/30"
           />
         </div>
 
@@ -308,25 +308,25 @@ export function Inventory() {
       <AnimatePresence>
         {selectedIds.length > 0 && (
           <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="shrink-0 overflow-hidden">
-            <div className="flex items-center gap-3 bg-emerald-50 border border-emerald-200 px-4 py-2.5 rounded-xl">
-              <span className="text-sm font-medium text-emerald-700">Đã chọn {selectedIds.length}</span>
-              <div className="h-4 w-px bg-emerald-200 mx-2" />
-              <button className="text-xs bg-white hover:bg-slate-50 text-slate-700 border border-emerald-200 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 shadow-sm"><FileDown className="w-3.5 h-3.5" /> Tạo phiếu nhập</button>
-              <button className="text-xs bg-white hover:bg-slate-50 text-slate-700 border border-emerald-200 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 shadow-sm"><FileUp className="w-3.5 h-3.5" /> Tạo phiếu xuất</button>
+            <div className="flex items-center gap-3 bg-emerald-500/10 border border-emerald-500/20 px-4 py-2.5 rounded-xl">
+              <span className="text-sm font-medium text-emerald-400">Đã chọn {selectedIds.length}</span>
+              <div className="h-4 w-px bg-emerald-500/20 mx-2" />
+              <button className="text-xs bg-black/20 hover:bg-black/40 text-white/80 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5"><FileDown className="w-3.5 h-3.5" /> Tạo phiếu nhập</button>
+              <button className="text-xs bg-black/20 hover:bg-black/40 text-white/80 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5"><FileUp className="w-3.5 h-3.5" /> Tạo phiếu xuất</button>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
       {/* TABLE */}
-      <div className="flex-1 flex flex-col bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm min-h-0">
+      <div className="flex-1 flex flex-col bg-black/20 border border-white/5 rounded-2xl overflow-hidden backdrop-blur-md min-h-0">
         <div className="overflow-x-auto flex-1 custom-scrollbar">
           <table className="w-full text-left border-collapse min-w-[1000px]">
-            <thead className="sticky top-0 z-10 bg-slate-50 border-b border-slate-200">
-              <tr className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
+            <thead className="sticky top-0 z-10 bg-[#15191C]/90 backdrop-blur">
+              <tr className="border-b border-white/5 text-[11px] font-semibold text-white/40 uppercase tracking-wider">
                 <th className="p-4 w-12 text-center">
                   <div className="flex items-center justify-center cursor-pointer" onClick={toggleSelectAll}>
-                    {selectedIds.length === paginatedRows.length && paginatedRows.length > 0 ? <CheckSquare className="w-4 h-4 text-emerald-600" /> : <Square className="w-4 h-4 text-slate-400" />}
+                    {selectedIds.length === paginatedRows.length && paginatedRows.length > 0 ? <CheckSquare className="w-4 h-4 text-emerald-400" /> : <Square className="w-4 h-4" />}
                   </div>
                 </th>
                 <th className="p-4">Sản phẩm & Biến thể</th>
@@ -342,16 +342,16 @@ export function Inventory() {
             <tbody className="text-sm">
               {isLoading ? (
                 Array.from({ length: 5 }).map((_, i) => (
-                  <tr key={i} className="border-b border-slate-100">
+                  <tr key={i} className="border-b border-white/5">
                     <td colSpan={9} className="p-4">
-                      <div className="h-12 bg-slate-100 rounded animate-pulse w-full"></div>
+                      <div className="h-12 bg-white/5 rounded animate-pulse w-full"></div>
                     </td>
                   </tr>
                 ))
               ) : paginatedRows.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="p-10 text-center text-slate-400">
-                    <Package className="w-10 h-10 mx-auto mb-3 opacity-30" />
+                  <td colSpan={9} className="p-10 text-center text-white/40">
+                    <Package className="w-10 h-10 mx-auto mb-3 opacity-20" />
                     Không tìm thấy sản phẩm trong kho.
                   </td>
                 </tr>
@@ -364,71 +364,71 @@ export function Inventory() {
                   const value = row.price * row.stock;
 
                   return (
-                    <tr key={row.variantId} className={cn("border-b border-slate-100 transition-colors group", isSelected ? "bg-emerald-50/70" : "hover:bg-slate-50/80")} style={{ height: '72px' }}>
+                    <tr key={row.variantId} className={cn("border-b border-white/5 transition-colors group", isSelected ? "bg-emerald-500/5" : "hover:bg-white/[0.02]")} style={{ height: '72px' }}>
                       <td className="p-4 text-center">
                         <div className="flex items-center justify-center cursor-pointer" onClick={() => toggleSelectRow(row.variantId)}>
-                          {isSelected ? <CheckSquare className="w-4 h-4 text-emerald-600" /> : <Square className="w-4 h-4 text-slate-300 group-hover:text-slate-400" />}
+                          {isSelected ? <CheckSquare className="w-4 h-4 text-emerald-400" /> : <Square className="w-4 h-4 text-white/30 group-hover:text-white/50" />}
                         </div>
                       </td>
                       <td className="p-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center p-1 shrink-0 relative overflow-hidden border border-slate-200">
-                            {displayImage ? <img src={displayImage} alt="" className="w-full h-full object-contain" /> : <Package className="w-4 h-4 text-slate-300" />}
+                          <div className="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center p-1 shrink-0 relative overflow-hidden border border-white/5">
+                            {displayImage ? <img src={displayImage} alt="" className="w-full h-full object-contain" /> : <Package className="w-4 h-4 text-white/20" />}
                           </div>
                           <div className="flex flex-col max-w-[220px]">
-                            <span className="font-semibold text-slate-900 truncate" title={row.productName}>{row.productName}</span>
-                            <span className="text-xs text-slate-500 truncate mt-0.5">{row.variantLabel || 'Mặc định'}</span>
+                            <span className="font-semibold text-white/90 truncate" title={row.productName}>{row.productName}</span>
+                            <span className="text-xs text-white/40 truncate mt-0.5">{row.variantLabel || 'Mặc định'}</span>
                           </div>
                         </div>
                       </td>
                       <td className="p-4">
-                        <span className="font-mono text-xs text-slate-700 bg-slate-100 px-2 py-1 rounded border border-slate-200 cursor-copy hover:bg-slate-200 transition-colors" title="Copy SKU">{row.sku}</span>
+                        <span className="font-mono text-xs text-white/60 bg-white/5 px-2 py-1 rounded border border-white/5 cursor-copy hover:bg-white/10 transition-colors" title="Copy SKU">{row.sku}</span>
                       </td>
-                      <td className="p-4 text-slate-700 whitespace-nowrap">
+                      <td className="p-4 text-white/70 whitespace-nowrap">
                         {formatCurrency(row.price)}
                       </td>
                       <td className="p-4">
                         <div className="flex items-center gap-2">
                           <button onClick={() => handleStockChange(row.variantId, row.productId, -1)} disabled={isOut}
-                            className="w-6 h-6 rounded bg-slate-100 hover:bg-slate-200 border border-slate-200 flex items-center justify-center transition-colors disabled:opacity-30 disabled:cursor-not-allowed text-slate-700"><Minus className="w-3 h-3" /></button>
-                          <span className={cn("font-bold text-[15px] w-8 text-center", isOut ? "text-rose-600" : isLow ? "text-amber-600" : "text-slate-900")}>{row.stock}</span>
+                            className="w-6 h-6 rounded bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center transition-colors disabled:opacity-30 disabled:cursor-not-allowed text-white/70"><Minus className="w-3 h-3" /></button>
+                          <span className={cn("font-bold text-[15px] w-8 text-center", isOut ? "text-[#EF4444]" : isLow ? "text-[#EAB308]" : "text-white")}>{row.stock}</span>
                           <button onClick={() => handleStockChange(row.variantId, row.productId, 1)}
-                            className="w-6 h-6 rounded bg-slate-100 hover:bg-slate-200 border border-slate-200 flex items-center justify-center transition-colors text-slate-700"><Plus className="w-3 h-3" /></button>
+                            className="w-6 h-6 rounded bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center transition-colors text-white/70"><Plus className="w-3 h-3" /></button>
                         </div>
                       </td>
                       <td className="p-4">
                         {isOut ? (
-                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-rose-50 text-rose-700 text-[11px] font-semibold border border-rose-200 whitespace-nowrap"><span className="w-1.5 h-1.5 rounded-full bg-rose-500" /> Hết hàng</span>
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#EF4444]/10 text-[#EF4444] text-[11px] font-semibold border border-[#EF4444]/20 whitespace-nowrap"><span className="w-1.5 h-1.5 rounded-full bg-[#EF4444]" /> Hết hàng</span>
                         ) : isLow ? (
-                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 text-[11px] font-semibold border border-amber-200 whitespace-nowrap"><span className="w-1.5 h-1.5 rounded-full bg-amber-500" /> Sắp hết</span>
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#EAB308]/10 text-[#EAB308] text-[11px] font-semibold border border-[#EAB308]/20 whitespace-nowrap"><span className="w-1.5 h-1.5 rounded-full bg-[#EAB308]" /> Sắp hết</span>
                         ) : (
-                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 text-[11px] font-semibold border border-emerald-200 whitespace-nowrap"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Còn hàng</span>
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#22C55E]/10 text-[#22C55E] text-[11px] font-semibold border border-[#22C55E]/20 whitespace-nowrap"><span className="w-1.5 h-1.5 rounded-full bg-[#22C55E]" /> Còn hàng</span>
                         )}
                       </td>
-                      <td className="p-4 font-medium text-slate-900 whitespace-nowrap">
+                      <td className="p-4 font-medium text-emerald-400/90 whitespace-nowrap">
                         {formatCurrency(value)}
                       </td>
-                      <td className="p-4 text-xs text-slate-500 whitespace-nowrap">
+                      <td className="p-4 text-xs text-white/50 whitespace-nowrap">
                         {formatDate(row.updatedAt)}
                       </td>
                       <td className="p-4 text-right">
                         <div className="relative inline-block text-left">
                           <button
                             onClick={(e) => { e.stopPropagation(); setActiveMenu(activeMenu === row.variantId ? null : row.variantId); }}
-                            className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-slate-700 transition-colors"
+                            className="p-1.5 hover:bg-white/10 rounded-lg text-white/40 hover:text-white transition-colors"
                           >
                             <MoreVertical className="w-4 h-4" />
                           </button>
 
                           {activeMenu === row.variantId && (
-                            <div className="absolute right-0 mt-2 w-48 rounded-xl bg-white shadow-xl ring-1 ring-slate-200 z-50 overflow-hidden border border-slate-100" onClick={e => e.stopPropagation()}>
+                            <div className="absolute right-0 mt-2 w-48 rounded-xl bg-[#2a2a2c] shadow-lg ring-1 ring-white/10 z-50 overflow-hidden" onClick={e => e.stopPropagation()}>
                               <div className="py-1">
-                                <button onClick={() => setActiveMenu(null)} className="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-slate-900 w-full text-left transition-colors"><Eye className="w-4 h-4 text-slate-400" /> Xem chi tiết</button>
-                                <button onClick={() => setActiveMenu(null)} className="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-slate-900 w-full text-left transition-colors"><Edit3 className="w-4 h-4 text-slate-400" /> Điều chỉnh tồn kho</button>
-                                <button onClick={() => setActiveMenu(null)} className="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-slate-900 w-full text-left transition-colors"><FileDown className="w-4 h-4 text-slate-400" /> Tạo phiếu nhập</button>
-                                <button onClick={() => setActiveMenu(null)} className="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-slate-900 w-full text-left transition-colors"><FileUp className="w-4 h-4 text-slate-400" /> Tạo phiếu xuất</button>
-                                <div className="h-px bg-slate-100 my-1"></div>
-                                <button onClick={() => setActiveMenu(null)} className="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-slate-900 w-full text-left transition-colors"><History className="w-4 h-4 text-slate-400" /> Xem lịch sử tồn kho</button>
+                                <button onClick={() => setActiveMenu(null)} className="flex items-center gap-2 px-4 py-2 text-sm text-white/80 hover:bg-white/5 hover:text-white w-full text-left transition-colors"><Eye className="w-4 h-4" /> Xem chi tiết</button>
+                                <button onClick={() => setActiveMenu(null)} className="flex items-center gap-2 px-4 py-2 text-sm text-white/80 hover:bg-white/5 hover:text-white w-full text-left transition-colors"><Edit3 className="w-4 h-4" /> Điều chỉnh tồn kho</button>
+                                <button onClick={() => setActiveMenu(null)} className="flex items-center gap-2 px-4 py-2 text-sm text-white/80 hover:bg-white/5 hover:text-white w-full text-left transition-colors"><FileDown className="w-4 h-4" /> Tạo phiếu nhập</button>
+                                <button onClick={() => setActiveMenu(null)} className="flex items-center gap-2 px-4 py-2 text-sm text-white/80 hover:bg-white/5 hover:text-white w-full text-left transition-colors"><FileUp className="w-4 h-4" /> Tạo phiếu xuất</button>
+                                <div className="h-px bg-white/10 my-1"></div>
+                                <button onClick={() => setActiveMenu(null)} className="flex items-center gap-2 px-4 py-2 text-sm text-white/80 hover:bg-white/5 hover:text-white w-full text-left transition-colors"><History className="w-4 h-4" /> Xem lịch sử tồn kho</button>
                               </div>
                             </div>
                           )}
@@ -443,9 +443,9 @@ export function Inventory() {
         </div>
 
         {/* PAGINATION */}
-        <div className="p-4 border-t border-slate-200 flex items-center justify-between text-sm shrink-0 bg-slate-50/50">
-          <div className="text-slate-500">
-            Hiển thị <span className="text-slate-900 font-medium">{(page - 1) * limit + (paginatedRows.length > 0 ? 1 : 0)}</span> – <span className="text-slate-900 font-medium">{(page - 1) * limit + paginatedRows.length}</span> trên <span className="text-slate-900 font-medium">{processedRows.length}</span> biến thể
+        <div className="p-4 border-t border-white/5 flex items-center justify-between text-sm shrink-0 bg-black/20">
+          <div className="text-white/50">
+            Hiển thị <span className="text-white font-medium">{(page - 1) * limit + (paginatedRows.length > 0 ? 1 : 0)}</span> – <span className="text-white font-medium">{(page - 1) * limit + paginatedRows.length}</span> trên <span className="text-white font-medium">{processedRows.length}</span> biến thể
           </div>
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
@@ -465,11 +465,11 @@ export function Inventory() {
               />
             </div>
             <div className="flex items-center gap-1">
-              <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="p-1 rounded-lg hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"><ChevronLeft className="w-5 h-5 text-slate-600" /></button>
+              <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="p-1 rounded hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"><ChevronLeft className="w-5 h-5 text-white/70" /></button>
               <div className="flex gap-1 px-2">
-                <span className="px-2.5 py-1 rounded-lg bg-white border border-slate-200 font-medium text-slate-900 shadow-sm">{page}</span>
+                <span className="px-2.5 py-1 rounded bg-white/10 font-medium text-white">{page}</span>
               </div>
-              <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages || totalPages === 0} className="p-1 rounded-lg hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"><ChevronRight className="w-5 h-5 text-slate-600" /></button>
+              <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages || totalPages === 0} className="p-1 rounded hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"><ChevronRight className="w-5 h-5 text-white/70" /></button>
             </div>
           </div>
         </div>

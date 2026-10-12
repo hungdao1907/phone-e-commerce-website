@@ -81,3 +81,26 @@ test('Customer direct detail route renders stored values through ProtectedRoute 
   }
   useAuthStore.setState({ token: null, user: null });
 });
+
+test('merged customer UI offers cancellation only before payment/shipping', async () => {
+  Object.assign(globalThis, { React, localStorage: { getItem: () => null, setItem: () => {}, removeItem: () => {} } });
+  const { CustomerOrderDetailView } = await import('./OrderDetailPage');
+  for (const [status, paymentStatus, expected] of [['pending', 'UNPAID', true], ['confirmed', 'PENDING', true], ['shipping', 'UNPAID', false], ['pending', 'PAID', false], ['cancelled', 'UNPAID', false]] as const) {
+    const detail = { ...order, orderCode: 'FIXTURE', createdAt: '2026-10-11T00:00:00Z', status, paymentStatus,
+      paymentMethod: 'COD', shippingAddress: '', shippingPhone: '', items: [] };
+    const html = renderToStaticMarkup(React.createElement(MemoryRouter, null, React.createElement(CustomerOrderDetailView, { order: detail })));
+    assert.equal(html.includes('>Hủy đơn hàng<'), expected);
+  }
+});
+
+test('merged category cards and pagination render stable accessible controls', async () => {
+  Object.assign(globalThis, { React });
+  const { CategoryCards } = await import('../../components/category/CategoryCards');
+  const { Pagination } = await import('../../components/store/Pagination');
+  const cards = renderToStaticMarkup(React.createElement(CategoryCards, { items: [{ id: 'phone', label: 'Phone' }, { id: 'tablet', label: 'Tablet' }], activeId: 'phone', onSelect: () => {} }));
+  assert.equal((cards.match(/aria-pressed="true"/g) || []).length, 1);
+  assert.equal(renderToStaticMarkup(React.createElement(Pagination, { page: 1, totalPages: 1, onPageChange: () => {} })), '');
+  const pages = renderToStaticMarkup(React.createElement(Pagination, { page: 5, totalPages: 20, onPageChange: () => {} }));
+  assert.equal((pages.match(/aria-current="page"/g) || []).length, 1);
+  assert.ok(pages.includes('Trang 20'));
+});

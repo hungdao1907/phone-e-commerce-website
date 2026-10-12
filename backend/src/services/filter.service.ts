@@ -5,7 +5,7 @@ const SPEC_MAPPINGS: Record<string, string> = {
   // RAM
   'ram': 'ram',
   'dung lượng ram': 'ram',
-  
+
   // Storage
   'ssd': 'storage',
   'ổ cứng': 'storage',
@@ -13,20 +13,20 @@ const SPEC_MAPPINGS: Record<string, string> = {
   'dung lượng': 'storage',
   'rom': 'storage',
   'bộ nhớ trong': 'storage',
-  
+
   // CPU
   'cpu': 'cpu',
   'bộ xử lý': 'cpu',
   'chip': 'cpu',
-  
+
   // GPU
   'gpu': 'gpu',
   'card đồ họa': 'gpu',
-  
+
   // Screen
   'màn hình': 'screenSize',
   'kích thước màn hình': 'screenSize',
-  
+
   // Color
   'màu sắc': 'colors',
   'color': 'colors',
@@ -170,7 +170,10 @@ export function extractFiltersFromProducts(products: any[]) {
   const colorCodesMap: Record<string, string> = {};
 
   for (const product of products) {
-    if (product.brand) filters.brands.add(product.brand.trim());
+    if (product.brand) {
+      const properBrand = product.brand.trim().charAt(0).toUpperCase() + product.brand.trim().slice(1).toLowerCase();
+      filters.brands.add(properBrand);
+    }
 
     // Extract from specifications
     if (Array.isArray(product.specifications)) {
@@ -180,7 +183,7 @@ export function extractFiltersFromProducts(products: any[]) {
         const value = spec.value;
         if (!key || !value || typeof value !== 'string') continue;
         const normKey = normalizeKey(key);
-        
+
         // Add SHORTENED value to corresponding filter set
         if (filters[normKey]) {
           const shortVal = shortenSpecValue(normKey, spec.value);
@@ -317,7 +320,7 @@ export function extractAdminFiltersFromProducts(products: any[]) {
       .map(([value, count]) => ({ value, count }))
       .sort((a, b) => a.value.localeCompare(b.value));
   }
-  
+
   result.priceRange = {
     min: hasValidPrice ? minPrice : 0,
     max: hasValidPrice ? maxPrice : 0

@@ -3,12 +3,59 @@ import axios from 'axios';
 import fs from 'fs';
 import path from 'path';
 import prisma from '../config/prisma';
+import { downloadAndProcessImage } from '../utils/image-downloader';
 
 const UPLOADS_DIR = path.resolve(__dirname, '..', '..', 'uploads', 'products');
 
 if (!fs.existsSync(UPLOADS_DIR)) {
   fs.mkdirSync(UPLOADS_DIR, { recursive: true });
 }
+
+export const parseSpecificationJSON = (rawValue: any, productName: string): { specs: any[], error: string | null } => {
+  if (!rawValue) return { specs: [], error: null };
+  try {
+    const parsed = typeof rawValue === 'string' ? JSON.parse(String(rawValue).trim()) : rawValue;
+    if (!Array.isArray(parsed)) {
+      return { specs: [], error: `Sản phẩm [${productName}]: Specification JSON không phải là một Array hợp lệ.` };
+    }
+
+    const finalSpecs = [];
+    for (let i = 0; i < parsed.length; i++) {
+      const group = parsed[i];
+      if (!group || typeof group !== 'object') continue;
+
+      const title = group.title ? String(group.title).trim() : '';
+      if (!title) {
+         return { specs: [], error: `Sản phẩm [${productName}]: Nhóm thông số thứ ${i + 1} thiếu title.` };
+      }
+
+      if (!Array.isArray(group.items)) {
+         return { specs: [], error: `Sản phẩm [${productName}]: Nhóm [${title}] có items không hợp lệ.` };
+      }
+
+      const validItems = [];
+      for (const item of group.items) {
+         if (!item || typeof item !== 'object') continue;
+         const label = item.label ? String(item.label).trim() : '';
+         const value = item.value ? String(item.value).trim() : '';
+         if (!label || !value) {
+            return { specs: [], error: `Sản phẩm [${productName}]: Nhóm [${title}] có thông số không hợp lệ (thiếu label hoặc value).` };
+         }
+         validItems.push({ label, value });
+      }
+
+      if (validItems.length > 0) {
+         finalSpecs.push({
+           title,
+           items: validItems
+         });
+      }
+    }
+    return { specs: finalSpecs, error: null };
+  } catch (err) {
+    return { specs: [], error: `Sản phẩm [${productName}]: Specification JSON không phải JSON hợp lệ.` };
+  }
+};
 
 export interface GroupedProduct {
   key: string;
@@ -18,7 +65,7 @@ export interface GroupedProduct {
   brand: string;
   description: string;
   status: string;
-  specifications: { key: string; value: string }[];
+  specifications: any[];
   variants: any[];
   imageUrl: string;
   galleryUrls: string[];
@@ -58,7 +105,7 @@ export const parseExcelPreview = async (buffer: Buffer) => {
     let matchedCategoryId = '';
     if (catRaw) {
       const normalizedCat = catRaw.toLowerCase().replace(/đ/g, 'd').normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
-      const matchedCat = categories.find(c => 
+      const matchedCat = categories.find(c =>
         c.name.toLowerCase().replace(/đ/g, 'd').normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim() === normalizedCat ||
         c.slug.includes(normalizedCat.replace(/\s+/g, '-')) ||
         normalizedCat.includes(c.slug.replace(/-/g, ' '))
@@ -71,20 +118,63 @@ export const parseExcelPreview = async (buffer: Buffer) => {
     }
 
     const parseArray = (str: any) => str ? String(str).split('|').map(s => s.trim()) : [];
-    
+
     const colors = parseArray(raw['Color']);
     const colorCodes = parseArray(raw['Color Code']);
     const colorImages = parseArray(raw['Color Image URL']);
-    
+
     const storages = parseArray(raw['Storage']);
-    const storagePrices = parseArray(raw['Storage Price']);
-    const storageSalePrices = parseArray(raw['Storage Sale Price']);
-    
-    const rams = parseArray(raw['RAM']);
-    const ssds = parseArray(raw['SSD']);
+
+    const parsePriceMap = (str: any, fieldName: string) => {
+      const map: Record<string, number> = {};
+      if (!str) return map;
+      const pairs = String(str).split('|').map(s => s.trim()).filter(Boolean);
+      for (const pair of pairs) {
+        const colonIdx = pair.lastIndexOf(':');
+        if (colonIdx !== -1) {
+          const key = pair.substring(0, colonIdx).trim();
+          const valueStr = pair.substring(colonIdx + 1).replace(/\D/g, '');
+          const value = parseInt(valueStr, 10);
+          if (!isNaN(value)) {
+            map[key] = value;
+          } else {
+            rowError += `Giá của Storage '${key}' trong ${fieldName} không hợp lệ; `;
+          }
+        } else {
+          rowError += `${fieldName} '${pair}' sai định dạng (thiếu dấu :); `;
+        }
+      }
+      return map;
+    };
+
+    const storagePriceMap = parsePriceMap(raw['Storage Price'], 'Storage Price');
+    const storageSalePriceMap = parsePriceMap(raw['Storage Sale Price'], 'Storage Sale Price');
+
+    for (const key of Object.keys(storagePriceMap)) {
+      if (!storages.includes(key)) {
+         rowError += `Storage Price chứa giá cho '${key}' nhưng không tìm thấy trong cột Storage; `;
+      }
+    }
 
     const cList = colors.length > 0 ? colors.map((c, idx) => ({ Color: c, ColorCode: colorCodes[idx] || '', ColorImage: colorImages[idx] || '' })) : [null];
-    const sList = storages.length > 0 ? storages.map((s, idx) => ({ Storage: s, Price: parseInt(storagePrices[idx]) || 0, SalePrice: parseInt(storageSalePrices[idx]) || 0 })) : [null];
+
+    const sList = storages.length > 0 ? storages.map(s => {
+      let price = storagePriceMap[s];
+      let salePrice = storageSalePriceMap[s] || 0;
+
+      if (price === undefined) {
+         if (basePrice > 0) {
+            price = basePrice;
+         } else {
+            rowError += `Thiếu giá cho Storage '${s}' và không có Base Price; `;
+            price = 0;
+         }
+      }
+      return { Storage: s, Price: price, SalePrice: salePrice };
+    }) : [null];
+
+    const rams = parseArray(raw['RAM']);
+    const ssds = parseArray(raw['SSD']);
     const rList = rams.length > 0 ? rams.map(r => ({ RAM: r })) : [null];
     const dList = ssds.length > 0 ? ssds.map(d => ({ SSD: d })) : [null];
 
@@ -146,6 +236,61 @@ export const parseExcelPreview = async (buffer: Buffer) => {
       }
     }
 
+    let finalSpecs: any[] = [];
+
+    const specJsonRaw = raw['Specification JSON'];
+    if (specJsonRaw) {
+      const { specs: parsedSpecs, error: specError } = parseSpecificationJSON(specJsonRaw, productName || `Row ${i+2}`);
+      if (specError) {
+         rowError += specError + ' ';
+      } else {
+         finalSpecs = parsedSpecs;
+      }
+    } else {
+      // Backward Compatibility Priority 2: Specification Groups + Specifications
+      const specGroupsRaw = raw['Specification Groups'] ? String(raw['Specification Groups']).trim() : '';
+      const specsRaw = raw['Specifications'] ? String(raw['Specifications']).trim() : '';
+
+      if (specGroupsRaw && specsRaw) {
+        const groups = specGroupsRaw.split('|').map(s => s.trim()).filter(Boolean);
+        const specsBlocks = specsRaw.split('|').map(s => s.trim());
+
+        for (let g = 0; g < groups.length; g++) {
+          const title = groups[g];
+          const block = specsBlocks[g] || '';
+          const items = block.split(';').map(itemStr => {
+            const colonIdx = itemStr.indexOf(':');
+            if (colonIdx === -1) return null;
+            const label = itemStr.substring(0, colonIdx).trim();
+            const value = itemStr.substring(colonIdx + 1).trim();
+            if (!label || !value) return null;
+            return { label, value };
+          }).filter(Boolean);
+
+          if (items.length > 0) {
+            finalSpecs.push({
+              title,
+              items
+            });
+          }
+        }
+      } else {
+        // Backward Compatibility Priority 3: Legacy fields
+        const specifications: Record<string, string> = {};
+        const specKeys = ['Screen', 'CPU', 'GPU', 'RAM', 'SSD', 'Camera', 'Battery', 'OS', 'Resolution'];
+        for (const key of specKeys) {
+          if (raw[key]) specifications[key] = String(raw[key]).trim();
+        }
+        finalSpecs = Object.entries(specifications).map(([key, value]) => ({
+          key: key === 'Screen' ? 'Màn hình' :
+               key === 'Storage' ? 'Dung lượng' :
+               key === 'Battery' ? 'Pin' :
+               key === 'Resolution' ? 'Độ phân giải' : key,
+          value
+        }));
+      }
+    }
+
     if (rowError || variantHasError) {
        errorRows++;
        groupedProducts.push({
@@ -167,19 +312,6 @@ export const parseExcelPreview = async (buffer: Buffer) => {
 
     validRows++;
 
-    const specifications: Record<string, string> = {};
-    const specKeys = ['Screen', 'CPU', 'GPU', 'RAM', 'SSD', 'Camera', 'Battery', 'OS', 'Resolution'];
-    for (const key of specKeys) {
-      if (raw[key]) specifications[key] = String(raw[key]).trim();
-    }
-    const specsArr = Object.entries(specifications).map(([key, value]) => ({
-      key: key === 'Screen' ? 'Màn hình' :
-           key === 'Storage' ? 'Dung lượng' :
-           key === 'Battery' ? 'Pin' :
-           key === 'Resolution' ? 'Độ phân giải' : key,
-      value
-    }));
-
     groupedProducts.push({
       key: `prod-${i}`,
       name: productName,
@@ -188,7 +320,7 @@ export const parseExcelPreview = async (buffer: Buffer) => {
       brand,
       description: (raw['Description'] || '').toString().trim(),
       status: (raw['Status'] || 'active').toString().toLowerCase().trim(),
-      specifications: specsArr,
+      specifications: finalSpecs,
       variants,
       imageUrl: (raw['Product Image URL'] || '').toString().trim(),
       galleryUrls: raw['Gallery Image URLs'] ? String(raw['Gallery Image URLs']).split('|').map((u: string) => u.trim()).filter(Boolean) : []
@@ -204,65 +336,53 @@ export const parseExcelPreview = async (buffer: Buffer) => {
   };
 };
 
-const downloadImage = async (url: string, prefix: string): Promise<string | null> => {
-  if (!url || !url.startsWith('http')) return null;
-  try {
-    const response = await axios({
-      url,
-      method: 'GET',
-      responseType: 'stream',
-      timeout: 10000,
-      maxContentLength: 5 * 1024 * 1024,
-    });
-
-    const ext = url.split('.').pop()?.split('?')[0]?.toLowerCase() || 'jpg';
-    const safeExt = ['jpg', 'jpeg', 'png', 'webp', 'gif'].includes(ext) ? ext : 'jpg';
-    
-    const uniqueSuffix = `${prefix}-${Date.now()}-${Math.round(Math.random() * 1e9)}`;
-    const filename = `${uniqueSuffix}.${safeExt}`;
-    const filepath = path.join(UPLOADS_DIR, filename);
-
-    const writer = fs.createWriteStream(filepath);
-    response.data.pipe(writer);
-
-    return new Promise((resolve, reject) => {
-      writer.on('finish', () => resolve(`/uploads/products/${filename}`));
-      writer.on('error', reject);
-    });
-  } catch (error) {
-    console.error(`Failed to download image: ${url}`, (error as Error).message);
-    return null;
-  }
-};
+// We are using the new downloadAndProcessImage from utils
 
 export const processImport = async (groupedProducts: GroupedProduct[]) => {
   const results = {
     productsCreated: 0,
     variantsCreated: 0,
     imagesDownloaded: 0,
+    imagesReused: 0,
+    imagesFailed: 0,
+    failedImages: [] as { url: string; reason: string }[],
     errors: [] as string[]
   };
 
   const imageCache = new Map<string, string | null>();
 
-  const getOrDownloadImage = async (url: string, prefix: string) => {
-    if (!url) return null;
-    if (imageCache.has(url)) return imageCache.get(url);
-    const localPath = await downloadImage(url, prefix);
-    if (localPath) results.imagesDownloaded++;
-    imageCache.set(url, localPath);
-    return localPath;
+  const getOrDownloadImage = async (url: string) => {
+    if (!url || !url.startsWith('http')) return null;
+    if (imageCache.has(url)) {
+      const cached = imageCache.get(url);
+      if (cached) results.imagesReused++;
+      return cached;
+    }
+    try {
+      const localPath = await downloadAndProcessImage(url);
+      if (localPath) results.imagesDownloaded++;
+      imageCache.set(url, localPath);
+      return localPath;
+    } catch (e: any) {
+      console.error(`[IMAGE IMPORT ERROR] Failed to download image ${url}:`, e.message);
+      results.imagesFailed++;
+      results.failedImages.push({ url, reason: e.message });
+      results.errors.push(`Image Download Failed (${url}): ${e.message}`);
+      imageCache.set(url, null); // Cache the failure too
+      return null;
+    }
   };
 
   for (const group of groupedProducts) {
     if (group.error) continue;
     try {
       const productSlug = group.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
-      const mainImagePath = await getOrDownloadImage(group.imageUrl, productSlug);
-      
+      const mainImagePath = await getOrDownloadImage(group.imageUrl);
+
       const galleryPaths: string[] = [];
-      for (const url of group.galleryUrls) {
-        const p = await getOrDownloadImage(url, productSlug);
+      const uniqueGalleryUrls = Array.from(new Set(group.galleryUrls));
+      for (const url of uniqueGalleryUrls) {
+        const p = await getOrDownloadImage(url);
         if (p) galleryPaths.push(p);
       }
 
@@ -275,7 +395,7 @@ export const processImport = async (groupedProducts: GroupedProduct[]) => {
             description: group.description,
             status: group.status,
             specifications: group.specifications as any,
-            image: mainImagePath || null,
+            image: mainImagePath || (galleryPaths.length > 0 ? galleryPaths[0] : null),
             images: galleryPaths,
           }
         });
@@ -283,8 +403,8 @@ export const processImport = async (groupedProducts: GroupedProduct[]) => {
         results.productsCreated++;
 
         for (const v of group.variants) {
-          const varImagePath = await getOrDownloadImage(v.image, `${productSlug}-var`);
-          
+          const varImagePath = await getOrDownloadImage(v.image);
+
           await tx.productVariant.create({
             data: {
               sku: v.sku,
@@ -300,7 +420,7 @@ export const processImport = async (groupedProducts: GroupedProduct[]) => {
           results.variantsCreated++;
         }
       });
-      
+
     } catch (e: any) {
       console.error('Error importing product group:', group.name, e);
       results.errors.push(`Group ${group.name}: ${e.message}`);
