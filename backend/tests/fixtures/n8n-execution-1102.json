@@ -1,0 +1,134 @@
+{
+  "normalizedInput": {
+    "chatInput": "cửa hàng có chính sách bảo hành như thế nào?",
+    "sessionId": "cloudflare-check-f1a511d6-a486-4d7a-afe5-805afea92f43",
+    "source": "web_chat",
+    "timestamp": "2026-10-13T08:33:57.082Z",
+    "conversationId": "cloudflare-check-f1a511d6-a486-4d7a-afe5-805afea92f43",
+    "history": [],
+    "conversationState": {
+      "category": "phone",
+      "active_filters": {
+        "brand": "Apple",
+        "storage_gb": "256GB",
+        "color": "Bạc"
+      },
+      "preferred_brands": [
+        "Apple"
+      ],
+      "excluded_brands": [],
+      "rejected_products": [],
+      "last_result_set": [
+        {
+          "position": 1,
+          "id": "1bdc2f2a-b89a-478f-860a-5e72150ac4e5",
+          "name": "iPhone 17 PRO MAX",
+          "brand": null,
+          "category": null,
+          "price_min": null,
+          "price_max": null
+        }
+      ],
+      "selected_product_id": "1bdc2f2a-b89a-478f-860a-5e72150ac4e5",
+      "selected_variant_id": "21390289-fdbe-4b04-bfba-366c6e3050d1",
+      "last_intent": "quotation",
+      "last_turn_action": "CONTINUE",
+      "pending_question": null,
+      "state_version": 2,
+      "updated_at": "2026-10-13T08:33:56.264Z"
+    }
+  },
+  "classification": {
+    "intent": "faq",
+    "brand": "",
+    "model": "",
+    "storage": "",
+    "ram": "",
+    "color": "",
+    "price_max": null,
+    "condition": "",
+    "use_case": "",
+    "faq_topic": "warranty",
+    "faq_topics": [
+      "warranty"
+    ],
+    "turn_action": "NEW_TOPIC",
+    "context_mode": "reset",
+    "category": null,
+    "exclude_brands": [],
+    "selected_result_index": null,
+    "price_direction": null,
+    "requires_clarification": false,
+    "clarification_field": null
+  },
+  "pendingRequests": [
+    {
+      "request_index": 1,
+      "brand": "Apple",
+      "model": "iPhone 17 PRO MAX",
+      "storage_gb": null,
+      "ram_gb": null,
+      "color": null,
+      "quantity": 1,
+      "product_id": "1bdc2f2a-b89a-478f-860a-5e72150ac4e5",
+      "available_variants": [
+        {
+          "id": "21390289-fdbe-4b04-bfba-366c6e3050d1",
+          "variant_id": "21390289-fdbe-4b04-bfba-366c6e3050d1",
+          "sku": "IPHO-256GB-BAC",
+          "storage_gb": 256,
+          "ram_gb": null,
+          "color": "Bạc"
+        },
+        {
+          "id": "5ff8ffb8-9b04-48cf-a775-078b4a42e847",
+          "variant_id": "5ff8ffb8-9b04-48cf-a775-078b4a42e847",
+          "sku": "IPHO-256GB-CAMVUTRU",
+          "storage_gb": 256,
+          "ram_gb": null,
+          "color": "Cam vũ trụ"
+        },
+        {
+          "id": "eeee2838-c9dc-4ff8-a996-2e0587b309c3",
+          "variant_id": "eeee2838-c9dc-4ff8-a996-2e0587b309c3",
+          "sku": "IPHO-256GB-XANHNAVY",
+          "storage_gb": 256,
+          "ram_gb": null,
+          "color": "Xanh Navy"
+        },
+        {
+          "id": "66fb53da-41e2-4414-a56a-4a2a0a37a2a9",
+          "variant_id": "66fb53da-41e2-4414-a56a-4a2a0a37a2a9",
+          "sku": "IPHO-512GB-CAMVUTRU",
+          "storage_gb": 512,
+          "ram_gb": null,
+          "color": "Cam vũ trụ"
+        },
+        {
+          "id": "bfe664db-8511-4605-a713-4f052e5050fe",
+          "variant_id": "bfe664db-8511-4605-a713-4f052e5050fe",
+          "sku": "IPHO-512GB-XANHNAVY",
+          "storage_gb": 512,
+          "ram_gb": null,
+          "color": "Xanh Navy"
+        },
+        {
+          "id": "e918b46b-6479-4bb6-a253-6ff062919445",
+          "variant_id": "e918b46b-6479-4bb6-a253-6ff062919445",
+          "sku": "IPHO-1TB-BAC",
+          "storage_gb": 1024,
+          "ram_gb": null,
+          "color": "Bạc"
+        },
+        {
+          "id": "754fd5c2-ad27-4c59-906b-0027d909a8ba",
+          "variant_id": "754fd5c2-ad27-4c59-906b-0027d909a8ba",
+          "sku": "IPHO-1TB-CAMVUTRU",
+          "storage_gb": 1024,
+          "ram_gb": null,
+          "color": "Cam vũ trụ"
+        }
+      ]
+    }
+  ]
+}

@@ -534,6 +534,75 @@ function quoteCode(name: string, input: any, upstream: Record<string, any>) {
   return (Array.isArray(result) ? result[0] : result).json;
 }
 
+test('explicit product detail is not hijacked by substring color matching in pending quote', () => {
+  const fixture = JSON.parse(readFileSync(path.resolve(process.cwd(), 'tests/fixtures/n8n-execution-1102.json'), 'utf8'));
+  for (const model of ['Apple Watch Ultra 3', 'iPhone 16']) {
+    const normalized = { ...fixture.normalizedInput, chatInput: `cho tôi xem thông tin ${model}` };
+    const router = quoteCode('validate-router', { content: { parts: [{ text: JSON.stringify({ intent: 'product_detail', model, brand: 'Apple', turn_action: 'NEW_TOPIC', context_mode: 'replace' }) }] } }, {
+      'Normalize Input': normalized, 'Pending Quote - Lookup': { session_id: normalized.sessionId,
+        expires_at: Date.now() + 60000, requests_json: JSON.stringify(fixture.pendingRequests) },
+    });
+    assert.equal(router.intent, 'product_detail');
+    assert.equal(router.is_followup, false);
+    const resolved = quoteCode('resolve-quotation-turn', router, { 'Normalize Input': normalized });
+    assert.equal(resolved.intent, 'product_detail');
+  }
+});
+
+test('execution 1102 regression: pending quote must not override Gemini warranty FAQ classification', () => {
+  const fixture = JSON.parse(readFileSync(path.resolve(process.cwd(), 'tests/fixtures/n8n-execution-1102.json'), 'utf8'));
+  const upstream = { 'Normalize Input': fixture.normalizedInput,
+    'Pending Quote - Lookup': { session_id: fixture.normalizedInput.sessionId, expires_at: Date.now() + 60000,
+      requests_json: JSON.stringify(fixture.pendingRequests) } };
+  const input = { content: { parts: [{ text: JSON.stringify(fixture.classification) }] } };
+  const router = quoteCode('validate-router', input, upstream);
+  assert.equal(router.intent, 'faq');
+  assert.deepEqual(router.faq_topics, ['warranty']);
+  const resolved = quoteCode('resolve-quotation-turn', router, upstream);
+  const output = quoteCode('build-conversation-state', { result_type: 'faq', response: 'Source-grounded policy fixture' },
+    { ...upstream, 'Resolve Quotation Turn': resolved });
+  assert.equal(output.conversation_state.selected_product_id, fixture.normalizedInput.conversationState.selected_product_id);
+  assert.equal(output.conversation_state.selected_variant_id, fixture.normalizedInput.conversationState.selected_variant_id);
+  assert.deepEqual(output.conversation_state.last_result_set, fixture.normalizedInput.conversationState.last_result_set);
+});
+
+test('detail lookup uses canonical selected ID, never the first brand product, and honors explicit new model', () => {
+  const products = ['watch', 'phone'].map(id => ({ id, name: id === 'watch' ? 'Apple Watch Ultra 3' : 'iPhone 17 Pro Max',
+    brand: 'Apple', status: 'active', category: { isActive: true }, variants: [{ id: `${id}-v`, price: 1000000, stock: 1, attributes: {} }] }));
+  function lookup(source: any) {
+    const code = readFileSync(path.resolve(process.cwd(), 'scripts/n8n-quotation/format-product-detail.js'), 'utf8');
+    return new Function('$json', '$', '$input', code)({}, () => ({ first: () => ({ json: source }) }),
+      { all: () => products.map(json => ({ json })) })[0].json;
+  }
+  const conversationState = { selected_product_id: 'phone', active_filters: { brand: 'Apple' } };
+  assert.equal(lookup({ conversationState }).product.id, 'phone');
+  assert.equal(lookup({ brand: 'Apple' }).result_type, 'no_result');
+  assert.equal(lookup({ conversationState: { ...conversationState, selected_product_id: 'missing' } }).result_type, 'no_result');
+  assert.equal(lookup({ model: 'Apple Watch Ultra 3', conversationState }).product.id, 'watch');
+});
+
+test('ready and waiting quote context survives FAQ with quantity; resume requires a live pending cache', () => {
+  const ready = quoteCode('build-conversation-state', { result_type: 'quotation', ready_to_quote: true,
+    products: [{ id: 'phone', name: 'iPhone', variant_id: 'silver', quantity: 3 }] },
+    { 'Normalize Input': {}, 'Resolve Quotation Turn': { intent: 'quotation' } }).conversation_state;
+  assert.equal(ready.pending_question.quantity, 3);
+  for (const state of [ready, { ...ready, pending_question: { ...ready.pending_question, field: 'variant' } }]) {
+    const after = quoteCode('build-conversation-state', { result_type: 'faq' }, { 'Normalize Input': { conversationState: state },
+      'Resolve Quotation Turn': { intent: 'faq', context_mode: 'reset' } }).conversation_state;
+    assert.equal(after.selected_product_id, 'phone'); assert.equal(after.selected_variant_id, 'silver');
+    assert.deepEqual(after.pending_question, state.pending_question);
+  }
+  const normalized = { sessionId: 'A', chatInput: 'tôi muốn tiếp tục báo giá', conversationState: ready };
+  const pending = { session_id: 'A', expires_at: Date.now() + 60000,
+    requests_json: JSON.stringify([{ product_id: 'phone', model: 'iPhone', quantity: 1, available_variants: [{ id: 'silver' }] }]) };
+  const routed = quoteCode('resolve-quotation-turn', { pending_quote_exists: true }, { 'Normalize Input': normalized });
+  assert.equal(routed.is_followup, true);
+  const prepared = quoteCode('prepare-quote-filters', routed, { 'Normalize Input': normalized, 'Pending Quote - Lookup': pending });
+  assert.equal(prepared.requests[0].variant_id, 'silver'); assert.equal(prepared.requests[0].quantity, 3);
+  const expired = quoteCode('prepare-quote-filters', { pending_quote_exists: false }, { 'Normalize Input': normalized });
+  assert.deepEqual(expired.requests, []);
+});
+
 const quoteCatalog = [{ ...responseCatalog[4], variants: [
   { id: 'silver-256', sku: 'REAL-SILVER', attributes: { 'Dung lượng': '256GB', 'Màu sắc': 'Bạc' }, price: 600000, salePrice: null, stock: 3 },
   { id: 'navy-512', sku: 'REAL-NAVY', attributes: { 'Dung lượng': '512GB', 'Màu sắc': 'Xanh Navy' }, price: 900000, salePrice: null, stock: 5 },

@@ -24,12 +24,12 @@ const routedConversationState = toPlainObject(router.conversationState);
 // Validate Router is the single source of truth for the current turn. Using
 // its resolved state prevents stale positive preferences from being restored
 // after an exclusion/refinement response.
-const preserveShoppingCriteria = router.turn_action !== 'SWITCH' && (
+const preserveShoppingCriteria = input.result_type === 'faq' || (router.turn_action !== 'SWITCH' && (
   router.intent === 'product_detail' ||
   router.intent === 'product_compare' ||
   router.turn_action === 'SELECT' ||
   router.turn_action === 'COMPARE'
-);
+));
 const previous = preserveShoppingCriteria
   ? priorConversationState
   : (Object.keys(routedConversationState).length > 0
@@ -98,9 +98,9 @@ const lastResultSet = displayedProducts.length
       price_min: product?.price_min ?? product?.price ?? null,
       price_max: product?.price_max ?? product?.price ?? null
     }))
-  : (router.context_mode === 'reset' ? [] : previousResults);
+  : (preserveShoppingCriteria ? previousResults : (router.context_mode === 'reset' ? [] : previousResults));
 
-let selectedProductId = router.context_mode === 'reset' || router.turn_action === 'SELECT'
+let selectedProductId = !preserveShoppingCriteria && router.context_mode === 'reset' || router.turn_action === 'SELECT'
   ? (router.selected_product_id || null)
   : (router.selected_product_id || previous.selected_product_id || null);
 const selectedIndex = Number(router.selected_result_index);
@@ -132,6 +132,9 @@ const quotePending = input.quote_status === 'needs_variant_selection'
   : null;
 const quoteProductPending = input.result_type === 'quotation' && input.quote_status === 'invalid_request'
   ? {type:'quotation',field:'product',options:[]} : null;
+const quoteReadyPending = input.result_type === 'quotation' && input.ready_to_quote === true && input.products?.length === 1
+  ? {type:'quotation',field:'ready',product_id:input.products[0].id,product_name:input.products[0].name,
+      quantity:input.products[0].quantity,options:[{id:input.products[0].variant_id,variant_id:input.products[0].variant_id}]} : null;
 const pending = router.turn_action === 'CANCEL'
   ? null
   : (router.requires_clarification
@@ -140,7 +143,7 @@ const pending = router.turn_action === 'CANCEL'
         field: router.clarification_field || 'unknown',
         options: []
       }
-    : (quotePending || quoteProductPending || ((input.result_type === 'quotation' && input.ready_to_quote === true) || router.turn_action === 'REJECT' || router.turn_action === 'SELECT' || router.turn_action === 'CONFIRM'
+    : (quoteReadyPending || quotePending || quoteProductPending || ((input.result_type === 'quotation' && input.ready_to_quote === true) || router.turn_action === 'REJECT' || router.turn_action === 'SELECT' || router.turn_action === 'CONFIRM'
       ? null
       : (previous.pending_question || null))));
 
@@ -175,7 +178,7 @@ const conversationState = {
   rejected_products: rejectedProducts,
   last_result_set: lastResultSet,
   selected_product_id: input.result_type === 'quotation' && input.products?.length === 1 ? input.products[0].id : selectedProductId,
-  selected_variant_id: input.result_type === 'quotation' ? (input.ready_to_quote ? input.products?.[0]?.variant_id || null : null) : (router.context_mode === 'reset' ? null : (previous.selected_variant_id || null)),
+  selected_variant_id: input.result_type === 'quotation' ? (input.ready_to_quote ? input.products?.[0]?.variant_id || null : null) : (!preserveShoppingCriteria && router.context_mode === 'reset' ? null : (previous.selected_variant_id || null)),
   last_intent: router.intent || previous.last_intent || null,
   last_turn_action: router.turn_action || previous.last_turn_action || 'CONTINUE',
   pending_question: pending,

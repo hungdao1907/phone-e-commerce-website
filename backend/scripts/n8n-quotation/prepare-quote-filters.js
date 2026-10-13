@@ -25,8 +25,10 @@ if (!pendingRequests.length && pending?.product_id) pendingRequests = [{
 const ordinal = text.match(/\b(?:mau|phien ban|lua chon)\s*(?:so|thu)?\s*(\d+)\b/);
 const storage = text.match(/\b(\d+(?:[.,]\d+)?)\s*(gb|tb)\b/);
 const colorMatch = chatInput.match(/m[aà]u\s+(.+?)(?:[.!?]|$)/iu);
+const resuming = /\btiep tuc bao gia\b/.test(text);
 const followup = pendingRequests.length > 0 && (input.is_followup === true || ordinal || storage || colorMatch
   || /^(?:dong y|xac nhan|ok|duoc)$/.test(text));
+if (resuming && input.pending_quote_exists !== true) pendingRequests = [];
 let requests = followup ? pendingRequests.map(request => ({ ...request })) : [];
 if (!followup) {
   const descriptors = Array.isArray(input.products) ? input.products : [];
@@ -45,7 +47,9 @@ if (!followup) {
 let ambiguousFollowup = Boolean(followup && requests.length > 1 && (ordinal || storage || colorMatch));
 if (requests.length === 1) {
   const request = requests[0];
-  if (ordinal) {
+  if (resuming && input.pending_quote_exists === true && state.selected_variant_id) {
+    request.variant_id = state.selected_variant_id;
+  } else if (ordinal) {
     const option = request.available_variants?.[Number(ordinal[1]) - 1];
     request.variant_id = option?.variant_id || option?.id || '__invalid_variant_selection__';
   } else {
