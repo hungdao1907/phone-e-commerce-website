@@ -24,7 +24,8 @@ const routedConversationState = toPlainObject(router.conversationState);
 // Validate Router is the single source of truth for the current turn. Using
 // its resolved state prevents stale positive preferences from being restored
 // after an exclusion/refinement response.
-const preserveShoppingCriteria = input.result_type === 'faq' || (router.turn_action !== 'SWITCH' && (
+const explicitDetail = router.intent === 'product_detail' && router.explicit_product_model === true;
+const preserveShoppingCriteria = explicitDetail || input.result_type === 'faq' || (router.turn_action !== 'SWITCH' && (
   router.intent === 'product_detail' ||
   router.intent === 'product_compare' ||
   router.turn_action === 'SELECT' ||
@@ -104,6 +105,9 @@ let selectedProductId = !preserveShoppingCriteria && router.context_mode === 're
   ? (router.selected_product_id || null)
   : (router.selected_product_id || previous.selected_product_id || null);
 const selectedIndex = Number(router.selected_result_index);
+if (explicitDetail && input.result_type === 'product_detail' && displayedProducts.length === 1) {
+  selectedProductId = displayedProducts[0].id || null;
+}
 if (Number.isInteger(selectedIndex) && selectedIndex > 0 && lastResultSet[selectedIndex - 1]) {
   selectedProductId = lastResultSet[selectedIndex - 1].id || selectedProductId;
 }
@@ -178,7 +182,7 @@ const conversationState = {
   rejected_products: rejectedProducts,
   last_result_set: lastResultSet,
   selected_product_id: input.result_type === 'quotation' && input.products?.length === 1 ? input.products[0].id : selectedProductId,
-  selected_variant_id: input.result_type === 'quotation' ? (input.ready_to_quote ? input.products?.[0]?.variant_id || null : null) : (!preserveShoppingCriteria && router.context_mode === 'reset' ? null : (previous.selected_variant_id || null)),
+  selected_variant_id: input.result_type === 'quotation' ? (input.ready_to_quote ? input.products?.[0]?.variant_id || null : null) : (explicitDetail || !preserveShoppingCriteria && router.context_mode === 'reset' ? null : (previous.selected_variant_id || null)),
   last_intent: router.intent || previous.last_intent || null,
   last_turn_action: router.turn_action || previous.last_turn_action || 'CONTINUE',
   pending_question: pending,

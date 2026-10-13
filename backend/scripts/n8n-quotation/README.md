@@ -1,7 +1,7 @@
 # Authenticated WebPhone chatbot webhook
 
 Verified MAIN workflow: `5319a575-90d2-4894-9ece-355d9528b732`.
-Published revision: `2ab56c6c-7105-4df8-811e-a0b65cb336ff`.
+Published revision: `cd22a99b-6fb0-4d16-bfcc-3d3ebd6d7714` (66 nodes, owner-approved deterministic fast path and explicit product context).
 
 Entry: POST `/webhook/webphone-chatbot`, Header Auth credential `WebPhone Chatbot Webhook`, response mode `responseNode`.
 The header name and value are configured only in the server environment as `N8N_CHAT_AUTH_HEADER` and `N8N_CHAT_AUTH_VALUE`.
@@ -11,7 +11,7 @@ Flow: Webhook -> Normalize HTTP Chat Input -> HTTP Chat Input Valid -> Normalize
 Invalid input uses Respond Invalid Chat Request (400). Malformed JSON is rejected by n8n (400/422).
 `result_type=error` uses 502; pending variant selection is a normal 200 response, even with `success=false`.
 
-The JS files preserve the reviewed quotation/FAQ node implementations. `main-webhook.workflow.json` preserves the verified 62-node active graph as an inactive, credential-free snapshot. Neither publishes anything automatically.
+The JS files preserve the reviewed quotation/FAQ node implementations. `main-webhook.workflow.json` preserves the verified 66-node active graph (revision `cd22a99b-6fb0-4d16-bfcc-3d3ebd6d7714`) as an inactive, credential-free snapshot. Neither publishes anything automatically. `main-webhook.pre-fast-path.backup.json` retains the original 62-node graph; `main-webhook.pre-model-priority.backup.json` retains the approved draft before the model-priority fix. Backups omit credentials and must not be blindly imported over MAIN.
 The MCP export omits credentials. Before restoring elsewhere, manually bind the Webhook to the existing Header Auth credential `WebPhone Chatbot Webhook`, bind the seven Gemini nodes to an authorized existing Gemini credential, and verify the Pending Quote Data Table bindings. Do not import over the active MAIN without explicit approval. No credential value or pinned execution data is included.
 The HTTP normalizer accepts both `conversationState` and `conversation_state`, preserves session identity and bounded history, and excludes request headers from downstream input.
 Only Backend owns final pricing, official Quotation/Order creation, and authenticated PDF access. No legacy PDF upload/conversion nodes are used.
@@ -43,3 +43,11 @@ node scripts/n8n-quotation/faq-context-smoke.cjs
 
 Measured: 14/14 conversation turns passed (executions 1124–1137), plus missing/wrong Header Auth returned 403. This includes 13 requested cases and an extra warranty turn while awaiting variant selection. No official Quotation, Order, Payment or PDF was created. Auth values are read locally and never printed. The catalog-specific fixtures depend on real current products/variants/stock.
 Backend regression: 194/194; frontend working-tree regression: 70/70. The uncommitted dropdown UI tests account for two frontend cases and are intentionally excluded from the FAQ release. These are mock/isolated tests, not PostgreSQL E2E.
+
+## Fast-path release and bounded final retest
+
+Current Backend regression/build: 200/200 PASS; Frontend working-tree regression: 70/70 PASS, lint/build PASS. The 16 original and 7 additional pinned cases passed before publish. Source/snapshot backups omit credentials. Unrelated frontend dropdown/payment changes are not part of this release.
+
+Run `node scripts/n8n-quotation/final-gemini-retest.cjs` with `WEBPHONE_WEBHOOK_TEST_URL` set temporarily to the local or approved public endpoint. It sends turns sequentially, performs no client retry, and stops at the first failure. `--fast-only` checks greeting/FAQ and Header Auth without invoking Gemini. Live tests are opt-in and separate from npm mock tests.
+
+Final public retest execution 1205 failed with Service unavailable at Gemini - Product Response; transport returned HTTP 200 with an empty body after 82.915 s. Further Gemini-dependent turns were not run. Greeting/FAQ and Header Auth passed on both local and public endpoints. Backend retains its localhost webhook URL: Cloudflare cutover is not verified or activated. See deployment/gemini-latency-findings.md for measured evidence and remaining gates.

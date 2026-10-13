@@ -2,7 +2,15 @@
 
 Preparation only. No deploy, migration, commit/push, or n8n publish is performed by this document.
 
-## Measured gate result
+## Current fast-path release gate
+
+MAIN is published at `cd22a99b-6fb0-4d16-bfcc-3d3ebd6d7714` (66 nodes). Original pinned 16/16 and additional 7/7 PASS; Backend 200/200 mock/isolated tests + build PASS; Frontend working-tree 70/70 tests PASS. No official Quotation/Order/Payment/PDF is created by these chatbot checks.
+
+Latest public Gemini-dependent search retest failed: execution 1205, Service unavailable at Gemini - Product Response, transport HTTP 200 with an empty body (82.915 s). Retry stopped. Fast-only local/public greeting and warranty FAQ pass, Header Auth negatives return 403. Full live HTTP regression is PARTIAL. Backend still uses localhost webhook; no Cloudflare cutover/restart was performed. Commit/push of the reviewed fast-path source is authorized independently of the upstream outage; remote verification is reported in the task result.
+
+Deploy readiness remains HOLD: temporary public tunnel/local catalog dependencies, unverified full public/Backend roundtrip, production secrets/TLS, explicit CORS allowlist, persistent PDF/image storage and Linux runtime verification are still required. No Render/Vercel deploy or change to the six catalog nodes is authorized in this task.
+
+## Historical measured FAQ gate
 
 The owner's replacement HTTP/2 Quick Tunnel passed local/public `/healthz` (200), missing/invalid Header Auth (403), and valid-auth JSON requests (200).
 The earlier 8/9 public run exposed execution 1102: warranty FAQ was misrouted to product_detail and selected Apple Watch instead of the selected iPhone.

@@ -14,7 +14,7 @@ try {
 } catch {}
 const state = normalizedInput.conversationState || {};
 const pending = state.pending_question?.type === 'quotation' ? state.pending_question : null;
-if (pending?.product_id && Array.isArray(pending.options)) {
+if (pending?.product_id && pending.field === 'variant' && Array.isArray(pending.options)) {
   pendingRequests = pendingRequests.map(request => request.product_id === pending.product_id
     ? { ...request, available_variants: pending.options, quantity: pending.quantity || request.quantity || 1 } : request);
 }
@@ -26,7 +26,7 @@ const ordinal = text.match(/\b(?:mau|phien ban|lua chon)\s*(?:so|thu)?\s*(\d+)\b
 const storage = text.match(/\b(\d+(?:[.,]\d+)?)\s*(gb|tb)\b/);
 const colorMatch = chatInput.match(/m[aà]u\s+(.+?)(?:[.!?]|$)/iu);
 const resuming = /\btiep tuc bao gia\b/.test(text);
-const followup = pendingRequests.length > 0 && (input.is_followup === true || ordinal || storage || colorMatch
+const followup = !input.explicit_product_model && pendingRequests.length > 0 && (input.is_followup === true || ordinal || storage || colorMatch
   || /^(?:dong y|xac nhan|ok|duoc)$/.test(text));
 if (resuming && input.pending_quote_exists !== true) pendingRequests = [];
 let requests = followup ? pendingRequests.map(request => ({ ...request })) : [];
@@ -47,8 +47,11 @@ if (!followup) {
 let ambiguousFollowup = Boolean(followup && requests.length > 1 && (ordinal || storage || colorMatch));
 if (requests.length === 1) {
   const request = requests[0];
-  if (resuming && input.pending_quote_exists === true && state.selected_variant_id) {
-    request.variant_id = state.selected_variant_id;
+  const pendingVariant = pending?.field === 'ready' && pending.product_id === request.product_id && pending.options?.length === 1
+    ? pending.options[0].variant_id || pending.options[0].id : null;
+  if (resuming && input.pending_quote_exists === true && (pendingVariant || state.selected_variant_id)) {
+    request.variant_id = pendingVariant || state.selected_variant_id;
+    request.quantity = pending?.quantity || request.quantity || 1;
   } else if (ordinal) {
     const option = request.available_variants?.[Number(ordinal[1]) - 1];
     request.variant_id = option?.variant_id || option?.id || '__invalid_variant_selection__';

@@ -1,5 +1,852 @@
 {
+  "id": "5319a575-90d2-4894-9ece-355d9528b732",
   "name": "WebPhone - seven fixes OFFLINE candidate (review before import)",
+  "active": false,
+  "isArchived": false,
+  "versionId": "cd22a99b-6fb0-4d16-bfcc-3d3ebd6d7714",
+  "activeVersionId": "cd22a99b-6fb0-4d16-bfcc-3d3ebd6d7714",
+  "triggerCount": 1,
+  "createdAt": "2026-09-21T04:55:26.766Z",
+  "updatedAt": "2026-10-13T13:59:00.557Z",
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": true
+  },
+  "connections": {
+    "Normalize Input": {
+      "main": [
+        [
+          {
+            "node": "Pending Quote - Lookup",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini - Intent Router": {
+      "main": [
+        [
+          {
+            "node": "Validate Router",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Intent Router": {
+      "main": [
+        [
+          {
+            "node": "Prepare Search Filters",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Prepare Product Detail",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Prepare Compare Filters",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Prepare Recommendation Filters",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields - Prepare FAQ",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "IF - Exact Greeting",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Prepare Quote Filters",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Delete Pending Quote",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Search Filters": {
+      "main": [
+        [
+          {
+            "node": "API - Fetch Products",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Product Results": {
+      "main": [
+        [
+          {
+            "node": "Name: IF - Products Found",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini - Product Response": {
+      "main": [
+        [
+          {
+            "node": "Edit Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Product Detail": {
+      "main": [
+        [
+          {
+            "node": "API - Fetch Products Detail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Product Detail": {
+      "main": [
+        [
+          {
+            "node": "IF - Product Detail Found",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini - Product Detail Response": {
+      "main": [
+        [
+          {
+            "node": "Edit Response Product Detail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini - FAQ Response": {
+      "main": [
+        [
+          {
+            "node": "Edit Response FAQ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Compare Filters": {
+      "main": [
+        [
+          {
+            "node": "API - Fetch Products Compare",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Compare Data": {
+      "main": [
+        [
+          {
+            "node": "IF - Compare Ready",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini - Product Compare Response": {
+      "main": [
+        [
+          {
+            "node": "Edit Response Product Compare",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini - Recommendation Response": {
+      "main": [
+        [
+          {
+            "node": "Edit Response Recommendation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini - Default Response": {
+      "main": [
+        [
+          {
+            "node": "Edit Response Default",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Quote Filters": {
+      "main": [
+        [
+          {
+            "node": "API - Fetch Products Quote",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Quote Data": {
+      "main": [
+        [
+          {
+            "node": "IF - Quote Ready",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Response": {
+      "main": [
+        [
+          {
+            "node": "Build Conversation State",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Response Product Compare": {
+      "main": [
+        [
+          {
+            "node": "Build Conversation State",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Response Product Detail": {
+      "main": [
+        [
+          {
+            "node": "Build Conversation State",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Response Recommendation": {
+      "main": [
+        [
+          {
+            "node": "Build Conversation State",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Recommendation Filters": {
+      "main": [
+        [
+          {
+            "node": "API - Fetch Products Recommendation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Response Default": {
+      "main": [
+        [
+          {
+            "node": "Build Conversation State",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Response FAQ": {
+      "main": [
+        [
+          {
+            "node": "Build Conversation State",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields - Prepare FAQ": {
+      "main": [
+        [
+          {
+            "node": "FAQ - Static Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Quotation Response": {
+      "main": [
+        [
+          {
+            "node": "Build Conversation State",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "API - Fetch Products": {
+      "main": [
+        [
+          {
+            "node": "Format Product Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Name: IF - Products Found": {
+      "main": [
+        [
+          {
+            "node": "Gemini - Product Response",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Result Search Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "API - Fetch Products Detail": {
+      "main": [
+        [
+          {
+            "node": "Format Product Detail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF - Product Detail Found": {
+      "main": [
+        [
+          {
+            "node": "Gemini - Product Detail Response",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Result Search Response1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "No Result Search Response": {
+      "main": [
+        [
+          {
+            "node": "Build Conversation State",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "No Result Search Response1": {
+      "main": [
+        [
+          {
+            "node": "Build Conversation State",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "API - Fetch Products Compare": {
+      "main": [
+        [
+          {
+            "node": "Format Compare Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF - Compare Ready": {
+      "main": [
+        [
+          {
+            "node": "Gemini - Product Compare Response",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Result Search Response2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "No Result Search Response2": {
+      "main": [
+        [
+          {
+            "node": "Build Conversation State",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "API - Fetch Products Recommendation": {
+      "main": [
+        [
+          {
+            "node": "Format Recommendation Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Recommendation Data": {
+      "main": [
+        [
+          {
+            "node": "Name: IF - Recommendation Found",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Name: IF - Recommendation Found": {
+      "main": [
+        [
+          {
+            "node": "Gemini - Recommendation Response",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Result Search Response3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "No Result Search Response3": {
+      "main": [
+        [
+          {
+            "node": "Build Conversation State",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "FAQ - Static Data": {
+      "main": [
+        [
+          {
+            "node": "IF - FAQ Found",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "No Result FAQ": {
+      "main": [
+        [
+          {
+            "node": "Build Conversation State",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF - FAQ Found": {
+      "main": [
+        [
+          {
+            "node": "Gemini - FAQ Response",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Result FAQ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Quote Error Response": {
+      "main": [
+        [
+          {
+            "node": "Build Conversation State",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF - Quote Ready": {
+      "main": [
+        [
+          {
+            "node": "Build Quotation Draft Response",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "IF - Needs Variant Selection",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF - Needs Variant Selection": {
+      "main": [
+        [
+          {
+            "node": "Prepare Pending Record",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build Quote Error Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Pending Record": {
+      "main": [
+        [
+          {
+            "node": "Save Pending Quote",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Pending Quote": {
+      "main": [
+        [
+          {
+            "node": "Build Quote Error Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delete Pending Quote": {
+      "main": [
+        [
+          {
+            "node": "Prepare Quotation Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Quotation Draft Response": {
+      "main": [
+        [
+          {
+            "node": "Build Conversation State",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Router": {
+      "main": [
+        [
+          {
+            "node": "Resolve Quotation Turn",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Resolve Quotation Turn": {
+      "main": [
+        [
+          {
+            "node": "Intent Router",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "API - Fetch Products Quote": {
+      "main": [
+        [
+          {
+            "node": "Prepare Quote Catalog IDs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Quote Catalog IDs": {
+      "main": [
+        [
+          {
+            "node": "IF - Quote Catalog IDs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF - Quote Catalog IDs": {
+      "main": [
+        [
+          {
+            "node": "API - Verify Quote Catalog",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Format Quote Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "API - Verify Quote Catalog": {
+      "main": [
+        [
+          {
+            "node": "Format Quote Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Normalize HTTP Chat Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize HTTP Chat Input": {
+      "main": [
+        [
+          {
+            "node": "HTTP Chat Input Valid",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Chat Input Valid": {
+      "main": [
+        [
+          {
+            "node": "Normalize Input",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond Invalid Chat Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Conversation State": {
+      "main": [
+        [
+          {
+            "node": "Respond Chat JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pending Quote - Lookup": {
+      "main": [
+        [
+          {
+            "node": "Deterministic Intent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Deterministic Intent": {
+      "main": [
+        [
+          {
+            "node": "IF - Deterministic Intent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF - Deterministic Intent": {
+      "main": [
+        [
+          {
+            "node": "Validate Router",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Gemini - Intent Router",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF - Exact Greeting": {
+      "main": [
+        [
+          {
+            "node": "Static Greeting",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Gemini - Default Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Static Greeting": {
+      "main": [
+        [
+          {
+            "node": "Build Conversation State",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
   "nodes": [
     {
       "parameters": {
@@ -101,7 +948,7 @@
     },
     {
       "parameters": {
-        "jsCode": "\nconst input = $json;\n\nlet rawText = \"\";\nif (Array.isArray(input.content?.parts)) {\n  rawText = input.content.parts.map(p => p.text || \"\").join(\"\");\n} else if (typeof input.content?.parts?.[0]?.text === \"string\") {\n  rawText = input.content.parts[0].text;\n} else if (typeof input.text === \"string\") {\n  rawText = input.text;\n}\n\nrawText = String(rawText).trim().replace(/^```json\\s*/i, \"\").replace(/^```\\s*/i, \"\").replace(/\\s*```$/i, \"\").trim();\n\nlet data;\ntry {\n  data = JSON.parse(rawText);\n} catch (error) {\n  try {\n    const firstBrace = rawText.indexOf(\"{\");\n    const lastBrace = rawText.lastIndexOf(\"}\");\n    if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {\n      data = JSON.parse(rawText.slice(firstBrace, lastBrace + 1));\n    } else {\n      throw new Error(\"Không tìm thấy JSON object\");\n    }\n  } catch (secondError) {\n    data = { intent: \"default\", brand: \"\", model: \"\", storage: \"\", ram: \"\", color: \"\", price_max: null, condition: \"\", use_case: \"\", faq_topic: \"\", faq_topics: [], products: [] };\n  }\n}\n\nconst validIntents = [\"product_search\", \"product_detail\", \"product_compare\", \"recommendation\", \"faq\", \"quotation\", \"default\"];\nlet rawIntent = String(data.intent || \"\").trim().toLowerCase();\nlet intent = validIntents.includes(rawIntent) ? rawIntent : \"default\";\n\nconst normalizeInput = $(\"Normalize Input\").first().json;\nconst chatInput = normalizeInput?.chatInput || \"\";\nconst sessionId = normalizeInput?.sessionId || \"\";\nconst source = normalizeInput?.source || \"web_chat\";\n\nlet pendingRow = null;\ntry {\n  const dtItems = $(\"Pending Quote - Lookup\").all();\n  if (dtItems && dtItems.length > 0 && dtItems[0].json && dtItems[0].json.session_id) {\n    pendingRow = dtItems[0].json;\n  }\n} catch (e) {}\n\nconst now = Date.now();\nlet isPendingValid = false;\nlet pendingRequests = [];\n\nif (pendingRow && pendingRow.session_id) {\n  const expiresAt = Number(pendingRow.expires_at || 0);\n  if (expiresAt > now) {\n    try {\n      pendingRequests = typeof pendingRow.requests_json === \"string\" ? JSON.parse(pendingRow.requests_json) : (pendingRow.requests || []);\n      if (Array.isArray(pendingRequests) && pendingRequests.length > 0) {\n        isPendingValid = true;\n      }\n    } catch (e) {}\n  }\n}\n\nfunction normalizePendingMatchText(value) {\n  return String(value ?? \"\")\n    .normalize(\"NFD\")\n    .replace(/[\\u0300-\\u036f]/g, \"\")\n    .replace(/[^\\p{L}\\p{N}]+/gu, \" \")\n    .toLowerCase()\n    .trim();\n}\n\nfunction pendingRequestHasMissingField(request) {\n  return [request?.color, request?.storage_gb, request?.ram_gb]\n    .some(value => value === null || value === undefined || String(value).trim() === \"\");\n}\n\nfunction hasFollowupAttribute(text) {\n  return [\n    /\\b(?:mau|color)\\b/i,\n    /\\b(?:bac|den|trang|vang|tim|hong|xanh|titan|silver|black|white|gold|jet black)\\b/i,\n    /\\bram\\s*\\d+\\b/i,\n    /\\b\\d+\\s*gb\\s*ram\\b/i,\n    /\\b\\d+(?:[.,]\\d+)?\\s*tb\\b/i,\n    /\\b(?:64|128|256|512|1024|2048)\\s*gb\\b/i,\n    /\\b\\d+\\s*(?:inch|mm)\\b/i,\n    /\\b(?:gps|cellular|wifi|5g|4g)\\b/i,\n    /\\b(?:nhom|titanium|chat lieu|material)\\b/i\n  ].some(pattern => pattern.test(text));\n}\n\nlet isFollowup = false;\nif (isPendingValid) {\n  const normalizedChat = String(chatInput || \"\").normalize(\"NFD\").replace(/[\\u0300-\\u036f]/g, \"\").toLowerCase();\n  const isProductInfoQuestion = /\\b(?:chong nuoc|waterproof|bao hanh|thong so|thong tin|camera|pin|man hinh)\\b/i.test(normalizedChat)\n    && /\\b(?:co|khong|nao|the nao|nhu the nao)\\b/i.test(normalizedChat);\n  if (isProductInfoQuestion && intent !== \"faq\") {\n    // An unrelated product-info question must be answered without consuming\n    // or retargeting the pending quotation.\n    intent = \"product_detail\";\n  }\n  const isExplicitOther = intent === \"faq\" || intent === \"product_compare\" || intent === \"product_detail\" || isProductInfoQuestion;\n  if (!isExplicitOther) {\n    const hasAttributeMention = /(?:ram|\\d+\\s*(?:gb|tb)|mau|color|bac|den|trang|vang|tim|hong|xanh|titan|silver|black|white|gold|\\b36\\b|\\b48\\b|\\b16\\b|\\b32\\b|\\b256\\b|\\b512\\b|\\b1tb\\b|\\b2tb\\b)/i.test(normalizedChat);\n    if (hasAttributeMention || intent === \"quotation\") {\n      intent = \"quotation\";\n      isFollowup = true;\n    }\n  }\n}\nfunction parseExplicitUserBudget(value) {\n  const normalized = String(value || '')\n    .replace(/[đĐ]/g, 'd')\n    .normalize('NFD')\n    .replace(/[\\u0300-\\u036f]/g, '')\n    .toLowerCase();\n  const match = normalized.match(/\\b(?:duoi|toi da|tam|khoang|ngan sach|budget|khong qua|gia duoi|gia khoang)\\s*(\\d+(?:[.,]\\d+)?)\\s*(trieu|tr|million|m|nghin|ngan|k)\\b/i);\n  if (!match) return null;\n  const amount = Number(match[1].replace(',', '.'));\n  if (!Number.isFinite(amount) || amount <= 0) return null;\n  const unit = match[2].toLowerCase();\n  const multiplier = ['trieu', 'tr', 'million', 'm'].includes(unit) ? 1000000 : 1000;\n  return Math.round(amount * multiplier);\n}\n\nconst explicitUserBudget = parseExplicitUserBudget(chatInput);\nlet priceMax = data.price_max;\nif (priceMax === '' || priceMax === undefined || priceMax === null) {\n  priceMax = null;\n} else {\n  if (typeof priceMax === 'string') priceMax = priceMax.replace(/\\./g, '').replace(/,/g, '').trim();\n  priceMax = Number(priceMax);\n  if (!Number.isFinite(priceMax) || priceMax < 0) priceMax = null;\n}\n\n\nfunction normalizeStorageGb(value, rawText) {\n  if (typeof value === 'string' && value.trim()) {\n    const v = value.trim().toLowerCase();\n    const tbMatch = v.match(/(\\d+(?:[.,]\\d+)?)\\s*tb/i);\n    if (tbMatch) {\n      const num = Number(tbMatch[1].replace(',', '.'));\n      if (Number.isFinite(num) && num > 0) return Math.round(num * 1024);\n    }\n    const gbMatch = v.match(/(\\d+)\\s*gb/i);\n    if (gbMatch) {\n      const num = Number(gbMatch[1]);\n      if (Number.isFinite(num) && num > 0) return num;\n    }\n  }\n\n  let rawStorageGb = null;\n  if (rawText && typeof rawText === 'string') {\n    const raw = rawText.toLowerCase();\n    const rawTbMatches = [...raw.matchAll(/(\\d+(?:[.,]\\d+)?)\\s*tb/gi)];\n    if (rawTbMatches.length > 0) {\n      const num = Number(rawTbMatches[0][1].replace(',', '.'));\n      if (Number.isFinite(num) && num > 0) {\n        rawStorageGb = Math.round(num * 1024);\n      }\n    } else {\n      const withoutRam = raw\n        .replace(/ram\\s*[:\\s]?\\s*\\d+\\s*gb/gi, '')\n        .replace(/\\d+\\s*gb\\s*ram/gi, '');\n      const rawGbMatches = [...withoutRam.matchAll(/(\\d+)\\s*gb/gi)];\n      for (const m of rawGbMatches) {\n        const num = Number(m[1]);\n        if (num >= 64) {\n          rawStorageGb = num;\n          break;\n        }\n      }\n    }\n  }\n\n  if (rawStorageGb !== null) {\n    return rawStorageGb;\n  }\n\n  if (value !== null && value !== undefined && value !== '') {\n    const num = Number(String(value).replace(/[^\\d.]/g, ''));\n    if (Number.isFinite(num) && num > 0) {\n      return Math.round(num);\n    }\n  }\n\n  return null;\n}\n\nfunction normalizeRamGb(value, rawText) {\n  if (typeof value === 'string' && value.trim()) {\n    const v = value.trim().toLowerCase();\n    const ramMatch = v.match(/(\\d+)\\s*gb/i) || v.match(/(\\d+)/);\n    if (ramMatch) {\n      const num = Number(ramMatch[1]);\n      if (Number.isFinite(num) && num <= 64) return num;\n    }\n  }\n\n  if (typeof value === 'number' && Number.isFinite(value) && value <= 64) {\n    return value;\n  }\n\n  if (rawText && typeof rawText === 'string') {\n    const raw = rawText.toLowerCase();\n    const ramMatch1 = raw.match(/ram\\s*[:\\s]?\\s*(\\d+)\\s*(?:gb)?/i);\n    const ramMatch2 = raw.match(/(\\d+)\\s*gb\\s*ram/i);\n    if (ramMatch1) {\n      const num = Number(ramMatch1[1]);\n      if (Number.isFinite(num) && num <= 64) return num;\n    }\n    if (ramMatch2) {\n      const num = Number(ramMatch2[1]);\n      if (Number.isFinite(num) && num <= 64) return num;\n    }\n  }\n\n  return null;\n}\n\n\nfunction getProductRawText(product, index, products, fullText) {\n  const text = String(fullText || \"\");\n  if (!Array.isArray(products) || products.length <= 1) return text;\n  const lower = text.toLowerCase();\n  const model = typeof product?.model === \"string\" ? product.model.trim() : \"\";\n  const brand = typeof product?.brand === \"string\" ? product.brand.trim() : \"\";\n  const currentHints = [model, brand && model ? `${brand} ${model}` : \"\"]\n    .filter(Boolean)\n    .sort((a, b) => b.length - a.length);\n  let start = -1;\n  for (const hint of currentHints) {\n    const pos = lower.indexOf(hint.toLowerCase());\n    if (pos !== -1 && (start === -1 || pos < start)) start = pos;\n  }\n  if (start === -1) return \"\";\n  let end = text.length;\n  products.forEach((other, otherIndex) => {\n    if (otherIndex === index) return;\n    const otherModel = typeof other?.model === \"string\" ? other.model.trim() : \"\";\n    const otherBrand = typeof other?.brand === \"string\" ? other.brand.trim() : \"\";\n    const otherHints = [otherModel, otherBrand && otherModel ? `${otherBrand} ${otherModel}` : \"\"]\n      .filter(Boolean)\n      .sort((a, b) => b.length - a.length);\n    for (const hint of otherHints) {\n      const pos = lower.indexOf(hint.toLowerCase(), start + 1);\n      if (pos > start && pos < end) end = pos;\n    }\n  });\n  return text.slice(start, end);\n}\r\n\nfunction parseExplicitQuantity(rawText) {\n  const normalized = String(rawText || '')\n    .replace(/[đĐ]/g, 'd')\n    .normalize('NFD')\n    .replace(/[\\u0300-\\u036f]/g, '')\n    .toLowerCase();\n  const match = normalized.match(/\\b(?:so luong|sl|mua|lay|can)\\s*(\\d+)\\b/i) ||\n    normalized.match(/(?:^|\\s)(\\d+)\\s*(?:cai|chiec|may)\\b/i);\n  const parsed = match ? Number(match[1]) : null;\n  return Number.isInteger(parsed) && parsed > 0\n    ? { quantity: parsed, quantity_explicit: true }\n    : { quantity: 1, quantity_explicit: false };\n}\n\nconst topLevelQuantity = parseExplicitQuantity(chatInput);\n\nlet products = [];\nif ((intent === \"product_compare\" || intent === \"quotation\") && Array.isArray(data.products)) {\n  products = data.products\n    .map((product, index) => {\n      const scopedRawText = getProductRawText(product, index, data.products, chatInput);\n      const quantityInfo = parseExplicitQuantity(scopedRawText);\n      return {\n        index: Number.isInteger(product?.index) ? product.index : index + 1,\n        brand: typeof product?.brand === \"string\" ? product.brand.trim() : \"\",\n        model: typeof product?.model === \"string\" ? product.model.trim() : \"\",\n        storage_gb: normalizeStorageGb(product?.storage_gb ?? product?.storage, scopedRawText),\n        ram_gb: normalizeRamGb(product?.ram_gb ?? product?.ram, scopedRawText),\n        color: typeof product?.color === \"string\" && product.color.trim() ? product.color.trim() : null,\n        quantity: quantityInfo.quantity,\n        quantity_explicit: quantityInfo.quantity_explicit\n      };\n    })\n    .filter(product => product.model || product.brand);\n}\n\n\n// LIVE-17: recover names the customer EXPLICITLY gave if the router\n// shortens a model suffix. Extract only independently recognizable device\n// families. Do not infer products from history or invent catalog facts.\nif (intent === 'product_compare') {\n  const explicitModels = [];\n  const namedPattern = /\\b(?:iphone\\s+\\d+(?:\\s+(?:pro\\s+max|pro|plus|mini|e))?|samsung\\s+galaxy\\s+(?:s|z\\s*fold|z\\s*flip)\\s*\\d+(?:\\s+(?:ultra|plus|fe))?|galaxy\\s+(?:s|z\\s*fold|z\\s*flip)\\s*\\d+(?:\\s+(?:ultra|plus|fe))?)\\b/gi;\n  for (const found of String(chatInput).matchAll(namedPattern)) {\n    const raw = found[0].trim();\n    const key = raw.toLowerCase().replace(/\\s+/g,'');\n    if (explicitModels.some(item => item.key === key)) continue;\n    const brand = /^iphone\\b/i.test(raw) ? 'Apple' : 'Samsung';\n    explicitModels.push({key, brand, model:raw});\n  }\n  if (explicitModels.length >= 2) {\n    products = explicitModels.map((item,index) => ({\n      index:index+1, brand:item.brand, model:item.model,\n      storage_gb:null, ram_gb:null, color:null, quantity:1,\n      quantity_explicit:false\n    }));\n  }\n}\n\n// ============================================================\n// DIALOGUE STATE / TURN ACTION NORMALIZATION\n// The router proposes semantics; this block validates and merges\n// only safe, structured values before any branch runs.\n// ============================================================\n\nlet previousConversationState =\n  normalizeInput?.conversationState &&\n  typeof normalizeInput.conversationState === 'object' &&\n  !Array.isArray(normalizeInput.conversationState)\n    ? normalizeInput.conversationState\n    : {};\n\nlet previousActiveFilters =\n  previousConversationState.active_filters &&\n  typeof previousConversationState.active_filters === 'object'\n    ? previousConversationState.active_filters\n    : {};\n\nfunction dialogueNormalize(value) {\n  return String(value ?? '')\n    // Runtime execution data contains replacement/mis-decoded Vietnamese bytes\n    // (for example: kh�ng, khÃ´ng, khĂ´ng). Keep chatInput untouched, but make\n    // deterministic routing tolerant of those representations.\n    .replace(/kh(?:\\uFFFD|\\?|Ã´|Ă´)ng/giu, 'khong')\n    .replace(/(?:đ|d)i[?]n\\s+tho[?]i/giu, 'dien thoai')\n    .replace(/kho[?]ng/giu, 'khoang')\n    .replace(/[đĐ]/g, 'd')\n    .normalize('NFD')\n    .replace(/[\\u0300-\\u036f]/g, '')\n    .toLowerCase()\n    .trim();\n}\n\nconst dialogueAliases = {\n  Apple: ['apple', 'iphone', 'ipad', 'macbook'],\n  Samsung: ['samsung', 'galaxy'],\n  Xiaomi: ['xiaomi', 'redmi', 'poco'],\n  Oppo: ['oppo'],\n  OnePlus: ['oneplus', 'one plus'],\n  Vivo: ['vivo'],\n  Honor: ['honor']\n};\n\nfunction dialogueBrands(text) {\n  const value = dialogueNormalize(text);\n  return Object.entries(dialogueAliases)\n    .filter(([, aliases]) => aliases.some(alias => value.includes(alias)))\n    .map(([brand]) => brand);\n}\n\nfunction dialogueProductMatchesBrand(product, brand) {\n  if (!product || !brand) return false;\n  return [product.brand, product.category, product.name]\n    .filter(Boolean)\n    .some(value => dialogueBrands(value).includes(brand));\n}\n\nfunction dialogueCategory(text) {\n  const value = dialogueNormalize(text);\n  if (/dong ho|smartwatch|watch/.test(value)) return 'watch';\n  if (/laptop|macbook|may tinh xach tay/.test(value)) return 'laptop';\n  if (/tablet|ipad|may tinh bang/.test(value)) return 'tablet';\n  if (/dien thoai|smartphone|iphone|galaxy|samsung|xiaomi|redmi|poco|oppo|oneplus/.test(value)) return 'phone';\n  return null;\n}\n\nfunction unique(values) {\n  return [...new Set(values.filter(Boolean))];\n}\n\nconst dialogueText = dialogueNormalize(chatInput);\nconst dialogueCurrentBrands = dialogueBrands(dialogueText);\nconst dialogueCurrentCategory = dialogueCategory(dialogueText);\nconst dialoguePreviousCategory = previousConversationState.category || null;\nconst dialogueTopicScopeChanged = Boolean(\n  dialogueCurrentCategory &&\n  dialoguePreviousCategory &&\n  dialogueCurrentCategory !== dialoguePreviousCategory\n);\nif (dialogueTopicScopeChanged) {\n  // Keep session infrastructure outside this object, but do not carry\n  // shopping constraints/referents into a different product category.\n  previousConversationState = { category: dialogueCurrentCategory, state_version: 2 };\n  previousActiveFilters = {};\n}\nconst dialogueOtherBrand =\n  /\\b(hang|thuong hieu|brand)\\b.*\\b(khac|other)\\b/.test(dialogueText) ||\n  /\\b(doi|chuyen|chon)\\b.*\\b(hang|thuong hieu|brand)\\b.*\\b(khac|other)\\b/.test(dialogueText) ||\n  /\\b(mau|con|cai|loai)\\b.*\\b(khac|other)\\b/.test(dialogueText);\nconst dialogueHasNegative = /\\b(khong|khong thich|bo|khong muon|khong dung|dung lay|khong lay|khong can)\\b/.test(dialogueText);\nconst dialogueReject = /^(khong|khong phai|khong can|khong muon)$/.test(dialogueText);\nconst dialogueNegativeBrands = (() => {\n  const result = [];\n  const brandNegation = /\\b(?:khong|bo|dung)\\s+(?:(?:muon|thich|lay|chon|can|thuoc|hang|thuong|hieu|brand)\\s+)*(apple|iphone|ipad|macbook|samsung|galaxy|xiaomi|redmi|poco|oppo|oneplus|vivo|honor)\\b/g;\n  for (const match of dialogueText.matchAll(brandNegation)) {\n    result.push(...dialogueBrands(match[1]));\n  }\n  return unique(result);\n})();\nconst dialoguePriceDirection =\n  /re hon|gia thap hon|dat qua|giam gia/.test(dialogueText)\n    ? 'lower'\n    : /dat hon|gia cao hon/.test(dialogueText)\n      ? 'higher'\n      : null;\nconst dialogueCancel = /^(?:thoi|dung|huy|huy bao gia|huy yeu cau|bo qua|khong can|khong can nua|khong can bao gia)$/.test(dialogueText);\nconst dialogueConfirm = /^(ok|uh|u|duoc|duoc roi|dung|co|yes)$/.test(dialogueText);\nconst dialogueNumberWords = {\n  mot: 1,\n  nhat: 1,\n  hai: 2,\n  ba: 3,\n  bon: 4,\n  tu: 4,\n  nam: 5\n};\nconst selectedIndexMatch = dialogueText.match(/(?:mau|con|cai|so)\\s*(?:thu|so)?\\s*(\\d+)/i);\nconst selectedFirstMatch = dialogueText.match(/(?:mau|con|cai)\\s+(?:dau tien|dau|thu nhat)\\b/i);\nconst selectedWordMatch = dialogueText.match(/(?:mau|con|cai)\\s*(?:thu)?\\s*(mot|nhat|hai|ba|bon|tu|nam)\\b/i);\nconst dialogueSelectedIndex = selectedIndexMatch\n  ? Number(selectedIndexMatch[1])\n  : (selectedFirstMatch || selectedWordMatch && ['mot', 'nhat'].includes(selectedWordMatch[1]))\n    ? 1\n    : selectedWordMatch\n      ? dialogueNumberWords[selectedWordMatch[1]]\n      : null;\nconst dialogueComparisonIndexes = [...dialogueText.matchAll(/(?:mau|con|cai|so)\\s*(?:thu|so)?\\s*(\\d+)/gi)]\n  .map(match => Number(match[1]))\n  .filter(index => Number.isInteger(index) && index > 0);\nconst pendingQuestion = previousConversationState.pending_question || null;\nconst hasPendingAction = Boolean(pendingQuestion && typeof pendingQuestion === 'object');\n\nlet resolvedIntent = intent;\nlet resolvedBrand = typeof data.brand === 'string' ? data.brand.trim() : '';\nlet resolvedModel = typeof data.model === 'string' ? data.model.trim() : '';\nlet resolvedStorage = typeof data.storage === 'string' ? data.storage.trim() : '';\nlet resolvedRam = typeof data.ram === 'string' ? data.ram.trim() : '';\nlet resolvedColor = typeof data.color === 'string' ? data.color.trim() : '';\nlet resolvedUseCase = typeof data.use_case === 'string' ? data.use_case.trim() : '';\n\n// Only explicit user wording may create a new positive preference. A product\n// returned by the model is conversational output, not a user-selected brand\n// or configuration. Existing state remains valid when it was already explicit.\nconst previousBrandContext = unique([\n  previousActiveFilters.brand,\n  ...(Array.isArray(previousConversationState.preferred_brands)\n    ? previousConversationState.preferred_brands\n    : [])\n].flatMap(value => dialogueBrands(value)));\nconst resolvedBrandCanonical = dialogueBrands(resolvedBrand)[0] || dialogueNormalize(resolvedBrand);\nconst hasExplicitCurrentBrand = dialogueCurrentBrands.includes(resolvedBrandCanonical);\nconst hasPreviousBrandContext = previousBrandContext.includes(resolvedBrandCanonical);\n\nconst dialogueTextWithoutRam = dialogueText\n  .replace(/\\bram\\s*[:\\s]?\\s*\\d+\\s*gb\\b/gi, ' ')\n  .replace(/\\b\\d+\\s*gb\\s*ram\\b/gi, ' ');\nconst dialogueHasExplicitStorage =\n  /\\b(?:dung luong|bo nho|storage)\\b/i.test(dialogueText) ||\n  /\\b\\d+(?:[.,]\\d+)?\\s*(?:tb|gb)\\b/i.test(dialogueTextWithoutRam);\nconst dialogueHasExplicitRam = /\\bram\\b|\\b\\d+\\s*gb\\s*ram\\b/i.test(dialogueText);\nconst dialogueHasExplicitColor =\n  /\\b(?:mau|color|den|trang|bac|xam|vang|tim|hong|xanh|titan|silver|black|white|gold|green|blue|red)\\b/i.test(dialogueText);\n\nif (\n  resolvedBrand &&\n  !hasExplicitCurrentBrand &&\n  !hasPreviousBrandContext\n) {\n  resolvedBrand = '';\n}\n\n// Do not persist model-inferred product attributes from a clean, budget-only\n// request. They become active filters only when the user actually mentioned\n// them (or when an earlier explicit filter is being continued).\nif (!dialogueHasExplicitStorage && !previousActiveFilters.storage_gb) resolvedStorage = '';\nif (!dialogueHasExplicitRam && !previousActiveFilters.ram_gb) resolvedRam = '';\nif (!dialogueHasExplicitColor && !previousActiveFilters.color) resolvedColor = '';\n\n\n// An explicit negative brand preference wins over any brand/model emitted by the LLM.\n// Keep the existing category and budget context, but never turn \"không iPhone\"\n// into a positive Apple filter.\nif (dialogueNegativeBrands.length > 0) {\n  resolvedBrand = '';\n  if (dialogueBrands(resolvedModel).some(brand => dialogueNegativeBrands.includes(brand))) {\n    resolvedModel = '';\n  }\n  if (resolvedIntent === 'default' || resolvedIntent === 'faq' || resolvedIntent === 'product_detail') {\n    resolvedIntent = previousConversationState.last_intent === 'recommendation'\n      ? 'recommendation'\n      : 'product_search';\n  }\n}\n\nif (!resolvedUseCase) {\n  if (/uu tien pin|pin tot hon/.test(dialogueText)) resolvedUseCase = 'battery';\n  else if (/choi game|gaming/.test(dialogueText)) resolvedUseCase = 'gaming';\n  else if (/hieu nang|performance/.test(dialogueText)) resolvedUseCase = 'performance';\n  else if (/camera tot|chup anh/.test(dialogueText)) resolvedUseCase = 'camera';\n}\n\nif (\n  !resolvedBrand &&\n  dialogueCurrentBrands.length === 1 &&\n  !dialogueOtherBrand &&\n  !dialogueNegativeBrands.includes(dialogueCurrentBrands[0])\n) {\n  resolvedBrand = dialogueCurrentBrands[0];\n}\n\nconst dialogueComparisonRequested =\n  resolvedIntent === 'product_compare' &&\n  dialogueComparisonIndexes.length >= 2;\nconst selectedFromPrevious =\n  !dialogueComparisonRequested &&\n  Number.isInteger(dialogueSelectedIndex) &&\n  dialogueSelectedIndex > 0 &&\n  Array.isArray(previousConversationState.last_result_set)\n    ? previousConversationState.last_result_set[dialogueSelectedIndex - 1]\n    : null;\nconst dialogueSelectionRequested =\n  !dialogueComparisonRequested &&\n  (\n    Number.isInteger(dialogueSelectedIndex) ||\n    /\\b(?:chon|lay)\\b.*\\b(?:mau|san pham|con|cai)\\b/.test(dialogueText)\n  );\nconst invalidSelection = dialogueSelectionRequested && !selectedFromPrevious;\n\nconst priorDisplayed = Array.isArray(previousConversationState.last_result_set)\n  ? previousConversationState.last_result_set : [];\nconst selectedPrior = priorDisplayed.find(product =>\n  product?.id && String(product.id) === String(previousConversationState.selected_product_id || '')\n) || null;\nconst brandFilteredPrior = dialoguePriceDirection === 'lower' && dialogueCurrentBrands.length === 1\n  ? priorDisplayed.filter(product => dialogueProductMatchesBrand(product,dialogueCurrentBrands[0]))\n  : [];\n// Prefer a unique explicitly selected product, then a unique displayed result.\n// No arbitrary highest-price fallback when several distinct products are shown.\nconst referencedProduct = dialoguePriceDirection === 'lower'\n  ? (selectedPrior || (brandFilteredPrior.length === 1 ? brandFilteredPrior[0] : null) ||\n      (priorDisplayed.length === 1 ? priorDisplayed[0] : null))\n  : null;\nconst referencedProductPriceRaw = Number(referencedProduct?.price_min ?? referencedProduct?.price);\nconst referencedProductPrice = Number.isFinite(referencedProductPriceRaw) && referencedProductPriceRaw > 0\n  ? referencedProductPriceRaw : null;\nconst selectedReferenceProduct = selectedFromPrevious || selectedPrior;\nconst selectedReferencePriceRaw = Number(selectedReferenceProduct?.price_min ?? selectedReferenceProduct?.price);\nconst selectedReferencePrice = Number.isFinite(selectedReferencePriceRaw) && selectedReferencePriceRaw > 0\n  ? selectedReferencePriceRaw : null;\nconst refinementPriceBelow = dialoguePriceDirection === 'lower'\n  ? (referencedProductPrice ?? selectedReferencePrice)\n  : null;\n\nif (referencedProduct && dialoguePriceDirection === 'lower') {\n  // A price rejection is not a positive brand preference. Keep the\n  // referenced product only in the explicit rejection state below.\n  resolvedBrand = '';\n  resolvedModel = '';\n}\n\nif (selectedFromPrevious) {\n  // The canonical presented result-set ID and its product descriptor win\n  // over a model/name inferred by the router.\n  resolvedBrand = selectedFromPrevious.brand || '';\n  resolvedModel = selectedFromPrevious.name || '';\n  if (hasPendingAction && pendingQuestion.type === 'quotation') {\n    resolvedIntent = 'quotation';\n  } else {\n    resolvedIntent = 'product_detail';\n  }\n}\n\nif (invalidSelection) {\n  resolvedIntent = 'default';\n  resolvedBrand = '';\n  resolvedModel = '';\n  resolvedStorage = '';\n  resolvedRam = '';\n  resolvedColor = '';\n}\n\nif (isPendingValid && dialogueConfirm) {\n  resolvedIntent = 'quotation';\n  isFollowup = true;\n}\n\nif (hasPendingAction && dialogueConfirm && pendingQuestion.product_id) {\n  resolvedIntent = pendingQuestion.type === 'quotation' ? 'quotation' : 'product_detail';\n  resolvedModel = resolvedModel || pendingQuestion.product_name || '';\n}\n\nif (dialogueCancel || (dialogueReject && hasPendingAction)) {\n  resolvedIntent = 'default';\n}\n\nconst dialogueCriteriaContinuation =\n  /(?:nhung mau|cac mau|mau dien thoai|dien thoai).*(?:theo tieu chi|tieu chi truoc do|nhu tieu chi truoc|nhu tren)/.test(dialogueText);\nif (\n  dialogueCriteriaContinuation &&\n  (previousConversationState.category || Object.keys(previousActiveFilters).length > 0)\n) {\n  resolvedIntent = 'recommendation';\n  resolvedModel = '';\n  if (dialogueCurrentBrands.length === 0) resolvedBrand = '';\n  if (!dialogueHasExplicitStorage) resolvedStorage = '';\n  if (!dialogueHasExplicitRam) resolvedRam = '';\n  if (!dialogueHasExplicitColor) resolvedColor = '';\n}\n\nif (\n  (resolvedIntent === 'product_compare' || resolvedIntent === 'quotation') &&\n  Array.isArray(previousConversationState.last_result_set)\n) {\n  const indexes = resolvedIntent === 'product_compare'\n    ? unique(dialogueComparisonIndexes)\n    : (dialogueSelectedIndex ? [dialogueSelectedIndex] : []);\n  const resolvedProducts = indexes\n    .map(index => previousConversationState.last_result_set[index - 1])\n    .filter(Boolean)\n    .map((product, index) => ({\n      index: indexes[index],\n      brand: product.brand || '',\n      model: product.name || '',\n      storage_gb: null,\n      ram_gb: null,\n      color: null,\n      quantity: 1\n    }));\n  if (resolvedProducts.length > 0) products = resolvedProducts;\n}\n\n\n// CONTEXTUAL COMPARE FALLBACK\nif (resolvedIntent === 'product_compare' && products.length < 2) {\n  const previousLastResults = Array.isArray(previousConversationState.last_result_set)\n    ? previousConversationState.last_result_set\n    : [];\n  const previousRejectedReferences = Array.isArray(previousConversationState.rejected_products)\n    ? previousConversationState.rejected_products\n    : [];\n  const historicalReferences = [...previousLastResults, ...previousRejectedReferences];\n  const compareProducts = [];\n  const compareKeys = new Set();\n\n  function compareProductKey(product) {\n    const brand = dialogueNormalize(product?.brand || '');\n    const model = dialogueNormalize(product?.model || product?.name || '');\n    return `${brand}::${model}`;\n  }\n\n  function appendCompareDescriptor(product, preferredIndex = null) {\n    if (!product) return;\n    const brand = typeof product.brand === 'string' ? product.brand.trim() : '';\n    const model = typeof product.model === 'string' && product.model.trim()\n      ? product.model.trim()\n      : (typeof product.name === 'string' ? product.name.trim() : '');\n    if (!brand && !model) return;\n\n    const descriptor = {\n      index: Number.isInteger(preferredIndex) && preferredIndex > 0\n        ? preferredIndex\n        : compareProducts.length + 1,\n      brand,\n      model,\n      storage_gb: null,\n      ram_gb: null,\n      color: null,\n      quantity: 1\n    };\n    const key = compareProductKey(descriptor);\n    if (!key || key === '::' || compareKeys.has(key)) return;\n    compareKeys.add(key);\n    compareProducts.push(descriptor);\n  }\n\n  for (const existingProduct of products) {\n    appendCompareDescriptor(\n      existingProduct,\n      Number.isInteger(existingProduct?.index) ? existingProduct.index : null\n    );\n  }\n\n  const previousSelectedProductId = previousConversationState.selected_product_id\n    ? String(previousConversationState.selected_product_id)\n    : null;\n  let previousSelectedProduct = previousSelectedProductId\n    ? historicalReferences.find(product =>\n        product?.id && String(product.id) === previousSelectedProductId\n      ) || null\n    : null;\n\n  if (!previousSelectedProduct && selectedReferenceProduct) {\n    previousSelectedProduct = selectedReferenceProduct;\n  }\n  if (previousSelectedProduct) appendCompareDescriptor(previousSelectedProduct);\n\n  const historicalSearchPool = [...previousRejectedReferences, ...previousLastResults];\n  for (const currentBrand of dialogueCurrentBrands) {\n    const matchingHistoricalProduct = historicalSearchPool.find(product => {\n      if (!product) return false;\n      if (\n        previousSelectedProductId &&\n        product.id &&\n        String(product.id) === previousSelectedProductId\n      ) return false;\n      return dialogueProductMatchesBrand(product, currentBrand);\n    });\n    if (matchingHistoricalProduct) appendCompareDescriptor(matchingHistoricalProduct);\n  }\n\n  if (compareProducts.length < 2) {\n    const normalizedCurrentText = dialogueNormalize(chatInput);\n    for (const historicalProduct of historicalSearchPool) {\n      if (!historicalProduct) continue;\n      if (\n        previousSelectedProductId &&\n        historicalProduct.id &&\n        String(historicalProduct.id) === previousSelectedProductId\n      ) continue;\n      const historicalName = dialogueNormalize(\n        historicalProduct.name || historicalProduct.model || ''\n      );\n      if (historicalName && normalizedCurrentText.includes(historicalName)) {\n        appendCompareDescriptor(historicalProduct);\n      }\n    }\n  }\n\n  if (compareProducts.length > products.length) products = compareProducts;\n}\n\nconst resolvedCategory =\n  dialogueCurrentCategory ||\n  previousConversationState.category ||\n  null;\n\nconst previousExcluded = Array.isArray(previousConversationState.excluded_brands)\n  ? previousConversationState.excluded_brands\n  : [];\nconst previousPreferred = Array.isArray(previousConversationState.preferred_brands)\n  ? previousConversationState.preferred_brands\n  : [];\nconst fallbackPreviousBrand =\n  previousActiveFilters.brand ||\n  previousPreferred[previousPreferred.length - 1] ||\n  null;\nconst resolvedExcludedBrands = unique([\n  ...previousExcluded,\n  ...dialogueNegativeBrands,\n  ...(dialogueOtherBrand && fallbackPreviousBrand ? [fallbackPreviousBrand] : [])\n]).filter(brand => !resolvedBrand || dialogueNormalize(brand) !== dialogueNormalize(resolvedBrand));\n\nlet turnAction = 'CONTINUE';\nif (dialogueCancel) {\n  turnAction = 'CANCEL';\n} else if (dialogueReject && hasPendingAction) {\n  turnAction = 'REJECT';\n} else if (dialogueSelectionRequested || selectedFromPrevious) {\n  turnAction = 'SELECT';\n} else if (resolvedIntent === 'product_compare' || /so sanh|so hai|khac nhau/.test(dialogueText)) {\n  turnAction = 'COMPARE';\n} else if (dialogueOtherBrand || dialogueNegativeBrands.length) {\n  turnAction = 'EXCLUDE';\n} else if (dialoguePriceDirection || /uu tien|can hieu nang|de hoc|lam viec|choi game|camera khong quan trong/.test(dialogueText)) {\n  turnAction = dialoguePriceDirection === 'lower' && /\\bdat qua\\b/.test(dialogueText) ? 'REJECT' : 'REFINE';\n} else if (\n  (dialogueCurrentCategory && dialoguePreviousCategory && dialogueCurrentCategory !== dialoguePreviousCategory) ||\n  (dialogueCurrentBrands.length === 1 && previousActiveFilters.brand && dialogueNormalize(dialogueCurrentBrands[0]) !== dialogueNormalize(previousActiveFilters.brand))\n) {\n  turnAction = 'SWITCH';\n} else if (dialogueConfirm && (hasPendingAction || isPendingValid)) {\n  turnAction = 'CONFIRM';\n} else if (!previousConversationState.last_intent && !previousConversationState.category) {\n  turnAction = 'NEW_TOPIC';\n}\n\n// LIVE-10: explicit brand switch must defeat stale product recommendations.\nif (dialogueCurrentBrands.length === 1 && previousActiveFilters.brand &&\n    dialogueNormalize(dialogueCurrentBrands[0]) !== dialogueNormalize(previousActiveFilters.brand) &&\n    dialogueNegativeBrands.length === 0 && !dialogueOtherBrand) {\n  turnAction = 'SWITCH';\n  resolvedBrand = dialogueCurrentBrands[0];\n  resolvedModel = resolvedModel || '';\n}\n\nconst contextMode =\n  dialogueTopicScopeChanged\n    ? 'reset'\n    : turnAction === 'SWITCH'\n      ? 'replace'\n      : turnAction === 'NEW_TOPIC'\n      ? 'replace'\n      : turnAction === 'EXCLUDE' || turnAction === 'REFINE' || turnAction === 'SELECT'\n        ? 'continue'\n        : 'continue';\n\n// Only a budget stated by the user changes the explicit constraint.\n// Otherwise continue the current topic's prior budget, or clear it on a\n// cross-category reset. Gemini's inferred price_max is not authoritative.\nconst priorExplicitBudget = previousActiveFilters.price_max;\nif (explicitUserBudget !== null) {\n  priceMax = explicitUserBudget;\n} else if (contextMode === 'reset') {\n  priceMax = null;\n} else if (priorExplicitBudget !== null && priorExplicitBudget !== undefined && Number.isFinite(Number(priorExplicitBudget))) {\n  priceMax = Number(priorExplicitBudget);\n} else {\n  priceMax = null;\n}\n\nif ((resolvedIntent === 'product_compare' || turnAction === 'COMPARE')) {\n  // Referenced comparison brands are not shopping preferences/filters.\n  resolvedBrand = '';\n  resolvedModel = '';\n}\n\nconst requiresClarification = Boolean(\n  invalidSelection ||\n  (hasPendingAction && !dialogueSelectedIndex && !dialogueConfirm && !dialogueCancel) ||\n  (dialoguePriceDirection === 'lower' && !Number.isFinite(refinementPriceBelow))\n);\nconst clarificationField = invalidSelection\n  ? 'product_selection'\n  : (requiresClarification ? pendingQuestion?.field || (dialoguePriceDirection ? 'price_max' : null) : null);\n\n// Keep the state contract coherent before Prepare Recommendation Filters.\n// A current-turn exclusion removes the same canonical brand from the prior\n// positive preference and from the active positive brand filter.\nconst resolvedPreferredBrands = unique([\n  ...(['replace','reset'].includes(contextMode) ? [] : previousPreferred),\n  ...(resolvedBrand && turnAction !== 'SELECT' ? [resolvedBrand] : [])\n]).filter(brand => !dialogueNegativeBrands.some(negative => dialogueNormalize(negative) === dialogueNormalize(brand)));\nconst resolvedActiveFilters = { ...previousActiveFilters };\n\n// Excluding a brand refreshes the candidate pool. Product-specific attributes\n// from the excluded result are not user constraints unless this turn repeats\n// them explicitly; keep only the conversation-level category and budget.\nif (turnAction === 'EXCLUDE' && dialogueNegativeBrands.length > 0) {\n  if (!dialogueHasExplicitStorage) {\n    resolvedStorage = '';\n    delete resolvedActiveFilters.storage_gb;\n  }\n  if (!dialogueHasExplicitRam) {\n    resolvedRam = '';\n    delete resolvedActiveFilters.ram_gb;\n  }\n  if (!dialogueHasExplicitColor) {\n    resolvedColor = '';\n    delete resolvedActiveFilters.color;\n  }\n}\n\nif (resolvedBrand && turnAction !== 'SELECT') {\n  resolvedActiveFilters.brand = resolvedBrand;\n} else if (dialogueNegativeBrands.length ||\n           (dialoguePriceDirection === 'lower' && referencedProduct)) {\n  delete resolvedActiveFilters.brand;\n}\nif (priceMax !== null && priceMax !== undefined) {\n  resolvedActiveFilters.price_max = priceMax;\n}\nconst previousRejectedProducts = Array.isArray(previousConversationState.rejected_products)\n    ? previousConversationState.rejected_products\n    : [];\n  const rejectedProductsById = new Map(\n    previousRejectedProducts\n      .filter(product => product && product.id)\n      .map(product => [String(product.id), product])\n  );\n  if (referencedProduct?.id) {\n    rejectedProductsById.set(String(referencedProduct.id), {\n      id: referencedProduct.id,\n      name: referencedProduct.name || referencedProduct.model || '',\n      brand: referencedProduct.brand || null,\n      price_min: Number.isFinite(referencedProductPrice)\n        ? referencedProductPrice\n        : (referencedProduct.price_min ?? referencedProduct.price ?? null),\n      price_max: Number.isFinite(referencedProductPrice)\n        ? referencedProductPrice\n        : (referencedProduct.price_max ?? referencedProduct.price ?? null)\n    });\n  }\n  const resolvedRejectedProducts = [...rejectedProductsById.values()];\n\n  const resolvedConversationState = {\n    ...previousConversationState,\n    category: resolvedCategory,\n    active_filters: resolvedActiveFilters,\n    preferred_brands: resolvedPreferredBrands,\n    excluded_brands: resolvedExcludedBrands,\n    rejected_products: resolvedRejectedProducts,\n    last_intent: resolvedIntent,\n    last_turn_action: turnAction\n  };\n\n\n// FAQ V1 canonicalization is intentionally isolated at the Validate Router boundary.\nconst allowedFaqTopics = [\n  \"shipping\", \"payment\", \"cod\", \"installment\", \"warranty\", \"return\",\n  \"address\", \"working_time\", \"contact\", \"order_cancellation\", \"delivery_inspection\"\n];\nfunction normalizeFaqText(value) {\n  return String(value ?? \"\")\n    .replace(/[đĐ]/g, \"d\")\n    .normalize(\"NFD\")\n    .replace(/[\\u0300-\\u036f]/g, \"\")\n    .toLowerCase();\n}\nfunction extractExplicitFaqTopics(value) {\n  const text = normalizeFaqText(value);\n  const rules = [\n    [\"shipping\", [\"giao hang\", \"van chuyen\", \"shipping\", \"ship\"]],\n    [\"payment\", [\"thanh toan\", \"payment\"]],\n    [\"cod\", [\"cod\", \"thanh toan khi nhan hang\", \"tra tien khi nhan hang\"]],\n    [\"installment\", [\"tra gop\", \"installment\"]],\n    [\"warranty\", [\"bao hanh\", \"warranty\"]],\n    [\"return\", [\"doi tra\", \"doi hang\", \"tra hang\", \"return\"]],\n    [\"address\", [\"dia chi\", \"o dau\", \"den cua hang\", \"tai cua hang\", \"showroom\"]],\n    [\"working_time\", [\"gio lam viec\", \"gio mo cua\", \"mo cua\", \"dong cua\"]],\n    [\"contact\", [\"lien he\", \"hotline\", \"email\", \"contact\"]],\n    [\"order_cancellation\", [\"huy don\", \"cancel order\"]],\n    [\"delivery_inspection\", [\"kiem tra may\", \"kiem tra hang\", \"kiem tra san pham\", \"kiem tra khi nhan\", \"mo hop khi nhan\"]]\n  ];\n  return rules.map(([topic, patterns]) => {\n    const positions = patterns.map(phrase => text.indexOf(phrase)).filter(index => index >= 0);\n    if (topic === \"order_cancellation\" && positions.length === 0 && text.includes(\"huy\") && text.includes(\"don\")) {\n      positions.push(Math.min(text.indexOf(\"huy\"), text.indexOf(\"don\")));\n    }\n    return { topic, index: positions.length ? Math.min(...positions) : -1 };\n  }).filter(item => item.index >= 0)\n    .sort((a, b) => a.index - b.index || allowedFaqTopics.indexOf(a.topic) - allowedFaqTopics.indexOf(b.topic))\n    .map(item => item.topic);\n}\nfunction canonicalizeFaqTopics(intentValue, currentMessage, routerTopics, routerPrimary) {\n  if (intentValue !== \"faq\") return [];\n  const explicit = extractExplicitFaqTopics(currentMessage);\n  const candidates = explicit.length ? explicit : [\n    ...(Array.isArray(routerTopics) ? routerTopics : []),\n    routerPrimary\n  ];\n  const seen = new Set();\n  return candidates.map(value => String(value ?? \"\").trim().toLowerCase())\n    .filter(value => allowedFaqTopics.includes(value) && !seen.has(value) && seen.add(value));\n}\nconst canonicalFaqTopics = canonicalizeFaqTopics(\n  resolvedIntent,\n  chatInput,\n  data.faq_topics,\n  data.faq_topic\n);\n\nconst resolvedSelectedProductId =\n  dialogueSelectionRequested\n    ? (selectedFromPrevious?.id || null)\n    : (\n        resolvedIntent === 'product_compare' ||\n        turnAction === 'COMPARE'\n      )\n      ? (previousConversationState.selected_product_id || null)\n      : (pendingQuestion?.product_id || null);\n\nreturn [\n  {\n    json: {\n      intent: resolvedIntent,\n      brand: resolvedBrand,\n      model: resolvedModel,\n      storage: resolvedStorage,\n      ram: resolvedRam,\n      color: resolvedColor,\n      price_max: priceMax,\n      condition: typeof data.condition === 'string' ? data.condition.trim() : '',\n      use_case: resolvedUseCase,\n      faq_topic: canonicalFaqTopics[0] || \"\",\n      faq_topics: canonicalFaqTopics,\n      products,\n      quantity: topLevelQuantity.quantity,\n      quantity_explicit: topLevelQuantity.quantity_explicit,\n      is_followup: isFollowup,\n      pending_quote_exists: isPendingValid,\n      pending_quote_requests: pendingRequests,\n      turn_action: turnAction,\n      context_mode: contextMode,\n      category: resolvedCategory,\n      exclude_brands: resolvedExcludedBrands,\n      excluded_brands: resolvedExcludedBrands,\n      preferred_brands: resolvedPreferredBrands,\n      rejected_products: resolvedRejectedProducts,\n      selected_result_index: Number.isInteger(dialogueSelectedIndex) ? dialogueSelectedIndex : null,\n      selected_product_id: resolvedSelectedProductId,\n      price_direction: dialoguePriceDirection,\n      refinement_price_below: Number.isFinite(refinementPriceBelow) ? refinementPriceBelow : null,\n      requires_clarification: requiresClarification,\n      clarification_field: clarificationField,\n      conversationState: resolvedConversationState,\n      chatInput,\n      sessionId,\n      source\n    }\n  }\n];\n\n"
+        "jsCode": "\nconst input = $json;\n\nlet rawText = \"\";\nif (Array.isArray(input.content?.parts)) {\n  rawText = input.content.parts.map(p => p.text || \"\").join(\"\");\n} else if (typeof input.content?.parts?.[0]?.text === \"string\") {\n  rawText = input.content.parts[0].text;\n} else if (typeof input.text === \"string\") {\n  rawText = input.text;\n}\n\nrawText = String(rawText).trim().replace(/^```json\\s*/i, \"\").replace(/^```\\s*/i, \"\").replace(/\\s*```$/i, \"\").trim();\n\nlet data;\ntry {\n  data = JSON.parse(rawText);\n} catch (error) {\n  try {\n    const firstBrace = rawText.indexOf(\"{\");\n    const lastBrace = rawText.lastIndexOf(\"}\");\n    if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {\n      data = JSON.parse(rawText.slice(firstBrace, lastBrace + 1));\n    } else {\n      throw new Error(\"Không tìm thấy JSON object\");\n    }\n  } catch (secondError) {\n    data = { intent: \"default\", brand: \"\", model: \"\", storage: \"\", ram: \"\", color: \"\", price_max: null, condition: \"\", use_case: \"\", faq_topic: \"\", faq_topics: [], products: [] };\n  }\n}\n\nconst validIntents = [\"product_search\", \"product_detail\", \"product_compare\", \"recommendation\", \"faq\", \"quotation\", \"default\"];\nlet rawIntent = String(data.intent || \"\").trim().toLowerCase();\nlet intent = validIntents.includes(rawIntent) ? rawIntent : \"default\";\n\nconst normalizeInput = $(\"Normalize Input\").first().json;\nconst chatInput = normalizeInput?.chatInput || \"\";\nconst sessionId = normalizeInput?.sessionId || \"\";\nconst source = normalizeInput?.source || \"web_chat\";\n\nlet pendingRow = null;\ntry {\n  const dtItems = $(\"Pending Quote - Lookup\").all();\n  if (dtItems && dtItems.length > 0 && dtItems[0].json && dtItems[0].json.session_id) {\n    pendingRow = dtItems[0].json;\n  }\n} catch (e) {}\n\nconst now = Date.now();\nlet isPendingValid = false;\nlet pendingRequests = [];\n\nif (pendingRow && pendingRow.session_id) {\n  const expiresAt = Number(pendingRow.expires_at || 0);\n  if (expiresAt > now) {\n    try {\n      pendingRequests = typeof pendingRow.requests_json === \"string\" ? JSON.parse(pendingRow.requests_json) : (pendingRow.requests || []);\n      if (Array.isArray(pendingRequests) && pendingRequests.length > 0) {\n        isPendingValid = true;\n      }\n    } catch (e) {}\n  }\n}\n\nfunction normalizePendingMatchText(value) {\n  return String(value ?? \"\")\n    .normalize(\"NFD\")\n    .replace(/[\\u0300-\\u036f]/g, \"\")\n    .replace(/[^\\p{L}\\p{N}]+/gu, \" \")\n    .toLowerCase()\n    .trim();\n}\n\nfunction pendingRequestHasMissingField(request) {\n  return [request?.color, request?.storage_gb, request?.ram_gb]\n    .some(value => value === null || value === undefined || String(value).trim() === \"\");\n}\n\nfunction hasFollowupAttribute(text) {\n  return [\n    /\\b(?:mau|color)\\b/i,\n    /\\b(?:bac|den|trang|vang|tim|hong|xanh|titan|silver|black|white|gold|jet black)\\b/i,\n    /\\bram\\s*\\d+\\b/i,\n    /\\b\\d+\\s*gb\\s*ram\\b/i,\n    /\\b\\d+(?:[.,]\\d+)?\\s*tb\\b/i,\n    /\\b(?:64|128|256|512|1024|2048)\\s*gb\\b/i,\n    /\\b\\d+\\s*(?:inch|mm)\\b/i,\n    /\\b(?:gps|cellular|wifi|5g|4g)\\b/i,\n    /\\b(?:nhom|titanium|chat lieu|material)\\b/i\n  ].some(pattern => pattern.test(text));\n}\n\nlet isFollowup = false;\nif (isPendingValid) {\n  const normalizedChat = String(chatInput || \"\").normalize(\"NFD\").replace(/[\\u0300-\\u036f]/g, \"\").toLowerCase();\n  const isProductInfoQuestion = /\\b(?:chong nuoc|waterproof|bao hanh|thong so|thong tin|camera|pin|man hinh)\\b/i.test(normalizedChat)\n    && /\\b(?:co|khong|nao|the nao|nhu the nao)\\b/i.test(normalizedChat);\n  if (isProductInfoQuestion && intent !== \"faq\") {\n    // An unrelated product-info question must be answered without consuming\n    // or retargeting the pending quotation.\n    intent = \"product_detail\";\n  }\n  const isExplicitOther = intent === \"faq\" || intent === \"product_compare\" || intent === \"product_detail\" || isProductInfoQuestion;\n  if (!isExplicitOther) {\n    const hasAttributeMention = /(?:ram|\\d+\\s*(?:gb|tb)|mau|color|bac|den|trang|vang|tim|hong|xanh|titan|silver|black|white|gold|\\b36\\b|\\b48\\b|\\b16\\b|\\b32\\b|\\b256\\b|\\b512\\b|\\b1tb\\b|\\b2tb\\b)/i.test(normalizedChat);\n    if (hasAttributeMention || intent === \"quotation\") {\n      intent = \"quotation\";\n      isFollowup = true;\n    }\n  }\n}\nfunction parseExplicitUserBudget(value) {\n  const normalized = String(value || '')\n    .replace(/[đĐ]/g, 'd')\n    .normalize('NFD')\n    .replace(/[\\u0300-\\u036f]/g, '')\n    .toLowerCase();\n  const match = normalized.match(/\\b(?:duoi|toi da|tam|khoang|ngan sach|budget|khong qua|gia duoi|gia khoang)\\s*(\\d+(?:[.,]\\d+)?)\\s*(trieu|tr|million|m|nghin|ngan|k)\\b/i);\n  if (!match) return null;\n  const amount = Number(match[1].replace(',', '.'));\n  if (!Number.isFinite(amount) || amount <= 0) return null;\n  const unit = match[2].toLowerCase();\n  const multiplier = ['trieu', 'tr', 'million', 'm'].includes(unit) ? 1000000 : 1000;\n  return Math.round(amount * multiplier);\n}\n\nconst explicitUserBudget = parseExplicitUserBudget(chatInput);\nlet priceMax = data.price_max;\nif (priceMax === '' || priceMax === undefined || priceMax === null) {\n  priceMax = null;\n} else {\n  if (typeof priceMax === 'string') priceMax = priceMax.replace(/\\./g, '').replace(/,/g, '').trim();\n  priceMax = Number(priceMax);\n  if (!Number.isFinite(priceMax) || priceMax < 0) priceMax = null;\n}\n\n\nfunction normalizeStorageGb(value, rawText) {\n  if (typeof value === 'string' && value.trim()) {\n    const v = value.trim().toLowerCase();\n    const tbMatch = v.match(/(\\d+(?:[.,]\\d+)?)\\s*tb/i);\n    if (tbMatch) {\n      const num = Number(tbMatch[1].replace(',', '.'));\n      if (Number.isFinite(num) && num > 0) return Math.round(num * 1024);\n    }\n    const gbMatch = v.match(/(\\d+)\\s*gb/i);\n    if (gbMatch) {\n      const num = Number(gbMatch[1]);\n      if (Number.isFinite(num) && num > 0) return num;\n    }\n  }\n\n  let rawStorageGb = null;\n  if (rawText && typeof rawText === 'string') {\n    const raw = rawText.toLowerCase();\n    const rawTbMatches = [...raw.matchAll(/(\\d+(?:[.,]\\d+)?)\\s*tb/gi)];\n    if (rawTbMatches.length > 0) {\n      const num = Number(rawTbMatches[0][1].replace(',', '.'));\n      if (Number.isFinite(num) && num > 0) {\n        rawStorageGb = Math.round(num * 1024);\n      }\n    } else {\n      const withoutRam = raw\n        .replace(/ram\\s*[:\\s]?\\s*\\d+\\s*gb/gi, '')\n        .replace(/\\d+\\s*gb\\s*ram/gi, '');\n      const rawGbMatches = [...withoutRam.matchAll(/(\\d+)\\s*gb/gi)];\n      for (const m of rawGbMatches) {\n        const num = Number(m[1]);\n        if (num >= 64) {\n          rawStorageGb = num;\n          break;\n        }\n      }\n    }\n  }\n\n  if (rawStorageGb !== null) {\n    return rawStorageGb;\n  }\n\n  if (value !== null && value !== undefined && value !== '') {\n    const num = Number(String(value).replace(/[^\\d.]/g, ''));\n    if (Number.isFinite(num) && num > 0) {\n      return Math.round(num);\n    }\n  }\n\n  return null;\n}\n\nfunction normalizeRamGb(value, rawText) {\n  if (typeof value === 'string' && value.trim()) {\n    const v = value.trim().toLowerCase();\n    const ramMatch = v.match(/(\\d+)\\s*gb/i) || v.match(/(\\d+)/);\n    if (ramMatch) {\n      const num = Number(ramMatch[1]);\n      if (Number.isFinite(num) && num <= 64) return num;\n    }\n  }\n\n  if (typeof value === 'number' && Number.isFinite(value) && value <= 64) {\n    return value;\n  }\n\n  if (rawText && typeof rawText === 'string') {\n    const raw = rawText.toLowerCase();\n    const ramMatch1 = raw.match(/ram\\s*[:\\s]?\\s*(\\d+)\\s*(?:gb)?/i);\n    const ramMatch2 = raw.match(/(\\d+)\\s*gb\\s*ram/i);\n    if (ramMatch1) {\n      const num = Number(ramMatch1[1]);\n      if (Number.isFinite(num) && num <= 64) return num;\n    }\n    if (ramMatch2) {\n      const num = Number(ramMatch2[1]);\n      if (Number.isFinite(num) && num <= 64) return num;\n    }\n  }\n\n  return null;\n}\n\n\nfunction getProductRawText(product, index, products, fullText) {\n  const text = String(fullText || \"\");\n  if (!Array.isArray(products) || products.length <= 1) return text;\n  const lower = text.toLowerCase();\n  const model = typeof product?.model === \"string\" ? product.model.trim() : \"\";\n  const brand = typeof product?.brand === \"string\" ? product.brand.trim() : \"\";\n  const currentHints = [model, brand && model ? `${brand} ${model}` : \"\"]\n    .filter(Boolean)\n    .sort((a, b) => b.length - a.length);\n  let start = -1;\n  for (const hint of currentHints) {\n    const pos = lower.indexOf(hint.toLowerCase());\n    if (pos !== -1 && (start === -1 || pos < start)) start = pos;\n  }\n  if (start === -1) return \"\";\n  let end = text.length;\n  products.forEach((other, otherIndex) => {\n    if (otherIndex === index) return;\n    const otherModel = typeof other?.model === \"string\" ? other.model.trim() : \"\";\n    const otherBrand = typeof other?.brand === \"string\" ? other.brand.trim() : \"\";\n    const otherHints = [otherModel, otherBrand && otherModel ? `${otherBrand} ${otherModel}` : \"\"]\n      .filter(Boolean)\n      .sort((a, b) => b.length - a.length);\n    for (const hint of otherHints) {\n      const pos = lower.indexOf(hint.toLowerCase(), start + 1);\n      if (pos > start && pos < end) end = pos;\n    }\n  });\n  return text.slice(start, end);\n}\n\nfunction parseExplicitQuantity(rawText) {\n  const normalized = String(rawText || '')\n    .replace(/[đĐ]/g, 'd')\n    .normalize('NFD')\n    .replace(/[\\u0300-\\u036f]/g, '')\n    .toLowerCase();\n  const match = normalized.match(/\\b(?:so luong|sl|mua|lay|can)\\s*(\\d+)\\b/i) ||\n    normalized.match(/(?:^|\\s)(\\d+)\\s*(?:cai|chiec|may)\\b/i);\n  const parsed = match ? Number(match[1]) : null;\n  return Number.isInteger(parsed) && parsed > 0\n    ? { quantity: parsed, quantity_explicit: true }\n    : { quantity: 1, quantity_explicit: false };\n}\n\nconst topLevelQuantity = parseExplicitQuantity(chatInput);\n\nlet products = [];\nif ((intent === \"product_compare\" || intent === \"quotation\") && Array.isArray(data.products)) {\n  products = data.products\n    .map((product, index) => {\n      const scopedRawText = getProductRawText(product, index, data.products, chatInput);\n      const quantityInfo = parseExplicitQuantity(scopedRawText);\n      return {\n        index: Number.isInteger(product?.index) ? product.index : index + 1,\n        brand: typeof product?.brand === \"string\" ? product.brand.trim() : \"\",\n        model: typeof product?.model === \"string\" ? product.model.trim() : \"\",\n        storage_gb: normalizeStorageGb(product?.storage_gb ?? product?.storage, scopedRawText),\n        ram_gb: normalizeRamGb(product?.ram_gb ?? product?.ram, scopedRawText),\n        color: typeof product?.color === \"string\" && product.color.trim() ? product.color.trim() : null,\n        quantity: quantityInfo.quantity,\n        quantity_explicit: quantityInfo.quantity_explicit\n      };\n    })\n    .filter(product => product.model || product.brand);\n}\n\n\n// LIVE-17: recover names the customer EXPLICITLY gave if the router\n// shortens a model suffix. Extract only independently recognizable device\n// families. Do not infer products from history or invent catalog facts.\nif (intent === 'product_compare') {\n  const explicitModels = [];\n  const namedPattern = /\\b(?:iphone\\s+\\d+(?:\\s+(?:pro\\s+max|pro|plus|mini|e))?|samsung\\s+galaxy\\s+(?:s|z\\s*fold|z\\s*flip)\\s*\\d+(?:\\s+(?:ultra|plus|fe))?|galaxy\\s+(?:s|z\\s*fold|z\\s*flip)\\s*\\d+(?:\\s+(?:ultra|plus|fe))?)\\b/gi;\n  for (const found of String(chatInput).matchAll(namedPattern)) {\n    const raw = found[0].trim();\n    const key = raw.toLowerCase().replace(/\\s+/g,'');\n    if (explicitModels.some(item => item.key === key)) continue;\n    const brand = /^iphone\\b/i.test(raw) ? 'Apple' : 'Samsung';\n    explicitModels.push({key, brand, model:raw});\n  }\n  if (explicitModels.length >= 2) {\n    products = explicitModels.map((item,index) => ({\n      index:index+1, brand:item.brand, model:item.model,\n      storage_gb:null, ram_gb:null, color:null, quantity:1,\n      quantity_explicit:false\n    }));\n  }\n}\n\n// ============================================================\n// DIALOGUE STATE / TURN ACTION NORMALIZATION\n// The router proposes semantics; this block validates and merges\n// only safe, structured values before any branch runs.\n// ============================================================\n\nlet previousConversationState =\n  normalizeInput?.conversationState &&\n  typeof normalizeInput.conversationState === 'object' &&\n  !Array.isArray(normalizeInput.conversationState)\n    ? normalizeInput.conversationState\n    : {};\n\nlet previousActiveFilters =\n  previousConversationState.active_filters &&\n  typeof previousConversationState.active_filters === 'object'\n    ? previousConversationState.active_filters\n    : {};\n\nfunction dialogueNormalize(value) {\n  return String(value ?? '')\n    // Runtime execution data contains replacement/mis-decoded Vietnamese bytes\n    // (for example: kh�ng, khÃ´ng, khĂ´ng). Keep chatInput untouched, but make\n    // deterministic routing tolerant of those representations.\n    .replace(/kh(?:\\uFFFD|\\?|Ã´|Ă´)ng/giu, 'khong')\n    .replace(/(?:đ|d)i[?]n\\s+tho[?]i/giu, 'dien thoai')\n    .replace(/kho[?]ng/giu, 'khoang')\n    .replace(/[đĐ]/g, 'd')\n    .normalize('NFD')\n    .replace(/[\\u0300-\\u036f]/g, '')\n    .toLowerCase()\n    .trim();\n}\n\nconst dialogueAliases = {\n  Apple: ['apple', 'iphone', 'ipad', 'macbook'],\n  Samsung: ['samsung', 'galaxy'],\n  Xiaomi: ['xiaomi', 'redmi', 'poco'],\n  Oppo: ['oppo'],\n  OnePlus: ['oneplus', 'one plus'],\n  Vivo: ['vivo'],\n  Honor: ['honor']\n};\n\nfunction dialogueBrands(text) {\n  const value = dialogueNormalize(text);\n  return Object.entries(dialogueAliases)\n    .filter(([, aliases]) => aliases.some(alias => value.includes(alias)))\n    .map(([brand]) => brand);\n}\n\nfunction dialogueProductMatchesBrand(product, brand) {\n  if (!product || !brand) return false;\n  return [product.brand, product.category, product.name]\n    .filter(Boolean)\n    .some(value => dialogueBrands(value).includes(brand));\n}\n\nfunction dialogueCategory(text) {\n  const value = dialogueNormalize(text);\n  if (/dong ho|smartwatch|watch/.test(value)) return 'watch';\n  if (/laptop|macbook|may tinh xach tay/.test(value)) return 'laptop';\n  if (/tablet|ipad|may tinh bang/.test(value)) return 'tablet';\n  if (/dien thoai|smartphone|iphone|galaxy|samsung|xiaomi|redmi|poco|oppo|oneplus/.test(value)) return 'phone';\n  return null;\n}\n\nfunction unique(values) {\n  return [...new Set(values.filter(Boolean))];\n}\n\nconst dialogueText = dialogueNormalize(chatInput);\nconst dialogueCurrentBrands = dialogueBrands(dialogueText);\nconst dialogueCurrentCategory = dialogueCategory(dialogueText);\nconst dialoguePreviousCategory = previousConversationState.category || null;\nconst dialogueTopicScopeChanged = Boolean(\n  dialogueCurrentCategory &&\n  dialoguePreviousCategory &&\n  dialogueCurrentCategory !== dialoguePreviousCategory\n);\nif (dialogueTopicScopeChanged) {\n  // Keep session infrastructure outside this object, but do not carry\n  // shopping constraints/referents into a different product category.\n  previousConversationState = { category: dialogueCurrentCategory, state_version: 2 };\n  previousActiveFilters = {};\n}\nconst dialogueOtherBrand =\n  /\\b(hang|thuong hieu|brand)\\b.*\\b(khac|other)\\b/.test(dialogueText) ||\n  /\\b(doi|chuyen|chon)\\b.*\\b(hang|thuong hieu|brand)\\b.*\\b(khac|other)\\b/.test(dialogueText) ||\n  /\\b(mau|con|cai|loai)\\b.*\\b(khac|other)\\b/.test(dialogueText);\nconst dialogueHasNegative = /\\b(khong|khong thich|bo|khong muon|khong dung|dung lay|khong lay|khong can)\\b/.test(dialogueText);\nconst dialogueReject = /^(khong|khong phai|khong can|khong muon)$/.test(dialogueText);\nconst dialogueNegativeBrands = (() => {\n  const result = [];\n  const brandNegation = /\\b(?:khong|bo|dung)\\s+(?:(?:muon|thich|lay|chon|can|thuoc|hang|thuong|hieu|brand)\\s+)*(apple|iphone|ipad|macbook|samsung|galaxy|xiaomi|redmi|poco|oppo|oneplus|vivo|honor)\\b/g;\n  for (const match of dialogueText.matchAll(brandNegation)) {\n    result.push(...dialogueBrands(match[1]));\n  }\n  return unique(result);\n})();\nconst dialoguePriceDirection =\n  /re hon|gia thap hon|dat qua|giam gia/.test(dialogueText)\n    ? 'lower'\n    : /dat hon|gia cao hon/.test(dialogueText)\n      ? 'higher'\n      : null;\nconst dialogueCancel = /^(?:thoi|dung|huy|huy bao gia|huy yeu cau|bo qua|khong can|khong can nua|khong can bao gia)$/.test(dialogueText);\nconst dialogueConfirm = /^(ok|uh|u|duoc|duoc roi|dung|co|yes)$/.test(dialogueText);\nconst dialogueNumberWords = {\n  mot: 1,\n  nhat: 1,\n  hai: 2,\n  ba: 3,\n  bon: 4,\n  tu: 4,\n  nam: 5\n};\nconst selectedIndexMatch = dialogueText.match(/(?:mau|con|cai|so)\\s*(?:thu|so)?\\s*(\\d+)/i);\nconst selectedFirstMatch = dialogueText.match(/(?:mau|con|cai)\\s+(?:dau tien|dau|thu nhat)\\b/i);\nconst selectedWordMatch = dialogueText.match(/(?:mau|con|cai)\\s*(?:thu)?\\s*(mot|nhat|hai|ba|bon|tu|nam)\\b/i);\nconst dialogueSelectedIndex = selectedIndexMatch\n  ? Number(selectedIndexMatch[1])\n  : (selectedFirstMatch || selectedWordMatch && ['mot', 'nhat'].includes(selectedWordMatch[1]))\n    ? 1\n    : selectedWordMatch\n      ? dialogueNumberWords[selectedWordMatch[1]]\n      : null;\nconst dialogueComparisonIndexes = [...dialogueText.matchAll(/(?:mau|con|cai|so)\\s*(?:thu|so)?\\s*(\\d+)/gi)]\n  .map(match => Number(match[1]))\n  .filter(index => Number.isInteger(index) && index > 0);\nconst pendingQuestion = previousConversationState.pending_question || null;\nconst hasPendingAction = Boolean(pendingQuestion && typeof pendingQuestion === 'object');\n\nlet resolvedIntent = intent;\nlet resolvedBrand = typeof data.brand === 'string' ? data.brand.trim() : '';\nlet resolvedModel = typeof data.model === 'string' ? data.model.trim() : '';\nlet resolvedStorage = typeof data.storage === 'string' ? data.storage.trim() : '';\nlet resolvedRam = typeof data.ram === 'string' ? data.ram.trim() : '';\nlet resolvedColor = typeof data.color === 'string' ? data.color.trim() : '';\nlet resolvedUseCase = typeof data.use_case === 'string' ? data.use_case.trim() : '';\n// Only a model actually named this turn may supersede a pending quotation.\n// Token boundaries prevent an inferred shorter model from matching a suffix\n// such as 16e. Catalog resolution (not this router) supplies the real ID.\nconst modelTokens = dialogueNormalize(resolvedModel).match(/[a-z0-9]+/g) || [];\nconst currentModelPattern = modelTokens.length > 0\n  ? new RegExp('\\\\b' + modelTokens.join('\\\\s*') + '\\\\b(?!\\\\s+(?:pro|max|plus|ultra|mini|air|se)\\\\b)', 'i') : null;\nconst explicitProductModel = Boolean(currentModelPattern?.test(dialogueText)\n  && ['product_detail', 'quotation'].includes(resolvedIntent) && !dialogueSelectedIndex);\nif (explicitProductModel) {\n  isFollowup = false;\n  if (resolvedIntent === 'product_detail') products = [];\n}\n\n// Only explicit user wording may create a new positive preference. A product\n// returned by the model is conversational output, not a user-selected brand\n// or configuration. Existing state remains valid when it was already explicit.\nconst previousBrandContext = unique([\n  previousActiveFilters.brand,\n  ...(Array.isArray(previousConversationState.preferred_brands)\n    ? previousConversationState.preferred_brands\n    : [])\n].flatMap(value => dialogueBrands(value)));\nconst resolvedBrandCanonical = dialogueBrands(resolvedBrand)[0] || dialogueNormalize(resolvedBrand);\nconst hasExplicitCurrentBrand = dialogueCurrentBrands.includes(resolvedBrandCanonical);\nconst hasPreviousBrandContext = previousBrandContext.includes(resolvedBrandCanonical);\n\nconst dialogueTextWithoutRam = dialogueText\n  .replace(/\\bram\\s*[:\\s]?\\s*\\d+\\s*gb\\b/gi, ' ')\n  .replace(/\\b\\d+\\s*gb\\s*ram\\b/gi, ' ');\nconst dialogueHasExplicitStorage =\n  /\\b(?:dung luong|bo nho|storage)\\b/i.test(dialogueText) ||\n  /\\b\\d+(?:[.,]\\d+)?\\s*(?:tb|gb)\\b/i.test(dialogueTextWithoutRam);\nconst dialogueHasExplicitRam = /\\bram\\b|\\b\\d+\\s*gb\\s*ram\\b/i.test(dialogueText);\nconst dialogueHasExplicitColor =\n  /\\b(?:mau|color|den|trang|bac|xam|vang|tim|hong|xanh|titan|silver|black|white|gold|green|blue|red)\\b/i.test(dialogueText);\n\nif (\n  resolvedBrand &&\n  !hasExplicitCurrentBrand &&\n  !hasPreviousBrandContext\n) {\n  resolvedBrand = '';\n}\n\n// Do not persist model-inferred product attributes from a clean, budget-only\n// request. They become active filters only when the user actually mentioned\n// them (or when an earlier explicit filter is being continued).\nif (!dialogueHasExplicitStorage && !previousActiveFilters.storage_gb) resolvedStorage = '';\nif (!dialogueHasExplicitRam && !previousActiveFilters.ram_gb) resolvedRam = '';\nif (!dialogueHasExplicitColor && !previousActiveFilters.color) resolvedColor = '';\n\n\n// An explicit negative brand preference wins over any brand/model emitted by the LLM.\n// Keep the existing category and budget context, but never turn \"không iPhone\"\n// into a positive Apple filter.\nif (dialogueNegativeBrands.length > 0) {\n  resolvedBrand = '';\n  if (dialogueBrands(resolvedModel).some(brand => dialogueNegativeBrands.includes(brand))) {\n    resolvedModel = '';\n  }\n  if (resolvedIntent === 'default' || resolvedIntent === 'faq' || resolvedIntent === 'product_detail') {\n    resolvedIntent = previousConversationState.last_intent === 'recommendation'\n      ? 'recommendation'\n      : 'product_search';\n  }\n}\n\nif (!resolvedUseCase) {\n  if (/uu tien pin|pin tot hon/.test(dialogueText)) resolvedUseCase = 'battery';\n  else if (/choi game|gaming/.test(dialogueText)) resolvedUseCase = 'gaming';\n  else if (/hieu nang|performance/.test(dialogueText)) resolvedUseCase = 'performance';\n  else if (/camera tot|chup anh/.test(dialogueText)) resolvedUseCase = 'camera';\n}\n\nif (\n  !resolvedBrand &&\n  dialogueCurrentBrands.length === 1 &&\n  !dialogueOtherBrand &&\n  !dialogueNegativeBrands.includes(dialogueCurrentBrands[0])\n) {\n  resolvedBrand = dialogueCurrentBrands[0];\n}\n\nconst dialogueComparisonRequested =\n  resolvedIntent === 'product_compare' &&\n  dialogueComparisonIndexes.length >= 2;\nconst selectedFromPrevious =\n  !dialogueComparisonRequested &&\n  Number.isInteger(dialogueSelectedIndex) &&\n  dialogueSelectedIndex > 0 &&\n  Array.isArray(previousConversationState.last_result_set)\n    ? previousConversationState.last_result_set[dialogueSelectedIndex - 1]\n    : null;\nconst dialogueSelectionRequested =\n  !dialogueComparisonRequested &&\n  (\n    Number.isInteger(dialogueSelectedIndex) ||\n    /\\b(?:chon|lay)\\b.*\\b(?:mau|san pham|con|cai)\\b/.test(dialogueText)\n  );\nconst invalidSelection = dialogueSelectionRequested && !selectedFromPrevious;\n\nconst priorDisplayed = Array.isArray(previousConversationState.last_result_set)\n  ? previousConversationState.last_result_set : [];\nconst selectedPrior = priorDisplayed.find(product =>\n  product?.id && String(product.id) === String(previousConversationState.selected_product_id || '')\n) || null;\nconst brandFilteredPrior = dialoguePriceDirection === 'lower' && dialogueCurrentBrands.length === 1\n  ? priorDisplayed.filter(product => dialogueProductMatchesBrand(product,dialogueCurrentBrands[0]))\n  : [];\n// Prefer a unique explicitly selected product, then a unique displayed result.\n// No arbitrary highest-price fallback when several distinct products are shown.\nconst referencedProduct = dialoguePriceDirection === 'lower'\n  ? (selectedPrior || (brandFilteredPrior.length === 1 ? brandFilteredPrior[0] : null) ||\n      (priorDisplayed.length === 1 ? priorDisplayed[0] : null))\n  : null;\nconst referencedProductPriceRaw = Number(referencedProduct?.price_min ?? referencedProduct?.price);\nconst referencedProductPrice = Number.isFinite(referencedProductPriceRaw) && referencedProductPriceRaw > 0\n  ? referencedProductPriceRaw : null;\nconst selectedReferenceProduct = selectedFromPrevious || selectedPrior;\nconst selectedReferencePriceRaw = Number(selectedReferenceProduct?.price_min ?? selectedReferenceProduct?.price);\nconst selectedReferencePrice = Number.isFinite(selectedReferencePriceRaw) && selectedReferencePriceRaw > 0\n  ? selectedReferencePriceRaw : null;\nconst refinementPriceBelow = dialoguePriceDirection === 'lower'\n  ? (referencedProductPrice ?? selectedReferencePrice)\n  : null;\n\nif (referencedProduct && dialoguePriceDirection === 'lower') {\n  // A price rejection is not a positive brand preference. Keep the\n  // referenced product only in the explicit rejection state below.\n  resolvedBrand = '';\n  resolvedModel = '';\n}\n\nif (selectedFromPrevious) {\n  // The canonical presented result-set ID and its product descriptor win\n  // over a model/name inferred by the router.\n  resolvedBrand = selectedFromPrevious.brand || '';\n  resolvedModel = selectedFromPrevious.name || '';\n  if (hasPendingAction && pendingQuestion.type === 'quotation') {\n    resolvedIntent = 'quotation';\n  } else {\n    resolvedIntent = 'product_detail';\n  }\n}\n\nif (invalidSelection) {\n  resolvedIntent = 'default';\n  resolvedBrand = '';\n  resolvedModel = '';\n  resolvedStorage = '';\n  resolvedRam = '';\n  resolvedColor = '';\n}\n\nif (isPendingValid && dialogueConfirm) {\n  resolvedIntent = 'quotation';\n  isFollowup = true;\n}\n\nif (hasPendingAction && dialogueConfirm && pendingQuestion.product_id) {\n  resolvedIntent = pendingQuestion.type === 'quotation' ? 'quotation' : 'product_detail';\n  resolvedModel = resolvedModel || pendingQuestion.product_name || '';\n}\n\nif (dialogueCancel || (dialogueReject && hasPendingAction)) {\n  resolvedIntent = 'default';\n}\n\nconst dialogueCriteriaContinuation =\n  /(?:nhung mau|cac mau|mau dien thoai|dien thoai).*(?:theo tieu chi|tieu chi truoc do|nhu tieu chi truoc|nhu tren)/.test(dialogueText);\nif (\n  dialogueCriteriaContinuation &&\n  (previousConversationState.category || Object.keys(previousActiveFilters).length > 0)\n) {\n  resolvedIntent = 'recommendation';\n  resolvedModel = '';\n  if (dialogueCurrentBrands.length === 0) resolvedBrand = '';\n  if (!dialogueHasExplicitStorage) resolvedStorage = '';\n  if (!dialogueHasExplicitRam) resolvedRam = '';\n  if (!dialogueHasExplicitColor) resolvedColor = '';\n}\n\nif (\n  (resolvedIntent === 'product_compare' || resolvedIntent === 'quotation') &&\n  Array.isArray(previousConversationState.last_result_set)\n) {\n  const indexes = resolvedIntent === 'product_compare'\n    ? unique(dialogueComparisonIndexes)\n    : (dialogueSelectedIndex ? [dialogueSelectedIndex] : []);\n  const resolvedProducts = indexes\n    .map(index => previousConversationState.last_result_set[index - 1])\n    .filter(Boolean)\n    .map((product, index) => ({\n      index: indexes[index],\n      brand: product.brand || '',\n      model: product.name || '',\n      storage_gb: null,\n      ram_gb: null,\n      color: null,\n      quantity: 1\n    }));\n  if (resolvedProducts.length > 0) products = resolvedProducts;\n}\n\n\n// CONTEXTUAL COMPARE FALLBACK\nif (resolvedIntent === 'product_compare' && products.length < 2) {\n  const previousLastResults = Array.isArray(previousConversationState.last_result_set)\n    ? previousConversationState.last_result_set\n    : [];\n  const previousRejectedReferences = Array.isArray(previousConversationState.rejected_products)\n    ? previousConversationState.rejected_products\n    : [];\n  const historicalReferences = [...previousLastResults, ...previousRejectedReferences];\n  const compareProducts = [];\n  const compareKeys = new Set();\n\n  function compareProductKey(product) {\n    const brand = dialogueNormalize(product?.brand || '');\n    const model = dialogueNormalize(product?.model || product?.name || '');\n    return `${brand}::${model}`;\n  }\n\n  function appendCompareDescriptor(product, preferredIndex = null) {\n    if (!product) return;\n    const brand = typeof product.brand === 'string' ? product.brand.trim() : '';\n    const model = typeof product.model === 'string' && product.model.trim()\n      ? product.model.trim()\n      : (typeof product.name === 'string' ? product.name.trim() : '');\n    if (!brand && !model) return;\n\n    const descriptor = {\n      index: Number.isInteger(preferredIndex) && preferredIndex > 0\n        ? preferredIndex\n        : compareProducts.length + 1,\n      brand,\n      model,\n      storage_gb: null,\n      ram_gb: null,\n      color: null,\n      quantity: 1\n    };\n    const key = compareProductKey(descriptor);\n    if (!key || key === '::' || compareKeys.has(key)) return;\n    compareKeys.add(key);\n    compareProducts.push(descriptor);\n  }\n\n  for (const existingProduct of products) {\n    appendCompareDescriptor(\n      existingProduct,\n      Number.isInteger(existingProduct?.index) ? existingProduct.index : null\n    );\n  }\n\n  const previousSelectedProductId = previousConversationState.selected_product_id\n    ? String(previousConversationState.selected_product_id)\n    : null;\n  let previousSelectedProduct = previousSelectedProductId\n    ? historicalReferences.find(product =>\n        product?.id && String(product.id) === previousSelectedProductId\n      ) || null\n    : null;\n\n  if (!previousSelectedProduct && selectedReferenceProduct) {\n    previousSelectedProduct = selectedReferenceProduct;\n  }\n  if (previousSelectedProduct) appendCompareDescriptor(previousSelectedProduct);\n\n  const historicalSearchPool = [...previousRejectedReferences, ...previousLastResults];\n  for (const currentBrand of dialogueCurrentBrands) {\n    const matchingHistoricalProduct = historicalSearchPool.find(product => {\n      if (!product) return false;\n      if (\n        previousSelectedProductId &&\n        product.id &&\n        String(product.id) === previousSelectedProductId\n      ) return false;\n      return dialogueProductMatchesBrand(product, currentBrand);\n    });\n    if (matchingHistoricalProduct) appendCompareDescriptor(matchingHistoricalProduct);\n  }\n\n  if (compareProducts.length < 2) {\n    const normalizedCurrentText = dialogueNormalize(chatInput);\n    for (const historicalProduct of historicalSearchPool) {\n      if (!historicalProduct) continue;\n      if (\n        previousSelectedProductId &&\n        historicalProduct.id &&\n        String(historicalProduct.id) === previousSelectedProductId\n      ) continue;\n      const historicalName = dialogueNormalize(\n        historicalProduct.name || historicalProduct.model || ''\n      );\n      if (historicalName && normalizedCurrentText.includes(historicalName)) {\n        appendCompareDescriptor(historicalProduct);\n      }\n    }\n  }\n\n  if (compareProducts.length > products.length) products = compareProducts;\n}\n\nconst resolvedCategory =\n  dialogueCurrentCategory ||\n  previousConversationState.category ||\n  null;\n\nconst previousExcluded = Array.isArray(previousConversationState.excluded_brands)\n  ? previousConversationState.excluded_brands\n  : [];\nconst previousPreferred = Array.isArray(previousConversationState.preferred_brands)\n  ? previousConversationState.preferred_brands\n  : [];\nconst fallbackPreviousBrand =\n  previousActiveFilters.brand ||\n  previousPreferred[previousPreferred.length - 1] ||\n  null;\nconst resolvedExcludedBrands = unique([\n  ...previousExcluded,\n  ...dialogueNegativeBrands,\n  ...(dialogueOtherBrand && fallbackPreviousBrand ? [fallbackPreviousBrand] : [])\n]).filter(brand => !resolvedBrand || dialogueNormalize(brand) !== dialogueNormalize(resolvedBrand));\n\nlet turnAction = 'CONTINUE';\nif (dialogueCancel) {\n  turnAction = 'CANCEL';\n} else if (dialogueReject && hasPendingAction) {\n  turnAction = 'REJECT';\n} else if (dialogueSelectionRequested || selectedFromPrevious) {\n  turnAction = 'SELECT';\n} else if (resolvedIntent === 'product_compare' || /so sanh|so hai|khac nhau/.test(dialogueText)) {\n  turnAction = 'COMPARE';\n} else if (dialogueOtherBrand || dialogueNegativeBrands.length) {\n  turnAction = 'EXCLUDE';\n} else if (dialoguePriceDirection || /uu tien|can hieu nang|de hoc|lam viec|choi game|camera khong quan trong/.test(dialogueText)) {\n  turnAction = dialoguePriceDirection === 'lower' && /\\bdat qua\\b/.test(dialogueText) ? 'REJECT' : 'REFINE';\n} else if (\n  (dialogueCurrentCategory && dialoguePreviousCategory && dialogueCurrentCategory !== dialoguePreviousCategory) ||\n  (dialogueCurrentBrands.length === 1 && previousActiveFilters.brand && dialogueNormalize(dialogueCurrentBrands[0]) !== dialogueNormalize(previousActiveFilters.brand))\n) {\n  turnAction = 'SWITCH';\n} else if (dialogueConfirm && (hasPendingAction || isPendingValid)) {\n  turnAction = 'CONFIRM';\n} else if (!previousConversationState.last_intent && !previousConversationState.category) {\n  turnAction = 'NEW_TOPIC';\n}\n\n// LIVE-10: explicit brand switch must defeat stale product recommendations.\nif (dialogueCurrentBrands.length === 1 && previousActiveFilters.brand &&\n    dialogueNormalize(dialogueCurrentBrands[0]) !== dialogueNormalize(previousActiveFilters.brand) &&\n    dialogueNegativeBrands.length === 0 && !dialogueOtherBrand) {\n  turnAction = 'SWITCH';\n  resolvedBrand = dialogueCurrentBrands[0];\n  resolvedModel = resolvedModel || '';\n}\n\nconst contextMode =\n  dialogueTopicScopeChanged\n    ? 'reset'\n    : turnAction === 'SWITCH'\n      ? 'replace'\n      : turnAction === 'NEW_TOPIC'\n      ? 'replace'\n      : turnAction === 'EXCLUDE' || turnAction === 'REFINE' || turnAction === 'SELECT'\n        ? 'continue'\n        : 'continue';\n\n// Only a budget stated by the user changes the explicit constraint.\n// Otherwise continue the current topic's prior budget, or clear it on a\n// cross-category reset. Gemini's inferred price_max is not authoritative.\nconst priorExplicitBudget = previousActiveFilters.price_max;\nif (explicitUserBudget !== null) {\n  priceMax = explicitUserBudget;\n} else if (contextMode === 'reset') {\n  priceMax = null;\n} else if (priorExplicitBudget !== null && priorExplicitBudget !== undefined && Number.isFinite(Number(priorExplicitBudget))) {\n  priceMax = Number(priorExplicitBudget);\n} else {\n  priceMax = null;\n}\n\nif ((resolvedIntent === 'product_compare' || turnAction === 'COMPARE')) {\n  // Referenced comparison brands are not shopping preferences/filters.\n  resolvedBrand = '';\n  resolvedModel = '';\n}\n\nconst requiresClarification = Boolean(\n  invalidSelection ||\n  (hasPendingAction && !explicitProductModel && !dialogueSelectedIndex && !dialogueConfirm && !dialogueCancel) ||\n  (dialoguePriceDirection === 'lower' && !Number.isFinite(refinementPriceBelow))\n);\nconst clarificationField = invalidSelection\n  ? 'product_selection'\n  : (requiresClarification ? pendingQuestion?.field || (dialoguePriceDirection ? 'price_max' : null) : null);\n\n// Keep the state contract coherent before Prepare Recommendation Filters.\n// A current-turn exclusion removes the same canonical brand from the prior\n// positive preference and from the active positive brand filter.\nconst resolvedPreferredBrands = unique([\n  ...(['replace','reset'].includes(contextMode) ? [] : previousPreferred),\n  ...(resolvedBrand && turnAction !== 'SELECT' ? [resolvedBrand] : [])\n]).filter(brand => !dialogueNegativeBrands.some(negative => dialogueNormalize(negative) === dialogueNormalize(brand)));\nconst resolvedActiveFilters = { ...previousActiveFilters };\n\n// Excluding a brand refreshes the candidate pool. Product-specific attributes\n// from the excluded result are not user constraints unless this turn repeats\n// them explicitly; keep only the conversation-level category and budget.\nif (turnAction === 'EXCLUDE' && dialogueNegativeBrands.length > 0) {\n  if (!dialogueHasExplicitStorage) {\n    resolvedStorage = '';\n    delete resolvedActiveFilters.storage_gb;\n  }\n  if (!dialogueHasExplicitRam) {\n    resolvedRam = '';\n    delete resolvedActiveFilters.ram_gb;\n  }\n  if (!dialogueHasExplicitColor) {\n    resolvedColor = '';\n    delete resolvedActiveFilters.color;\n  }\n}\n\nif (resolvedBrand && turnAction !== 'SELECT') {\n  resolvedActiveFilters.brand = resolvedBrand;\n} else if (dialogueNegativeBrands.length ||\n           (dialoguePriceDirection === 'lower' && referencedProduct)) {\n  delete resolvedActiveFilters.brand;\n}\nif (priceMax !== null && priceMax !== undefined) {\n  resolvedActiveFilters.price_max = priceMax;\n}\nconst previousRejectedProducts = Array.isArray(previousConversationState.rejected_products)\n    ? previousConversationState.rejected_products\n    : [];\n  const rejectedProductsById = new Map(\n    previousRejectedProducts\n      .filter(product => product && product.id)\n      .map(product => [String(product.id), product])\n  );\n  if (referencedProduct?.id) {\n    rejectedProductsById.set(String(referencedProduct.id), {\n      id: referencedProduct.id,\n      name: referencedProduct.name || referencedProduct.model || '',\n      brand: referencedProduct.brand || null,\n      price_min: Number.isFinite(referencedProductPrice)\n        ? referencedProductPrice\n        : (referencedProduct.price_min ?? referencedProduct.price ?? null),\n      price_max: Number.isFinite(referencedProductPrice)\n        ? referencedProductPrice\n        : (referencedProduct.price_max ?? referencedProduct.price ?? null)\n    });\n  }\n  const resolvedRejectedProducts = [...rejectedProductsById.values()];\n\n  const resolvedConversationState = {\n    ...previousConversationState,\n    category: resolvedCategory,\n    active_filters: resolvedActiveFilters,\n    preferred_brands: resolvedPreferredBrands,\n    excluded_brands: resolvedExcludedBrands,\n    rejected_products: resolvedRejectedProducts,\n    last_intent: resolvedIntent,\n    last_turn_action: turnAction\n  };\n\n\n// FAQ V1 canonicalization is intentionally isolated at the Validate Router boundary.\nconst allowedFaqTopics = [\n  \"shipping\", \"payment\", \"cod\", \"installment\", \"warranty\", \"return\",\n  \"address\", \"working_time\", \"contact\", \"order_cancellation\", \"delivery_inspection\"\n];\nfunction normalizeFaqText(value) {\n  return String(value ?? \"\")\n    .replace(/[đĐ]/g, \"d\")\n    .normalize(\"NFD\")\n    .replace(/[\\u0300-\\u036f]/g, \"\")\n    .toLowerCase();\n}\nfunction extractExplicitFaqTopics(value) {\n  const text = normalizeFaqText(value);\n  const rules = [\n    [\"shipping\", [\"giao hang\", \"van chuyen\", \"shipping\", \"ship\"]],\n    [\"payment\", [\"thanh toan\", \"payment\"]],\n    [\"cod\", [\"cod\", \"thanh toan khi nhan hang\", \"tra tien khi nhan hang\"]],\n    [\"installment\", [\"tra gop\", \"installment\"]],\n    [\"warranty\", [\"bao hanh\", \"warranty\"]],\n    [\"return\", [\"doi tra\", \"doi hang\", \"tra hang\", \"return\"]],\n    [\"address\", [\"dia chi\", \"o dau\", \"den cua hang\", \"tai cua hang\", \"showroom\"]],\n    [\"working_time\", [\"gio lam viec\", \"gio mo cua\", \"mo cua\", \"dong cua\"]],\n    [\"contact\", [\"lien he\", \"hotline\", \"email\", \"contact\"]],\n    [\"order_cancellation\", [\"huy don\", \"cancel order\"]],\n    [\"delivery_inspection\", [\"kiem tra may\", \"kiem tra hang\", \"kiem tra san pham\", \"kiem tra khi nhan\", \"mo hop khi nhan\"]]\n  ];\n  return rules.map(([topic, patterns]) => {\n    const positions = patterns.map(phrase => text.indexOf(phrase)).filter(index => index >= 0);\n    if (topic === \"order_cancellation\" && positions.length === 0 && text.includes(\"huy\") && text.includes(\"don\")) {\n      positions.push(Math.min(text.indexOf(\"huy\"), text.indexOf(\"don\")));\n    }\n    return { topic, index: positions.length ? Math.min(...positions) : -1 };\n  }).filter(item => item.index >= 0)\n    .sort((a, b) => a.index - b.index || allowedFaqTopics.indexOf(a.topic) - allowedFaqTopics.indexOf(b.topic))\n    .map(item => item.topic);\n}\nfunction canonicalizeFaqTopics(intentValue, currentMessage, routerTopics, routerPrimary) {\n  if (intentValue !== \"faq\") return [];\n  const explicit = extractExplicitFaqTopics(currentMessage);\n  const candidates = explicit.length ? explicit : [\n    ...(Array.isArray(routerTopics) ? routerTopics : []),\n    routerPrimary\n  ];\n  const seen = new Set();\n  return candidates.map(value => String(value ?? \"\").trim().toLowerCase())\n    .filter(value => allowedFaqTopics.includes(value) && !seen.has(value) && seen.add(value));\n}\nconst canonicalFaqTopics = canonicalizeFaqTopics(\n  resolvedIntent,\n  chatInput,\n  data.faq_topics,\n  data.faq_topic\n);\n\nconst resolvedSelectedProductId =\n  explicitProductModel\n    ? null\n    : dialogueSelectionRequested\n    ? (selectedFromPrevious?.id || null)\n    : (\n        resolvedIntent === 'product_compare' ||\n        turnAction === 'COMPARE'\n      )\n      ? (previousConversationState.selected_product_id || null)\n      : (pendingQuestion?.product_id || null);\n\nreturn [\n  {\n    json: {\n      intent: resolvedIntent,\n      brand: resolvedBrand,\n      model: resolvedModel,\n      explicit_product_model: explicitProductModel,\n      storage: resolvedStorage,\n      ram: resolvedRam,\n      color: resolvedColor,\n      price_max: priceMax,\n      condition: typeof data.condition === 'string' ? data.condition.trim() : '',\n      use_case: resolvedUseCase,\n      faq_topic: canonicalFaqTopics[0] || \"\",\n      faq_topics: canonicalFaqTopics,\n      products,\n      quantity: topLevelQuantity.quantity,\n      quantity_explicit: topLevelQuantity.quantity_explicit,\n      is_followup: isFollowup,\n      pending_quote_exists: isPendingValid,\n      pending_quote_requests: pendingRequests,\n      turn_action: turnAction,\n      context_mode: contextMode,\n      category: resolvedCategory,\n      exclude_brands: resolvedExcludedBrands,\n      excluded_brands: resolvedExcludedBrands,\n      preferred_brands: resolvedPreferredBrands,\n      rejected_products: resolvedRejectedProducts,\n      selected_result_index: Number.isInteger(dialogueSelectedIndex) ? dialogueSelectedIndex : null,\n      selected_product_id: resolvedSelectedProductId,\n      price_direction: dialoguePriceDirection,\n      refinement_price_below: Number.isFinite(refinementPriceBelow) ? refinementPriceBelow : null,\n      requires_clarification: requiresClarification,\n      clarification_field: clarificationField,\n      conversationState: resolvedConversationState,\n      chatInput,\n      sessionId,\n      source\n    }\n  }\n];\n"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -401,7 +1248,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const source = $('Prepare Product Detail').first().json;\n\n// ============================================================\n// HELPERS\n// ============================================================\n\nfunction normalizeText(value) {\n  return String(value ?? '')\n    .normalize('NFD')\n    .replace(/[\\u0300-\\u036f]/g, '')\n    .replace(/Ă„â€˜/g, 'd')\n    .replace(/Ă„Â/g, 'D')\n    .toLowerCase()\n    .trim();\n}\n\nfunction compactText(value) {\n  return normalizeText(value)\n    .replace(/[^a-z0-9]/g, '');\n}\n\nfunction parseCapacity(value) {\n  if (value === null || value === undefined || value === '') {\n    return null;\n  }\n\n  const text = normalizeText(value).replace(/\\s+/g, '');\n\n  const match = text.match(/(\\d+(?:\\.\\d+)?)(tb|gb)?/i);\n\n  if (!match) return null;\n\n  let number = Number(match[1]);\n\n  if (!Number.isFinite(number)) {\n    return null;\n  }\n\n  if ((match[2] || '').toLowerCase() === 'tb') {\n    number *= 1024;\n  }\n\n  return number;\n}\n\nfunction findAttribute(attributes, possibleNames) {\n  if (!attributes || typeof attributes !== 'object') {\n    return null;\n  }\n\n  for (const [key, value] of Object.entries(attributes)) {\n    const normalizedKey = normalizeText(key);\n\n    if (\n      possibleNames.some(\n        name => normalizedKey === normalizeText(name)\n      )\n    ) {\n      return value;\n    }\n  }\n\n  return null;\n}\n\nfunction getSpecification(specifications, keyword) {\n  if (!Array.isArray(specifications)) {\n    return null;\n  }\n\n  const target = normalizeText(keyword);\n\n  const item = specifications.find(spec => {\n    const key =\n      spec?.key ??\n      spec?.name ??\n      spec?.label ??\n      '';\n\n    return normalizeText(key).includes(target);\n  });\n\n  return item?.value ?? null;\n}\n\nfunction extractVersionInfo(attributes) {\n  const version = findAttribute(\n    attributes,\n    ['Phiên bản', 'Phien ban', 'Version']\n  );\n\n  if (!version) {\n    return {\n      storageGb: null,\n      ramGb: null\n    };\n  }\n\n  const matches = [\n    ...String(version).matchAll(\n      /(\\d+(?:\\.\\d+)?)\\s*(TB|GB)/gi\n    )\n  ];\n\n  if (!matches.length) {\n    return {\n      storageGb: null,\n      ramGb: null\n    };\n  }\n\n  const values = matches.map(match => ({\n    value: Number(match[1]),\n    unit: match[2].toUpperCase()\n  }));\n\n  const tb = values.find(v => v.unit === 'TB');\n\n  if (tb) {\n    const gb = values.filter(v => v.unit === 'GB');\n\n    return {\n      storageGb: tb.value * 1024,\n      ramGb: gb.length ? gb[0].value : null\n    };\n  }\n\n  const gb = values\n    .filter(v => v.unit === 'GB')\n    .map(v => v.value);\n\n  if (gb.length >= 2) {\n    return {\n      ramGb: gb[0],\n      storageGb: gb[gb.length - 1]\n    };\n  }\n\n  return {\n    storageGb: gb.length === 1 ? gb[0] : null,\n    ramGb: null\n  };\n}\n\nfunction normalizeImageUrl(value) {\n  if (!value) return null;\n\n  let text = String(value).trim();\n\n  const markdownMatch = text.match(\n    /^\\[([^\\]]+)\\]\\(([^)]+)\\)$/\n  );\n\n  if (markdownMatch) {\n    text = markdownMatch[2] || markdownMatch[1];\n  }\n\n  text = text.replace(\n    /^https?:\\/\\/localhost:3001/,\n    ''\n  );\n\n  text = text.replace(\n    /^https?:\\/\\/127\\.0\\.0\\.1:3001/,\n    ''\n  );\n\n  text = text.replace(\n    /^https?:\\/\\/host\\.docker\\.internal:3001/,\n    ''\n  );\n\n  return text || null;\n}\n\nfunction calculateCampaignPrice(price, campaign) {\n  const originalPrice = Number(price);\n\n  if (!Number.isFinite(originalPrice)) {\n    return 0;\n  }\n\n  if (!campaign) {\n    return originalPrice;\n  }\n\n  const discountValue =\n    Number(campaign.discountValue) || 0;\n\n  if (campaign.discountType === 'percentage') {\n    return Math.max(\n      0,\n      Math.round(\n        originalPrice -\n        originalPrice * discountValue / 100\n      )\n    );\n  }\n\n  return Math.max(\n    0,\n    originalPrice - discountValue\n  );\n}\n\n// ============================================================\n// API INPUT\n// ============================================================\n\nconst items = $input.all();\n\nlet apiProducts = [];\n\nif (\n  items.length === 1 &&\n  Array.isArray(items[0].json)\n) {\n  apiProducts = items[0].json;\n} else {\n  apiProducts = items.map(item => item.json);\n}\n\n// ============================================================\n// REQUEST FILTERS\n// ============================================================\n\nconst brandFilter =\n  normalizeText(source.brand);\n\nconst canonicalFilters = source.conversationState?.active_filters || {};\nconst effectiveBrandFilter = brandFilter || normalizeText(canonicalFilters.brand);\nconst selectedProductId = source.selected_product_id ? String(source.selected_product_id)\n  : (!source.model && source.conversationState?.selected_product_id ? String(source.conversationState.selected_product_id) : '');\nconst maxPriceFilter = source.price_max !== null && source.price_max !== undefined\n  ? Number(source.price_max)\n  : (canonicalFilters.price_max !== null && canonicalFilters.price_max !== undefined\n      ? Number(canonicalFilters.price_max)\n      : null);\nconst excludedBrandFilters = Array.isArray(source.conversationState?.excluded_brands)\n  ? source.conversationState.excluded_brands.map(normalizeText)\n  : [];\n\nconst modelFilter =\n  compactText(source.model);\n\nconst colorFilter =\n  normalizeText(source.color);\n\nconst storageFilter =\n  source.storage_gb !== null &&\n  source.storage_gb !== undefined\n    ? Number(source.storage_gb)\n    : null;\n\nconst ramFilter =\n  source.ram_gb !== null &&\n  source.ram_gb !== undefined\n    ? Number(source.ram_gb)\n    : null;\n\n// ============================================================\n// FIND PRODUCT\n// ============================================================\n\nconst eligibleProducts = apiProducts.filter(product => {\n  if (normalizeText(product.status) !== 'active' || product.category?.isActive === false) return false;\n  const productBrands = [product.brand, product.category?.name, product.category?.slug]\n    .filter(Boolean)\n    .map(normalizeText);\n  if (effectiveBrandFilter && !productBrands.includes(effectiveBrandFilter)) return false;\n  if (excludedBrandFilters.some(brand => productBrands.includes(brand))) return false;\n  return true;\n});\n\nlet matchedProduct = null;\nif (selectedProductId) {\n  // A supplied canonical ID is authoritative. Do not fall back to a sibling SKU.\n  matchedProduct = eligibleProducts.find(product => String(product.id) === selectedProductId) || null;\n} else if (!modelFilter) {\n  // An unreferenced detail request must not become a first-item catalog lookup.\n  matchedProduct = null;\n} else if (modelFilter) {\n  const exactMatches = eligibleProducts.filter(product => compactText(product.name) === modelFilter);\n  if (exactMatches.length === 1) {\n    matchedProduct = exactMatches[0];\n  } else if (exactMatches.length === 0) {\n    const fuzzyMatches = eligibleProducts.filter(product => compactText(product.name).includes(modelFilter));\n    if (fuzzyMatches.length === 1) matchedProduct = fuzzyMatches[0];\n  }\n} else {\n  matchedProduct = null;\n}\n\n// ============================================================\n// NO PRODUCT\n// ============================================================\n\nif (!matchedProduct) {\n  return [\n    {\n      json: {\n        result_type: 'no_result',\n        total: 0,\n        intent: 'product_detail',\n\n        chatInput:\n          source.chatInput ?? '',\n\n        sessionId:\n          source.sessionId ?? '',\n\n        product: null\n      }\n    }\n  ];\n}\n\n// ============================================================\n// FILTER VARIANTS\n// ============================================================\n\nconst matchedVariants = [];\n\nconst variants = Array.isArray(matchedProduct.variants)\n  ? matchedProduct.variants\n  : [];\n\nfor (const variant of variants) {\n\n  const storageRaw = findAttribute(\n    variant.attributes,\n    [\n      'Dung lÆ°á»£ng',\n      'Dung luong',\n      'Storage',\n      'SSD'\n    ]\n  );\n\n  const colorRaw = findAttribute(\n    variant.attributes,\n    [\n      'Màu sắc',\n      'Mau sac',\n      'Color'\n    ]\n  );\n\n  const directRam = findAttribute(\n    variant.attributes,\n    ['RAM']\n  );\n\n  const versionInfo =\n    extractVersionInfo(variant.attributes);\n\n  let storageGb =\n    parseCapacity(storageRaw);\n\n  let ramGb =\n    parseCapacity(directRam);\n\n  if (storageGb === null) {\n    storageGb =\n      versionInfo.storageGb;\n  }\n\n  if (ramGb === null) {\n    ramGb =\n      versionInfo.ramGb;\n  }\n\n  if (ramGb === null) {\n    ramGb = parseCapacity(\n      getSpecification(\n        matchedProduct.specifications,\n        'RAM'\n      )\n    );\n  }\n\n  // Requested storage\n  if (\n    storageFilter !== null &&\n    storageGb !== storageFilter\n  ) {\n    continue;\n  }\n\n  // Requested RAM\n  if (\n    ramFilter !== null &&\n    ramGb !== ramFilter\n  ) {\n    continue;\n  }\n\n  // Requested color\n  if (colorFilter) {\n    if (\n      !normalizeText(colorRaw)\n        .includes(colorFilter)\n    ) {\n      continue;\n    }\n  }\n\n  const stock =\n    Number(variant.stock) || 0;\n\n  const originalPrice =\n    Number(variant.price) || 0;\n\n  const effectivePrice =\n    calculateCampaignPrice(\n      originalPrice,\n      matchedProduct.activeCampaign\n    );\n\n  if (Number.isFinite(maxPriceFilter) && effectivePrice > maxPriceFilter) {\n    continue;\n  }\n\n  matchedVariants.push({\n    id: variant.id,\n\n    sku: variant.sku,\n\n    attributes:\n      variant.attributes ?? {},\n\n    storage_gb:\n      storageGb,\n\n    ram_gb:\n      ramGb,\n\n    color:\n      colorRaw ?? null,\n\n    color_code:\n      variant.colorCode ?? null,\n\n    original_price:\n      originalPrice,\n\n    price:\n      effectivePrice,\n\n    sale_price:\n      variant.salePrice ?? null,\n\n    stock,\n\n    availability:\n      stock > 0\n        ? 'in_stock'\n        : 'out_of_stock',\n\n    image_url:\n      normalizeImageUrl(\n        variant.image ||\n        matchedProduct.image ||\n        matchedProduct.images?.[0]\n      )\n  });\n}\n\n// ============================================================\n// PRODUCT EXISTS BUT REQUESTED VARIANT DOES NOT\n// ============================================================\n\nif (matchedVariants.length === 0) {\n  return [\n    {\n      json: {\n        result_type: 'no_result',\n        total: 0,\n        intent: 'product_detail',\n\n        chatInput:\n          source.chatInput ?? '',\n\n        sessionId:\n          source.sessionId ?? '',\n\n        product: null\n      }\n    }\n  ];\n}\n\n// ============================================================\n// SORT\n// in-stock first, then price\n// ============================================================\n\nmatchedVariants.sort((a, b) => {\n  if (\n    a.availability !== b.availability\n  ) {\n    return a.availability === 'in_stock'\n      ? -1\n      : 1;\n  }\n\n  return a.price - b.price;\n});\n\nconst inStockVariants =\n  matchedVariants.filter(\n    v => v.stock > 0\n  );\n\nconst totalStock =\n  matchedVariants.reduce(\n    (sum, v) => sum + v.stock,\n    0\n  );\n\nconst prices =\n  matchedVariants.map(v => v.price);\n\nconst selectedVariant =\n  matchedVariants[0];\n\n// ============================================================\n// FINAL PRODUCT\n// ============================================================\n\nconst product = {\n  id:\n    matchedProduct.id,\n\n  name:\n    matchedProduct.name,\n\n  model:\n    matchedProduct.name,\n\n  brand:\n    matchedProduct.brand ?? null,\n\n  category:\n    matchedProduct.category\n      ? {\n          id: matchedProduct.category.id,\n          name: matchedProduct.category.name,\n          slug: matchedProduct.category.slug\n        }\n      : null,\n\n  description:\n    matchedProduct.description ?? null,\n\n  image_url:\n    normalizeImageUrl(\n      selectedVariant.image_url ||\n      matchedProduct.image ||\n      matchedProduct.images?.[0]\n    ),\n\n  images:\n    Array.isArray(matchedProduct.images)\n      ? matchedProduct.images\n          .map(normalizeImageUrl)\n          .filter(Boolean)\n      : [],\n\n  specifications:\n    matchedProduct.specifications ?? [],\n\n  screen:\n    getSpecification(\n      matchedProduct.specifications,\n      'Màn hình'\n    ),\n\n  cpu:\n    getSpecification(\n      matchedProduct.specifications,\n      'CPU'\n    ) ||\n    getSpecification(\n      matchedProduct.specifications,\n      'Chip'\n    ),\n\n  camera:\n    getSpecification(\n      matchedProduct.specifications,\n      'Camera'\n    ),\n\n  battery:\n    getSpecification(\n      matchedProduct.specifications,\n      'Pin'\n    ),\n\n  operating_system:\n    getSpecification(\n      matchedProduct.specifications,\n      'Hệ điều hành'\n    ),\n\n  price:\n    Math.min(...prices),\n\n  price_min:\n    Math.min(...prices),\n\n  price_max:\n    Math.max(...prices),\n\n  stock:\n    totalStock,\n\n  availability:\n    inStockVariants.length > 0\n      ? 'in_stock'\n      : 'out_of_stock',\n\n  campaign:\n    matchedProduct.activeCampaign\n      ? {\n          id:\n            matchedProduct.activeCampaign.id,\n\n          name:\n            matchedProduct.activeCampaign.name,\n\n          discountType:\n            matchedProduct.activeCampaign.discountType,\n\n          discountValue:\n            matchedProduct.activeCampaign.discountValue\n        }\n      : null,\n\n  variants:\n    matchedVariants\n};\n\n// ============================================================\n// OUTPUT\n// ============================================================\n\nreturn [\n  {\n    json: {\n      result_type:\n        'product_detail',\n\n      total: 1,\n\n      intent:\n        'product_detail',\n\n      chatInput:\n        source.chatInput ?? '',\n\n      sessionId:\n        source.sessionId ?? '',\n\n      product\n    }\n  }\n];"
+        "jsCode": "const source = $('Prepare Product Detail').first().json;\n\n// ============================================================\n// HELPERS\n// ============================================================\n\nfunction normalizeText(value) {\n  return String(value ?? '')\n    .normalize('NFD')\n    .replace(/[\\u0300-\\u036f]/g, '')\n    .replace(/Ă„â€˜/g, 'd')\n    .replace(/Ă„Â/g, 'D')\n    .toLowerCase()\n    .trim();\n}\n\nfunction compactText(value) {\n  return normalizeText(value)\n    .replace(/[^a-z0-9]/g, '');\n}\n\nfunction parseCapacity(value) {\n  if (value === null || value === undefined || value === '') {\n    return null;\n  }\n\n  const text = normalizeText(value).replace(/\\s+/g, '');\n\n  const match = text.match(/(\\d+(?:\\.\\d+)?)(tb|gb)?/i);\n\n  if (!match) return null;\n\n  let number = Number(match[1]);\n\n  if (!Number.isFinite(number)) {\n    return null;\n  }\n\n  if ((match[2] || '').toLowerCase() === 'tb') {\n    number *= 1024;\n  }\n\n  return number;\n}\n\nfunction findAttribute(attributes, possibleNames) {\n  if (!attributes || typeof attributes !== 'object') {\n    return null;\n  }\n\n  for (const [key, value] of Object.entries(attributes)) {\n    const normalizedKey = normalizeText(key);\n\n    if (\n      possibleNames.some(\n        name => normalizedKey === normalizeText(name)\n      )\n    ) {\n      return value;\n    }\n  }\n\n  return null;\n}\n\nfunction getSpecification(specifications, keyword) {\n  if (!Array.isArray(specifications)) {\n    return null;\n  }\n\n  const target = normalizeText(keyword);\n\n  const item = specifications.find(spec => {\n    const key =\n      spec?.key ??\n      spec?.name ??\n      spec?.label ??\n      '';\n\n    return normalizeText(key).includes(target);\n  });\n\n  return item?.value ?? null;\n}\n\nfunction extractVersionInfo(attributes) {\n  const version = findAttribute(\n    attributes,\n    ['Phiên bản', 'Phien ban', 'Version']\n  );\n\n  if (!version) {\n    return {\n      storageGb: null,\n      ramGb: null\n    };\n  }\n\n  const matches = [\n    ...String(version).matchAll(\n      /(\\d+(?:\\.\\d+)?)\\s*(TB|GB)/gi\n    )\n  ];\n\n  if (!matches.length) {\n    return {\n      storageGb: null,\n      ramGb: null\n    };\n  }\n\n  const values = matches.map(match => ({\n    value: Number(match[1]),\n    unit: match[2].toUpperCase()\n  }));\n\n  const tb = values.find(v => v.unit === 'TB');\n\n  if (tb) {\n    const gb = values.filter(v => v.unit === 'GB');\n\n    return {\n      storageGb: tb.value * 1024,\n      ramGb: gb.length ? gb[0].value : null\n    };\n  }\n\n  const gb = values\n    .filter(v => v.unit === 'GB')\n    .map(v => v.value);\n\n  if (gb.length >= 2) {\n    return {\n      ramGb: gb[0],\n      storageGb: gb[gb.length - 1]\n    };\n  }\n\n  return {\n    storageGb: gb.length === 1 ? gb[0] : null,\n    ramGb: null\n  };\n}\n\nfunction normalizeImageUrl(value) {\n  if (!value) return null;\n\n  let text = String(value).trim();\n\n  const markdownMatch = text.match(\n    /^\\[([^\\]]+)\\]\\(([^)]+)\\)$/\n  );\n\n  if (markdownMatch) {\n    text = markdownMatch[2] || markdownMatch[1];\n  }\n\n  text = text.replace(\n    /^https?:\\/\\/localhost:3001/,\n    ''\n  );\n\n  text = text.replace(\n    /^https?:\\/\\/127\\.0\\.0\\.1:3001/,\n    ''\n  );\n\n  text = text.replace(\n    /^https?:\\/\\/host\\.docker\\.internal:3001/,\n    ''\n  );\n\n  return text || null;\n}\n\nfunction calculateCampaignPrice(price, campaign) {\n  const originalPrice = Number(price);\n\n  if (!Number.isFinite(originalPrice)) {\n    return 0;\n  }\n\n  if (!campaign) {\n    return originalPrice;\n  }\n\n  const discountValue =\n    Number(campaign.discountValue) || 0;\n\n  if (campaign.discountType === 'percentage') {\n    return Math.max(\n      0,\n      Math.round(\n        originalPrice -\n        originalPrice * discountValue / 100\n      )\n    );\n  }\n\n  return Math.max(\n    0,\n    originalPrice - discountValue\n  );\n}\n\n// ============================================================\n// API INPUT\n// ============================================================\n\nconst items = $input.all();\n\nlet apiProducts = [];\n\nif (\n  items.length === 1 &&\n  Array.isArray(items[0].json)\n) {\n  apiProducts = items[0].json;\n} else {\n  apiProducts = items.map(item => item.json);\n}\n\n// ============================================================\n// REQUEST FILTERS\n// ============================================================\n\nconst brandFilter =\n  normalizeText(source.brand);\n\nconst canonicalFilters = source.conversationState?.active_filters || {};\nconst effectiveBrandFilter = brandFilter || normalizeText(canonicalFilters.brand);\nconst selectedProductId = !source.explicit_product_model && source.selected_product_id ? String(source.selected_product_id)\n  : (!source.model && source.conversationState?.selected_product_id ? String(source.conversationState.selected_product_id) : '');\nconst maxPriceFilter = source.price_max !== null && source.price_max !== undefined\n  ? Number(source.price_max)\n  : (canonicalFilters.price_max !== null && canonicalFilters.price_max !== undefined\n      ? Number(canonicalFilters.price_max)\n      : null);\nconst excludedBrandFilters = Array.isArray(source.conversationState?.excluded_brands)\n  ? source.conversationState.excluded_brands.map(normalizeText)\n  : [];\n\nconst modelFilter =\n  compactText(source.model);\n\nconst colorFilter =\n  normalizeText(source.color);\n\nconst storageFilter =\n  source.storage_gb !== null &&\n  source.storage_gb !== undefined\n    ? Number(source.storage_gb)\n    : null;\n\nconst ramFilter =\n  source.ram_gb !== null &&\n  source.ram_gb !== undefined\n    ? Number(source.ram_gb)\n    : null;\n\n// ============================================================\n// FIND PRODUCT\n// ============================================================\n\nconst eligibleProducts = apiProducts.filter(product => {\n  if (normalizeText(product.status) !== 'active' || product.category?.isActive === false) return false;\n  const productBrands = [product.brand, product.category?.name, product.category?.slug]\n    .filter(Boolean)\n    .map(normalizeText);\n  if (effectiveBrandFilter && !productBrands.includes(effectiveBrandFilter)) return false;\n  if (excludedBrandFilters.some(brand => productBrands.includes(brand))) return false;\n  return true;\n});\n\nlet matchedProduct = null;\nif (selectedProductId) {\n  // A supplied canonical ID is authoritative. Do not fall back to a sibling SKU.\n  matchedProduct = eligibleProducts.find(product => String(product.id) === selectedProductId) || null;\n} else if (!modelFilter) {\n  // An unreferenced detail request must not become a first-item catalog lookup.\n  matchedProduct = null;\n} else if (modelFilter) {\n  const exactMatches = eligibleProducts.filter(product => compactText(product.name) === modelFilter);\n  if (exactMatches.length === 1) {\n    matchedProduct = exactMatches[0];\n  } else if (exactMatches.length === 0) {\n    const requestedTokens = normalizeText(source.model).match(/[a-z0-9]+/g) || [];\n    const namePattern = new RegExp('^' + requestedTokens.join('\\\\s*') + '\\\\b(?!\\\\s*(?:pro|max|plus|ultra|mini|air|se)\\\\b)', 'i');\n    const fuzzyMatches = eligibleProducts.filter(product => namePattern.test(normalizeText(product.name)));\n    if (fuzzyMatches.length === 1) matchedProduct = fuzzyMatches[0];\n  }\n} else {\n  matchedProduct = null;\n}\n\n// ============================================================\n// NO PRODUCT\n// ============================================================\n\nif (!matchedProduct) {\n  return [\n    {\n      json: {\n        result_type: 'no_result',\n        total: 0,\n        intent: 'product_detail',\n\n        chatInput:\n          source.chatInput ?? '',\n\n        sessionId:\n          source.sessionId ?? '',\n\n        product: null\n      }\n    }\n  ];\n}\n\n// ============================================================\n// FILTER VARIANTS\n// ============================================================\n\nconst matchedVariants = [];\n\nconst variants = Array.isArray(matchedProduct.variants)\n  ? matchedProduct.variants\n  : [];\n\nfor (const variant of variants) {\n\n  const storageRaw = findAttribute(\n    variant.attributes,\n    [\n      'Dung lÆ°á»£ng',\n      'Dung luong',\n      'Storage',\n      'SSD'\n    ]\n  );\n\n  const colorRaw = findAttribute(\n    variant.attributes,\n    [\n      'Màu sắc',\n      'Mau sac',\n      'Color'\n    ]\n  );\n\n  const directRam = findAttribute(\n    variant.attributes,\n    ['RAM']\n  );\n\n  const versionInfo =\n    extractVersionInfo(variant.attributes);\n\n  let storageGb =\n    parseCapacity(storageRaw);\n\n  let ramGb =\n    parseCapacity(directRam);\n\n  if (storageGb === null) {\n    storageGb =\n      versionInfo.storageGb;\n  }\n\n  if (ramGb === null) {\n    ramGb =\n      versionInfo.ramGb;\n  }\n\n  if (ramGb === null) {\n    ramGb = parseCapacity(\n      getSpecification(\n        matchedProduct.specifications,\n        'RAM'\n      )\n    );\n  }\n\n  // Requested storage\n  if (\n    storageFilter !== null &&\n    storageGb !== storageFilter\n  ) {\n    continue;\n  }\n\n  // Requested RAM\n  if (\n    ramFilter !== null &&\n    ramGb !== ramFilter\n  ) {\n    continue;\n  }\n\n  // Requested color\n  if (colorFilter) {\n    if (\n      !normalizeText(colorRaw)\n        .includes(colorFilter)\n    ) {\n      continue;\n    }\n  }\n\n  const stock =\n    Number(variant.stock) || 0;\n\n  const originalPrice =\n    Number(variant.price) || 0;\n\n  const effectivePrice =\n    calculateCampaignPrice(\n      originalPrice,\n      matchedProduct.activeCampaign\n    );\n\n  if (Number.isFinite(maxPriceFilter) && effectivePrice > maxPriceFilter) {\n    continue;\n  }\n\n  matchedVariants.push({\n    id: variant.id,\n\n    sku: variant.sku,\n\n    attributes:\n      variant.attributes ?? {},\n\n    storage_gb:\n      storageGb,\n\n    ram_gb:\n      ramGb,\n\n    color:\n      colorRaw ?? null,\n\n    color_code:\n      variant.colorCode ?? null,\n\n    original_price:\n      originalPrice,\n\n    price:\n      effectivePrice,\n\n    sale_price:\n      variant.salePrice ?? null,\n\n    stock,\n\n    availability:\n      stock > 0\n        ? 'in_stock'\n        : 'out_of_stock',\n\n    image_url:\n      normalizeImageUrl(\n        variant.image ||\n        matchedProduct.image ||\n        matchedProduct.images?.[0]\n      )\n  });\n}\n\n// ============================================================\n// PRODUCT EXISTS BUT REQUESTED VARIANT DOES NOT\n// ============================================================\n\nif (matchedVariants.length === 0) {\n  return [\n    {\n      json: {\n        result_type: 'no_result',\n        total: 0,\n        intent: 'product_detail',\n\n        chatInput:\n          source.chatInput ?? '',\n\n        sessionId:\n          source.sessionId ?? '',\n\n        product: null\n      }\n    }\n  ];\n}\n\n// ============================================================\n// SORT\n// in-stock first, then price\n// ============================================================\n\nmatchedVariants.sort((a, b) => {\n  if (\n    a.availability !== b.availability\n  ) {\n    return a.availability === 'in_stock'\n      ? -1\n      : 1;\n  }\n\n  return a.price - b.price;\n});\n\nconst inStockVariants =\n  matchedVariants.filter(\n    v => v.stock > 0\n  );\n\nconst totalStock =\n  matchedVariants.reduce(\n    (sum, v) => sum + v.stock,\n    0\n  );\n\nconst prices =\n  matchedVariants.map(v => v.price);\n\nconst selectedVariant =\n  matchedVariants[0];\n\n// ============================================================\n// FINAL PRODUCT\n// ============================================================\n\nconst product = {\n  id:\n    matchedProduct.id,\n\n  name:\n    matchedProduct.name,\n\n  model:\n    matchedProduct.name,\n\n  brand:\n    matchedProduct.brand ?? null,\n\n  category:\n    matchedProduct.category\n      ? {\n          id: matchedProduct.category.id,\n          name: matchedProduct.category.name,\n          slug: matchedProduct.category.slug\n        }\n      : null,\n\n  description:\n    matchedProduct.description ?? null,\n\n  image_url:\n    normalizeImageUrl(\n      selectedVariant.image_url ||\n      matchedProduct.image ||\n      matchedProduct.images?.[0]\n    ),\n\n  images:\n    Array.isArray(matchedProduct.images)\n      ? matchedProduct.images\n          .map(normalizeImageUrl)\n          .filter(Boolean)\n      : [],\n\n  specifications:\n    matchedProduct.specifications ?? [],\n\n  screen:\n    getSpecification(\n      matchedProduct.specifications,\n      'Màn hình'\n    ),\n\n  cpu:\n    getSpecification(\n      matchedProduct.specifications,\n      'CPU'\n    ) ||\n    getSpecification(\n      matchedProduct.specifications,\n      'Chip'\n    ),\n\n  camera:\n    getSpecification(\n      matchedProduct.specifications,\n      'Camera'\n    ),\n\n  battery:\n    getSpecification(\n      matchedProduct.specifications,\n      'Pin'\n    ),\n\n  operating_system:\n    getSpecification(\n      matchedProduct.specifications,\n      'Hệ điều hành'\n    ),\n\n  price:\n    Math.min(...prices),\n\n  price_min:\n    Math.min(...prices),\n\n  price_max:\n    Math.max(...prices),\n\n  stock:\n    totalStock,\n\n  availability:\n    inStockVariants.length > 0\n      ? 'in_stock'\n      : 'out_of_stock',\n\n  campaign:\n    matchedProduct.activeCampaign\n      ? {\n          id:\n            matchedProduct.activeCampaign.id,\n\n          name:\n            matchedProduct.activeCampaign.name,\n\n          discountType:\n            matchedProduct.activeCampaign.discountType,\n\n          discountValue:\n            matchedProduct.activeCampaign.discountValue\n        }\n      : null,\n\n  variants:\n    matchedVariants\n};\n\n// ============================================================\n// OUTPUT\n// ============================================================\n\nreturn [\n  {\n    json: {\n      result_type:\n        'product_detail',\n\n      total: 1,\n\n      intent:\n        'product_detail',\n\n      chatInput:\n        source.chatInput ?? '',\n\n      sessionId:\n        source.sessionId ?? '',\n\n      product\n    }\n  }\n];\n"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -471,7 +1318,8 @@
         7232
       ],
       "id": "849943f0-781b-4edb-a678-c8332ea121a4",
-      "name": "Gemini - FAQ Response"
+      "name": "Gemini - FAQ Response",
+      "disabled": true
     },
     {
       "parameters": {
@@ -594,7 +1442,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const input = $json;\nconst normalizedInput = $('Normalize Input').first().json;\nconst sessionId = normalizedInput.sessionId || '';\nconst chatInput = normalizedInput.chatInput || '';\nconst normalize = value => String(value || '').normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').replace(/[đĐ]/g, 'd').toLowerCase().trim();\nconst text = normalize(chatInput);\nlet pendingRequests = [];\ntry {\n  const row = $('Pending Quote - Lookup').first().json;\n  if (sessionId && row.session_id === sessionId && Number(row.expires_at) > Date.now()) {\n    const parsed = JSON.parse(row.requests_json || '[]');\n    if (Array.isArray(parsed)) pendingRequests = parsed.slice(0, 12);\n  }\n} catch {}\nconst state = normalizedInput.conversationState || {};\nconst pending = state.pending_question?.type === 'quotation' ? state.pending_question : null;\nif (pending?.product_id && Array.isArray(pending.options)) {\n  pendingRequests = pendingRequests.map(request => request.product_id === pending.product_id\n    ? { ...request, available_variants: pending.options, quantity: pending.quantity || request.quantity || 1 } : request);\n}\nif (!pendingRequests.length && pending?.product_id) pendingRequests = [{\n  request_index: 1, product_id: pending.product_id, model: pending.product_name,\n  quantity: pending.quantity || 1, available_variants: pending.options || [],\n}];\nconst ordinal = text.match(/\\b(?:mau|phien ban|lua chon)\\s*(?:so|thu)?\\s*(\\d+)\\b/);\nconst storage = text.match(/\\b(\\d+(?:[.,]\\d+)?)\\s*(gb|tb)\\b/);\nconst colorMatch = chatInput.match(/m[aà]u\\s+(.+?)(?:[.!?]|$)/iu);\nconst resuming = /\\btiep tuc bao gia\\b/.test(text);\nconst followup = pendingRequests.length > 0 && (input.is_followup === true || ordinal || storage || colorMatch\n  || /^(?:dong y|xac nhan|ok|duoc)$/.test(text));\nif (resuming && input.pending_quote_exists !== true) pendingRequests = [];\nlet requests = followup ? pendingRequests.map(request => ({ ...request })) : [];\nif (!followup) {\n  const descriptors = Array.isArray(input.products) ? input.products : [];\n  requests = descriptors.filter(p => p?.model).map((p, index) => ({\n    request_index: index + 1, brand: p.brand || '', model: p.model,\n    storage_gb: p.storage_gb ?? null, ram_gb: p.ram_gb ?? null, color: p.color || null,\n    quantity: p.quantity_explicit === true ? p.quantity : 1,\n  }));\n  if (!requests.length && input.model) requests = [{ request_index: 1, brand: input.brand || '', model: input.model,\n    storage_gb: null, ram_gb: null, color: null, quantity: 1 }];\n  if (!requests.length && /\\b(?:mau nay|san pham nay|dien thoai nay)\\b/.test(text)) {\n    const selected = (state.last_result_set || []).find(p => p.id === state.selected_product_id);\n    if (selected) requests = [{ request_index: 1, product_id: selected.id, brand: selected.brand || '', model: selected.name, quantity: 1 }];\n  }\n}\nlet ambiguousFollowup = Boolean(followup && requests.length > 1 && (ordinal || storage || colorMatch));\nif (requests.length === 1) {\n  const request = requests[0];\n  if (resuming && input.pending_quote_exists === true && state.selected_variant_id) {\n    request.variant_id = state.selected_variant_id;\n  } else if (ordinal) {\n    const option = request.available_variants?.[Number(ordinal[1]) - 1];\n    request.variant_id = option?.variant_id || option?.id || '__invalid_variant_selection__';\n  } else {\n    if (storage) { request.storage_gb = Number(storage[1].replace(',', '.')) * (storage[2] === 'tb' ? 1024 : 1); delete request.variant_id; }\n    if (colorMatch) { request.color = colorMatch[1].trim(); delete request.variant_id; }\n    if (!storage && input.storage) request.storage_gb = Number(String(input.storage).replace(/gb/i, '')) || request.storage_gb || null;\n    if (!colorMatch && input.color) request.color = input.color;\n  }\n  if (input.quantity_explicit === true) request.quantity = input.quantity;\n}\nreturn [{ json: { result_type: 'quotation', requests: requests.slice(0, 12),\n  total_requested: requests.length, ambiguous_followup: ambiguousFollowup,\n  ambiguous_products: ambiguousFollowup ? requests.map(r => r.model || 'sản phẩm') : [],\n  chatInput, sessionId, source: 'web_chat' } }];\n"
+        "jsCode": "const input = $json;\nconst normalizedInput = $('Normalize Input').first().json;\nconst sessionId = normalizedInput.sessionId || '';\nconst chatInput = normalizedInput.chatInput || '';\nconst normalize = value => String(value || '').normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').replace(/[đĐ]/g, 'd').toLowerCase().trim();\nconst text = normalize(chatInput);\nlet pendingRequests = [];\ntry {\n  const row = $('Pending Quote - Lookup').first().json;\n  if (sessionId && row.session_id === sessionId && Number(row.expires_at) > Date.now()) {\n    const parsed = JSON.parse(row.requests_json || '[]');\n    if (Array.isArray(parsed)) pendingRequests = parsed.slice(0, 12);\n  }\n} catch {}\nconst state = normalizedInput.conversationState || {};\nconst pending = state.pending_question?.type === 'quotation' ? state.pending_question : null;\nif (pending?.product_id && pending.field === 'variant' && Array.isArray(pending.options)) {\n  pendingRequests = pendingRequests.map(request => request.product_id === pending.product_id\n    ? { ...request, available_variants: pending.options, quantity: pending.quantity || request.quantity || 1 } : request);\n}\nif (!pendingRequests.length && pending?.product_id) pendingRequests = [{\n  request_index: 1, product_id: pending.product_id, model: pending.product_name,\n  quantity: pending.quantity || 1, available_variants: pending.options || [],\n}];\nconst ordinal = text.match(/\\b(?:mau|phien ban|lua chon)\\s*(?:so|thu)?\\s*(\\d+)\\b/);\nconst storage = text.match(/\\b(\\d+(?:[.,]\\d+)?)\\s*(gb|tb)\\b/);\nconst colorMatch = chatInput.match(/m[aà]u\\s+(.+?)(?:[.!?]|$)/iu);\nconst resuming = /\\btiep tuc bao gia\\b/.test(text);\nconst followup = !input.explicit_product_model && pendingRequests.length > 0 && (input.is_followup === true || ordinal || storage || colorMatch\n  || /^(?:dong y|xac nhan|ok|duoc)$/.test(text));\nif (resuming && input.pending_quote_exists !== true) pendingRequests = [];\nlet requests = followup ? pendingRequests.map(request => ({ ...request })) : [];\nif (!followup) {\n  const descriptors = Array.isArray(input.products) ? input.products : [];\n  requests = descriptors.filter(p => p?.model).map((p, index) => ({\n    request_index: index + 1, brand: p.brand || '', model: p.model,\n    storage_gb: p.storage_gb ?? null, ram_gb: p.ram_gb ?? null, color: p.color || null,\n    quantity: p.quantity_explicit === true ? p.quantity : 1,\n  }));\n  if (!requests.length && input.model) requests = [{ request_index: 1, brand: input.brand || '', model: input.model,\n    storage_gb: null, ram_gb: null, color: null, quantity: 1 }];\n  if (!requests.length && /\\b(?:mau nay|san pham nay|dien thoai nay)\\b/.test(text)) {\n    const selected = (state.last_result_set || []).find(p => p.id === state.selected_product_id);\n    if (selected) requests = [{ request_index: 1, product_id: selected.id, brand: selected.brand || '', model: selected.name, quantity: 1 }];\n  }\n}\nlet ambiguousFollowup = Boolean(followup && requests.length > 1 && (ordinal || storage || colorMatch));\nif (requests.length === 1) {\n  const request = requests[0];\n  const pendingVariant = pending?.field === 'ready' && pending.product_id === request.product_id && pending.options?.length === 1\n    ? pending.options[0].variant_id || pending.options[0].id : null;\n  if (resuming && input.pending_quote_exists === true && (pendingVariant || state.selected_variant_id)) {\n    request.variant_id = pendingVariant || state.selected_variant_id;\n    request.quantity = pending?.quantity || request.quantity || 1;\n  } else if (ordinal) {\n    const option = request.available_variants?.[Number(ordinal[1]) - 1];\n    request.variant_id = option?.variant_id || option?.id || '__invalid_variant_selection__';\n  } else {\n    if (storage) { request.storage_gb = Number(storage[1].replace(',', '.')) * (storage[2] === 'tb' ? 1024 : 1); delete request.variant_id; }\n    if (colorMatch) { request.color = colorMatch[1].trim(); delete request.variant_id; }\n    if (!storage && input.storage) request.storage_gb = Number(String(input.storage).replace(/gb/i, '')) || request.storage_gb || null;\n    if (!colorMatch && input.color) request.color = input.color;\n  }\n  if (input.quantity_explicit === true) request.quantity = input.quantity;\n}\nreturn [{ json: { result_type: 'quotation', requests: requests.slice(0, 12),\n  total_requested: requests.length, ambiguous_followup: ambiguousFollowup,\n  ambiguous_products: ambiguousFollowup ? requests.map(r => r.model || 'sản phẩm') : [],\n  chatInput, sessionId, source: 'web_chat' } }];\n"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -1920,7 +2768,7 @@
     {
       "parameters": {
         "mode": "runOnceForEachItem",
-        "jsCode": "\nconst original = ($json && typeof $json === 'object' && !Array.isArray($json)) ? $json : {};\nconst input = original;\nconst normalizeInput = $('Normalize Input').first().json || {};\nconst router = $('Resolve Quotation Turn').first().json || {};\n\nfunction toPlainObject(value) {\n  if (value && typeof value === 'object' && !Array.isArray(value)) return value;\n  if (typeof value === 'string' && value.trim()) {\n    try {\n      const parsed = JSON.parse(value);\n      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) return parsed;\n    } catch {\n      // fall through to the safe empty state\n    }\n  }\n  return {};\n}\n\nconst priorConversationState = toPlainObject(\n  normalizeInput.conversationState ?? input.conversation_state ?? input.context\n);\nconst routedConversationState = toPlainObject(router.conversationState);\n// Validate Router is the single source of truth for the current turn. Using\n// its resolved state prevents stale positive preferences from being restored\n// after an exclusion/refinement response.\nconst preserveShoppingCriteria = input.result_type === 'faq' || (router.turn_action !== 'SWITCH' && (\n  router.intent === 'product_detail' ||\n  router.intent === 'product_compare' ||\n  router.turn_action === 'SELECT' ||\n  router.turn_action === 'COMPARE'\n));\nconst previous = preserveShoppingCriteria\n  ? priorConversationState\n  : (Object.keys(routedConversationState).length > 0\n      ? routedConversationState\n      : priorConversationState);\n\nfunction normalize(value) {\n  return String(value ?? '')\n    .replace(/[đĐ]/g, 'd')\n    .normalize('NFD')\n    .replace(/[\\u0300-\\u036f]/g, '')\n    .toLowerCase()\n    .trim();\n}\n\nfunction safeNode(name) {\n  try { return $(name).first().json || {}; } catch { return {}; }\n}\n\nfunction unique(values) { return [...new Set(values.filter(Boolean))]; }\n\nconst stateCategory = preserveShoppingCriteria\n  ? (previous.category || null)\n  : (router.category || previous.category || null);\nconst previousActive = previous.active_filters && typeof previous.active_filters === 'object' ? previous.active_filters : {};\nconst activeFilters = { ...previousActive };\n\nif (!preserveShoppingCriteria && router.context_mode === 'reset') {\n  for (const key of ['brand', 'price_max', 'storage_gb', 'ram_gb', 'color', 'use_case']) delete activeFilters[key];\n}\n\nfor (const [key, value] of Object.entries({\n  brand: router.brand,\n  price_max: router.price_max,\n  storage_gb: router.storage,\n  ram_gb: router.ram,\n  color: router.color,\n  use_case: router.use_case\n})) {\n  if (preserveShoppingCriteria) continue;\n  if (router.turn_action === 'SELECT' && key === 'brand') continue;\n  if (value !== null && value !== undefined && value !== '') activeFilters[key] = value;\n}\n\nconst resultSources = [\n  safeNode('Format Product Results').products,\n  safeNode('Format Recommendation Data').products,\n  safeNode('Format Compare Data').products\n];\nlet displayedProducts = resultSources.find(value => Array.isArray(value) && value.length > 0) || [];\nif (!displayedProducts.length && safeNode('Format Product Detail').product) {\n  displayedProducts = [safeNode('Format Product Detail').product];\n}\nif (!displayedProducts.length && Array.isArray(input.products) && input.products.length > 0) {\n  displayedProducts = input.products;\n}\n\nconst previousResults = Array.isArray(previous.last_result_set) ? previous.last_result_set : [];\nconst lastResultSet = displayedProducts.length\n  ? displayedProducts.map((product, index) => ({\n      position: index + 1,\n      id: product?.id || null,\n      name: product?.name || product?.model || '',\n      brand: product?.brand || null,\n      category: product?.category?.name || product?.category?.slug || product?.category || null,\n      price_min: product?.price_min ?? product?.price ?? null,\n      price_max: product?.price_max ?? product?.price ?? null\n    }))\n  : (preserveShoppingCriteria ? previousResults : (router.context_mode === 'reset' ? [] : previousResults));\n\nlet selectedProductId = !preserveShoppingCriteria && router.context_mode === 'reset' || router.turn_action === 'SELECT'\n  ? (router.selected_product_id || null)\n  : (router.selected_product_id || previous.selected_product_id || null);\nconst selectedIndex = Number(router.selected_result_index);\nif (Number.isInteger(selectedIndex) && selectedIndex > 0 && lastResultSet[selectedIndex - 1]) {\n  selectedProductId = lastResultSet[selectedIndex - 1].id || selectedProductId;\n}\n\nconst previousRejectedProducts = router.context_mode === 'reset'\n  ? []\n  : (Array.isArray(previous.rejected_products) ? previous.rejected_products : []);\nconst routedRejectedProducts = Array.isArray(router.rejected_products)\n  ? router.rejected_products\n  : [];\nconst rejectedProductsById = new Map(\n  [...previousRejectedProducts, ...routedRejectedProducts]\n    .filter(product => product && product.id)\n    .map(product => [String(product.id), product])\n);\nconst rejectedProducts = [...rejectedProductsById.values()];\n\nconst quotePending = input.quote_status === 'needs_variant_selection'\n  ? {\n      type: 'quotation',\n      field: 'variant',\n      product_id: input.request_results?.[0]?.product?.id || null,\n      product_name: input.request_results?.[0]?.product?.name || null,\n      options: input.request_results?.[0]?.available_variants || []\n    }\n  : null;\nconst quoteProductPending = input.result_type === 'quotation' && input.quote_status === 'invalid_request'\n  ? {type:'quotation',field:'product',options:[]} : null;\nconst quoteReadyPending = input.result_type === 'quotation' && input.ready_to_quote === true && input.products?.length === 1\n  ? {type:'quotation',field:'ready',product_id:input.products[0].id,product_name:input.products[0].name,\n      quantity:input.products[0].quantity,options:[{id:input.products[0].variant_id,variant_id:input.products[0].variant_id}]} : null;\nconst pending = router.turn_action === 'CANCEL'\n  ? null\n  : (router.requires_clarification\n    ? {\n        type: 'clarification',\n        field: router.clarification_field || 'unknown',\n        options: []\n      }\n    : (quoteReadyPending || quotePending || quoteProductPending || ((input.result_type === 'quotation' && input.ready_to_quote === true) || router.turn_action === 'REJECT' || router.turn_action === 'SELECT' || router.turn_action === 'CONFIRM'\n      ? null\n      : (previous.pending_question || null))));\n\nconst excludedBrandSource = preserveShoppingCriteria\n  ? (Array.isArray(previous.excluded_brands) ? previous.excluded_brands : [])\n  : (router.context_mode === 'reset'\n      ? (Array.isArray(router.excluded_brands) ? router.excluded_brands : [])\n      : (Array.isArray(router.excluded_brands)\n          ? router.excluded_brands\n          : (Array.isArray(previous.excluded_brands) ? previous.excluded_brands : [])));\nconst excludedBrands = unique([\n  ...excludedBrandSource,\n  ...(preserveShoppingCriteria || !Array.isArray(router.exclude_brands) ? [] : router.exclude_brands)\n]).filter(brand => !activeFilters.brand || normalize(brand) !== normalize(activeFilters.brand));\nconst preferredBrandSource = preserveShoppingCriteria\n  ? (Array.isArray(previous.preferred_brands) ? previous.preferred_brands : [])\n  : (router.context_mode === 'reset'\n      ? (Array.isArray(router.preferred_brands) ? router.preferred_brands : [])\n      : (Array.isArray(router.preferred_brands)\n          ? router.preferred_brands\n          : (Array.isArray(previous.preferred_brands) ? previous.preferred_brands : [])));\nconst preferredBrands = unique([\n  ...preferredBrandSource,\n  activeFilters.brand\n]);\n\nconst conversationState = {\n  category: stateCategory,\n  active_filters: activeFilters,\n  preferred_brands: preferredBrands,\n  excluded_brands: excludedBrands,\n  rejected_products: rejectedProducts,\n  last_result_set: lastResultSet,\n  selected_product_id: input.result_type === 'quotation' && input.products?.length === 1 ? input.products[0].id : selectedProductId,\n  selected_variant_id: input.result_type === 'quotation' ? (input.ready_to_quote ? input.products?.[0]?.variant_id || null : null) : (!preserveShoppingCriteria && router.context_mode === 'reset' ? null : (previous.selected_variant_id || null)),\n  last_intent: router.intent || previous.last_intent || null,\n  last_turn_action: router.turn_action || previous.last_turn_action || 'CONTINUE',\n  pending_question: pending,\n  state_version: 2,\n  updated_at: new Date().toISOString()\n};\n\nconst output = {\n  json: {\n    ...input,\n    conversation_state: conversationState\n  }\n};\nif (input.binary) output.binary = input.binary;\nreturn output;\n\n"
+        "jsCode": "\nconst original = ($json && typeof $json === 'object' && !Array.isArray($json)) ? $json : {};\nconst input = original;\nconst normalizeInput = $('Normalize Input').first().json || {};\nconst router = $('Resolve Quotation Turn').first().json || {};\n\nfunction toPlainObject(value) {\n  if (value && typeof value === 'object' && !Array.isArray(value)) return value;\n  if (typeof value === 'string' && value.trim()) {\n    try {\n      const parsed = JSON.parse(value);\n      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) return parsed;\n    } catch {\n      // fall through to the safe empty state\n    }\n  }\n  return {};\n}\n\nconst priorConversationState = toPlainObject(\n  normalizeInput.conversationState ?? input.conversation_state ?? input.context\n);\nconst routedConversationState = toPlainObject(router.conversationState);\n// Validate Router is the single source of truth for the current turn. Using\n// its resolved state prevents stale positive preferences from being restored\n// after an exclusion/refinement response.\nconst explicitDetail = router.intent === 'product_detail' && router.explicit_product_model === true;\nconst preserveShoppingCriteria = explicitDetail || input.result_type === 'faq' || (router.turn_action !== 'SWITCH' && (\n  router.intent === 'product_detail' ||\n  router.intent === 'product_compare' ||\n  router.turn_action === 'SELECT' ||\n  router.turn_action === 'COMPARE'\n));\nconst previous = preserveShoppingCriteria\n  ? priorConversationState\n  : (Object.keys(routedConversationState).length > 0\n      ? routedConversationState\n      : priorConversationState);\n\nfunction normalize(value) {\n  return String(value ?? '')\n    .replace(/[đĐ]/g, 'd')\n    .normalize('NFD')\n    .replace(/[\\u0300-\\u036f]/g, '')\n    .toLowerCase()\n    .trim();\n}\n\nfunction safeNode(name) {\n  try { return $(name).first().json || {}; } catch { return {}; }\n}\n\nfunction unique(values) { return [...new Set(values.filter(Boolean))]; }\n\nconst stateCategory = preserveShoppingCriteria\n  ? (previous.category || null)\n  : (router.category || previous.category || null);\nconst previousActive = previous.active_filters && typeof previous.active_filters === 'object' ? previous.active_filters : {};\nconst activeFilters = { ...previousActive };\n\nif (!preserveShoppingCriteria && router.context_mode === 'reset') {\n  for (const key of ['brand', 'price_max', 'storage_gb', 'ram_gb', 'color', 'use_case']) delete activeFilters[key];\n}\n\nfor (const [key, value] of Object.entries({\n  brand: router.brand,\n  price_max: router.price_max,\n  storage_gb: router.storage,\n  ram_gb: router.ram,\n  color: router.color,\n  use_case: router.use_case\n})) {\n  if (preserveShoppingCriteria) continue;\n  if (router.turn_action === 'SELECT' && key === 'brand') continue;\n  if (value !== null && value !== undefined && value !== '') activeFilters[key] = value;\n}\n\nconst resultSources = [\n  safeNode('Format Product Results').products,\n  safeNode('Format Recommendation Data').products,\n  safeNode('Format Compare Data').products\n];\nlet displayedProducts = resultSources.find(value => Array.isArray(value) && value.length > 0) || [];\nif (!displayedProducts.length && safeNode('Format Product Detail').product) {\n  displayedProducts = [safeNode('Format Product Detail').product];\n}\nif (!displayedProducts.length && Array.isArray(input.products) && input.products.length > 0) {\n  displayedProducts = input.products;\n}\n\nconst previousResults = Array.isArray(previous.last_result_set) ? previous.last_result_set : [];\nconst lastResultSet = displayedProducts.length\n  ? displayedProducts.map((product, index) => ({\n      position: index + 1,\n      id: product?.id || null,\n      name: product?.name || product?.model || '',\n      brand: product?.brand || null,\n      category: product?.category?.name || product?.category?.slug || product?.category || null,\n      price_min: product?.price_min ?? product?.price ?? null,\n      price_max: product?.price_max ?? product?.price ?? null\n    }))\n  : (preserveShoppingCriteria ? previousResults : (router.context_mode === 'reset' ? [] : previousResults));\n\nlet selectedProductId = !preserveShoppingCriteria && router.context_mode === 'reset' || router.turn_action === 'SELECT'\n  ? (router.selected_product_id || null)\n  : (router.selected_product_id || previous.selected_product_id || null);\nconst selectedIndex = Number(router.selected_result_index);\nif (explicitDetail && input.result_type === 'product_detail' && displayedProducts.length === 1) {\n  selectedProductId = displayedProducts[0].id || null;\n}\nif (Number.isInteger(selectedIndex) && selectedIndex > 0 && lastResultSet[selectedIndex - 1]) {\n  selectedProductId = lastResultSet[selectedIndex - 1].id || selectedProductId;\n}\n\nconst previousRejectedProducts = router.context_mode === 'reset'\n  ? []\n  : (Array.isArray(previous.rejected_products) ? previous.rejected_products : []);\nconst routedRejectedProducts = Array.isArray(router.rejected_products)\n  ? router.rejected_products\n  : [];\nconst rejectedProductsById = new Map(\n  [...previousRejectedProducts, ...routedRejectedProducts]\n    .filter(product => product && product.id)\n    .map(product => [String(product.id), product])\n);\nconst rejectedProducts = [...rejectedProductsById.values()];\n\nconst quotePending = input.quote_status === 'needs_variant_selection'\n  ? {\n      type: 'quotation',\n      field: 'variant',\n      product_id: input.request_results?.[0]?.product?.id || null,\n      product_name: input.request_results?.[0]?.product?.name || null,\n      options: input.request_results?.[0]?.available_variants || []\n    }\n  : null;\nconst quoteProductPending = input.result_type === 'quotation' && input.quote_status === 'invalid_request'\n  ? {type:'quotation',field:'product',options:[]} : null;\nconst quoteReadyPending = input.result_type === 'quotation' && input.ready_to_quote === true && input.products?.length === 1\n  ? {type:'quotation',field:'ready',product_id:input.products[0].id,product_name:input.products[0].name,\n      quantity:input.products[0].quantity,options:[{id:input.products[0].variant_id,variant_id:input.products[0].variant_id}]} : null;\nconst pending = router.turn_action === 'CANCEL'\n  ? null\n  : (router.requires_clarification\n    ? {\n        type: 'clarification',\n        field: router.clarification_field || 'unknown',\n        options: []\n      }\n    : (quoteReadyPending || quotePending || quoteProductPending || ((input.result_type === 'quotation' && input.ready_to_quote === true) || router.turn_action === 'REJECT' || router.turn_action === 'SELECT' || router.turn_action === 'CONFIRM'\n      ? null\n      : (previous.pending_question || null))));\n\nconst excludedBrandSource = preserveShoppingCriteria\n  ? (Array.isArray(previous.excluded_brands) ? previous.excluded_brands : [])\n  : (router.context_mode === 'reset'\n      ? (Array.isArray(router.excluded_brands) ? router.excluded_brands : [])\n      : (Array.isArray(router.excluded_brands)\n          ? router.excluded_brands\n          : (Array.isArray(previous.excluded_brands) ? previous.excluded_brands : [])));\nconst excludedBrands = unique([\n  ...excludedBrandSource,\n  ...(preserveShoppingCriteria || !Array.isArray(router.exclude_brands) ? [] : router.exclude_brands)\n]).filter(brand => !activeFilters.brand || normalize(brand) !== normalize(activeFilters.brand));\nconst preferredBrandSource = preserveShoppingCriteria\n  ? (Array.isArray(previous.preferred_brands) ? previous.preferred_brands : [])\n  : (router.context_mode === 'reset'\n      ? (Array.isArray(router.preferred_brands) ? router.preferred_brands : [])\n      : (Array.isArray(router.preferred_brands)\n          ? router.preferred_brands\n          : (Array.isArray(previous.preferred_brands) ? previous.preferred_brands : [])));\nconst preferredBrands = unique([\n  ...preferredBrandSource,\n  activeFilters.brand\n]);\n\nconst conversationState = {\n  category: stateCategory,\n  active_filters: activeFilters,\n  preferred_brands: preferredBrands,\n  excluded_brands: excludedBrands,\n  rejected_products: rejectedProducts,\n  last_result_set: lastResultSet,\n  selected_product_id: input.result_type === 'quotation' && input.products?.length === 1 ? input.products[0].id : selectedProductId,\n  selected_variant_id: input.result_type === 'quotation' ? (input.ready_to_quote ? input.products?.[0]?.variant_id || null : null) : (explicitDetail || !preserveShoppingCriteria && router.context_mode === 'reset' ? null : (previous.selected_variant_id || null)),\n  last_intent: router.intent || previous.last_intent || null,\n  last_turn_action: router.turn_action || previous.last_turn_action || 'CONTINUE',\n  pending_question: pending,\n  state_version: 2,\n  updated_at: new Date().toISOString()\n};\n\nconst output = {\n  json: {\n    ...input,\n    conversation_state: conversationState\n  }\n};\nif (input.binary) output.binary = input.binary;\nreturn output;\n"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -1946,7 +2794,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const input = $json;\nconst normalized = $('Normalize Input').first().json;\nconst text = String(normalized.chatInput || '').normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').replace(/[đĐ]/g, 'd').toLowerCase();\nconst pending = normalized.conversationState?.pending_question;\nconst pendingQuote = pending?.type === 'quotation';\nconst resumeQuote = /\\btiep tuc bao gia\\b/.test(text) && input.pending_quote_exists === true && Boolean(normalized.conversationState?.selected_product_id);\nconst isWarranty = /\\b(?:bao hanh|warranty)\\b/.test(text);\nif (isWarranty && !/\\b(?:so sanh|bao gia)\\b/.test(text)) {\n  return [{json:{...input,intent:'faq',faq_topic:'warranty',faq_topics:['warranty'],turn_action:'CONTINUE',context_mode:'continue',\n    requires_clarification:false,conversationState:normalized.conversationState || input.conversationState}}];\n}\nconst isAttribute = /\\b\\d+\\s*(?:gb|tb)\\b|\\bmau\\s+\\S|\\b(?:mau|phien ban)\\s*(?:so|thu)?\\s*\\d+\\b/.test(text);\nconst isProductReply = pendingQuote && pending.field === 'product' && Boolean(input.model || input.products?.length);\nconst isOtherQuestion = /\\b(?:bao hanh|chinh sach|camera|pin|man hinh|so sanh)\\b/.test(text);\nif (input.turn_action !== 'CANCEL' && !isOtherQuestion &&\n  (resumeQuote || /\\bbao gia\\b/.test(text) || (pendingQuote && (isAttribute || isProductReply)) || (input.pending_quote_exists && isAttribute))) {\n  return [{ json: { ...input, intent: 'quotation', is_followup: resumeQuote || (pendingQuote || input.pending_quote_exists) && isAttribute,\n    requires_clarification: false, clarification_field: null } }];\n}\nreturn [{ json: input }];\n"
+        "jsCode": "const input = $json;\nconst normalized = $('Normalize Input').first().json;\nconst text = String(normalized.chatInput || '').normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').replace(/[đĐ]/g, 'd').toLowerCase();\nconst pending = normalized.conversationState?.pending_question;\nconst pendingQuote = pending?.type === 'quotation';\nconst resumeQuote = /\\btiep tuc bao gia\\b/.test(text) && input.pending_quote_exists === true && Boolean(pendingQuote ? pending.product_id : normalized.conversationState?.selected_product_id);\nconst isWarranty = /\\b(?:bao hanh|warranty)\\b/.test(text);\nif (isWarranty && !/\\b(?:so sanh|bao gia)\\b/.test(text)) {\n  return [{json:{...input,intent:'faq',faq_topic:'warranty',faq_topics:['warranty'],turn_action:'CONTINUE',context_mode:'continue',\n    requires_clarification:false,conversationState:normalized.conversationState || input.conversationState}}];\n}\nconst isAttribute = /\\b\\d+\\s*(?:gb|tb)\\b|\\bmau\\s+\\S|\\b(?:mau|phien ban)\\s*(?:so|thu)?\\s*\\d+\\b/.test(text);\nconst isProductReply = pendingQuote && pending.field === 'product' && Boolean(input.model || input.products?.length);\nconst isOtherQuestion = /\\b(?:bao hanh|chinh sach|camera|pin|man hinh|so sanh)\\b/.test(text);\nif (input.turn_action !== 'CANCEL' && !isOtherQuestion &&\n  (resumeQuote || /\\bbao gia\\b/.test(text) || (!input.explicit_product_model && ((pendingQuote && (isAttribute || isProductReply)) || (input.pending_quote_exists && isAttribute))))) {\n  return [{ json: { ...input, intent: 'quotation', is_followup: !input.explicit_product_model && (resumeQuote || (pendingQuote || input.pending_quote_exists) && isAttribute),\n    requires_clarification: false, clarification_field: null } }];\n}\nreturn [{ json: input }];\n"
       },
       "id": "7acbfb5e-01ab-4140-b65d-3b1cc1e41d7d",
       "name": "Resolve Quotation Turn",
@@ -2118,793 +2966,146 @@
         7456,
         6848
       ]
+    },
+    {
+      "id": "a98e2f0e-1f7f-4dbe-91ae-a7e1306444a0",
+      "name": "Deterministic Intent",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -880,
+        540
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const normalized = $('Normalize Input').first().json;\nconst text = String(normalized.chatInput || '').normalize('NFD').replace(/[\\u0300-\\u036f]/g, '')\n  .replace(/[đĐ]/g, 'd').toLowerCase().trim();\nlet classification = null;\nconst base = { intent: 'default', brand: '', model: '', storage: '', ram: '', color: '', price_max: null,\n  condition: '', use_case: '', faq_topic: '', faq_topics: [], products: [], quantity: 1,\n  turn_action: 'CONTINUE', context_mode: 'continue', requires_clarification: false };\nif (/^(?:xin chao|chao(?: ban|shop|webphone)?|hello|hi|alo)[.!?]*$/.test(text)) {\n  classification = base;\n} else if (/\\b(?:bao hanh|warranty)\\b/.test(text)\n  && /\\b(?:chinh sach|bao hanh chung|bao hanh (?:san pham|may) nay|the nao|bao lau|warranty policy)\\b/.test(text)\n  && !/\\b(?:bao gia|so sanh|tim|mua|ban|goi y|tu van)\\b|\\d/.test(text)) {\n  classification = { ...base, intent: 'faq', faq_topic: 'warranty', faq_topics: ['warranty'] };\n} else {\n  let requests = [];\n  let valid = false;\n  try {\n    const row = $('Pending Quote - Lookup').first().json;\n    requests = JSON.parse(row.requests_json || '[]');\n    valid = row.session_id === normalized.sessionId && Number(row.expires_at) > Date.now()\n      && Array.isArray(requests) && requests.length > 0;\n  } catch {}\n  const state = normalized.conversationState || {};\n  const pending = state.pending_question?.type === 'quotation' ? state.pending_question : null;\n  const selectedId = pending?.product_id || state.selected_product_id;\n  const selectedVariant = pending?.field === 'ready' && pending.options?.length === 1\n    ? pending.options[0].variant_id || pending.options[0].id : state.selected_variant_id;\n  const validState = state.state_version === 2 && !Array.isArray(state)\n    && typeof selectedId === 'string' && selectedId.length > 0;\n  const request = Array.isArray(requests) ? requests.find(request => request.product_id === selectedId) : null;\n  const sameProduct = validState && request\n    && (!state.pending_question?.product_id || state.pending_question.product_id === selectedId);\n  const sameVariant = !selectedVariant || (Array.isArray(request?.available_variants)\n    && request.available_variants.some(variant => (variant.id || variant.variant_id) === selectedVariant));\n  const attributesOnly = /^(?:\\d+(?:[.,]\\d+)?\\s*(?:gb|tb)(?:\\s+mau\\s+[\\p{L}\\s]+)?|mau\\s+[\\p{L}\\s]+|(?:mau|phien ban)\\s+(?:so|thu)\\s*\\d+)[.!?]*$/u.test(text);\n  const resume = /^(?:toi muon\\s+)?tiep tuc bao gia(?:\\s+truoc do)?[.!?]*$/.test(text);\n  if (valid && sameProduct && sameVariant && (attributesOnly || resume)) classification = { ...base, intent: 'quotation' };\n}\nreturn [{ json: classification\n  ? { fast_intent: true, content: { parts: [{ text: JSON.stringify(classification) }] } }\n  : { fast_intent: false } }];\n"
+      }
+    },
+    {
+      "id": "73b42b9b-e9e6-4057-8a22-d8902f1f3318",
+      "name": "IF - Deterministic Intent",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -660,
+        540
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.fast_intent === true }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "7d9edc15-5bf3-4076-a0a3-79c12e3adf3a",
+      "name": "IF - Exact Greeting",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        0,
+        1280
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ /^(?:xin chao|chao(?: ban|shop|webphone)?|hello|hi|alo)[.!?]*$/.test(String($('Normalize Input').first().json.chatInput || '').normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').replace(/[đĐ]/g,'d').toLowerCase().trim()) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "cfe54cd2-7429-4af1-a6c6-0c2a6cfc4a49",
+      "name": "Static Greeting",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        240,
+        1280
+      ],
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "greeting-type",
+              "name": "result_type",
+              "value": "text",
+              "type": "string"
+            },
+            {
+              "id": "greeting-response",
+              "name": "response",
+              "value": "Xin chào! Tôi là trợ lý WebPhone. Tôi có thể giúp bạn tìm sản phẩm, tư vấn, so sánh và chuẩn bị yêu cầu báo giá.",
+              "type": "string"
+            },
+            {
+              "id": "greeting-session",
+              "name": "sessionId",
+              "value": "={{ $('Normalize Input').first().json.sessionId }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      }
     }
   ],
-  "connections": {
-    "Normalize Input": {
-      "main": [
-        [
-          {
-            "node": "Pending Quote - Lookup",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Gemini - Intent Router": {
-      "main": [
-        [
-          {
-            "node": "Validate Router",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Intent Router": {
-      "main": [
-        [
-          {
-            "node": "Prepare Search Filters",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Prepare Product Detail",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Prepare Compare Filters",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Prepare Recommendation Filters",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Edit Fields - Prepare FAQ",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Gemini - Default Response",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Prepare Quote Filters",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Delete Pending Quote",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Prepare Search Filters": {
-      "main": [
-        [
-          {
-            "node": "API - Fetch Products",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Format Product Results": {
-      "main": [
-        [
-          {
-            "node": "Name: IF - Products Found",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Gemini - Product Response": {
-      "main": [
-        [
-          {
-            "node": "Edit Response",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Prepare Product Detail": {
-      "main": [
-        [
-          {
-            "node": "API - Fetch Products Detail",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Format Product Detail": {
-      "main": [
-        [
-          {
-            "node": "IF - Product Detail Found",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Gemini - Product Detail Response": {
-      "main": [
-        [
-          {
-            "node": "Edit Response Product Detail",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Gemini - FAQ Response": {
-      "main": [
-        [
-          {
-            "node": "Edit Response FAQ",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Prepare Compare Filters": {
-      "main": [
-        [
-          {
-            "node": "API - Fetch Products Compare",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Format Compare Data": {
-      "main": [
-        [
-          {
-            "node": "IF - Compare Ready",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Gemini - Product Compare Response": {
-      "main": [
-        [
-          {
-            "node": "Edit Response Product Compare",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Gemini - Recommendation Response": {
-      "main": [
-        [
-          {
-            "node": "Edit Response Recommendation",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Gemini - Default Response": {
-      "main": [
-        [
-          {
-            "node": "Edit Response Default",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Prepare Quote Filters": {
-      "main": [
-        [
-          {
-            "node": "API - Fetch Products Quote",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Format Quote Data": {
-      "main": [
-        [
-          {
-            "node": "IF - Quote Ready",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Edit Response": {
-      "main": [
-        [
-          {
-            "node": "Build Conversation State",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Edit Response Product Compare": {
-      "main": [
-        [
-          {
-            "node": "Build Conversation State",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Edit Response Product Detail": {
-      "main": [
-        [
-          {
-            "node": "Build Conversation State",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Edit Response Recommendation": {
-      "main": [
-        [
-          {
-            "node": "Build Conversation State",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Prepare Recommendation Filters": {
-      "main": [
-        [
-          {
-            "node": "API - Fetch Products Recommendation",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Edit Response Default": {
-      "main": [
-        [
-          {
-            "node": "Build Conversation State",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Edit Response FAQ": {
-      "main": [
-        [
-          {
-            "node": "Build Conversation State",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Edit Fields - Prepare FAQ": {
-      "main": [
-        [
-          {
-            "node": "FAQ - Static Data",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Prepare Quotation Response": {
-      "main": [
-        [
-          {
-            "node": "Build Conversation State",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "API - Fetch Products": {
-      "main": [
-        [
-          {
-            "node": "Format Product Results",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Name: IF - Products Found": {
-      "main": [
-        [
-          {
-            "node": "Gemini - Product Response",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "No Result Search Response",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "API - Fetch Products Detail": {
-      "main": [
-        [
-          {
-            "node": "Format Product Detail",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "IF - Product Detail Found": {
-      "main": [
-        [
-          {
-            "node": "Gemini - Product Detail Response",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "No Result Search Response1",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "No Result Search Response": {
-      "main": [
-        [
-          {
-            "node": "Build Conversation State",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "No Result Search Response1": {
-      "main": [
-        [
-          {
-            "node": "Build Conversation State",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "API - Fetch Products Compare": {
-      "main": [
-        [
-          {
-            "node": "Format Compare Data",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "IF - Compare Ready": {
-      "main": [
-        [
-          {
-            "node": "Gemini - Product Compare Response",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "No Result Search Response2",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "No Result Search Response2": {
-      "main": [
-        [
-          {
-            "node": "Build Conversation State",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "API - Fetch Products Recommendation": {
-      "main": [
-        [
-          {
-            "node": "Format Recommendation Data",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Format Recommendation Data": {
-      "main": [
-        [
-          {
-            "node": "Name: IF - Recommendation Found",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Name: IF - Recommendation Found": {
-      "main": [
-        [
-          {
-            "node": "Gemini - Recommendation Response",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "No Result Search Response3",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "No Result Search Response3": {
-      "main": [
-        [
-          {
-            "node": "Build Conversation State",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "FAQ - Static Data": {
-      "main": [
-        [
-          {
-            "node": "IF - FAQ Found",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "No Result FAQ": {
-      "main": [
-        [
-          {
-            "node": "Build Conversation State",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "IF - FAQ Found": {
-      "main": [
-        [
-          {
-            "node": "Gemini - FAQ Response",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "No Result FAQ",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Build Quote Error Response": {
-      "main": [
-        [
-          {
-            "node": "Build Conversation State",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "IF - Quote Ready": {
-      "main": [
-        [
-          {
-            "node": "Build Quotation Draft Response",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "IF - Needs Variant Selection",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Pending Quote - Lookup": {
-      "main": [
-        [
-          {
-            "node": "Gemini - Intent Router",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "IF - Needs Variant Selection": {
-      "main": [
-        [
-          {
-            "node": "Prepare Pending Record",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Build Quote Error Response",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Prepare Pending Record": {
-      "main": [
-        [
-          {
-            "node": "Save Pending Quote",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Save Pending Quote": {
-      "main": [
-        [
-          {
-            "node": "Build Quote Error Response",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Delete Pending Quote": {
-      "main": [
-        [
-          {
-            "node": "Prepare Quotation Response",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Build Quotation Draft Response": {
-      "main": [
-        [
-          {
-            "node": "Build Conversation State",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Validate Router": {
-      "main": [
-        [
-          {
-            "node": "Resolve Quotation Turn",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Resolve Quotation Turn": {
-      "main": [
-        [
-          {
-            "node": "Intent Router",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "API - Fetch Products Quote": {
-      "main": [
-        [
-          {
-            "node": "Prepare Quote Catalog IDs",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Prepare Quote Catalog IDs": {
-      "main": [
-        [
-          {
-            "node": "IF - Quote Catalog IDs",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "IF - Quote Catalog IDs": {
-      "main": [
-        [
-          {
-            "node": "API - Verify Quote Catalog",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Format Quote Data",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "API - Verify Quote Catalog": {
-      "main": [
-        [
-          {
-            "node": "Format Quote Data",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Webhook": {
-      "main": [
-        [
-          {
-            "node": "Normalize HTTP Chat Input",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Normalize HTTP Chat Input": {
-      "main": [
-        [
-          {
-            "node": "HTTP Chat Input Valid",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "HTTP Chat Input Valid": {
-      "main": [
-        [
-          {
-            "node": "Normalize Input",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Respond Invalid Chat Request",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Build Conversation State": {
-      "main": [
-        [
-          {
-            "node": "Respond Chat JSON",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    }
-  },
-  "settings": {
-    "executionOrder": "v1",
-    "binaryMode": "separate",
-    "timeSavedMode": "fixed",
-    "callerPolicy": "workflowsFromSameOwner",
-    "availableInMCP": true
-  },
-  "active": false,
+  "tags": [],
   "meta": {
     "sourceWorkflowId": "5319a575-90d2-4894-9ece-355d9528b732",
-    "verifiedPublishedRevision": "2ab56c6c-7105-4df8-811e-a0b65cb336ff",
-    "credentialRebindingRequired": true
-  }
+    "verifiedActiveRevision": "cd22a99b-6fb0-4d16-bfcc-3d3ebd6d7714",
+    "credentialsOmitted": true,
+    "doNotImportOverActiveMain": true
+  },
+  "parentFolderId": null,
+  "scopes": [
+    "workflow:create",
+    "workflow:delete",
+    "workflow:execute",
+    "workflow:execute-chat",
+    "workflow:list",
+    "workflow:move",
+    "workflow:publish",
+    "workflow:read",
+    "workflow:share",
+    "workflow:unpublish",
+    "workflow:unshare",
+    "workflow:update",
+    "workflow:updateRedactionSetting"
+  ],
+  "canExecute": true
 }

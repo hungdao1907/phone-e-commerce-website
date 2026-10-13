@@ -229,7 +229,7 @@ const brandFilter =
 
 const canonicalFilters = source.conversationState?.active_filters || {};
 const effectiveBrandFilter = brandFilter || normalizeText(canonicalFilters.brand);
-const selectedProductId = source.selected_product_id ? String(source.selected_product_id)
+const selectedProductId = !source.explicit_product_model && source.selected_product_id ? String(source.selected_product_id)
   : (!source.model && source.conversationState?.selected_product_id ? String(source.conversationState.selected_product_id) : '');
 const maxPriceFilter = source.price_max !== null && source.price_max !== undefined
   ? Number(source.price_max)
@@ -284,7 +284,9 @@ if (selectedProductId) {
   if (exactMatches.length === 1) {
     matchedProduct = exactMatches[0];
   } else if (exactMatches.length === 0) {
-    const fuzzyMatches = eligibleProducts.filter(product => compactText(product.name).includes(modelFilter));
+    const requestedTokens = normalizeText(source.model).match(/[a-z0-9]+/g) || [];
+    const namePattern = new RegExp('^' + requestedTokens.join('\\s*') + '\\b(?!\\s*(?:pro|max|plus|ultra|mini|air|se)\\b)', 'i');
+    const fuzzyMatches = eligibleProducts.filter(product => namePattern.test(normalizeText(product.name)));
     if (fuzzyMatches.length === 1) matchedProduct = fuzzyMatches[0];
   }
 } else {

@@ -5,10 +5,11 @@ const env = require('dotenv').parse(fs.readFileSync('.env'));
 const { chatbotWebhookHeaders } = require('../../dist/src/services/chatbot-webhook-auth.js');
 const headers = chatbotWebhookHeaders(env, true);
 const url = process.env.WEBPHONE_WEBHOOK_TEST_URL;
-assert.equal(new URL(url).protocol, 'https:');
+assert.ok(new URL(url).protocol === 'https:' || (new URL(url).protocol === 'http:' && ['localhost', '127.0.0.1'].includes(new URL(url).hostname)));
 const session = `faq-regression-${randomUUID()}`;
 let state = null, selected = null, passed = 0;
 async function turn(label, message, check, alternateSession) {
+  const started = performance.now();
   const response = await fetch(url, { method: 'POST', headers,
     body: JSON.stringify({ chatInput: message, sessionId: alternateSession || session,
       source: 'web_chat', history: [], conversationState: alternateSession ? null : state }),
@@ -23,7 +24,7 @@ async function turn(label, message, check, alternateSession) {
   passed++;
   console.log(JSON.stringify({ label, status: response.status, type: body.result_type,
     quoteStatus: body.quote_status, selectedProduct: body.conversation_state.selected_product_id,
-    selectedVariant: body.conversation_state.selected_variant_id, passed }));
+    selectedVariant: body.conversation_state.selected_variant_id, milliseconds: Math.round(performance.now() - started), passed }));
 }
 function faq(body) {
   assert.equal(body.result_type, 'faq');
@@ -54,6 +55,22 @@ function faq(body) {
     assert.equal(b.quote_status, 'ready'); assert.equal(b.conversation_state.selected_product_id, selected.product);
     assert.equal(b.conversation_state.selected_variant_id, selected.variant);
     assert.equal(b.conversation_state.pending_question.quantity, selected.quantity);
+  });
+  await turn('1157 explicit iPhone 16 detail', 'cho tôi xem thông tin iPhone 16', b => {
+    assert.equal(b.result_type, 'product_detail'); assert.equal(b.product.name, 'iPhone 16');
+    assert.equal(b.conversation_state.pending_question.product_id, selected.product);
+    assert.equal(b.conversation_state.pending_question.options[0].id || b.conversation_state.pending_question.options[0].variant_id, selected.variant);
+    assert.equal(b.conversation_state.pending_question.quantity, selected.quantity);
+  });
+  await turn('resume old quotation after different detail', 'tiếp tục báo giá trước đó', b => {
+    assert.equal(b.quote_status, 'ready'); assert.equal(b.conversation_state.selected_product_id, selected.product);
+    assert.equal(b.conversation_state.selected_variant_id, selected.variant);
+  });
+  await turn('explicit new quote iPhone 16', 'tôi muốn báo giá iPhone 16', b => {
+    assert.equal(b.quote_status, 'needs_variant_selection');
+    assert.equal(b.conversation_state.pending_question.product_name, 'iPhone 16');
+    assert.notEqual(b.conversation_state.pending_question.product_id, selected.product);
+    assert.equal(b.conversation_state.selected_variant_id, null);
   });
   await turn('8 explicit Apple Watch', 'cho tôi xem thông tin Apple Watch Ultra 3', b => {
     assert.equal(b.result_type, 'product_detail'); assert.match(JSON.stringify(b.product || b.products), /Apple Watch Ultra 3/i);

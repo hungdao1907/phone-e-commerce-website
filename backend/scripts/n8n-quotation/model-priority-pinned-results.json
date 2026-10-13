@@ -1,0 +1,200 @@
+{
+  "draft": "cd22a99b-6fb0-4d16-bfcc-3d3ebd6d7714",
+  "published": "cd22a99b-6fb0-4d16-bfcc-3d3ebd6d7714",
+  "tests": [
+    {
+      "label": "1 greeting",
+      "execution": "1160",
+      "pass": true,
+      "type": "text",
+      "fast": true,
+      "errors": []
+    },
+    {
+      "label": "2 greeting plus request",
+      "execution": "1161",
+      "pass": true,
+      "type": "product_search",
+      "fast": false,
+      "errors": []
+    },
+    {
+      "label": "3 search",
+      "execution": "1162",
+      "pass": true,
+      "type": "product_search",
+      "fast": false,
+      "errors": []
+    },
+    {
+      "label": "4 ordinal selection",
+      "execution": "1163",
+      "pass": true,
+      "type": "product_detail",
+      "fast": false,
+      "errors": []
+    },
+    {
+      "label": "5 quotation product",
+      "execution": "1164",
+      "pass": true,
+      "type": "quotation",
+      "quote": "needs_variant_selection",
+      "fast": false,
+      "errors": []
+    },
+    {
+      "label": "6 variant selection",
+      "execution": "1165",
+      "pass": true,
+      "type": "quotation",
+      "quote": "ready",
+      "fast": true,
+      "errors": []
+    },
+    {
+      "label": "7 device warranty",
+      "execution": "1166",
+      "pass": true,
+      "type": "faq",
+      "fast": true,
+      "errors": []
+    },
+    {
+      "label": "8 resume",
+      "execution": "1167",
+      "pass": true,
+      "type": "quotation",
+      "quote": "ready",
+      "fast": true,
+      "errors": []
+    },
+    {
+      "label": "9 execution 1102 general warranty",
+      "execution": "1168",
+      "pass": true,
+      "type": "faq",
+      "fast": true,
+      "errors": []
+    },
+    {
+      "label": "10 switch Watch",
+      "execution": "1169",
+      "pass": true,
+      "type": "product_detail",
+      "fast": false,
+      "errors": []
+    },
+    {
+      "label": "11 isolation",
+      "execution": "1170",
+      "pass": true,
+      "type": "product_search",
+      "fast": false,
+      "errors": []
+    },
+    {
+      "label": "12 expired",
+      "execution": "1171",
+      "pass": true,
+      "type": "quotation",
+      "quote": "invalid_request",
+      "fast": false,
+      "errors": []
+    },
+    {
+      "label": "13 needs variant",
+      "execution": "1172",
+      "pass": true,
+      "type": "quotation",
+      "quote": "needs_variant_selection",
+      "fast": false,
+      "errors": []
+    },
+    {
+      "label": "14 ready",
+      "execution": "1173",
+      "pass": true,
+      "type": "quotation",
+      "quote": "ready",
+      "fast": true,
+      "errors": []
+    },
+    {
+      "label": "15 detail",
+      "execution": "1174",
+      "pass": true,
+      "type": "product_detail",
+      "fast": false,
+      "errors": []
+    },
+    {
+      "label": "15 comparison",
+      "execution": "1175",
+      "pass": true,
+      "type": "product_compare",
+      "fast": false,
+      "errors": []
+    },
+    {
+      "label": "17 detail then resume old quote",
+      "execution": "1176",
+      "pass": true,
+      "type": "quotation",
+      "quote": "ready",
+      "fast": true,
+      "errors": []
+    },
+    {
+      "label": "18 explicit new quotation from ready",
+      "execution": "1177",
+      "pass": true,
+      "type": "quotation",
+      "quote": "needs_variant_selection",
+      "fast": false,
+      "errors": []
+    },
+    {
+      "label": "19 missing Pro is not base16",
+      "execution": "1178",
+      "pass": true,
+      "type": "no_result",
+      "fast": false,
+      "errors": []
+    },
+    {
+      "label": "20 missing ProMax is not base16",
+      "execution": "1179",
+      "pass": true,
+      "type": "no_result",
+      "fast": false,
+      "errors": []
+    },
+    {
+      "label": "21 unknown model",
+      "execution": "1180",
+      "pass": true,
+      "type": "no_result",
+      "fast": false,
+      "errors": []
+    },
+    {
+      "label": "22 recommendation",
+      "execution": "1181",
+      "pass": true,
+      "type": "recommendation",
+      "fast": false,
+      "errors": []
+    },
+    {
+      "label": "23 sold out selected variant",
+      "execution": "1182",
+      "pass": true,
+      "type": "quotation",
+      "quote": "insufficient_stock",
+      "fast": true,
+      "errors": []
+    }
+  ],
+  "pinning": "Gemini, catalog, datatable I/O mocked; Code/Set/IF executed by n8n; not live HTTP"
+}

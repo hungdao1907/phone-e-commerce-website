@@ -1,0 +1,50 @@
+{
+  "date": "2026-10-13",
+  "workflowId": "5319a575-90d2-4894-9ece-355d9528b732",
+  "revision": "cd22a99b-6fb0-4d16-bfcc-3d3ebd6d7714",
+  "clientConcurrency": 1,
+  "clientRetries": 0,
+  "publicRetest": {
+    "executionId": "1205",
+    "message": "có bán iPhone không?",
+    "httpStatus": 200,
+    "bodyBytes": 0,
+    "latencyMs": 82915,
+    "result": "FAIL_NON_JSON_EMPTY_BODY",
+    "geminiNodes": [
+      {
+        "name": "Gemini - Intent Router",
+        "status": "success",
+        "durationMs": 79212
+      },
+      {
+        "name": "Gemini - Product Response",
+        "status": "error",
+        "durationMs": 1095,
+        "error": "Service unavailable"
+      }
+    ],
+    "upstreamHttpStatus": "NOT_VERIFIED",
+    "internalRetryAttempts": "NOT_VERIFIED",
+    "observedRateLimit": false
+  },
+  "subsequentGeminiCases": "NOT_RUN_STOP_AFTER_UPSTREAM_FAILURE",
+  "fastOnly": {
+    "local": {
+      "greetingMs": 338,
+      "faqMs": 480,
+      "status": 200,
+      "stateVersion": 2
+    },
+    "public": {
+      "greetingMs": 1193,
+      "faqMs": 443,
+      "status": 200,
+      "stateVersion": 2
+    },
+    "missingAuth": 403,
+    "wrongAuth": 403
+  },
+  "backendCutover": "NOT_PERFORMED_PUBLIC_GATE_FAILED",
+  "officialQuotationOrderPaymentPdfCreated": false
+}

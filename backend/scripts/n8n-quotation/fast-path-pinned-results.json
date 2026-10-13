@@ -1,0 +1,139 @@
+{
+  "basedOnPublishedRevision": "2ab56c6c-7105-4df8-811e-a0b65cb336ff",
+  "draftRevision": "c6156a40-1286-491a-a203-4ecc3e538d0f",
+  "publishStatus": "NOT_PUBLISHED_PINNED_GATE_FAILED",
+  "backup": "main-webhook.pre-fast-path.backup.json",
+  "externalServicesAndDataTablesPinned": true,
+  "results": [
+    {
+      "label": "1 greeting",
+      "execution": "1143",
+      "pass": true,
+      "type": "text",
+      "fast": true
+    },
+    {
+      "label": "2 greeting plus request",
+      "execution": "1144",
+      "pass": true,
+      "type": "product_search",
+      "fast": false
+    },
+    {
+      "label": "3 search",
+      "execution": "1145",
+      "pass": true,
+      "type": "product_search",
+      "fast": false
+    },
+    {
+      "label": "4 ordinal selection",
+      "execution": "1146",
+      "pass": true,
+      "type": "product_detail",
+      "fast": false
+    },
+    {
+      "label": "5 quotation product",
+      "execution": "1147",
+      "pass": true,
+      "type": "quotation",
+      "quote": "needs_variant_selection",
+      "fast": false
+    },
+    {
+      "label": "6 variant selection",
+      "execution": "1148",
+      "pass": true,
+      "type": "quotation",
+      "quote": "ready",
+      "fast": true
+    },
+    {
+      "label": "7 device warranty",
+      "execution": "1149",
+      "pass": true,
+      "type": "faq",
+      "fast": true
+    },
+    {
+      "label": "8 resume",
+      "execution": "1150",
+      "pass": true,
+      "type": "quotation",
+      "quote": "ready",
+      "fast": true
+    },
+    {
+      "label": "9 execution 1102 general warranty",
+      "execution": "1151",
+      "pass": true,
+      "type": "faq",
+      "fast": true
+    },
+    {
+      "label": "10 switch Watch",
+      "execution": "1152",
+      "pass": true,
+      "type": "product_detail",
+      "fast": false
+    },
+    {
+      "label": "11 isolation",
+      "execution": "1153",
+      "pass": true,
+      "type": "product_search",
+      "fast": false
+    },
+    {
+      "label": "12 expired",
+      "execution": "1154",
+      "pass": true,
+      "type": "quotation",
+      "quote": "invalid_request",
+      "fast": false
+    },
+    {
+      "label": "13 needs variant",
+      "execution": "1155",
+      "pass": true,
+      "type": "quotation",
+      "quote": "needs_variant_selection",
+      "fast": false
+    },
+    {
+      "label": "14 ready",
+      "execution": "1156",
+      "pass": true,
+      "type": "quotation",
+      "quote": "ready",
+      "fast": true
+    },
+    {
+      "label": "15 detail",
+      "execution": "1157",
+      "pass": false,
+      "type": "product_detail",
+      "fast": false
+    },
+    {
+      "label": "15 comparison",
+      "execution": "1158",
+      "pass": true,
+      "type": "product_compare",
+      "total": 2
+    }
+  ],
+  "failure": {
+    "executionId": "1157",
+    "input": "Cho tôi xem thông tin iPhone 16",
+    "pendingProduct": "iPhone 17 PRO MAX",
+    "actualProduct": "iPhone 17 PRO MAX",
+    "baselineReplay": {
+      "model": "iPhone 16",
+      "selected_product_id": "1bdc2f2a-b89a-478f-860a-5e72150ac4e5",
+      "requires_clarification": true,
+      "turn_action": "CONTINUE"
+    }
+  }
+}

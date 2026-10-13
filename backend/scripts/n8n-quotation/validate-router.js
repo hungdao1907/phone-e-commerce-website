@@ -450,6 +450,18 @@ let resolvedStorage = typeof data.storage === 'string' ? data.storage.trim() : '
 let resolvedRam = typeof data.ram === 'string' ? data.ram.trim() : '';
 let resolvedColor = typeof data.color === 'string' ? data.color.trim() : '';
 let resolvedUseCase = typeof data.use_case === 'string' ? data.use_case.trim() : '';
+// Only a model actually named this turn may supersede a pending quotation.
+// Token boundaries prevent an inferred shorter model from matching a suffix
+// such as 16e. Catalog resolution (not this router) supplies the real ID.
+const modelTokens = dialogueNormalize(resolvedModel).match(/[a-z0-9]+/g) || [];
+const currentModelPattern = modelTokens.length > 0
+  ? new RegExp('\\b' + modelTokens.join('\\s*') + '\\b(?!\\s+(?:pro|max|plus|ultra|mini|air|se)\\b)', 'i') : null;
+const explicitProductModel = Boolean(currentModelPattern?.test(dialogueText)
+  && ['product_detail', 'quotation'].includes(resolvedIntent) && !dialogueSelectedIndex);
+if (explicitProductModel) {
+  isFollowup = false;
+  if (resolvedIntent === 'product_detail') products = [];
+}
 
 // Only explicit user wording may create a new positive preference. A product
 // returned by the model is conversational output, not a user-selected brand
@@ -829,7 +841,7 @@ if ((resolvedIntent === 'product_compare' || turnAction === 'COMPARE')) {
 
 const requiresClarification = Boolean(
   invalidSelection ||
-  (hasPendingAction && !dialogueSelectedIndex && !dialogueConfirm && !dialogueCancel) ||
+  (hasPendingAction && !explicitProductModel && !dialogueSelectedIndex && !dialogueConfirm && !dialogueCancel) ||
   (dialoguePriceDirection === 'lower' && !Number.isFinite(refinementPriceBelow))
 );
 const clarificationField = invalidSelection
@@ -963,7 +975,9 @@ const canonicalFaqTopics = canonicalizeFaqTopics(
 );
 
 const resolvedSelectedProductId =
-  dialogueSelectionRequested
+  explicitProductModel
+    ? null
+    : dialogueSelectionRequested
     ? (selectedFromPrevious?.id || null)
     : (
         resolvedIntent === 'product_compare' ||
@@ -978,6 +992,7 @@ return [
       intent: resolvedIntent,
       brand: resolvedBrand,
       model: resolvedModel,
+      explicit_product_model: explicitProductModel,
       storage: resolvedStorage,
       ram: resolvedRam,
       color: resolvedColor,
