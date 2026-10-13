@@ -41,6 +41,18 @@ test('natural product introduction and one verified carousel render without dupl
   assert.ok(!html.includes('Danh sách dưới đây được xác minh'));
 });
 
+test('quotation product/variant follow-ups use Backend draft DTO instead of stale cards or a generic refusal', async () => {
+  for (const message of ['iphone 17', '256GB màu Bạc', 'mẫu số 3']) {
+    const dto = { result_type: 'quotation', quote_status: 'needs_variant_selection', ready_to_quote: false, success: false,
+      catalog_verified: true, response: 'Đã tìm thấy sản phẩm. Bạn muốn chọn phiên bản nào?', products: [product] };
+    const result = await resolveQuotationIntent(message, dto, [{ ...product, id: 'stale' }], {
+      byIds: async () => { throw new Error('redundant search'); }, byName: async () => { throw new Error('redundant search'); },
+    });
+    assert.equal(result?.text, dto.response); assert.deepEqual(result?.products.map(p => p.id), [product.id]);
+    assert.notEqual(result?.isError, true);
+  }
+});
+
 test('A: natural quotation intent searches Backend by extracted name when n8n has no product IDs', async () => {
   let searched = '';
   const result = await resolveQuotationIntent('Tôi muốn báo giá iPhone 17', { result_type: 'product_search', products: [] }, [], {

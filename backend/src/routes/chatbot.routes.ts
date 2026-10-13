@@ -5,6 +5,8 @@ import prisma from '../config/prisma';
 import { ChatbotCatalogInputError, resolveChatbotCatalogProducts } from '../services/chatbot-catalog.service';
 import { safeErrorSummary } from '../utils/safe-error-summary';
 import { chatbotProductHints, groundChatbotProse, reconcileChatbotCatalogState, scopeChatbotFactProducts } from '../services/chatbot-response-grounding';
+import { isQuotationDraftResponse, prepareQuotationDraftResponse } from '../services/chatbot-quotation-draft.service';
+import { chatbotWebhookHeaders } from '../services/chatbot-webhook-auth';
 
 const CHAT_CONTEXT_MESSAGE_LIMIT = 6;
 const CHAT_CONTEXT_MESSAGE_CHAR_LIMIT = 600;
@@ -158,11 +160,21 @@ function projectChatbotConversationState(state: ChatConversationState): ChatConv
     projected.state_version = state.state_version;
   }
   if (isPublicChatbotRecord(state.pending_question)) {
-    const pending: Record<string, string> = {};
+    const pending: Record<string, unknown> = {};
     for (const key of ['type', 'field'] as const) {
       const value = boundedText(state.pending_question[key], 40);
       if (value) pending[key] = value;
     }
+    for (const key of ['product_id', 'product_name'] as const) {
+      const value = boundedText(state.pending_question[key], 128);
+      if (value) pending[key] = value;
+    }
+    if (Number.isSafeInteger(state.pending_question.quantity) && Number(state.pending_question.quantity) > 0) pending.quantity = state.pending_question.quantity;
+    if (Array.isArray(state.pending_question.options)) pending.options = state.pending_question.options.slice(0, 64).flatMap(option => {
+      if (!isPublicChatbotRecord(option)) return [];
+      const id = boundedText(option.variant_id || option.id, 64);
+      return id && /^[A-Za-z0-9_-]{1,64}$/.test(id) ? [{ id, variant_id: id }] : [];
+    });
     if (Object.keys(pending).length) projected.pending_question = pending;
   } else if (state.pending_question === null) projected.pending_question = null;
   return projected;
@@ -282,8 +294,19 @@ function sanitizeNormalizedCustomerChatbotResponse(value: PublicChatbotRecord, s
 }
 
 /** All displayed facts come from the same Backend catalog snapshot; n8n supplies intent/prose/ordered ID hints only. */
-export async function prepareCustomerChatbotResponse(value: unknown, sessionId: string, database: typeof prisma) {
+export async function prepareCustomerChatbotResponse(value: unknown, sessionId: string, database: typeof prisma): Promise<PublicChatbotRecord> {
   const record = normalizeChatbotWorkflowResponse(value);
+  if (record && isQuotationDraftResponse(record)) {
+    try {
+      const draft = await prepareQuotationDraftResponse(record, sessionId, database);
+      draft.conversation_state = projectChatbotConversationState(draft.conversation_state);
+      return draft;
+    } catch (error) {
+      console.warn('[Chatbot Route] Quotation draft catalog unavailable.', safeErrorSummary(error));
+      return { sessionId, result_type: 'error', quote_status: 'error', ready_to_quote: false,
+        response: 'Danh mục Backend tạm thời không khả dụng. Vui lòng thử lại; yêu cầu báo giá chưa được gửi.', products: [] };
+    }
+  }
   const base = sanitizeCustomerChatbotResponse(value, sessionId) as PublicChatbotRecord;
   if (!record || base.result_type === 'error' || String(record.result_type).trim().toLowerCase() === 'quotation' || record.response_type === 'file' || typeof record.download_url === 'string') return base;
   const kind = typeof record.result_type === 'string' ? record.result_type.trim().toLowerCase() : 'text';
@@ -476,12 +499,21 @@ router.post('/message', async (req, res) => {
       sessionId = sessionId.trim();
     }
 
+    const n8nUrl = process.env.N8N_CHAT_WEBHOOK_URL;
+    let n8nHeaders: Record<string, string>;
+    try {
+      if (!n8nUrl) throw new Error('Webhook URL missing');
+      const endpoint = new URL(n8nUrl);
+      n8nHeaders = chatbotWebhookHeaders(process.env, endpoint.pathname.endsWith('/webphone-chatbot'));
+    } catch {
+      return res.status(503).json({ result_type: 'error', response_type: 'text', success: false, response: 'Chat service is temporarily unavailable', sessionId });
+    }
+
     // 3. Load bounded, session-scoped context and record the current user turn.
     const contextSnapshot = await saveUserMessageAndLoadHistory(sessionId, trimmedMessage, database);
     const history = contextSnapshot.history;
 
     // 4. Ensure Environment Variable
-    const n8nUrl = process.env.N8N_CHAT_WEBHOOK_URL;
     if (!n8nUrl) {
       console.error('[Chatbot Route] N8N_CHAT_WEBHOOK_URL is not configured.');
       return res.status(503).json({ result_type: 'error', response_type: 'text', success: false, response: 'Chat service is temporarily unavailable', sessionId });
@@ -509,9 +541,7 @@ router.post('/message', async (req, res) => {
     try {
       n8nResponse = await (dependencies.fetcher || fetch)(n8nUrl, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers: n8nHeaders,
         body: JSON.stringify(n8nPayload),
         signal: controller.signal
       });

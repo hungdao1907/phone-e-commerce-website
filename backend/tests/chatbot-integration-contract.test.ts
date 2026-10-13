@@ -1,5 +1,21 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { chatbotWebhookHeaders } from '../src/services/chatbot-webhook-auth';
+
+test('webhook Header Auth is taken only from server configuration', () => {
+  assert.deepEqual(chatbotWebhookHeaders({ N8N_CHAT_AUTH_HEADER: 'X-WebPhone-Key', N8N_CHAT_AUTH_VALUE: 'test-only-fixture' }, true),
+    { 'Content-Type': 'application/json', 'X-WebPhone-Key': 'test-only-fixture' });
+  assert.deepEqual(chatbotWebhookHeaders({}), { 'Content-Type': 'application/json' });
+  assert.throws(() => chatbotWebhookHeaders({}, true));
+});
+
+test('invalid webhook auth cannot inject headers or overwrite transport configuration', () => {
+  for (const name of ['Content-Type', 'Host', 'Cookie', 'invalid header', 'X-Key\r\nInjected']) {
+    assert.throws(() => chatbotWebhookHeaders({ N8N_CHAT_AUTH_HEADER: name, N8N_CHAT_AUTH_VALUE: 'test-only' }, true));
+  }
+  assert.throws(() => chatbotWebhookHeaders({ N8N_CHAT_AUTH_HEADER: 'X-Key', N8N_CHAT_AUTH_VALUE: 'fixture\r\nInjected: value' }, true));
+  assert.throws(() => chatbotWebhookHeaders({ N8N_CHAT_AUTH_HEADER: 'X-Key' }, true));
+});
 import {
   buildCustomerN8nPayload,
   CHATBOT_QUOTATION_NOT_ACTIVATED_MESSAGE,
@@ -11,6 +27,8 @@ import { createChatbotRouter } from '../src/routes/chatbot.routes';
 import express from 'express';
 import type { AddressInfo } from 'node:net';
 import { groundChatbotProse } from '../src/services/chatbot-response-grounding';
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
 import {
   ChatbotCatalogInputError,
   parseChatbotCatalogIds,
@@ -506,4 +524,119 @@ test('standalone color-list entries are checked against actual Backend variant a
   const dto: any = await prepareCustomerChatbotResponse({ result_type: 'product_detail', product: { id: 'phone-5' },
     response: 'Bản 256GB có các màu sắc sau:\n\n- Đỏ\n- Xanh\n\nBạn muốn chọn màu nào?' }, 's1', responseDatabase());
   assert.ok(!dto.response.includes('Đỏ')); assert.ok(dto.response.includes('- Xanh')); assert.ok(dto.response.includes('Bạn muốn chọn màu nào?'));
+});
+
+function quoteCode(name: string, input: any, upstream: Record<string, any>) {
+  const code = readFileSync(path.resolve(process.cwd(), 'scripts/n8n-quotation', `${name}.js`), 'utf8');
+  const result = new Function('$json', '$', '$input', code)(input, (node: string) => ({
+    first: () => ({ json: upstream[node] || {} }), all: () => [{ json: upstream[node] || {} }],
+  }), { all: () => [{ json: input }] });
+  return (Array.isArray(result) ? result[0] : result).json;
+}
+
+const quoteCatalog = [{ ...responseCatalog[4], variants: [
+  { id: 'silver-256', sku: 'REAL-SILVER', attributes: { 'Dung lượng': '256GB', 'Màu sắc': 'Bạc' }, price: 600000, salePrice: null, stock: 3 },
+  { id: 'navy-512', sku: 'REAL-NAVY', attributes: { 'Dung lượng': '512GB', 'Màu sắc': 'Xanh Navy' }, price: 900000, salePrice: null, stock: 5 },
+  { id: 'sold-out', sku: 'REAL-SOLD', attributes: { 'Dung lượng': '256GB', 'Màu sắc': 'Đen' }, price: 600000, salePrice: null, stock: 0 },
+] }];
+
+test('HTTP webhook normalizer preserves session/state aliases and excludes authentication headers', () => {
+  const state = { state_version: 2, pending_question: { type: 'quotation', field: 'variant' } };
+  const normalized = quoteCode('normalize-http-chat-input', { body: {
+    chatInput: '  chọn bản 256GB  ', sessionId: 'http-session', conversation_state: state,
+    history: [{ role: 'user', content: 'báo giá' }], source: 'web_chat',
+  }, headers: { 'X-WebPhone-Chatbot-Key': 'test-only-secret' } }, {});
+  assert.equal(normalized.valid, true);
+  assert.equal(normalized.chatInput, 'chọn bản 256GB');
+  assert.equal(normalized.sessionId, 'http-session');
+  assert.deepEqual(normalized.conversationState, state);
+  assert.ok(!JSON.stringify(normalized).includes('test-only-secret'));
+  assert.deepEqual(quoteCode('normalize-http-chat-input', { body: { chatInput: 'hello', sessionId: 's', conversationState: state } }, {}).conversationState, state);
+});
+
+test('HTTP webhook normalizer rejects missing or invalid message/session/state before workflow side effects', () => {
+  for (const body of [null, [], {}, { chatInput: 'hello' }, { chatInput: ' ', sessionId: 's' },
+    { chatInput: 'hello', sessionId: 's', conversation_state: [] }]) {
+    const normalized = quoteCode('normalize-http-chat-input', { body }, {});
+    assert.equal(normalized.valid, false);
+    assert.equal(normalized.result_type, 'error');
+    assert.equal(normalized.success, false);
+  }
+});
+
+test('quotation draft preserves variant-selection status and Backend price while excluding sold-out options', async () => {
+  const dto: any = await prepareCustomerChatbotResponse({ result_type: 'quotation', quote_status: 'needs_variant_selection', success: false,
+    request_results: [{ status: 'needs_variant_selection', product: { id: 'phone-5' }, requested: { quantity: 1 },
+      available_variants: [{ id: 'navy-512', price: 1 }, { id: 'silver-256', price: 1 }, { id: 'sold-out' }] }] }, 'quote-A', responseDatabase(quoteCatalog as any));
+  assert.equal(dto.result_type, 'quotation'); assert.equal(dto.quote_status, 'needs_variant_selection'); assert.equal(dto.ready_to_quote, false);
+  assert.equal(dto.success, false); assert.ok(dto.response.includes('iPhone 17'));
+  assert.deepEqual(dto.request_results[0].available_variants.map((v: any) => v.id), ['navy-512', 'silver-256']);
+  assert.equal(dto.request_results[0].available_variants[0].price, 900000); assert.ok(!dto.response.includes('1 đ'));
+  assert.equal(dto.conversation_state.pending_question.product_id, 'phone-5');
+  assert.deepEqual(dto.conversation_state.pending_question.options.map((v: any) => v.id), ['navy-512', 'silver-256']);
+  assert.equal('download_url' in dto, false);
+});
+
+test('ready draft is a selection only; stale variant, insufficient stock and invalid quantities cannot be ready', async () => {
+  for (const [variant, quantity, expected] of [['silver-256', 1, 'ready'], ['sold-out', 1, 'insufficient_stock'],
+    ['invented', 1, 'insufficient_stock'], ['silver-256', 4, 'insufficient_stock'], ['silver-256', 0, 'invalid_request']]) {
+    const dto: any = await prepareCustomerChatbotResponse({ result_type: 'quotation', quote_status: 'ready', request_results: [
+      { status: 'ready', resolved_product: { id: 'phone-5', variant_id: variant, quantity } },
+    ] }, 'quote-A', responseDatabase(quoteCatalog as any));
+    assert.equal(dto.quote_status, expected); assert.equal(dto.ready_to_quote, expected === 'ready');
+    assert.equal('quote_number' in dto, false); assert.equal('download_url' in dto, false); assert.equal('totalAmount' in dto, false);
+    if (expected === 'ready') assert.equal(dto.products[0].selected_variant_id, variant);
+  }
+});
+
+test('new quotation request never uses stale last_result_set and catalog failures return genuine errors', async () => {
+  const input = { result_type: 'quotation', quote_status: 'not_found', request_results: [{ status: 'not_found' }],
+    conversation_state: { last_result_set: [{ id: 'phone-5' }] } };
+  const noResult: any = await prepareCustomerChatbotResponse(input, 'quote-B', responseDatabase());
+  assert.equal(noResult.quote_status, 'not_found'); assert.deepEqual(noResult.products, []);
+  const failed: any = await prepareCustomerChatbotResponse({ ...input, request_results: [{ product: { id: 'phone-5' } }] }, 'quote-B',
+    { product: { findMany: async () => { throw new Error('mock unavailable'); } }, campaign: { findMany: async () => [] } } as any);
+  assert.equal(failed.result_type, 'error'); assert.equal(failed.ready_to_quote, false);
+});
+
+test('an out-of-stock requested configuration stays unavailable even when other configurations are in stock', async () => {
+  const dto: any = await prepareCustomerChatbotResponse({ result_type: 'quotation', quote_status: 'insufficient_stock',
+    request_results: [{ status: 'insufficient_stock', product: { id: 'phone-5' }, requested: { quantity: 1 } }] }, 'quote-A', responseDatabase(quoteCatalog as any));
+  assert.equal(dto.quote_status, 'insufficient_stock'); assert.equal(dto.ready_to_quote, false);
+  assert.ok(dto.products[0].variants.some((v: any) => v.stock > 0));
+});
+
+test('n8n quote nodes resolve storage/color and ordered variant selection without computing prices or PDF', async () => {
+  const catalog = await resolveChatbotCatalogProducts(responseDatabase(quoteCatalog as any), ['phone-5']);
+  const pending = { session_id: 'session-A', expires_at: Date.now() + 60000,
+    requests_json: JSON.stringify([{ request_index: 1, product_id: 'phone-5', model: 'iPhone 17', quantity: 1,
+      available_variants: [{ id: 'navy-512' }, { id: 'silver-256' }] }]) };
+  for (const [message, variant] of [['256GB màu Bạc', 'silver-256'], ['512GB màu Xanh Navy', 'navy-512'], ['mẫu số 2', 'silver-256']]) {
+    const upstream = { 'Normalize Input': { sessionId: 'session-A', chatInput: message }, 'Pending Quote - Lookup': pending };
+    const prepared = quoteCode('prepare-quote-filters', { is_followup: true }, upstream);
+    const formatted = quoteCode('format-quote-data', { products: catalog }, { 'Prepare Quote Filters': prepared });
+    assert.equal(formatted.ready_to_quote, true, message); assert.equal(formatted.products[0].variant_id, variant);
+    const draft = quoteCode('build-quotation-draft-response', formatted, {});
+    assert.equal(draft.quote_status, 'ready'); assert.equal(draft.products[0].variant_id, variant);
+    assert.equal('download_url' in draft, false); assert.equal('subtotal' in draft, false); assert.equal('unit_price' in draft.products[0], false);
+  }
+  const otherSession = quoteCode('prepare-quote-filters', { is_followup: true }, {
+    'Normalize Input': { sessionId: 'session-B', chatInput: '256GB màu Bạc' }, 'Pending Quote - Lookup': pending,
+  });
+  assert.deepEqual(otherSession.requests, []);
+});
+
+test('n8n draft pending state is retained; generic quote asks for product and explicit product reply stays quotation', () => {
+  const generic = quoteCode('build-conversation-state', { result_type: 'quotation', quote_status: 'invalid_request', products: [] }, {
+    'Normalize Input': {}, 'Resolve Quotation Turn': { intent: 'quotation' },
+  });
+  assert.equal(generic.conversation_state.pending_question.field, 'product');
+  const reply = quoteCode('resolve-quotation-turn', { intent: 'product_search', model: 'iPhone 17' }, {
+    'Normalize Input': { chatInput: 'iphone 17', conversationState: generic.conversation_state },
+  });
+  assert.equal(reply.intent, 'quotation');
+  const waiting = quoteCode('build-conversation-state', { result_type: 'quotation', quote_status: 'needs_variant_selection',
+    products: [{ id: 'phone-5' }], request_results: [{ product: { id: 'phone-5', name: 'iPhone 17' }, available_variants: [{ id: 'silver-256' }] }] },
+    { 'Normalize Input': {}, 'Resolve Quotation Turn': { intent: 'quotation' } });
+  assert.equal(waiting.conversation_state.pending_question.product_id, 'phone-5');
 });

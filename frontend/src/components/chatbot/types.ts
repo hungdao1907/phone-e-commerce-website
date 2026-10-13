@@ -11,6 +11,8 @@ export interface ChatbotVariant {
 }
 
 export interface ChatbotProduct {
+  selected_variant_id?: string;
+  quotation_quantity?: number;
   id?: string;
   name?: string;
   brand?: string;

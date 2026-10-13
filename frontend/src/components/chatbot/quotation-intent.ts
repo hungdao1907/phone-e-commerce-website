@@ -60,6 +60,13 @@ export async function resolveQuotationIntent(
     byName?: (name: string) => Promise<ChatbotProduct[]>;
   } = {},
 ): Promise<QuotationCatalogResult | null> {
+  if (response && typeof response === 'object' && !Array.isArray(response)) {
+    const draft = response as Record<string, unknown>;
+    if (draft.result_type === 'quotation' && draft.catalog_verified === true && typeof draft.response === 'string'
+      && ['ready', 'needs_variant_selection', 'not_found', 'insufficient_stock', 'invalid_request'].includes(String(draft.quote_status))) {
+      return { text: draft.response, products: dedupeChatbotProducts(Array.isArray(draft.products) ? draft.products as ChatbotProduct[] : []) };
+    }
+  }
   const intent = parseQuotationIntent(message);
   if (!intent.isQuotationIntent) return null;
 

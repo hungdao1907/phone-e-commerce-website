@@ -55,9 +55,11 @@ export function ProductResultCard({ product }: ProductResultCardProps) {
   const { token, user } = useAuthStore();
   const variants = Array.isArray(product.variants) ? product.variants : [];
   const [variantId, setVariantId] = useState(() =>
-    variants.find(variant => variant.availability === 'in_stock')?.id || variants[0]?.id || '',
+    variants.find(variant => variant.id === product.selected_variant_id && variant.availability === 'in_stock')?.id
+      || variants.find(variant => variant.availability === 'in_stock')?.id || variants[0]?.id || '',
   );
-  const [quantity, setQuantity] = useState('1');
+  const [quantity, setQuantity] = useState(() => Number.isSafeInteger(product.quotation_quantity) && product.quotation_quantity! > 0
+    ? String(product.quotation_quantity) : '1');
   const [actionError, setActionError] = useState('');
   const selectedVariant = useMemo(() => variants.find(variant => variant.id === variantId), [variants, variantId]);
   const imageUrl = resolveBackendUrl(product.image_url);
