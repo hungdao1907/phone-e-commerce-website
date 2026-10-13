@@ -563,6 +563,45 @@ test('latency proposal preserves auth, models, catalog endpoints, and a complete
   assert.ok(faq.parameters.assignments.assignments.find((a: any) => a.name === 'response').value.includes("$('FAQ - Static Data')"));
 });
 
+test('Render cutover changes only catalog URLs and preserves connections, auth and Gemini parameters', () => {
+  const read = (name: string) => JSON.parse(readFileSync(path.resolve(process.cwd(), 'scripts/n8n-quotation', name), 'utf8'));
+  const before = read('main-webhook.pre-render-backend.backup.json');
+  const after = read('main-webhook.workflow.json');
+  assert.deepEqual(after.connections, before.connections);
+  const http = after.nodes.filter((node: any) => node.type === 'n8n-nodes-base.httpRequest');
+  assert.equal(http.length, 6);
+  for (const node of http) {
+    const original = before.nodes.find((old: any) => old.name === node.name);
+    const { url: oldUrl, ...oldParameters } = original.parameters;
+    const { url, ...parameters } = node.parameters;
+    assert.deepEqual(parameters, oldParameters);
+    assert.ok(url.includes("$('Normalize Input').first().json.backendBaseUrl"));
+    assert.ok(!/localhost|host\.docker\.internal/.test(url));
+  }
+  for (const node of after.nodes.filter((node: any) => /Gemini/.test(node.name) || node.type === 'n8n-nodes-base.webhook')) {
+    assert.deepEqual(node.parameters, before.nodes.find((old: any) => old.name === node.name).parameters);
+  }
+});
+
+test('one server-controlled base URL supports Render and local development without changing request contracts', () => {
+  const workflow = JSON.parse(readFileSync(path.resolve(process.cwd(), 'scripts/n8n-quotation/main-webhook.workflow.json'), 'utf8'));
+  const config = workflow.nodes.find((node: any) => node.name === 'Normalize Input').parameters.assignments.assignments
+    .find((field: any) => field.name === 'backendBaseUrl');
+  assert.equal(config.value, 'https://phone-e-commerce-website.onrender.com');
+  assert.equal(config.type, 'string');
+  for (const origin of [config.value, 'http://host.docker.internal:3001']) {
+    for (const node of workflow.nodes.filter((node: any) => node.type === 'n8n-nodes-base.httpRequest')) {
+      const evaluate = new Function('$', `return ${node.parameters.url.slice(3, -2)}`);
+      const value = evaluate((name: string) => ({ first: () => ({ json: name === 'Normalize Input'
+        ? { backendBaseUrl: origin } : { category: 'phone', filters: { price_max: 123456 } } }) }));
+      const url = new URL(value);
+      assert.equal(url.origin, origin);
+      assert.ok(['/api/products', '/api/products/search', '/api/chatbot/catalog'].includes(url.pathname));
+      if (url.pathname.endsWith('/search')) assert.equal(url.searchParams.get('maxPrice'), '123456');
+    }
+  }
+});
+
 test('deterministic routing bypasses AI only for exact greeting and already-supported warranty policy', () => {
   for (const [chatInput, intent] of [['Xin chào!', 'default'], ['hello', 'default'], ['bảo hành sản phẩm này thế nào?', 'faq']]) {
     const routed = quoteCode('deterministic-intent', {}, { 'Normalize Input': { chatInput, sessionId: 'A' } });

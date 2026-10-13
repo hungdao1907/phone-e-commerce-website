@@ -1,7 +1,7 @@
 # Authenticated WebPhone chatbot webhook
 
 Verified MAIN workflow: `5319a575-90d2-4894-9ece-355d9528b732`.
-Published revision: `cd22a99b-6fb0-4d16-bfcc-3d3ebd6d7714` (66 nodes, owner-approved deterministic fast path and explicit product context).
+Published revision: `e8c2e287-f27a-455a-9a37-d11956169bac` (66 nodes, Render catalog cutover; fast path and explicit product context preserved).
 
 Entry: POST `/webhook/webphone-chatbot`, Header Auth credential `WebPhone Chatbot Webhook`, response mode `responseNode`.
 The header name and value are configured only in the server environment as `N8N_CHAT_AUTH_HEADER` and `N8N_CHAT_AUTH_VALUE`.
@@ -15,6 +15,14 @@ The JS files preserve the reviewed quotation/FAQ node implementations. `main-web
 The MCP export omits credentials. Before restoring elsewhere, manually bind the Webhook to the existing Header Auth credential `WebPhone Chatbot Webhook`, bind the seven Gemini nodes to an authorized existing Gemini credential, and verify the Pending Quote Data Table bindings. Do not import over the active MAIN without explicit approval. No credential value or pinned execution data is included.
 The HTTP normalizer accepts both `conversationState` and `conversation_state`, preserves session identity and bounded history, and excludes request headers from downstream input.
 Only Backend owns final pricing, official Quotation/Order creation, and authenticated PDF access. No legacy PDF upload/conversion nodes are used.
+
+## Render catalog cutover
+
+All six catalog HTTP nodes use the server-controlled `Normalize Input.backendBaseUrl` assignment, currently `https://phone-e-commerce-website.onrender.com`. To switch local development, change only this assignment to `http://host.docker.internal:3001`, validate and publish with owner authorization. Never derive this origin from the webhook request.
+
+See `backend/docs/deployment/n8n-render-backend-cutover.md` for measured evidence and limitations. The current inactive snapshot matches the published Render graph; earlier revision references below are historical results. The pre-render active and draft backups omit credentials and retain the existing Header Auth/Gemini credential bindings only on the live server.
+
+Run `node scripts/n8n-quotation/production-render-smoke.cjs` from `backend` for opt-in Vercel bundle/Render chat relay checks. It stops on the first failure and never retries upstream. Latest greeting/FAQ passed with state V2; pending quotation returned Render 504, so the remaining relay turns were NOT_RUN. This is not full production E2E acceptance.
 
 ## Manual live checks
 

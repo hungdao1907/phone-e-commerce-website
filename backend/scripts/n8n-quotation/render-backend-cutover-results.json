@@ -1,0 +1,40 @@
+{
+  "workflowId": "5319a575-90d2-4894-9ece-355d9528b732",
+  "revisionBefore": "ade2fb3d-c6b2-452e-8c2e-25f3e8669d1a",
+  "revisionAfter": "e8c2e287-f27a-455a-9a37-d11956169bac",
+  "published": true,
+  "httpNodesUpdated": 6,
+  "nodesTotal": 66,
+  "graphValidation": "PASS",
+  "pinnedRegression": { "pass": 23, "fail": 0, "executionRange": [1210, 1232], "externalIO": "MOCKED" },
+  "invalidBodyPinnedExecution": 1233,
+  "renderCatalog": { "productsStatus": 200, "productsCount": 61, "detailStatus": 200, "variantsCount": 9, "searchStatus": 200, "searchCount": 14, "catalogStatus": 200, "dockerConnectivity": "PASS" },
+  "publicHttp": {
+    "missingAuth": 403,
+    "wrongAuth": 403,
+    "greeting": { "status": 200, "latencyMs": 449 },
+    "generalFaq": { "status": 200, "latencyMs": 497 },
+    "quotationDraft": { "status": 200, "latencyMs": 40086 },
+    "variantReady": { "status": 200, "latencyMs": 1122 },
+    "faqPreservesReady": { "status": 200, "latencyMs": 1895 },
+    "continuation": { "status": 200, "latencyMs": 1053 },
+    "detail": { "transportStatus": 200, "usableJson": false, "latencyMs": 55889, "executionId": 1241, "error": "Service unavailable", "failedNode": "Gemini - Product Detail Response" }
+  },
+  "renderCatalogExecutionEvidence": [1238, 1240],
+  "renderChatGreetingRelayStatus": 200,
+  "vercelPageStatus": 200,
+  "vercelCorsPreflightStatus": 204,
+  "browserDOM": "NOT_RUN",
+  "fullProductRelayE2E": "PARTIAL",
+  "backendMockTests": { "pass": 202, "fail": 0 },
+  "officialQuotationOrderPaymentPdfCreated": false,
+  "productionRenderRelayRetest": {
+    "sessionId": "production-smoke-d0814606-980e-449d-b7d3-ba28a2cdc3eb",
+    "greeting": { "status": 200, "latencyMs": 1185, "executionId": 1242, "stateVersion": 2 },
+    "warrantyFaq": { "status": 200, "latencyMs": 848, "executionId": 1243, "stateVersion": 2 },
+    "pendingQuotation": { "status": 504, "latencyMs": 90115, "executionId": 1244, "terminalExecutionStatus": "success", "executionLatencyMs": 131165, "lateQuoteStatus": "needs_variant_selection", "lateStateVersion": 2, "customerOutcome": "FAIL_BACKEND_TIMEOUT", "perNodeDelayCause": "NOT_VERIFIED" },
+    "remainingChatTurns": "NOT_RUN_STOPPED_AFTER_TIMEOUT",
+    "browser": "NOT_RUN_NO_AVAILABLE_BROWSER",
+    "frontendTests": { "pass": 70, "fail": 0 }
+  }
+}

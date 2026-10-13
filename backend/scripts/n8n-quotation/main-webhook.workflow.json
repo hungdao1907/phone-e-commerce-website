@@ -3,8 +3,8 @@
   "name": "WebPhone - seven fixes OFFLINE candidate (review before import)",
   "active": false,
   "isArchived": false,
-  "versionId": "cd22a99b-6fb0-4d16-bfcc-3d3ebd6d7714",
-  "activeVersionId": "cd22a99b-6fb0-4d16-bfcc-3d3ebd6d7714",
+  "versionId": "e8c2e287-f27a-455a-9a37-d11956169bac",
+  "activeVersionId": "e8c2e287-f27a-455a-9a37-d11956169bac",
   "triggerCount": 1,
   "createdAt": "2026-09-21T04:55:26.766Z",
   "updatedAt": "2026-10-13T13:59:00.557Z",
@@ -893,6 +893,12 @@
               "name": "conversationState",
               "value": "={{ $json.conversationState || null }}",
               "type": "object"
+            },
+            {
+              "id": "webphone-backend-base-url",
+              "name": "backendBaseUrl",
+              "type": "string",
+              "value": "https://phone-e-commerce-website.onrender.com"
             }
           ]
         },
@@ -901,8 +907,8 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        3312,
-        6688
+        6000,
+        9808
       ],
       "id": "afd21972-1252-49ba-89a5-b1ec0c1ba645",
       "name": "Normalize Input"
@@ -2001,14 +2007,14 @@
     },
     {
       "parameters": {
-        "url": "http://host.docker.internal:3001/api/products",
+        "url": "={{ $('Normalize Input').first().json.backendBaseUrl + '/api/products' }}",
         "options": {}
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        5024,
-        5824
+        8240,
+        8944
       ],
       "id": "970b1a8a-f80a-4144-a4e9-1440fce344dc",
       "name": "API - Fetch Products"
@@ -2048,14 +2054,14 @@
     },
     {
       "parameters": {
-        "url": "http://host.docker.internal:3001/api/products",
+        "url": "={{ $('Normalize Input').first().json.backendBaseUrl + '/api/products' }}",
         "options": {}
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        5232,
-        6064
+        8448,
+        9184
       ],
       "id": "a2baa119-d30c-4d3b-9277-24192bdf65de",
       "name": "API - Fetch Products Detail"
@@ -2189,14 +2195,14 @@
     },
     {
       "parameters": {
-        "url": "http://host.docker.internal:3001/api/products",
+        "url": "={{ $('Normalize Input').first().json.backendBaseUrl + '/api/products' }}",
         "options": {}
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        5456,
-        6320
+        8672,
+        9440
       ],
       "id": "8d4962ed-0992-426e-a286-5e8867b1b008",
       "name": "API - Fetch Products Compare"
@@ -2289,14 +2295,14 @@
     },
     {
       "parameters": {
-        "url": "={{ 'http://host.docker.internal:3001/api/products/search?category=' + encodeURIComponent($('Prepare Recommendation Filters').first().json.category || 'phone') + '&maxPrice=' + encodeURIComponent($('Prepare Recommendation Filters').first().json.filters?.price_max ?? '') + '&page=1&limit=100' }}",
+        "url": "={{ $('Normalize Input').first().json.backendBaseUrl + '/api/products/search?category=' + encodeURIComponent($('Prepare Recommendation Filters').first().json.category || 'phone') + '&maxPrice=' + encodeURIComponent($('Prepare Recommendation Filters').first().json.filters?.price_max ?? '') + '&page=1&limit=100' }}",
         "options": {}
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        5424,
-        7040
+        8640,
+        10160
       ],
       "id": "7fe2dbf3-1f83-4516-96c6-5a630c968f24",
       "name": "API - Fetch Products Recommendation"
@@ -2507,14 +2513,14 @@
     },
     {
       "parameters": {
-        "url": "http://host.docker.internal:3001/api/products",
+        "url": "={{ $('Normalize Input').first().json.backendBaseUrl + '/api/products' }}",
         "options": {}
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        4960,
-        7536
+        8176,
+        10656
       ],
       "id": "c3f410a3-c3e9-42ae-b6d6-5e3616490fac",
       "name": "API - Fetch Products Quote"
@@ -2853,7 +2859,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "http://host.docker.internal:3001/api/chatbot/catalog",
+        "url": "={{ $('Normalize Input').first().json.backendBaseUrl + '/api/chatbot/catalog' }}",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ JSON.stringify({productIds: $json.productIds}) }}",
@@ -2866,8 +2872,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        5536,
-        7536
+        8752,
+        10656
       ]
     },
     {
@@ -2909,7 +2915,7 @@
             "caseSensitive": true,
             "leftValue": "",
             "typeValidation": "strict",
-            "version": 2
+            "version": 3
           },
           "conditions": [
             {
@@ -2919,7 +2925,8 @@
                 "type": "boolean",
                 "operation": "true",
                 "singleValue": true
-              }
+              },
+              "id": "6ca7528f-fb5e-4246-a927-60ff40563efb"
             }
           ],
           "combinator": "and"
@@ -2931,8 +2938,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        3088,
-        6688
+        5776,
+        9808
       ]
     },
     {
@@ -2968,18 +2975,17 @@
       ]
     },
     {
+      "parameters": {
+        "jsCode": "const normalized = $('Normalize Input').first().json;\nconst text = String(normalized.chatInput || '').normalize('NFD').replace(/[\\u0300-\\u036f]/g, '')\n  .replace(/[đĐ]/g, 'd').toLowerCase().trim();\nlet classification = null;\nconst base = { intent: 'default', brand: '', model: '', storage: '', ram: '', color: '', price_max: null,\n  condition: '', use_case: '', faq_topic: '', faq_topics: [], products: [], quantity: 1,\n  turn_action: 'CONTINUE', context_mode: 'continue', requires_clarification: false };\nif (/^(?:xin chao|chao(?: ban|shop|webphone)?|hello|hi|alo)[.!?]*$/.test(text)) {\n  classification = base;\n} else if (/\\b(?:bao hanh|warranty)\\b/.test(text)\n  && /\\b(?:chinh sach|bao hanh chung|bao hanh (?:san pham|may) nay|the nao|bao lau|warranty policy)\\b/.test(text)\n  && !/\\b(?:bao gia|so sanh|tim|mua|ban|goi y|tu van)\\b|\\d/.test(text)) {\n  classification = { ...base, intent: 'faq', faq_topic: 'warranty', faq_topics: ['warranty'] };\n} else {\n  let requests = [];\n  let valid = false;\n  try {\n    const row = $('Pending Quote - Lookup').first().json;\n    requests = JSON.parse(row.requests_json || '[]');\n    valid = row.session_id === normalized.sessionId && Number(row.expires_at) > Date.now()\n      && Array.isArray(requests) && requests.length > 0;\n  } catch {}\n  const state = normalized.conversationState || {};\n  const pending = state.pending_question?.type === 'quotation' ? state.pending_question : null;\n  const selectedId = pending?.product_id || state.selected_product_id;\n  const selectedVariant = pending?.field === 'ready' && pending.options?.length === 1\n    ? pending.options[0].variant_id || pending.options[0].id : state.selected_variant_id;\n  const validState = state.state_version === 2 && !Array.isArray(state)\n    && typeof selectedId === 'string' && selectedId.length > 0;\n  const request = Array.isArray(requests) ? requests.find(request => request.product_id === selectedId) : null;\n  const sameProduct = validState && request\n    && (!state.pending_question?.product_id || state.pending_question.product_id === selectedId);\n  const sameVariant = !selectedVariant || (Array.isArray(request?.available_variants)\n    && request.available_variants.some(variant => (variant.id || variant.variant_id) === selectedVariant));\n  const attributesOnly = /^(?:\\d+(?:[.,]\\d+)?\\s*(?:gb|tb)(?:\\s+mau\\s+[\\p{L}\\s]+)?|mau\\s+[\\p{L}\\s]+|(?:mau|phien ban)\\s+(?:so|thu)\\s*\\d+)[.!?]*$/u.test(text);\n  const resume = /^(?:toi muon\\s+)?tiep tuc bao gia(?:\\s+truoc do)?[.!?]*$/.test(text);\n  if (valid && sameProduct && sameVariant && (attributesOnly || resume)) classification = { ...base, intent: 'quotation' };\n}\nreturn [{ json: classification\n  ? { fast_intent: true, content: { parts: [{ text: JSON.stringify(classification) }] } }\n  : { fast_intent: false } }];\n"
+      },
       "id": "a98e2f0e-1f7f-4dbe-91ae-a7e1306444a0",
       "name": "Deterministic Intent",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -880,
-        540
-      ],
-      "parameters": {
-        "mode": "runOnceForAllItems",
-        "jsCode": "const normalized = $('Normalize Input').first().json;\nconst text = String(normalized.chatInput || '').normalize('NFD').replace(/[\\u0300-\\u036f]/g, '')\n  .replace(/[đĐ]/g, 'd').toLowerCase().trim();\nlet classification = null;\nconst base = { intent: 'default', brand: '', model: '', storage: '', ram: '', color: '', price_max: null,\n  condition: '', use_case: '', faq_topic: '', faq_topics: [], products: [], quantity: 1,\n  turn_action: 'CONTINUE', context_mode: 'continue', requires_clarification: false };\nif (/^(?:xin chao|chao(?: ban|shop|webphone)?|hello|hi|alo)[.!?]*$/.test(text)) {\n  classification = base;\n} else if (/\\b(?:bao hanh|warranty)\\b/.test(text)\n  && /\\b(?:chinh sach|bao hanh chung|bao hanh (?:san pham|may) nay|the nao|bao lau|warranty policy)\\b/.test(text)\n  && !/\\b(?:bao gia|so sanh|tim|mua|ban|goi y|tu van)\\b|\\d/.test(text)) {\n  classification = { ...base, intent: 'faq', faq_topic: 'warranty', faq_topics: ['warranty'] };\n} else {\n  let requests = [];\n  let valid = false;\n  try {\n    const row = $('Pending Quote - Lookup').first().json;\n    requests = JSON.parse(row.requests_json || '[]');\n    valid = row.session_id === normalized.sessionId && Number(row.expires_at) > Date.now()\n      && Array.isArray(requests) && requests.length > 0;\n  } catch {}\n  const state = normalized.conversationState || {};\n  const pending = state.pending_question?.type === 'quotation' ? state.pending_question : null;\n  const selectedId = pending?.product_id || state.selected_product_id;\n  const selectedVariant = pending?.field === 'ready' && pending.options?.length === 1\n    ? pending.options[0].variant_id || pending.options[0].id : state.selected_variant_id;\n  const validState = state.state_version === 2 && !Array.isArray(state)\n    && typeof selectedId === 'string' && selectedId.length > 0;\n  const request = Array.isArray(requests) ? requests.find(request => request.product_id === selectedId) : null;\n  const sameProduct = validState && request\n    && (!state.pending_question?.product_id || state.pending_question.product_id === selectedId);\n  const sameVariant = !selectedVariant || (Array.isArray(request?.available_variants)\n    && request.available_variants.some(variant => (variant.id || variant.variant_id) === selectedVariant));\n  const attributesOnly = /^(?:\\d+(?:[.,]\\d+)?\\s*(?:gb|tb)(?:\\s+mau\\s+[\\p{L}\\s]+)?|mau\\s+[\\p{L}\\s]+|(?:mau|phien ban)\\s+(?:so|thu)\\s*\\d+)[.!?]*$/u.test(text);\n  const resume = /^(?:toi muon\\s+)?tiep tuc bao gia(?:\\s+truoc do)?[.!?]*$/.test(text);\n  if (valid && sameProduct && sameVariant && (attributesOnly || resume)) classification = { ...base, intent: 'quotation' };\n}\nreturn [{ json: classification\n  ? { fast_intent: true, content: { parts: [{ text: JSON.stringify(classification) }] } }\n  : { fast_intent: false } }];\n"
-      }
+        6384,
+        9808
+      ]
     },
     {
       "id": "73b42b9b-e9e6-4057-8a22-d8902f1f3318",
@@ -3048,16 +3054,7 @@
       }
     },
     {
-      "id": "cfe54cd2-7429-4af1-a6c6-0c2a6cfc4a49",
-      "name": "Static Greeting",
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        240,
-        1280
-      ],
       "parameters": {
-        "mode": "manual",
         "assignments": {
           "assignments": [
             {
@@ -3081,13 +3078,21 @@
           ]
         },
         "options": {}
-      }
+      },
+      "id": "cfe54cd2-7429-4af1-a6c6-0c2a6cfc4a49",
+      "name": "Static Greeting",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        8688,
+        9584
+      ]
     }
   ],
   "tags": [],
   "meta": {
     "sourceWorkflowId": "5319a575-90d2-4894-9ece-355d9528b732",
-    "verifiedActiveRevision": "cd22a99b-6fb0-4d16-bfcc-3d3ebd6d7714",
+    "verifiedActiveRevision": "e8c2e287-f27a-455a-9a37-d11956169bac",
     "credentialsOmitted": true,
     "doNotImportOverActiveMain": true
   },

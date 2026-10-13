@@ -2,7 +2,11 @@
 
 Preparation only. No deploy, migration, commit/push, or n8n publish is performed by this document.
 
-## Current fast-path release gate
+## Latest measured deployment update
+
+Render and Vercel are now reachable. MAIN revision `e8c2e287-f27a-455a-9a37-d11956169bac` uses Render for all six catalog HTTP nodes through one server-controlled base URL. Actual product/variant/quotation-context checks passed; product detail remains blocked by Gemini Service unavailable (execution 1241). See `n8n-render-backend-cutover.md`. The older local-node and deployment gate descriptions below are historical, not the current catalog configuration. n8n Docker/Quick Tunnel still depend on the local host; persistent storage and CORS remain production follow-ups.
+
+## Historical fast-path release gate
 
 MAIN is published at `cd22a99b-6fb0-4d16-bfcc-3d3ebd6d7714` (66 nodes). Original pinned 16/16 and additional 7/7 PASS; Backend 200/200 mock/isolated tests + build PASS; Frontend working-tree 70/70 tests PASS. No official Quotation/Order/Payment/PDF is created by these chatbot checks.
 
