@@ -7,6 +7,7 @@ import { safeErrorSummary, safeFetchErrorSummary } from '../utils/safe-error-sum
 import { chatbotProductHints, groundChatbotProse, reconcileChatbotCatalogState, scopeChatbotFactProducts } from '../services/chatbot-response-grounding';
 import { isQuotationDraftResponse, prepareQuotationDraftResponse } from '../services/chatbot-quotation-draft.service';
 import { chatbotWebhookHeaders } from '../services/chatbot-webhook-auth';
+import { filterGroundedCatalogProducts, groundedCatalogResponseText, GroundedContractError, MAX_GROUNDED_VND, normalizeGroundedText, parseGroundedBudget, parseGroundedConstraints, requestedGroundedBudget, validatedStateTimestamp } from '../services/chatbot-grounded-constraints';
 
 const CHAT_CONTEXT_MESSAGE_LIMIT = 6;
 const CHAT_CONTEXT_MESSAGE_CHAR_LIMIT = 600;
@@ -102,7 +103,10 @@ function boundedText(value: unknown, limit = 160): string | null {
 
 /** Allowlist conversational state; never forward customer identity, prices, stock, or arbitrary nested text. */
 function projectChatbotConversationState(state: ChatConversationState): ChatConversationState {
+  const timestamp = validatedStateTimestamp(state.updated_at);
+  if (state.updated_at !== undefined && !timestamp) return { state_version: 2, active_filters: {}, last_result_set: [], selected_product_id: null, selected_variant_id: null, pending_question: null };
   const projected: ChatConversationState = {};
+  if (timestamp) projected.updated_at = timestamp;
   const category = boundedText(state.category, 40);
   if (category) projected.category = category;
   else if (state.category === null) projected.category = null;
@@ -113,9 +117,13 @@ function projectChatbotConversationState(state: ChatConversationState): ChatConv
     const value = boundedText(sourceFilters[key]);
     if (value) filters[key] = value;
   }
-  for (const key of ['storage_gb', 'ram_gb', 'price_max'] as const) {
+  for (const key of ['storage_gb', 'ram_gb', 'price_min', 'price_max'] as const) {
     const value = sourceFilters[key];
-    if (typeof value === 'number' && Number.isFinite(value) && value >= 0) filters[key] = value;
+    if (Number.isSafeInteger(value) && Number(value) >= 0 && Number(value) <= MAX_GROUNDED_VND) filters[key] = value;
+  }
+  if (sourceFilters.grounded_budget !== undefined) {
+    try { filters.grounded_budget = parseGroundedBudget(sourceFilters.grounded_budget); }
+    catch { return { state_version: 2, active_filters: {}, last_result_set: [], selected_product_id: null, selected_variant_id: null, pending_question: null }; }
   }
   if (isPublicChatbotRecord(state.active_filters)) projected.active_filters = filters;
 
@@ -252,7 +260,7 @@ function sanitizeNormalizedCustomerChatbotResponse(value: PublicChatbotRecord, s
 
   const publicResponse: PublicChatbotRecord = { sessionId };
 
-  if (resultType && !['text', 'faq', 'no_result', 'error', ...PRODUCT_ADVICE_TYPES].includes(resultType)) {
+  if (resultType && !['text', 'faq', 'no_result', 'error', 'clarification', ...PRODUCT_ADVICE_TYPES].includes(resultType)) {
     return { sessionId, result_type: 'error', response: CHATBOT_INVALID_RESPONSE_MESSAGE };
   }
 
@@ -289,12 +297,12 @@ function sanitizeNormalizedCustomerChatbotResponse(value: PublicChatbotRecord, s
     };
   }
 
-  return { ...publicResponse, result_type: ['text', 'faq', 'no_result', 'error'].includes(resultType) ? resultType : 'text',
+  return { ...publicResponse, result_type: ['text', 'faq', 'no_result', 'error', 'clarification'].includes(resultType) ? resultType : 'text',
     response: redactWorkflowText(text.trim()).slice(0, 12000) };
 }
 
 /** All displayed facts come from the same Backend catalog snapshot; n8n supplies intent/prose/ordered ID hints only. */
-export async function prepareCustomerChatbotResponse(value: unknown, sessionId: string, database: typeof prisma): Promise<PublicChatbotRecord> {
+export async function prepareCustomerChatbotResponse(value: unknown, sessionId: string, database: typeof prisma, requestContext?: { message: string; priorState?: ChatConversationState | null }): Promise<PublicChatbotRecord> {
   const record = normalizeChatbotWorkflowResponse(value);
   if (record && isQuotationDraftResponse(record)) {
     try {
@@ -325,13 +333,41 @@ export async function prepareCustomerChatbotResponse(value: unknown, sessionId: 
     catch (error) { available = false; console.warn('[Chatbot Route] Response grounding unavailable.', safeErrorSummary(error)); }
   }
   const byId = new Map(verified.map(p => [p.id, p]));
-  const products = hintedIds.flatMap(id => byId.has(id) ? [byId.get(id)!] : []);
+  let products = hintedIds.flatMap(id => byId.has(id) ? [byId.get(id)!] : []);
   const rawProducts = [...(Array.isArray(record.products) ? record.products : []), ...(isPublicChatbotRecord(record.product) ? [record.product] : [])];
+  let constraints: ReturnType<typeof parseGroundedConstraints> = null;
+  if (PRODUCT_ADVICE_TYPES.has(kind) || kind === 'no_result') {
+    try {
+      constraints = parseGroundedConstraints(record);
+      if (constraints) {
+        const requestedBudget = requestContext ? requestedGroundedBudget(requestContext.message) : null;
+        if (requestedBudget === 'clarification') return { sessionId, result_type: 'clarification', response: 'Bạn muốn giới hạn giá từ bao nhiêu đến bao nhiêu?', products: [], total: 0, requires_clarification: true };
+        if (requestedBudget) constraints.budget = requestedBudget;
+        else if (requestContext?.priorState && validatedStateTimestamp(requestContext.priorState.updated_at)
+          && /\b(?:may nay|san pham nay|tiep tuc|mau thu|mau so|re hon|dat hon)\b/.test(normalizeGroundedText(requestContext.message))) {
+          const priorFilters = requestContext.priorState.active_filters;
+          if (isPublicChatbotRecord(priorFilters) && priorFilters.grounded_budget) constraints.budget = parseGroundedBudget(priorFilters.grounded_budget);
+        }
+        let assignments: Array<{ id: string; categoryId: string | null }> = [], categories: Array<{ id: string; parentId: string | null; isActive: boolean }> = [];
+        if (constraints.categoryIds.length && products.length) {
+          [assignments, categories] = await Promise.all([
+            database.product.findMany({ where: { id: { in: products.map(p => p.id) }, status: 'active' }, select: { id: true, categoryId: true } }),
+            database.category.findMany({ select: { id: true, parentId: true, isActive: true } }),
+          ]);
+        }
+        products = filterGroundedCatalogProducts(products, rawProducts, constraints, { assignments, categories });
+      }
+    } catch (error) {
+      if (!(error instanceof GroundedContractError)) console.warn('[Chatbot Route] Constraint verification unavailable.', safeErrorSummary(error));
+      return { sessionId, result_type: 'error', response: 'Không xác minh được điều kiện tìm kiếm. Vui lòng thử lại.', products: [], total: 0, catalog_verified: false };
+    }
+  }
   const rawText = typeof record.response === 'string' ? record.response : typeof record.message === 'string' ? record.message : '';
   const countedText = hasCatalog ? rawText.replace(/\b(\d+)\s+(sản phẩm|mẫu|products|models)\b/giu,
     (match, count, noun) => Number(count) === record.total ? `${products.length} ${noun}` : match) : rawText;
   const factProducts = scopeChatbotFactProducts(products, rawProducts, projectedState.selected_variant_id);
   let response = groundChatbotProse(redactWorkflowText(countedText), factProducts, rawProducts, kind);
+  if (constraints) response = groundedCatalogResponseText(products);
   if (!response) response = products.length ? 'Bạn có thể xem dữ liệu hiện tại trên các thẻ sản phẩm dưới đây.' : String(base.response);
   if (hasCatalog && (!available || products.length !== hintedIds.length || !hintedIds.length)) {
     response += '\n\n' + (available ? 'Một số gợi ý không còn xác minh được trong danh mục hiện tại. Bạn có thể thử tên sản phẩm khác.' : 'Danh mục Backend tạm thời không khả dụng. Vui lòng thử lại để xem giá và tồn kho hiện tại.');
@@ -355,11 +391,19 @@ export async function prepareCustomerChatbotResponse(value: unknown, sessionId: 
   }).slice(0, 12);
   if (!hasCatalog && kind === 'no_result') dto.total = 0;
   if (!hasCatalog && kind === 'faq' && Number.isSafeInteger(record.total) && Number(record.total) >= 0) dto.total = record.total;
-  if (isChatConversationState(record.conversation_state)) {
-    const replaceResults = ['product_search', 'recommendation'].includes(kind) && hintedIds.length > 0;
-    dto.conversation_state = available && lookupIds.length
+  if (constraints || isChatConversationState(record.conversation_state)) {
+    const replaceResults = Boolean(constraints) || ['product_search', 'recommendation'].includes(kind) && hintedIds.length > 0;
+    if (constraints) {
+      const filters = isPublicChatbotRecord(projectedState.active_filters) ? projectedState.active_filters : {};
+      projectedState.active_filters = { ...filters, grounded_budget: constraints.budget };
+    }
+    dto.conversation_state = constraints && available || available && lookupIds.length
       ? reconcileChatbotCatalogState(projectedState, replaceResults ? products : verified, replaceResults)
       : projectedState;
+    if (constraints || rawState.updated_at !== undefined) {
+      (dto.conversation_state as ChatConversationState).updated_at = new Date().toISOString();
+      (dto.conversation_state as ChatConversationState).state_version = 2;
+    }
   }
   return dto;
 }
@@ -589,7 +633,7 @@ router.post('/message', async (req, res) => {
       return res.status(502).json({ result_type: 'error', response_type: 'text', success: false, response: 'Received invalid data from chat service.', sessionId });
     }
 
-    const publicResponse = await prepareCustomerChatbotResponse(responseData, sessionId, database);
+    const publicResponse = await prepareCustomerChatbotResponse(responseData, sessionId, database, { message: trimmedMessage, priorState: n8nPayload.conversationState });
     const assistantContent = isPublicChatbotRecord(publicResponse)
       ? typeof publicResponse.response === 'string'
         ? publicResponse.response
