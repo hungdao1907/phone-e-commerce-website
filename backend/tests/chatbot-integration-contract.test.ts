@@ -40,7 +40,57 @@ import {
   normalizeTrackingContact,
   verifyTrackingChallenge,
 } from '../src/services/order-tracking-security';
-import { safeErrorSummary } from '../src/utils/safe-error-summary';
+import { safeErrorSummary, safeFetchErrorSummary } from '../src/utils/safe-error-summary';
+
+test('fetch diagnostics retain DNS/TLS/timeout cause identifiers and redact sensitive messages', () => {
+  const error = Object.assign(new TypeError('fetch failed'), { cause: Object.assign(new Error('getaddrinfo ENOTFOUND private-host.invalid'), { code: 'ENOTFOUND' }) });
+  assert.deepEqual(safeFetchErrorSummary(error), { name: 'TypeError', message: 'fetch failed',
+    cause: { name: 'Error', code: 'ENOTFOUND', message: 'getaddrinfo ENOTFOUND [details redacted]' } });
+  for (const [message, code] of [['self-signed certificate in certificate chain', 'SELF_SIGNED_CERT_IN_CHAIN'],
+    ['Connect Timeout Error (attempted address: private-host.invalid)', 'UND_ERR_CONNECT_TIMEOUT'],
+    ['connect ECONNREFUSED 127.0.0.1:5678', 'ECONNREFUSED'],
+    ['Authorization: Bearer fixture-secret; email=private@example.invalid; body=private-input', 'ERR_NETWORK']]) {
+    const summary = safeFetchErrorSummary(Object.assign(new TypeError('fetch failed'), {
+      cause: Object.assign(new Error(message), { code }),
+    }));
+    assert.equal((summary.cause as any).code, code);
+    assert.equal((summary.cause as any).name, 'Error');
+    assert.equal(typeof (summary.cause as any).message, 'string');
+    assert.ok(!/private-|fixture-secret|127\.0\.0\.1|Authorization/.test(JSON.stringify(summary)));
+  }
+  assert.deepEqual(safeFetchErrorSummary(new TypeError('fetch failed')), { name: 'TypeError', message: 'fetch failed' });
+});
+
+test('fetch failure route logs safe cause metadata and keeps 502/504 contracts unchanged', async () => {
+  const oldUrl = process.env.N8N_CHAT_WEBHOOK_URL, oldLog = console.error;
+  const logs: any[] = [];
+  process.env.N8N_CHAT_WEBHOOK_URL = 'https://workflow.example.invalid/diagnostic-test';
+  console.error = (...args: any[]) => { logs.push(args); };
+  const database: any = { $transaction: async (work: any) => work({
+    chatConversation: { upsert: async () => ({ id: 'mock-chat', context: null }) },
+    chatMessage: { findMany: async () => [], create: async () => ({}) },
+  }) };
+  try {
+    for (const abort of [false, true]) {
+      const error = abort ? Object.assign(new Error('aborted'), { name: 'AbortError' })
+        : Object.assign(new TypeError('fetch failed'), { cause: Object.assign(new Error('getaddrinfo ENOTFOUND private-host.invalid'), { code: 'ENOTFOUND' }) });
+      const router: any = createChatbotRouter({ database, fetcher: (async () => { throw error; }) as typeof fetch });
+      const handler = router.stack.find((entry: any) => entry.route?.path === '/message').route.stack[0].handle;
+      let status = 200, body: any;
+      const res = { status(value: number) { status = value; return this; }, json(value: any) { body = value; return this; } };
+      await handler({ body: { message: 'private-input', sessionId: 'diagnostic-session' } }, res);
+      assert.equal(status, abort ? 504 : 502);
+      assert.equal(body.response, abort ? 'Chat service timed out. Please try again later.' : 'Failed to communicate with chat service.');
+      assert.equal(body.result_type, 'error');
+    }
+    assert.equal(logs[0][1].cause.code, 'ENOTFOUND');
+    assert.equal(logs[0][1].cause.message, 'getaddrinfo ENOTFOUND [details redacted]');
+    assert.ok(!/private-|workflow\.example|Bearer/.test(JSON.stringify(logs)));
+  } finally {
+    console.error = oldLog;
+    if (oldUrl === undefined) delete process.env.N8N_CHAT_WEBHOOK_URL; else process.env.N8N_CHAT_WEBHOOK_URL = oldUrl;
+  }
+});
 
 test('safe backend error summary keeps Prisma/OS codes but omits messages and connection credentials', () => {
   const cause = Object.assign(new Error('postgresql://db-user:do-not-log@host/db'), {

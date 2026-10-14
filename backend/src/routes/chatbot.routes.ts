@@ -3,7 +3,7 @@ import crypto from 'crypto';
 import { Prisma } from '@prisma/client';
 import prisma from '../config/prisma';
 import { ChatbotCatalogInputError, resolveChatbotCatalogProducts } from '../services/chatbot-catalog.service';
-import { safeErrorSummary } from '../utils/safe-error-summary';
+import { safeErrorSummary, safeFetchErrorSummary } from '../utils/safe-error-summary';
 import { chatbotProductHints, groundChatbotProse, reconcileChatbotCatalogState, scopeChatbotFactProducts } from '../services/chatbot-response-grounding';
 import { isQuotationDraftResponse, prepareQuotationDraftResponse } from '../services/chatbot-quotation-draft.service';
 import { chatbotWebhookHeaders } from '../services/chatbot-webhook-auth';
@@ -551,7 +551,7 @@ router.post('/message', async (req, res) => {
         console.error('[Chatbot Route] n8n request timed out.');
         return res.status(504).json({ result_type: 'error', response_type: 'text', success: false, response: 'Chat service timed out. Please try again later.', sessionId });
       }
-      console.error('[Chatbot Route] Network error calling n8n:', fetchError.message);
+      console.error('[Chatbot Route] Network error calling n8n:', safeFetchErrorSummary(fetchError));
       return res.status(502).json({ result_type: 'error', response_type: 'text', success: false, response: 'Failed to communicate with chat service.', sessionId });
     }
 
