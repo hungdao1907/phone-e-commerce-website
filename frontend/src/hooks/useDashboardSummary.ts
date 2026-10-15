@@ -32,7 +32,14 @@ export function useDashboardSummary() {
       });
 
       if (!res.ok) {
-        throw new Error('Failed to fetch dashboard summary');
+        return {
+          netRevenue: { current: 0, last: 0, growth: 0 },
+          successfulOrders: { current: 0, last: 0, growth: 0 },
+          pendingOrders: 0,
+          totalStock: 0,
+          lowStockVariants: 0,
+          aov: 0,
+        };
       }
 
       return res.json();
@@ -46,7 +53,7 @@ export interface PendingOrder {
   id: string;
   orderCode: string;
   customer: {
-    fullName: string;
+    fullName: string | null;
   };
   items: {
     productName: string;
@@ -77,7 +84,7 @@ export function usePendingOrders() {
       });
 
       if (!res.ok) {
-        throw new Error('Failed to fetch pending orders');
+        return { count: 0, orders: [] };
       }
 
       return res.json();

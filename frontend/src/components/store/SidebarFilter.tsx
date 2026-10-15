@@ -63,7 +63,7 @@ export function SidebarFilter({ filters, isLoading, hideCategoryAndBrand, catego
 
     const currentValues = newParams.get(key)?.split(',').filter(Boolean) || [];
     let newValues = [...currentValues];
-    
+
     // For single select items like category
     if (key === 'category') {
        if (currentValues.includes(value)) {
@@ -90,7 +90,7 @@ export function SidebarFilter({ filters, isLoading, hideCategoryAndBrand, catego
     } else {
       newParams.delete(key);
     }
-    
+
     // Reset page to 1 on filter change
     newParams.set('page', '1');
     setSearchParams(newParams);
@@ -98,13 +98,13 @@ export function SidebarFilter({ filters, isLoading, hideCategoryAndBrand, catego
 
   const handlePriceChange = (min: string, max: string) => {
     const newParams = new URLSearchParams(searchParams);
-    
+
     if (min) newParams.set('minPrice', min);
     else newParams.delete('minPrice');
-    
+
     if (max) newParams.set('maxPrice', max);
     else newParams.delete('maxPrice');
-    
+
     newParams.set('page', '1');
     setSearchParams(newParams);
   };
@@ -112,11 +112,11 @@ export function SidebarFilter({ filters, isLoading, hideCategoryAndBrand, catego
   const clearFilters = () => {
     const cat = searchParams.get('category');
     const sort = searchParams.get('sort');
-    
+
     const newParams = new URLSearchParams();
     if (cat) newParams.set('category', cat);
     if (sort) newParams.set('sort', sort);
-    
+
     setSearchParams(newParams); // Apply immediately on clear all
   };
 
@@ -124,7 +124,7 @@ export function SidebarFilter({ filters, isLoading, hideCategoryAndBrand, catego
   const isWatchMode = Boolean(isWatch || currentCategory.includes('watch') || currentCategory === 'dong-ho-thong-minh');
   const isPhone = ['phone', 'iphone', 'samsung', 'xiaomi', 'oppo'].includes(currentCategory);
   const isLaptop = ['laptop', 'macbook', 'asus', 'lenovo'].includes(currentCategory);
-  
+
   // Standard checkbox filter section
   const FilterSection = ({ title, sectionKey, options }: { title: string, sectionKey: string, options: string[] }) => {
     if (!options || options.length === 0) return null;
@@ -135,7 +135,7 @@ export function SidebarFilter({ filters, isLoading, hideCategoryAndBrand, catego
 
     return (
       <div className="border-b border-neutral-200 py-4">
-        <button 
+        <button
           className="flex items-center justify-between w-full text-left"
           onClick={() => toggleSection(sectionKey)}
           type="button"
@@ -172,7 +172,7 @@ export function SidebarFilter({ filters, isLoading, hideCategoryAndBrand, catego
     const colorOptions: string[] = filters?.colors || [];
     const colorCodes: Record<string, string> = filters?.colorCodes || {};
     if (!colorOptions || colorOptions.length === 0) return null;
-    
+
     const isExpanded = expandedSections['colors'] !== false;
     const selectedValues = searchParams.get('color')?.split(',') || [];
 
@@ -212,7 +212,7 @@ export function SidebarFilter({ filters, isLoading, hideCategoryAndBrand, catego
 
     return (
       <div className="border-b border-neutral-200 py-4">
-        <button 
+        <button
           className="flex items-center justify-between w-full text-left"
           onClick={() => toggleSection('colors')}
         >
@@ -243,7 +243,7 @@ export function SidebarFilter({ filters, isLoading, hideCategoryAndBrand, catego
                 </button>
               );
             })}
-            
+
             {hiddenColors.length > 0 && (
               <button
                 onClick={() => setShowAllColors(!showAllColors)}
@@ -269,7 +269,7 @@ export function SidebarFilter({ filters, isLoading, hideCategoryAndBrand, catego
       {/* Header */}
       <div className="flex items-center justify-between p-5 border-b border-neutral-100 shrink-0">
         <h2 className="text-lg font-bold text-neutral-900">Bộ Lọc</h2>
-        <button 
+        <button
           type="button"
           onClick={clearFilters}
           className="text-xs font-semibold text-neutral-500 hover:text-neutral-900 transition-colors"
@@ -279,7 +279,7 @@ export function SidebarFilter({ filters, isLoading, hideCategoryAndBrand, catego
       </div>
 
       {/* Scrollable Area */}
-      <div 
+      <div
         ref={scrollRef}
         onScroll={handleScroll}
         data-lenis-prevent="true"
@@ -312,8 +312,8 @@ export function SidebarFilter({ filters, isLoading, hideCategoryAndBrand, catego
                         type="button"
                         onClick={() => handleFilterChange('category', lowerCat)}
                         className={`px-3 py-1.5 text-xs font-semibold rounded-full border transition-colors ${
-                          isActive 
-                            ? 'bg-neutral-900 text-white border-neutral-900' 
+                          isActive
+                            ? 'bg-neutral-900 text-white border-neutral-900'
                             : 'bg-white text-neutral-600 border-neutral-200 hover:border-neutral-900 hover:text-neutral-900'
                         }`}
                       >
@@ -328,10 +328,10 @@ export function SidebarFilter({ filters, isLoading, hideCategoryAndBrand, catego
             {!hideCategoryAndBrand && (
                <FilterSection title="Thương Hiệu" sectionKey="brand" options={filters?.brands || []} />
             )}
-            
+
             {/* Price Range Filter */}
             <div className="border-b border-neutral-200 py-4">
-               <button 
+               <button
                   type="button"
                   className="flex items-center justify-between w-full text-left"
                   onClick={() => toggleSection('price')}
@@ -341,7 +341,7 @@ export function SidebarFilter({ filters, isLoading, hideCategoryAndBrand, catego
                 </button>
                 {expandedSections['price'] !== false && (
                   <div className="mt-4 px-2">
-                     <PriceRangeSlider 
+                     <PriceRangeSlider
                        min={minPriceBound}
                        max={maxPriceBound}
                        step={500000}

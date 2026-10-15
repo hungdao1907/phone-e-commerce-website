@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useAuthStore } from '@/store/authStore';
 import { Heart, Ticket, Star, ShieldCheck } from 'lucide-react';
 import { AccountSidebar, TabId } from '@/components/profile/AccountSidebar';
@@ -10,10 +11,27 @@ import { EmptyState } from '@/components/profile/EmptyState';
 import { MyComplaintsTab } from '@/components/profile/MyComplaintsTab';
 import { ComplaintModal } from '@/components/complaint/ComplaintModal';
 import { WishlistTab } from '@/components/profile/WishlistTab';
+import { CustomerQuotations } from '@/components/quotations/CustomerQuotations';
+import { loadQuotationDraft } from '@/components/quotations/quotation-draft';
+import { subscribeToQuotationDraftChanges } from '@/components/quotations/quotation-events';
 
 export const CustomerProfile = () => {
   const { user, token } = useAuthStore();
+  const location = useLocation();
   const [activeTab, setActiveTab] = useState<TabId>('overview');
+  useEffect(() => {
+    if (user?.role === 'customer' && new URLSearchParams(location.search).get('tab') === 'quotations') {
+      setActiveTab('quotations');
+    }
+  }, [location.search, user?.role]);
+
+  useEffect(() => {
+    const syncDraftTab = () => {
+      if (user?.role === 'customer' && loadQuotationDraft().length > 0) setActiveTab('quotations');
+    };
+    syncDraftTab();
+    return subscribeToQuotationDraftChanges(syncDraftTab);
+  }, [user?.id, user?.role]);
   
   // Profile state
   const [fullName, setFullName] = useState(user?.username || '');
@@ -195,6 +213,8 @@ export const CustomerProfile = () => {
                 onOpenComplaint={handleOpenComplaint}
               />
             )}
+
+            {activeTab === 'quotations' && <CustomerQuotations />}
 
             {activeTab === 'wishlist' && (
               <WishlistTab />

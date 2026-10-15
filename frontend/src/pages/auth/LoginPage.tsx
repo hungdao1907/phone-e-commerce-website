@@ -103,7 +103,7 @@ const ForgotPasswordFlow = ({ onBack }: { onBack: () => void }) => {
       setMessage({ text: 'Vui lòng nhập định dạng email hợp lệ.', type: 'error' });
       return;
     }
-    
+
     setIsLoading(true);
     setMessage({ text: '', type: 'idle' });
 
@@ -114,11 +114,11 @@ const ForgotPasswordFlow = ({ onBack }: { onBack: () => void }) => {
         body: JSON.stringify({ email: email.trim().toLowerCase() })
       });
       const data = await response.json();
-      
+
       if (!response.ok) {
         throw new Error(data.message || 'Đã xảy ra lỗi, vui lòng thử lại sau.');
       }
-      
+
       setMessage({ text: data.message, type: 'success' });
       setStep(2);
     } catch (error: any) {
@@ -149,11 +149,11 @@ const ForgotPasswordFlow = ({ onBack }: { onBack: () => void }) => {
         body: JSON.stringify({ email: email.trim().toLowerCase(), resetToken, newPassword })
       });
       const data = await response.json();
-      
+
       if (!response.ok) {
         throw new Error(data.message || 'Đã xảy ra lỗi khi đặt lại mật khẩu.');
       }
-      
+
       setStep(4);
       setMessage({ text: data.message, type: 'success' });
     } catch (error: any) {
@@ -190,8 +190,8 @@ const ForgotPasswordFlow = ({ onBack }: { onBack: () => void }) => {
                 className={`w-full h-10 px-4 bg-white/5 border ${message.type === 'error' ? 'border-red-500' : 'border-white/10'} rounded-lg text-sm text-white placeholder-neutral-400 focus:outline-none focus:ring-1 focus:ring-[#99e300] focus:border-[#99e300] transition-colors`}
               />
             </div>
-            <button 
-              type="submit" 
+            <button
+              type="submit"
               disabled={isLoading}
               className="w-full h-10 mt-1 rounded-lg bg-[#99e300] hover:bg-[#88ca00] text-black font-semibold text-sm tracking-wider cursor-pointer shadow-[0_2px_8px_rgba(153,227,0,0.15)] active:scale-[0.98] transition-all disabled:opacity-50"
             >
@@ -202,9 +202,9 @@ const ForgotPasswordFlow = ({ onBack }: { onBack: () => void }) => {
       )}
 
       {step === 2 && (
-        <AuthOtpVerification 
-          email={email} 
-          purpose="forgot-password" 
+        <AuthOtpVerification
+          email={email}
+          purpose="forgot-password"
           onVerified={(token) => {
             if (token) setResetToken(token);
             setStep(3);
@@ -221,7 +221,7 @@ const ForgotPasswordFlow = ({ onBack }: { onBack: () => void }) => {
           </div>
           <form className="space-y-3.5" onSubmit={handleResetPassword}>
             {message.type === 'error' && <div className="text-red-500 text-sm bg-red-500/10 border border-red-500/30 p-2.5 rounded-lg">{message.text}</div>}
-            
+
             <div className="relative">
               <input
                 type={showPassword ? 'text' : 'password'}
@@ -230,8 +230,8 @@ const ForgotPasswordFlow = ({ onBack }: { onBack: () => void }) => {
                 onChange={(e) => { setNewPassword(e.target.value); setMessage({ text: '', type: 'idle' }); }}
                 className="w-full h-10 pl-4 pr-10 bg-white/5 border border-white/10 rounded-lg text-sm text-white placeholder-neutral-400 focus:outline-none focus:ring-1 focus:ring-[#99e300] focus:border-[#99e300] transition-colors"
               />
-              <button 
-                type="button" 
+              <button
+                type="button"
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-white transition-colors"
               >
@@ -247,8 +247,8 @@ const ForgotPasswordFlow = ({ onBack }: { onBack: () => void }) => {
                 onChange={(e) => { setConfirmPassword(e.target.value); setMessage({ text: '', type: 'idle' }); }}
                 className="w-full h-10 pl-4 pr-10 bg-white/5 border border-white/10 rounded-lg text-sm text-white placeholder-neutral-400 focus:outline-none focus:ring-1 focus:ring-[#99e300] focus:border-[#99e300] transition-colors"
               />
-              <button 
-                type="button" 
+              <button
+                type="button"
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-white transition-colors"
               >
@@ -256,8 +256,8 @@ const ForgotPasswordFlow = ({ onBack }: { onBack: () => void }) => {
               </button>
             </div>
 
-            <button 
-              type="submit" 
+            <button
+              type="submit"
               disabled={isLoading}
               className="w-full h-10 mt-1 rounded-lg bg-[#99e300] hover:bg-[#88ca00] text-black font-semibold text-sm tracking-wider cursor-pointer shadow-[0_2px_8px_rgba(153,227,0,0.15)] active:scale-[0.98] transition-all disabled:opacity-50"
             >
@@ -276,7 +276,7 @@ const ForgotPasswordFlow = ({ onBack }: { onBack: () => void }) => {
           </div>
           <h2 className="text-xl font-bold tracking-wide mb-2">Đặt lại mật khẩu thành công</h2>
           <p className="text-white/60 text-sm mb-6">Mật khẩu của bạn đã được cập nhật.</p>
-          <button 
+          <button
             onClick={onBack}
             className="w-full h-10 rounded-lg bg-[#99e300] hover:bg-[#88ca00] text-black font-semibold text-sm transition-colors cursor-pointer"
           >
@@ -295,7 +295,7 @@ const SignInForm = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<{ field?: string, message: string } | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  
+
   const [socialMessage, setSocialMessage] = useState('');
 
   const setAuth = useAuthStore((state) => state.setAuth);
@@ -308,7 +308,7 @@ const SignInForm = () => {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!username.trim()) {
       setError({ field: 'username', message: 'Vui lòng nhập tên đăng nhập hoặc email.' });
       return;
@@ -340,10 +340,10 @@ const SignInForm = () => {
       }
 
       setAuth(data.token, data.user);
-      
+
       const searchParams = new URLSearchParams(window.location.search);
       const returnUrl = searchParams.get('returnUrl');
-      
+
       if (returnUrl) {
          navigate(returnUrl);
       } else if (data.user.role === 'customer') {
@@ -379,7 +379,7 @@ const SignInForm = () => {
       {socialMessage && <div className="text-amber-500 text-xs bg-amber-500/10 border border-amber-500/30 p-2 rounded-lg">{socialMessage}</div>}
       <form className="space-y-3.5" onSubmit={handleLogin}>
         {error && !error.field && <div className="text-red-500 text-sm bg-red-500/10 border border-red-500/30 p-2.5 rounded-lg">{error.message}</div>}
-        
+
         <div className="space-y-1">
           <input
             type="text"
@@ -402,8 +402,8 @@ const SignInForm = () => {
               autoComplete="current-password"
               className={`w-full h-10 pl-4 pr-10 bg-white/5 border ${error?.field === 'password' ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-white/10 focus:ring-[#99e300] focus:border-[#99e300]'} rounded-lg text-sm text-white placeholder-neutral-400 focus:outline-none focus:ring-1 transition-colors`}
             />
-            <button 
-              type="button" 
+            <button
+              type="button"
               onClick={() => setShowPassword(!showPassword)}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-white transition-colors"
               aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
@@ -420,8 +420,8 @@ const SignInForm = () => {
           </button>
         </div>
 
-        <button 
-          type="submit" 
+        <button
+          type="submit"
           disabled={isLoading}
           className="w-full h-10 mt-1 rounded-lg bg-[#99e300] hover:bg-[#88ca00] text-black font-semibold text-sm tracking-wider cursor-pointer shadow-[0_2px_8px_rgba(153,227,0,0.15)] active:scale-[0.98] transition-all disabled:opacity-50 flex justify-center items-center gap-2"
         >
@@ -447,7 +447,7 @@ const SignUpForm = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState({ text: '', type: '' });
   const [errors, setErrors] = useState<Record<string, string>>({});
-  
+
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [agreed, setAgreed] = useState(false);
@@ -465,7 +465,7 @@ const SignUpForm = () => {
     e.preventDefault();
     setErrors({});
     setMessage({ text: '', type: '' });
-    
+
     let hasError = false;
     const newErrors: Record<string, string> = {};
 
@@ -542,7 +542,7 @@ const SignUpForm = () => {
         <h2 className="text-2xl font-bold tracking-wide">Tạo Tài Khoản</h2>
         <p className="text-xs text-neutral-400">Đăng ký để nhận các ưu đãi tốt nhất</p>
       </div>
-      
+
       {message.text && (
         <div className={`text-sm p-3 rounded-lg border ${message.type === 'success' ? 'bg-[#99e300]/10 border-[#99e300]/30 text-[#99e300]' : 'bg-red-500/10 border-red-500/30 text-red-500'}`}>
           {message.text}
@@ -582,8 +582,8 @@ const SignUpForm = () => {
                 onChange={(e) => { setPassword(e.target.value); setErrors(prev => ({...prev, password: ''})); }}
                 className={`w-full h-10 pl-4 pr-10 bg-white/5 border ${errors.password ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-white/10 focus:ring-[#99e300] focus:border-[#99e300]'} rounded-lg text-sm text-white placeholder-neutral-400 focus:outline-none focus:ring-1 transition-colors`}
               />
-              <button 
-                type="button" 
+              <button
+                type="button"
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-white transition-colors"
               >
@@ -610,8 +610,8 @@ const SignUpForm = () => {
                 onChange={(e) => { setConfirmPassword(e.target.value); setErrors(prev => ({...prev, confirmPassword: ''})); }}
                 className={`w-full h-10 pl-4 pr-10 bg-white/5 border ${errors.confirmPassword ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-white/10 focus:ring-[#99e300] focus:border-[#99e300]'} rounded-lg text-sm text-white placeholder-neutral-400 focus:outline-none focus:ring-1 transition-colors`}
               />
-              <button 
-                type="button" 
+              <button
+                type="button"
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-white transition-colors"
               >
@@ -633,8 +633,8 @@ const SignUpForm = () => {
             {errors.agreed && <p className="text-xs text-red-500">{errors.agreed}</p>}
           </div>
 
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             disabled={isLoading}
             className="w-full h-10 mt-2 rounded-lg bg-[#99e300] hover:bg-[#88ca00] text-black font-semibold text-sm tracking-wider cursor-pointer shadow-[0_2px_8px_rgba(153,227,0,0.15)] active:scale-[0.98] transition-all disabled:opacity-50 flex justify-center items-center gap-2"
           >
@@ -649,9 +649,9 @@ const SignUpForm = () => {
       )}
 
       {step === 2 && (
-        <AuthOtpVerification 
-          email={email} 
-          purpose="register" 
+        <AuthOtpVerification
+          email={email}
+          purpose="register"
           onVerified={() => {
             setMessage({ text: 'Đăng ký thành công! Bạn có thể đăng nhập bằng tên đăng nhập.', type: 'success' });
             setStep(3);
@@ -663,7 +663,7 @@ const SignUpForm = () => {
       {step === 3 && (
         <div className="text-center py-4">
           <p className="text-white/60 text-sm mb-4">Tài khoản của bạn đã sẵn sàng.</p>
-          <button 
+          <button
             onClick={() => window.location.reload()}
             className="w-full h-10 rounded-lg bg-white/10 hover:bg-white/20 text-white font-semibold text-sm transition-colors"
           >
@@ -701,13 +701,13 @@ export function LoginPage() {
         Trang chủ
       </Link>
 
-      {/* 
+      {/*
         ========================================================================
         DESKTOP VIEW: SLIDING PANELS (md:block hidden)
         ========================================================================
       */}
       <div className="hidden md:block relative w-full max-w-[850px] min-h-[520px] bg-black/0 backdrop-blur-sm border border-white/10 rounded-2xl overflow-hidden shadow-[0_8px_32px_0_rgba(0,0,0,0.5)] z-10">
-        
+
         {/* SIGN IN FORM (Left Side) */}
         <motion.div
           initial={false}
@@ -801,7 +801,7 @@ export function LoginPage() {
 
       </div>
 
-      {/* 
+      {/*
         ========================================================================
         MOBILE VIEW: STACKED (md:hidden block)
         ========================================================================
@@ -810,7 +810,7 @@ export function LoginPage() {
         <div className="p-8 pb-4">
           {isSignUp ? <SignUpForm /> : <SignInForm />}
         </div>
-        
+
         <div className="bg-white/[0.02] border-t border-white/10 p-8 flex flex-col items-center text-center backdrop-blur-2xl">
           {isSignUp ? (
             <>

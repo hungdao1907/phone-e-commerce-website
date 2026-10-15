@@ -20,14 +20,14 @@ export function CrossSellSection({ currentProductId, brand, categoryId }: CrossS
         const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/products`);
         if (res.ok) {
           const data = await res.json();
-          
+
           // 1. Find the current product to know its category
           const currentProduct = data.find((p: any) => p.id === currentProductId);
           const currentCategorySlug = currentProduct?.category?.slug || '';
-          
+
           // 2. Filter products of the same brand, excluding the current product
-          const sameBrandProducts = data.filter((p: any) => 
-            p.id !== currentProductId && 
+          const sameBrandProducts = data.filter((p: any) =>
+            p.id !== currentProductId &&
             p.brand === brand &&
             p.status === 'active'
           );
@@ -43,7 +43,7 @@ export function CrossSellSection({ currentProductId, brand, categoryId }: CrossS
           // 4. Ecosystem pick: try to pick products from OTHER categories
           let crossSell: any[] = [];
           const otherCategories = Object.keys(byCategory).filter(c => c !== currentCategorySlug);
-          
+
           // Try to pick one from each other category first
           for (const cat of otherCategories) {
             if (crossSell.length < 4 && byCategory[cat].length > 0) {
@@ -77,11 +77,11 @@ export function CrossSellSection({ currentProductId, brand, categoryId }: CrossS
   const handleAddToCart = (e: React.MouseEvent, product: any) => {
     e.preventDefault();
     e.stopPropagation();
-    
+
     // Quick add default variant
     const defaultVariant = product.variants?.[0];
     const basePrice = defaultVariant?.price || product.price || 0;
-    
+
     addCartItem({
       productId: product.id,
       productSlug: product.slug || product.id,
@@ -97,7 +97,7 @@ export function CrossSellSection({ currentProductId, brand, categoryId }: CrossS
       stock: defaultVariant?.stock || 10,
       quantity: 1,
     });
-    
+
     alert('Đã thêm ' + product.name + ' vào giỏ hàng!');
   };
 
@@ -111,15 +111,15 @@ export function CrossSellSection({ currentProductId, brand, categoryId }: CrossS
         {products.map((p) => {
           const price = p.variants?.[0]?.price || p.price || 0;
           return (
-            <Link 
-              key={p.id} 
+            <Link
+              key={p.id}
               to={`/product/${p.slug || p.id}`}
               className="flex flex-col group border border-neutral-200 rounded-xl p-2 hover:border-blue-400 transition-all bg-white"
             >
               <div className="aspect-square bg-neutral-50 rounded-lg mb-2 p-2 flex items-center justify-center relative overflow-hidden">
-                <img 
-                  src={p.image || 'https://via.placeholder.com/150'} 
-                  alt={p.name} 
+                <img
+                  src={p.image || 'https://via.placeholder.com/150'}
+                  alt={p.name}
                   className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
                 />
                 {p.activeCampaign && (
@@ -134,9 +134,9 @@ export function CrossSellSection({ currentProductId, brand, categoryId }: CrossS
               <p className="text-red-600 font-bold text-xs mb-2">
                 {price.toLocaleString('vi-VN')} ₫
               </p>
-              
+
               <div className="mt-auto">
-                <button 
+                <button
                   onClick={(e) => handleAddToCart(e, p)}
                   className="w-full flex items-center justify-center gap-1 rounded-lg bg-blue-50 border border-transparent px-2 py-1.5 text-[10px] font-bold text-blue-700 hover:border-blue-200 hover:bg-blue-100 transition-colors"
                 >

@@ -20,6 +20,10 @@ import { LeadManager } from '@/components/admin/views/LeadManager';
 import { SettingsManager } from '@/components/admin/views/SettingsManager';
 import { AdminChatWidget } from '@/components/admin/chat/AdminChatWidget';
 import { NotificationCenter } from '@/components/admin/widgets/NotificationCenter';
+import { StaffQuotations } from '@/components/quotations/StaffQuotations';
+import { AdminQuotationAssignments } from '@/components/quotations/AdminQuotationAssignments';
+import { StaffNotificationsView, StaffProfileView } from '@/components/staff/StaffViews';
+import { useAuthStore } from '@/store/authStore';
 
 // Map view IDs to readable titles
 const VIEW_LABELS: Record<string, string> = {
@@ -37,12 +41,18 @@ const VIEW_LABELS: Record<string, string> = {
   user: 'Nhân sự',
   'user-staff': 'Quản lý Nhân sự',
   'marketing-module': 'Marketing',
+  quotations: 'Báo giá',
+  notifications: 'Thông báo',
+  profile: 'Hồ sơ cá nhân',
 };
 
 export function DashboardLayout() {
   const { view: routeView } = useParams<{ view?: string }>();
   const navigate = useNavigate();
   const [activeView, setActiveView] = useState(() => routeView || 'dashboard');
+  const role = useAuthStore((state) => state.user?.role);
+  const isStaff = role === 'staff';
+  const isAdmin = role === 'admin' || role === 'superadmin';
   const [isNotifCenterOpen, setIsNotifCenterOpen] = useState(false);
 
   useEffect(() => {
@@ -121,6 +131,14 @@ export function DashboardLayout() {
               <Complaints />
             ) : activeView === 'orders-invoices' ? (
               <Invoices />
+            ) : activeView === 'quotations' || activeView === 'quotations-list' || activeView === 'quotations-pending' || activeView === 'quotations-processed' ? (
+              isStaff ? <StaffQuotations initialTab={activeView} /> : isAdmin ? <AdminQuotationAssignments /> : (
+                <div className="rounded-2xl border border-rose-200 bg-rose-50 p-5 text-sm text-rose-800">Chỉ Staff được phân công xem báo giá; chỉ Admin/Superadmin được quản lý phân công.</div>
+              )
+            ) : activeView === 'notifications' || activeView === 'my-notifications' ? (
+              <StaffNotificationsView />
+            ) : activeView === 'profile' ? (
+              <StaffProfileView />
             ) : activeView === 'settings' ? (
               <SettingsManager />
             ) : (

@@ -12,7 +12,8 @@ import type { MotionValue } from 'motion/react';
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { HeroAuroraBackground } from '@/components/ui/HeroAuroraBackground';
-import { GlowingText } from '@/components/ui/GlowingText';
+import { CategoryStarField } from '@/components/ui/CategoryStarField';
+import { SparkleStar } from '@/components/ui/SparkleStar';
 import { LiquidText } from '@/components/ui/LiquidText';
 
 export interface HeroProductCard {
@@ -136,7 +137,7 @@ const HERO_PRODUCTS: HeroProductCard[] = [
   },
 ];
 
-const HERO_LIQUID_WORDS = ['Đỉnh Cao', 'Đột Phá', 'Kiến Tạo', 'Tiên Phong'];
+const HERO_LIQUID_WORDS = ['Tiên Phong', 'Đỉnh Cao', 'Đột Phá', 'Kiến Tạo'];
 
 const HERO_DESCRIPTION_TEXT =
   'Khám phá những thiết bị được chọn lọc cho công việc, sáng tạo và cuộc sống mỗi ngày.';
@@ -151,164 +152,204 @@ interface SlotConfig {
   duration?: number;
   idleDelay?: number;
   parallaxFactor: number;
+  sparkle?: {
+    positionClass: string;
+    sizeClass?: string;
+    delay?: number;
+  };
 }
 
 /**
  * Exact 9-Column Staggered Canopy Layout from Reference Image:
- * - Col 1 (Far-Left): 2 cards stacked (Top: 16%, Bottom: 48%)
- * - Col 2 (Left): 2 cards stacked (Top: 9%, Bottom: 40%)
- * - Col 3 (Left-Center): 1 card dipped down (Top: 26%)
+ * - Col 1 (Far-Left): 2 cards stacked (Top: 15%, Bottom: 48%)
+ * - Col 2 (Left): 2 cards stacked (Top: 9%, Bottom: 39%)
+ * - Col 3 (Left-Center): 1 card dipped down (Top: 25%)
  * - Col 4 (Center-Left): 1 card (Top: 11%)
- * - Col 5 (Center Apex): 1 card centered (Top: 16%)
+ * - Col 5 (Center Apex): 1 card centered (Top: 15%)
  * - Col 6 (Center-Right): 1 card (Top: 10%)
- * - Col 7 (Right-Center): 1 card dipped down (Top: 24%)
+ * - Col 7 (Right-Center): 1 card dipped down (Top: 23%)
  * - Col 8 (Right): 2 cards stacked (Top: 9%, Bottom: 38% with 3D perspective tilt)
- * - Col 9 (Far-Right): 2 cards stacked (Top: 16%, Bottom: 48%)
+ * - Col 9 (Far-Right): 2 cards stacked (Top: 15%, Bottom: 48%)
  */
 const REFERENCE_SLOTS: SlotConfig[] = [
-  // 0. Col 1 Top (Far Left Top)
+  // 0. Col 1 Top (Far Left Top: iPhone 16 Pro)
   {
     id: 'col1-top',
-    positionStyle: { left: '1.2%', top: '16%' },
-    className: 'hidden 2xl:block',
-    sizeClass: 'w-[100px] sm:w-[125px] lg:w-[145px] xl:w-[158px] 2xl:w-[168px]',
+    positionStyle: { left: '1.2%', top: '15%' },
+    className: 'hidden xl:block',
+    sizeClass: 'w-[90px] sm:w-[110px] lg:w-[130px] xl:w-[142px] 2xl:w-[160px]',
     idleY: [-4, 3, -4],
     duration: 5.4,
     idleDelay: 0.1,
     parallaxFactor: 0.5,
+    sparkle: {
+      positionClass: 'bottom-[22%] -right-[6%]',
+      sizeClass: 'w-5 h-5 sm:w-6 sm:h-6',
+      delay: 0.2,
+    },
   },
-  // 1. Col 1 Bottom (Far Left Bottom)
+  // 1. Col 1 Bottom (Far Left Bottom: Galaxy Z Fold6)
   {
     id: 'col1-bottom',
     positionStyle: { left: '1.2%', top: '48%' },
-    className: 'hidden 2xl:block',
-    sizeClass: 'w-[100px] sm:w-[125px] lg:w-[145px] xl:w-[158px] 2xl:w-[168px]',
+    className: 'hidden xl:block',
+    sizeClass: 'w-[90px] sm:w-[110px] lg:w-[130px] xl:w-[142px] 2xl:w-[160px]',
     idleY: [3, -4, 3],
     duration: 5.8,
     idleDelay: 0.3,
     parallaxFactor: 0.6,
+    sparkle: {
+      positionClass: '-top-2 right-[22%]',
+      sizeClass: 'w-4 h-4 sm:w-5 sm:h-5',
+      delay: 0.5,
+    },
   },
-  // 2. Col 2 Top (Left Top)
+  // 2. Col 2 Top (Left Top: Xiaomi 15 Ultra)
   {
     id: 'col2-top',
-    positionStyle: { left: '11.5%', top: '9%' },
+    positionStyle: { left: '11%', top: '9%' },
     className: 'hidden lg:block',
-    sizeClass: 'w-[100px] sm:w-[125px] lg:w-[145px] xl:w-[158px] 2xl:w-[168px]',
+    sizeClass: 'w-[90px] sm:w-[110px] lg:w-[130px] xl:w-[142px] 2xl:w-[160px]',
     idleY: [-4, 4, -4],
     duration: 5.2,
     idleDelay: 0.2,
     parallaxFactor: 0.7,
   },
-  // 3. Col 2 Bottom (Left Middle - Mobile Visible)
+  // 3. Col 2 Bottom (Left Middle: iPad Pro M4)
   {
     id: 'col2-bottom',
     positionStyle: {},
-    className: 'block left-3 top-[10%] sm:left-[11.5%] sm:top-[40%]',
-    sizeClass: 'w-[95px] sm:w-[125px] lg:w-[145px] xl:w-[158px] 2xl:w-[168px]',
+    className: 'block left-2 top-[10%] sm:left-[11%] sm:top-[39%]',
+    sizeClass: 'w-[86px] sm:w-[110px] lg:w-[130px] xl:w-[142px] 2xl:w-[160px]',
     idleY: [4, -4, 4],
     duration: 5.9,
     idleDelay: 0.4,
     parallaxFactor: 0.8,
   },
-  // 4. Col 3 (Left-Center - Dipped Lower)
+  // 4. Col 3 (Left-Center - Dipped Lower: Galaxy Book4 Pro)
   {
     id: 'col3-mid',
-    positionStyle: { left: '22.5%', top: '26%' },
+    positionStyle: { left: '21.5%', top: '25%' },
     className: 'hidden md:block',
-    sizeClass: 'w-[100px] sm:w-[125px] lg:w-[145px] xl:w-[158px] 2xl:w-[168px]',
+    sizeClass: 'w-[98px] sm:w-[122px] lg:w-[140px] xl:w-[152px] 2xl:w-[168px]',
     idleY: [-4, 4, -4],
     duration: 6.3,
     idleDelay: 0.5,
     parallaxFactor: 0.55,
   },
-  // 5. Col 4 (Center-Left Top)
+  // 5. Col 4 (Center-Left Top: RedmiBook Pro 16)
   {
     id: 'col4-top',
-    positionStyle: { left: '33.5%', top: '11%' },
+    positionStyle: { left: '32.5%', top: '11%' },
     className: 'hidden xl:block',
-    sizeClass: 'w-[100px] sm:w-[125px] lg:w-[145px] xl:w-[158px] 2xl:w-[168px]',
+    sizeClass: 'w-[98px] sm:w-[122px] lg:w-[140px] xl:w-[152px] 2xl:w-[168px]',
     idleY: [3, -4, 3],
     duration: 5.1,
     idleDelay: 0.25,
     parallaxFactor: 0.4,
+    sparkle: {
+      positionClass: '-top-2.5 -right-2',
+      sizeClass: 'w-5 h-5 sm:w-6 sm:h-6',
+      delay: 0.8,
+    },
   },
-  // 6. Col 5 (Center Top - Executive Top Center)
+  // 6. Col 5 (Center Apex: Apple MacBook Pro M4)
   {
     id: 'col5-top',
-    positionStyle: { left: '44.8%', top: '16%' },
+    positionStyle: { left: '44.2%', top: '15%' },
     className: 'hidden xl:block',
-    sizeClass: 'w-[100px] sm:w-[125px] lg:w-[145px] xl:w-[158px] 2xl:w-[168px]',
+    sizeClass: 'w-[98px] sm:w-[122px] lg:w-[140px] xl:w-[152px] 2xl:w-[168px]',
     idleY: [-3, 4, -3],
     duration: 5.7,
     idleDelay: 0.6,
     parallaxFactor: 0.35,
+    sparkle: {
+      positionClass: '-top-2.5 -right-2',
+      sizeClass: 'w-5 h-5 sm:w-6 sm:h-6',
+      delay: 0.35,
+    },
   },
-  // 7. Col 6 (Center-Right Top)
+  // 7. Col 6 (Center-Right Top: Galaxy Tab S10 Ultra)
   {
     id: 'col6-top',
-    positionStyle: { right: '33.5%', top: '10%' },
+    positionStyle: { right: '32.5%', top: '10%' },
     className: 'hidden xl:block',
-    sizeClass: 'w-[100px] sm:w-[125px] lg:w-[145px] xl:w-[158px] 2xl:w-[168px]',
+    sizeClass: 'w-[98px] sm:w-[122px] lg:w-[140px] xl:w-[152px] 2xl:w-[168px]',
     idleY: [4, -3, 4],
     duration: 5.3,
     idleDelay: 0.35,
     parallaxFactor: 0.4,
   },
-  // 8. Col 7 (Right-Center - Dipped Lower)
+  // 8. Col 7 (Right-Center - Dipped Lower: Xiaomi 15 Pro)
   {
     id: 'col7-mid',
-    positionStyle: { right: '22.5%', top: '24%' },
+    positionStyle: { right: '21.5%', top: '23%' },
     className: 'hidden md:block',
-    sizeClass: 'w-[100px] sm:w-[125px] lg:w-[145px] xl:w-[158px] 2xl:w-[168px]',
+    sizeClass: 'w-[90px] sm:w-[110px] lg:w-[130px] xl:w-[142px] 2xl:w-[160px]',
     idleY: [-4, 4, -4],
     duration: 6.1,
     idleDelay: 0.45,
     parallaxFactor: 0.55,
+    sparkle: {
+      positionClass: '-top-2 -left-2',
+      sizeClass: 'w-4 h-4 sm:w-5 sm:h-5',
+      delay: 0.6,
+    },
   },
-  // 9. Col 8 Top (Right Top)
+  // 9. Col 8 Top (Right Top: Apple MacBook Air 15)
   {
     id: 'col8-top',
-    positionStyle: { right: '11.5%', top: '9%' },
+    positionStyle: { right: '11%', top: '9%' },
     className: 'hidden lg:block',
-    sizeClass: 'w-[100px] sm:w-[125px] lg:w-[145px] xl:w-[158px] 2xl:w-[168px]',
+    sizeClass: 'w-[98px] sm:w-[122px] lg:w-[140px] xl:w-[152px] 2xl:w-[168px]',
     idleY: [-4, 4, -4],
     duration: 5.5,
     idleDelay: 0.15,
     parallaxFactor: 0.7,
   },
-  // 10. Col 8 Bottom (Right Middle - 3D Tilted Card!)
+  // 10. Col 8 Bottom (Right Middle: Xiaomi Pad 7 Pro)
   {
     id: 'col8-bottom',
     positionStyle: {},
-    className: 'block right-3 top-[10%] sm:right-[11.5%] sm:top-[38%]',
-    sizeClass: 'w-[95px] sm:w-[125px] lg:w-[145px] xl:w-[158px] 2xl:w-[168px]',
+    className: 'block right-2 top-[10%] sm:right-[11%] sm:top-[38%]',
+    sizeClass: 'w-[86px] sm:w-[110px] lg:w-[130px] xl:w-[142px] 2xl:w-[160px]',
     curveTransform: 'perspective(900px) rotateY(-13deg) rotateX(4deg)',
     idleY: [3, -4, 3],
     duration: 6.0,
     idleDelay: 0.3,
     parallaxFactor: 0.85,
+    sparkle: {
+      positionClass: 'top-[30%] -left-3',
+      sizeClass: 'w-4 h-4 sm:w-5 sm:h-5',
+      delay: 0.9,
+    },
   },
-  // 11. Col 9 Top (Far Right Top)
+  // 11. Col 9 Top (Far Right Top: Samsung Galaxy S25 Ultra)
   {
     id: 'col9-top',
-    positionStyle: { right: '1.2%', top: '16%' },
-    className: 'hidden 2xl:block',
-    sizeClass: 'w-[100px] sm:w-[125px] lg:w-[145px] xl:w-[158px] 2xl:w-[168px]',
+    positionStyle: { right: '1.2%', top: '15%' },
+    className: 'hidden xl:block',
+    sizeClass: 'w-[90px] sm:w-[110px] lg:w-[130px] xl:w-[142px] 2xl:w-[160px]',
     idleY: [4, -4, 4],
     duration: 5.6,
     idleDelay: 0.2,
     parallaxFactor: 0.5,
   },
-  // 12. Col 9 Bottom (Far Right Bottom)
+  // 12. Col 9 Bottom (Far Right Bottom: Samsung Galaxy Z Flip6)
   {
     id: 'col9-bottom',
     positionStyle: { right: '1.2%', top: '48%' },
-    className: 'hidden 2xl:block',
-    sizeClass: 'w-[100px] sm:w-[125px] lg:w-[145px] xl:w-[158px] 2xl:w-[168px]',
+    className: 'hidden xl:block',
+    sizeClass: 'w-[90px] sm:w-[110px] lg:w-[130px] xl:w-[142px] 2xl:w-[160px]',
     idleY: [-4, 3, -4],
     duration: 5.8,
     idleDelay: 0.5,
     parallaxFactor: 0.6,
+    sparkle: {
+      positionClass: '-top-2 -right-2',
+      sizeClass: 'w-4 h-4 sm:w-5 sm:h-5',
+      delay: 0.25,
+    },
   },
 ];
 
@@ -411,8 +452,35 @@ function FloatingCard({
             src={product.image}
             alt={product.name}
             loading={index < 4 ? 'eager' : 'lazy'}
-            className="h-full w-full object-contain object-center transition-transform duration-300 drop-shadow-[0_12px_24px_rgba(0,0,0,0.08)] drop-shadow-[0_2px_6px_rgba(0,0,0,0.04)]"
+            className="h-full w-full object-contain object-center transition-transform duration-300 drop-shadow-[0_14px_28px_rgba(0,0,0,0.12)] drop-shadow-[0_2px_8px_rgba(0,0,0,0.06)]"
           />
+
+          {/* 4-Pointed Sparkle Star Glint (As seen in reference screenshot) */}
+          {slot.sparkle && (
+            <motion.div
+              className={cn(
+                'pointer-events-none absolute z-20 text-white drop-shadow-[0_0_12px_rgba(255,255,255,0.95)] drop-shadow-[0_0_4px_rgba(255,255,255,0.85)]',
+                slot.sparkle.positionClass,
+              )}
+              animate={
+                reducedMotion
+                  ? {}
+                  : {
+                      scale: [0.85, 1.25, 0.85],
+                      opacity: [0.75, 1, 0.75],
+                      rotate: [0, 15, 0],
+                    }
+              }
+              transition={{
+                duration: 3.2,
+                delay: slot.sparkle.delay || 0,
+                repeat: Infinity,
+                ease: 'easeInOut',
+              }}
+            >
+              <SparkleStar className={cn('h-5 w-5', slot.sparkle.sizeClass)} />
+            </motion.div>
+          )}
         </div>
 
 
@@ -503,14 +571,40 @@ export function HeroSection({
       onPointerLeave={handlePointerLeave}
       className="relative z-0 -mt-[44px] flex min-h-[100svh] w-full flex-col justify-end overflow-hidden bg-white pt-[44px] text-neutral-900"
     >
-      {/* Bottom Subtle Gray Fade & Mist Layer — Enhanced Depth */}
+      {/* 1. Northern Lights (Aurora Borealis) Sky Background across top 75% */}
+      <div className="pointer-events-none absolute inset-x-0 top-0 z-0 h-[72%] sm:h-[76%] lg:h-[78%] overflow-hidden select-none">
+        <img
+          src="/images/aurora-hero-bg.jpg"
+          alt="Aurora Sky"
+          className="h-full w-full object-cover object-[center_25%] opacity-95 transition-opacity duration-1000"
+        />
+
+        {/* 2. Interactive WebGL Three.js Aurora Ribbon Shimmer Overlay */}
+        <div className="absolute inset-0 opacity-40 mix-blend-screen">
+          <HeroAuroraBackground reducedMotion={reducedMotion} />
+        </div>
+
+        {/* 3. Cosmic Twinkling Starfield */}
+        <div className="absolute inset-0 opacity-75">
+          <CategoryStarField />
+        </div>
+
+        {/* Subtle Top Space Vignette */}
+        <div className="absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-[#030712]/35 via-transparent to-transparent" />
+
+        {/* Seamless Soft Dissolve from Aurora Sky into Pure White Mist Floor */}
+        <div className="absolute inset-x-0 bottom-0 h-44 sm:h-56 lg:h-64 bg-gradient-to-t from-white via-white/80 via-35% to-transparent" />
+      </div>
+
+      {/* 4. White Mist / Glow Floor Covering Lower 48% */}
       <div
-        className="pointer-events-none absolute inset-x-0 bottom-0 z-0 h-64 sm:h-80 bg-gradient-to-t from-neutral-200/90 via-neutral-100/60 to-transparent"
+        className="pointer-events-none absolute inset-x-0 bottom-0 z-0 h-[48%] bg-gradient-to-t from-white via-white/95 via-40% to-transparent"
         aria-hidden="true"
       />
 
+
       {/* 13-Card Floating Gallery Canopy — 9-Column Reference Perspective */}
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 top-[52px] sm:top-[64px] lg:top-[74px] z-10 overflow-hidden [perspective:1400px]">
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 top-[48px] sm:top-[60px] lg:top-[68px] z-10 overflow-hidden [perspective:1400px]">
         <div className="pointer-events-auto relative mx-auto h-full w-full max-w-[1760px] [transform-style:preserve-3d]">
           {HERO_PRODUCTS.map((product, idx) => (
             <FloatingCard

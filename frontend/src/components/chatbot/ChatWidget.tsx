@@ -3,8 +3,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { MessageSquare, X, Send, Bot, RotateCcw, Sparkles, HelpCircle, Loader2 } from 'lucide-react';
 import { ChatMessage, QuickPrompt } from './types';
 import { ChatMessageItem } from './ChatMessageItem';
-import { sendChatMessage } from '../../services/chatbot.api';
+import { extractSuggestedProductIds, fetchChatbotCatalogProducts, readVerifiedChatbotProducts, resolveChatbotProductResponse, sendChatMessage } from '../../services/chatbot.api';
+import { resolveQuotationIntent } from './quotation-intent';
 import { MeshGradientSVG } from '../ui/shader-svg';
+import { CustomerQuotationPanel } from './CustomerQuotationPanel';
 
 const SESSION_KEY = 'webphone_chat_session_id';
 
@@ -65,6 +67,15 @@ export function ChatWidget() {
       : `session-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
   };
 
+  const getCurrentSessionId = () => {
+    const existingSessionId = sessionStorage.getItem(SESSION_KEY);
+    if (existingSessionId) return existingSessionId;
+
+    const newSessionId = getNewSessionId();
+    sessionStorage.setItem(SESSION_KEY, newSessionId);
+    return newSessionId;
+  };
+
   const initWelcomeMessage = () => {
     const hours = new Date().getHours();
     const greeting = hours < 12 ? 'Chào buổi sáng!' : hours < 18 ? 'Chào buổi chiều!' : 'Chào buổi tối!';
@@ -81,11 +92,7 @@ export function ChatWidget() {
 
   // Initialize session and welcome message
   useEffect(() => {
-    let sessionId = sessionStorage.getItem(SESSION_KEY);
-    if (!sessionId) {
-      sessionId = getNewSessionId();
-      sessionStorage.setItem(SESSION_KEY, sessionId);
-    }
+    getCurrentSessionId();
     initWelcomeMessage();
 
     // Show tooltip after 2.5 seconds if not open
@@ -119,7 +126,7 @@ export function ChatWidget() {
       return;
     }
 
-    const sessionId = sessionStorage.getItem(SESSION_KEY) || getNewSessionId();
+    const sessionId = getCurrentSessionId();
 
     const userMessage: ChatMessage = {
       id: crypto.randomUUID(),
@@ -156,22 +163,34 @@ export function ChatWidget() {
         createdAt: Date.now(),
       };
 
-      if (response.result_type === 'product_search') {
-        assistantMessage.text = response.response;
-        assistantMessage.products = response.products;
+      const previousProducts = [...messages].reverse().find(message => message.products?.length)?.products || [];
+      const verifiedProducts = readVerifiedChatbotProducts(response);
+      const quotationResult = await resolveQuotationIntent(text, response, previousProducts, verifiedProducts
+        ? { byIds: async ids => verifiedProducts.filter(p => ids.includes(p.id!)) } : {});
+      assistantMessage.resultType = response.result_type;
+
+      if (quotationResult) {
+        assistantMessage.text = quotationResult.text;
+        assistantMessage.products = quotationResult.products;
+        assistantMessage.isError = quotationResult.isError;
+      } else if (['product_search', 'product_detail', 'product_compare', 'recommendation'].includes(response.result_type)
+        || extractSuggestedProductIds(response).length > 0) {
+        const result = await resolveChatbotProductResponse(response);
+        assistantMessage.text = result.text;
+        assistantMessage.products = result.products;
+        assistantMessage.isError = result.isError;
       } else if (response.result_type === 'quotation') {
-        assistantMessage.text = response.response || response.message;
-        if (response.response_type === 'file') {
-          assistantMessage.quotation = {
-            responseType: 'file',
-            success: response.success,
-            quoteStatus: response.quote_status,
-            quoteNumber: response.quote_number,
-            fileName: response.file_name,
-            mimeType: response.mime_type,
-            downloadUrl: response.download_url,
-            totalDisplay: response.total_display
-          };
+        const suggestedIds = extractSuggestedProductIds(response);
+        assistantMessage.text = suggestedIds.length
+          ? 'Đã xác minh sản phẩm từ danh mục Backend. Hãy chọn phiên bản và số lượng trên thẻ để tiếp tục yêu cầu báo giá.'
+          : 'Bạn muốn báo giá mẫu máy nào? Hãy cho biết tên hoặc dòng máy để tìm trong danh mục WebPhone.';
+        try {
+          assistantMessage.products = await fetchChatbotCatalogProducts(suggestedIds);
+          if (suggestedIds.length > 0 && assistantMessage.products.length === 0) {
+            assistantMessage.text = 'Không xác minh được sản phẩm trong danh mục hiện tại. Hãy tìm lại sản phẩm để tiếp tục yêu cầu báo giá.';
+          }
+        } catch {
+          assistantMessage.text = 'Danh mục Backend hiện chưa thể xác minh; chưa có báo giá hoặc PDF nào được tạo.';
         }
       } else if (response.result_type === 'error') {
         assistantMessage.isError = true;
@@ -183,11 +202,15 @@ export function ChatWidget() {
 
       setMessages(prev => prev.map(m => m.id === loadingId ? assistantMessage : m));
     } catch (error) {
+      const previousProducts = [...messages].reverse().find(message => message.products?.length)?.products || [];
+      const quotationFallback = await resolveQuotationIntent(text, {}, previousProducts);
       setMessages(prev => prev.map(m => m.id === loadingId ? {
         id: crypto.randomUUID(),
         role: 'assistant',
         createdAt: Date.now(),
-        isError: true
+        isError: quotationFallback?.isError ?? !quotationFallback,
+        text: quotationFallback?.text || 'Không thể kết nối chatbot. Vui lòng thử lại.' ,
+        products: quotationFallback?.products,
       } : m));
     } finally {
       setIsSending(false);
@@ -255,7 +278,7 @@ export function ChatWidget() {
               aria-label="Mở trợ lý ảo AI"
             >
               {/* Dynamic MeshGradient Mascot Icon */}
-              <div className="w-16 h-20 sm:w-[68px] sm:h-[85px] drop-shadow-[0_10px_25px_rgba(79,70,229,0.45)] group-hover:drop-shadow-[0_16px_32px_rgba(79,70,229,0.65)] transition-all duration-300">
+              <div className="w-12 h-[60px] sm:w-[50px] sm:h-[63px] drop-shadow-[0_6px_16px_rgba(79,70,229,0.38)] group-hover:drop-shadow-[0_10px_22px_rgba(79,70,229,0.55)] transition-all duration-300">
                 <MeshGradientSVG className="w-full h-full" speed={1.2} />
               </div>
             </motion.button>
@@ -324,11 +347,12 @@ export function ChatWidget() {
             <div
               ref={messagesContainerRef}
               data-lenis-prevent="true"
-              className="flex-1 overflow-y-auto p-4 sm:p-5 overscroll-contain space-y-2"
+              className="flex-1 overflow-y-auto overflow-x-hidden p-4 sm:p-5 overscroll-contain space-y-2.5 w-full max-w-full min-w-0"
             >
               {messages.map((msg) => (
                 <ChatMessageItem key={msg.id} message={msg} />
               ))}
+              <CustomerQuotationPanel />
 
               {/* Quick Prompts Hub (shown when starting a conversation) */}
               {isOnlyWelcomeMessage && (

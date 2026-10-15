@@ -1,0 +1,57 @@
+{
+  "workflowId": "5319a575-90d2-4894-9ece-355d9528b732",
+  "revision": "cd22a99b-6fb0-4d16-bfcc-3d3ebd6d7714",
+  "pinned": {
+    "original": 16,
+    "additional": 7,
+    "pass": 23
+  },
+  "mocks": {
+    "backend": 200,
+    "frontend": 70
+  },
+  "http": {
+    "status": "PARTIAL",
+    "greeting": {
+      "localMs": 384,
+      "publicMs": 618,
+      "backendMs": 1157
+    },
+    "faqWithActualPending": {
+      "localMs": 433,
+      "publicMs": 1547
+    },
+    "continuationWithActualPending": {
+      "localMs": 1142,
+      "publicMs": 1122
+    },
+    "headerAuthMissing": 403,
+    "headerAuthInvalid": 403,
+    "failures": [
+      {
+        "execution": "1186",
+        "node": "Gemini - Product Response",
+        "error": "Service unavailable"
+      },
+      {
+        "execution": "1192",
+        "node": "Gemini - Intent Router",
+        "error": "Service unavailable"
+      },
+      {
+        "execution": "1196",
+        "node": "Gemini - Product Detail Response",
+        "error": "Service unavailable",
+        "routerResolvedModel": "iPhone 16",
+        "actualCatalogProduct": "iPhone 16"
+      },
+      {
+        "execution": "1184",
+        "clientError": "Timeout at 85 seconds"
+      }
+    ]
+  },
+  "backendCutover": "NOT_PERFORMED_PUBLIC_GATE_PARTIAL",
+  "health": 200,
+  "officialQuotationOrderPdfCreated": false
+}

@@ -32,8 +32,8 @@ export function OrderDeliveryTimeline({ currentStatus, history = [] }: OrderDeli
   return (
     <div className="relative">
       <div className="absolute left-[15px] top-6 bottom-6 w-0.5 bg-neutral-100" />
-      <div 
-        className="absolute left-[15px] top-6 w-0.5 bg-emerald-500 transition-all duration-500 ease-out" 
+      <div
+        className="absolute left-[15px] top-6 w-0.5 bg-emerald-500 transition-all duration-500 ease-out"
         style={{ height: `${(currentIndex / (TIMELINE_STEPS.length - 1)) * 100}%` }}
       />
 

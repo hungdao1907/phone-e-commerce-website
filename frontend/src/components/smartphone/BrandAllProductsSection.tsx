@@ -70,7 +70,7 @@ export function BrandAllProductsSection({ config, products }: BrandAllProductsSe
     params.delete('q');
     params.set('category', categorySlug);
     params.set('brand', brandSlug);
-    
+
     const res = await fetch(`${API_URL}/api/products/filters?${params.toString()}`);
     if (!res.ok) throw new Error('Failed to fetch filters');
     return res.json();
@@ -253,13 +253,13 @@ export function BrandAllProductsSection({ config, products }: BrandAllProductsSe
 
         {/* Dynamic Filter Layout - Sidebar + Grid */}
         <div className="flex flex-col md:flex-row gap-8 max-w-[1400px] mx-auto w-full">
-          
+
           {/* Sidebar Area */}
           <div className={`
             fixed inset-0 z-50 bg-black/50 md:bg-transparent md:sticky md:top-24 md:h-[calc(100vh-120px)] md:w-64 md:flex-shrink-0 transition-opacity duration-300
             ${isMobileSidebarOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none md:opacity-100 md:pointer-events-auto'}
           `}>
-            <div 
+            <div
               data-lenis-prevent="true"
               className={`
               absolute md:static inset-y-0 left-0 w-[85%] max-w-sm bg-[#f5f5f7] md:bg-transparent h-full md:w-full transition-transform duration-300 transform overflow-y-auto
@@ -274,10 +274,10 @@ export function BrandAllProductsSection({ config, products }: BrandAllProductsSe
                 </button>
               </div>
               <div className="p-4 md:p-0 sidebar-filter-wrapper">
-                <SidebarFilter 
-                  filters={filtersData} 
-                  isLoading={isLoadingFilters} 
-                  hideCategoryAndBrand={true} 
+                <SidebarFilter
+                  filters={filtersData}
+                  isLoading={isLoadingFilters}
+                  hideCategoryAndBrand={true}
                   categorySlug={categorySlug}
                   onCloseMobile={() => setIsMobileSidebarOpen(false)}
                 />
@@ -289,7 +289,7 @@ export function BrandAllProductsSection({ config, products }: BrandAllProductsSe
           {/* Product Grid Area */}
           <div className="flex-1 min-w-0">
             <ActiveFilterChips />
-            
+
             <div className="mb-6 flex items-center justify-between">
               <span className="text-xs sm:text-sm font-bold text-neutral-600">
                 {isProductsLoading ? 'Đang tải...' : `Tìm thấy ${productsData?.total || 0} sản phẩm phù hợp`}
@@ -320,7 +320,7 @@ export function BrandAllProductsSection({ config, products }: BrandAllProductsSe
                 <p className="text-neutral-500 max-w-md mx-auto mb-6">
                   Rất tiếc, không có sản phẩm nào khớp với các bộ lọc bạn đã chọn.
                 </p>
-                <button 
+                <button
                   onClick={() => setSearchParams(new URLSearchParams())}
                   className="bg-neutral-900 text-white px-6 py-2.5 rounded-full font-semibold hover:bg-neutral-800 transition-colors"
                 >
@@ -332,10 +332,10 @@ export function BrandAllProductsSection({ config, products }: BrandAllProductsSe
                   {/* Flattened grid */}
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-5">
                     {(productsData?.data || []).map((product: any) => (
-                      <FilteredProductCard 
-                        key={product.id} 
-                        product={product} 
-                        categorySlug={categorySlug} 
+                      <FilteredProductCard
+                        key={product.id}
+                        product={product}
+                        categorySlug={categorySlug}
                       />
                     ))}
                   </div>
@@ -343,7 +343,7 @@ export function BrandAllProductsSection({ config, products }: BrandAllProductsSe
                 {/* Pagination */}
                 {productsData?.totalPages > 1 && (
                   <div className="flex justify-center items-center gap-2 mt-12">
-                    <button 
+                    <button
                       disabled={productsData.page === 1}
                       onClick={() => handlePageChange(productsData.page - 1)}
                       className="px-4 py-2 border border-neutral-200 rounded-full text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed hover:bg-white transition-colors"
@@ -356,8 +356,8 @@ export function BrandAllProductsSection({ config, products }: BrandAllProductsSe
                           key={idx}
                           onClick={() => handlePageChange(idx + 1)}
                           className={`w-10 h-10 rounded-full text-sm font-bold flex items-center justify-center transition-colors ${
-                            productsData.page === idx + 1 
-                              ? 'bg-neutral-900 text-white' 
+                            productsData.page === idx + 1
+                              ? 'bg-neutral-900 text-white'
                               : 'bg-transparent text-neutral-600 hover:bg-neutral-200'
                           }`}
                         >
@@ -365,7 +365,7 @@ export function BrandAllProductsSection({ config, products }: BrandAllProductsSe
                         </button>
                       ))}
                     </div>
-                    <button 
+                    <button
                       disabled={productsData.page === productsData.totalPages}
                       onClick={() => handlePageChange(productsData.page + 1)}
                       className="px-4 py-2 border border-neutral-200 rounded-full text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed hover:bg-white transition-colors"

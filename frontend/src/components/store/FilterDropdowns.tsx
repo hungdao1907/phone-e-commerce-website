@@ -111,13 +111,13 @@ export function FilterDropdowns({ categorySlug, filtersData }: FilterDropdownsPr
         <div className="text-sm font-bold text-neutral-800 shrink-0 flex items-center gap-1.5 bg-neutral-100/80 px-3 py-2 rounded-full">
           Bộ lọc <span className="flex items-center justify-center bg-neutral-800 text-white text-[10px] w-5 h-5 rounded-full">{totalApplied}</span>
         </div>
-        
+
         {/* Horizontal scroll wrapper for mobile */}
         <div className="flex flex-wrap items-center gap-2 md:gap-3 flex-1">
           {activeFilterKeys.map(filterKey => {
             if (filterKey === 'price') {
               return (
-                <PriceFilterDropdown 
+                <PriceFilterDropdown
                   key={filterKey}
                   isOpen={openDropdown === filterKey}
                   onToggle={() => setOpenDropdown(openDropdown === filterKey ? null : filterKey)}
@@ -146,7 +146,7 @@ export function FilterDropdowns({ categorySlug, filtersData }: FilterDropdownsPr
               />
             );
           })}
-          
+
           {totalApplied > 0 && (
             <button
               onClick={handleClearAll}
@@ -179,7 +179,7 @@ interface MultiSelectFilterDropdownProps {
 function MultiSelectFilterDropdown({
   filterKey, label, options, isOpen, onToggle, onClose, searchParams, setSearchParams
 }: MultiSelectFilterDropdownProps) {
-  
+
   // draft state
   const appliedValue = searchParams.get(filterKey);
   const initialDraft = appliedValue ? appliedValue.split(',') : [];
@@ -208,7 +208,7 @@ function MultiSelectFilterDropdown({
     } else {
       nextParams.delete(filterKey);
     }
-    // Only "brand" requires special "Tất cả" mapping inside useQuery, but in URL we don't need to put "Tất cả". 
+    // Only "brand" requires special "Tất cả" mapping inside useQuery, but in URL we don't need to put "Tất cả".
     // In our backend, if it's missing, it searches all.
     nextParams.delete('page');
     setSearchParams(nextParams);
@@ -293,7 +293,7 @@ interface PriceFilterDropdownProps {
 function PriceFilterDropdown({
   isOpen, onToggle, onClose, searchParams, setSearchParams, priceRange
 }: PriceFilterDropdownProps) {
-  
+
   const rawMin = priceRange?.min;
   const rawMax = priceRange?.max;
 
@@ -328,10 +328,10 @@ function PriceFilterDropdown({
       const nextParams = new URLSearchParams(searchParams);
       if (draftValue[0] > bounds.min) nextParams.set('minPrice', String(draftValue[0]));
       else nextParams.delete('minPrice');
-      
+
       if (draftValue[1] < bounds.max) nextParams.set('maxPrice', String(draftValue[1]));
       else nextParams.delete('maxPrice');
-      
+
       nextParams.delete('page');
       setSearchParams(nextParams);
     }

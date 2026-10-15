@@ -1,13 +1,16 @@
 import express from 'express';
-import { PrismaClient } from '@prisma/client';
+import { Prisma } from '@prisma/client';
+import prisma from '../config/prisma';
 import { authenticateToken } from '../middleware/auth.middleware';
+import { requireRoles } from '../middleware/authorization.middleware';
 import { getRouteParam } from '../utils/route-param';
 
 const router = express.Router();
-const prisma = new PrismaClient();
+
+class PromoCodeHistoryConflict extends Error {}
 
 // GET all promo codes
-router.get('/', async (req, res) => {
+router.get('/', authenticateToken, requireRoles('staff', 'admin', 'superadmin'), async (req, res) => {
   try {
     const promoCodes = await prisma.promoCode.findMany({
       orderBy: { createdAt: 'desc' }
@@ -77,7 +80,7 @@ router.post('/validate', async (req, res) => {
 });
 
 // POST create promo code
-router.post('/', async (req, res) => {
+router.post('/', authenticateToken, requireRoles('staff', 'admin', 'superadmin'), async (req, res) => {
   try {
     // The frontend sends `name` instead of `code`. We map it back.
     const { name, code, discountType, discountValue, startDate, endDate, isActive, usageLimit, minOrderValue } = req.body;
@@ -105,7 +108,7 @@ router.post('/', async (req, res) => {
 });
 
 // PUT update promo code
-router.put('/:id', async (req, res) => {
+router.put('/:id', authenticateToken, requireRoles('staff', 'admin', 'superadmin'), async (req, res) => {
   try {
     const { name, code, discountType, discountValue, startDate, endDate, isActive, usageLimit, minOrderValue, usedCount } = req.body;
     const actualCode = code || name;
@@ -133,13 +136,23 @@ router.put('/:id', async (req, res) => {
 });
 
 // DELETE promo code
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', authenticateToken, requireRoles('staff', 'admin', 'superadmin'), async (req, res) => {
   try {
-    await prisma.promoCode.delete({
-      where: { id: getRouteParam(req.params.id) }
-    });
+    const id = getRouteParam(req.params.id);
+    await prisma.$transaction(async (tx) => {
+      if (await tx.order.count({ where: { promoCodeId: id } }) > 0) {
+        throw new PromoCodeHistoryConflict('Promo code is referenced by existing orders.');
+      }
+      await tx.promoCode.delete({ where: { id } });
+    }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
     res.json({ message: 'Xóa mã thành công' });
   } catch (error) {
+    if (error instanceof PromoCodeHistoryConflict) {
+      return res.status(409).json({ message: 'Cannot delete a promotion code used by an order; deactivate it to preserve the order history.' });
+    }
+    if (error && typeof error === 'object' && 'code' in error && error.code === 'P2025') {
+      return res.status(404).json({ message: 'Promo code not found.' });
+    }
     console.error('Error deleting promo code:', error);
     res.status(500).json({ message: 'Lỗi server' });
   }

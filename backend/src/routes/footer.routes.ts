@@ -1,12 +1,13 @@
 import { Router } from 'express';
 import { authenticateToken } from '../middleware/auth.middleware';
+import { requireRoles } from '../middleware/authorization.middleware';
 import prisma from '../config/prisma';
 import { getRouteParam } from '../utils/route-param';
 
 const router = Router();
 
-// Lấy danh sách toàn bộ Footer sections kèm links (Dành cho Admin, không filter isActive)
-router.get('/sections', authenticateToken, async (_req, res) => {
+// Lấy danh sách toàn bộ Footer sections kèm links (Dành cho Admin/Staff, không filter isActive)
+router.get('/sections', authenticateToken, requireRoles('staff', 'admin', 'superadmin'), async (_req, res) => {
   try {
     const sections = await prisma.footerSection.findMany({
       include: {
@@ -71,7 +72,7 @@ router.get('/active', async (_req, res) => {
 });
 
 // Lấy 1 Footer section
-router.get('/sections/:id', authenticateToken, async (req, res) => {
+router.get('/sections/:id', authenticateToken, requireRoles('staff', 'admin', 'superadmin'), async (req, res) => {
   try {
     const id = getRouteParam(req.params.id);
     if (!id) return res.status(400).json({ message: 'ID không hợp lệ.' });
@@ -154,7 +155,7 @@ function validateFooterPayload(data: any): { valid: boolean; message: string; no
 }
 
 // Tạo Footer section
-router.post('/sections', authenticateToken, async (req, res) => {
+router.post('/sections', authenticateToken, requireRoles('staff', 'admin', 'superadmin'), async (req, res) => {
   try {
     const { valid, message, normalized } = validateFooterPayload(req.body);
     if (!valid || !normalized) {
@@ -190,7 +191,7 @@ router.post('/sections', authenticateToken, async (req, res) => {
 });
 
 // Cập nhật Footer section
-router.put('/sections/:id', authenticateToken, async (req, res) => {
+router.put('/sections/:id', authenticateToken, requireRoles('staff', 'admin', 'superadmin'), async (req, res) => {
   try {
     const id = getRouteParam(req.params.id);
     if (!id) return res.status(400).json({ message: 'ID không hợp lệ.' });
@@ -236,7 +237,7 @@ router.put('/sections/:id', authenticateToken, async (req, res) => {
 });
 
 // Xóa Footer section
-router.delete('/sections/:id', authenticateToken, async (req, res) => {
+router.delete('/sections/:id', authenticateToken, requireRoles('staff', 'admin', 'superadmin'), async (req, res) => {
   try {
     const id = getRouteParam(req.params.id);
     if (!id) return res.status(400).json({ message: 'ID không hợp lệ.' });

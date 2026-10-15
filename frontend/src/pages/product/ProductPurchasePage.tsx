@@ -14,7 +14,7 @@ export function ProductPurchasePage() {
   const { slug } = useParams<{ slug: string }>();
   const [product, setProduct] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  
+
   const navigate = useNavigate();
   const addCartItem = useCartStore((state) => state.addItem);
   const { setCartDrawerOpen } = useAppStore();
@@ -24,10 +24,10 @@ export function ProductPurchasePage() {
     const fetchProduct = async () => {
       try {
         let dbProduct = null;
-        
+
         // Check if slug is a UUID
         const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slug);
-        
+
         if (isUUID) {
           const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/products/${slug}`);
           if (res.ok) dbProduct = await res.json();
@@ -49,7 +49,7 @@ export function ProductPurchasePage() {
         }
 
         if (dbProduct) {
-          
+
           const uniqueColors = new Map();
           dbProduct.variants?.forEach((v: any) => {
             const colorName = v.attributes?.['Màu sắc'] || 'Màu mặc định';
@@ -70,10 +70,13 @@ export function ProductPurchasePage() {
             const storageLabel = v.attributes?.['Dung lượng'] || 'Tiêu chuẩn';
             if (!uniqueStorages.has(storageLabel)) {
               const basePrice = v.price || dbProduct.price || 0;
+              const effectivePrice = Number.isSafeInteger(v.effectivePrice)
+                ? v.effectivePrice
+                : (v.salePrice != null && v.salePrice < basePrice ? v.salePrice : basePrice);
               uniqueStorages.set(storageLabel, {
                 id: `storage-${storageLabel}`,
                 label: storageLabel,
-                price: basePrice,
+                price: effectivePrice,
                 originalPrice: basePrice,
                 stockByColor: colors.map(() => v.stock || 0)
               });
@@ -89,12 +92,15 @@ export function ProductPurchasePage() {
             const colorName = v.attributes?.['Màu sắc'] || 'Màu mặc định';
             const storageLabel = v.attributes?.['Dung lượng'] || 'Tiêu chuẩn';
             const basePrice = v.price || dbProduct.price || 0;
+            const effectivePrice = Number.isSafeInteger(v.effectivePrice)
+              ? v.effectivePrice
+              : (v.salePrice != null && v.salePrice < basePrice ? v.salePrice : basePrice);
             return {
               id: v.id,
               sku: v.sku || dbProduct.id,
               colorId: `color-${colorName}`,
               storageId: `storage-${storageLabel}`,
-              price: basePrice,
+              price: effectivePrice,
               originalPrice: basePrice,
               stock: v.stock || 0
             };
@@ -104,7 +110,7 @@ export function ProductPurchasePage() {
             const basePrice = dbProduct.price || 0;
             variants.push({ id: 'default-variant', sku: dbProduct.id, colorId: colors[0].id, storageId: storageOptions[0].id, price: basePrice, originalPrice: basePrice, stock: 0 });
           }
-          
+
           let parsedSpecs = [];
           if (Array.isArray(dbProduct.specifications)) {
             const specs = dbProduct.specifications;
@@ -202,7 +208,7 @@ export function ProductPurchasePage() {
     setSelectedStorageId(defaultVariant?.storageId ?? '');
     setQuantity(1);
     document.title = product.name + ' | Cửa Hàng Công Nghệ';
-    
+
     if (window.location.hash === '#reviews') {
       setTimeout(() => {
         const el = document.getElementById('reviews');
@@ -295,7 +301,7 @@ export function ProductPurchasePage() {
   return (
     <main className="product-purchase-page min-h-screen bg-neutral-50/50 pb-20 pt-6 text-neutral-950 sm:pt-8">
       <div className="mx-auto w-full max-w-[1300px] px-4 sm:px-6 lg:px-8">
-        
+
         {/* Breadcrumb */}
         <nav className="flex items-center gap-2 text-[13px] text-neutral-500 mb-6 py-2 overflow-x-auto whitespace-nowrap scrollbar-hide font-medium">
           <Link to="/" className="hover:text-[#22c55e] transition-colors">Trang chủ</Link>
@@ -329,10 +335,10 @@ export function ProductPurchasePage() {
               images={galleryImages}
               productName={product.name}
             />
-            
+
             {/* Description */}
             <ProductDescription description={product.description} />
-            
+
             {/* Specifications */}
             <ProductSpecifications
               productName={product.name}
@@ -356,17 +362,17 @@ export function ProductPurchasePage() {
             />
           </div>
         </div>
-        
+
         {/* FULL WIDTH SECTIONS */}
         <div className="flex flex-col gap-8 w-full mx-auto mt-4">
-          
+
           {/* Reviews Section */}
           <div id="reviews" className="scroll-mt-24">
             <ProductReviews productId={product.id} categorySlug={product.categorySlug} />
           </div>
-          
+
           {/* Related Products Section */}
-          <RelatedProducts 
+          <RelatedProducts
             currentProductId={product.id}
             categoryId={product.categorySlug || product.categoryId}
             brand={product.brand}

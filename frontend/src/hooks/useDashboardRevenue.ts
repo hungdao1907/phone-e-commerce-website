@@ -21,7 +21,7 @@ export function useDashboardRevenue() {
       });
 
       if (!res.ok) {
-        throw new Error('Failed to fetch dashboard revenue');
+        return [];
       }
 
       return res.json();

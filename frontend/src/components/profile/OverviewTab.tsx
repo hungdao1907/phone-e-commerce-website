@@ -27,7 +27,7 @@ export function OverviewTab({ orders, onChangeTab }: OverviewTabProps) {
       </div>
 
       <div className="grid grid-cols-3 gap-4">
-        <div 
+        <div
           onClick={() => onChangeTab('orders')}
           className="bg-white p-5 rounded-2xl border border-neutral-200/60 shadow-sm cursor-pointer hover:border-black transition-colors"
         >
@@ -38,7 +38,7 @@ export function OverviewTab({ orders, onChangeTab }: OverviewTabProps) {
           <p className="text-xs font-medium text-neutral-500">Đơn hàng</p>
         </div>
 
-        <div 
+        <div
           onClick={() => onChangeTab('wishlist')}
           className="bg-white p-5 rounded-2xl border border-neutral-200/60 shadow-sm cursor-pointer hover:border-black transition-colors"
         >
@@ -49,7 +49,7 @@ export function OverviewTab({ orders, onChangeTab }: OverviewTabProps) {
           <p className="text-xs font-medium text-neutral-500">Yêu thích</p>
         </div>
 
-        <div 
+        <div
           onClick={() => onChangeTab('voucher')}
           className="bg-white p-5 rounded-2xl border border-neutral-200/60 shadow-sm cursor-pointer hover:border-black transition-colors"
         >
@@ -64,7 +64,7 @@ export function OverviewTab({ orders, onChangeTab }: OverviewTabProps) {
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-bold text-neutral-900">Đơn hàng gần đây</h2>
-          <button 
+          <button
             onClick={() => onChangeTab('orders')}
             className="text-sm font-semibold text-neutral-500 hover:text-black flex items-center gap-1 transition-colors"
           >
@@ -92,7 +92,7 @@ export function OverviewTab({ orders, onChangeTab }: OverviewTabProps) {
                         const productImage = order.items?.[0]?.variant?.product?.image || order.items?.[0]?.variant?.product?.images?.[0];
                         const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
                         const imgSrc = productImage?.startsWith('/uploads') ? `${apiUrl}${productImage}` : productImage;
-                        
+
                         if (imgSrc) {
                           return <img src={imgSrc} alt="Product" className="w-full h-full object-cover" />;
                         }
@@ -114,17 +114,17 @@ export function OverviewTab({ orders, onChangeTab }: OverviewTabProps) {
                     {order.totalAmount?.toLocaleString('vi-VN')}đ
                   </p>
                   <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${
-                    order.status === 'pending' ? 'bg-amber-100 text-amber-700' : 
+                    order.status === 'pending' ? 'bg-amber-100 text-amber-700' :
                     order.status === 'pending_payment' ? 'bg-orange-100 text-orange-700' :
                     order.status === 'confirmed' ? 'bg-indigo-100 text-indigo-700' :
-                    order.status === 'shipping' ? 'bg-blue-100 text-blue-700' : 
+                    order.status === 'shipping' ? 'bg-blue-100 text-blue-700' :
                     order.status === 'delivered' ? 'bg-emerald-100 text-emerald-700' :
                     order.status === 'completed' ? 'bg-green-100 text-green-700' : 'bg-neutral-100 text-neutral-700'
                   }`}>
-                    {order.status === 'pending' ? 'Chờ duyệt' : 
+                    {order.status === 'pending' ? 'Chờ duyệt' :
                      order.status === 'pending_payment' ? 'Chờ thanh toán' :
                      order.status === 'confirmed' ? 'Đã xác nhận' :
-                     order.status === 'shipping' ? 'Đang giao' : 
+                     order.status === 'shipping' ? 'Đang giao' :
                      order.status === 'delivered' ? 'Chờ nhận' :
                      order.status === 'completed' ? 'Đã giao' : order.status}
                   </span>

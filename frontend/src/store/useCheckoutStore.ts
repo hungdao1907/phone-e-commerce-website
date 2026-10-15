@@ -54,13 +54,13 @@ const defaultDeliveryInfo: DeliveryInfo = {
 export const useCheckoutStore = create<CheckoutState>()((set) => ({
   deliveryInfo: { ...defaultDeliveryInfo },
   paymentMethod: 'COD',
-  setDeliveryInfo: (info) => set((state) => ({ 
-    deliveryInfo: { ...state.deliveryInfo, ...info } 
+  setDeliveryInfo: (info) => set((state) => ({
+    deliveryInfo: { ...state.deliveryInfo, ...info }
   })),
   setVATInfo: (info) => set((state) => ({
-    deliveryInfo: { 
-      ...state.deliveryInfo, 
-      vatInfo: { ...state.deliveryInfo.vatInfo, ...info } 
+    deliveryInfo: {
+      ...state.deliveryInfo,
+      vatInfo: { ...state.deliveryInfo.vatInfo, ...info }
     }
   })),
   setPaymentMethod: (method) => set({ paymentMethod: method }),

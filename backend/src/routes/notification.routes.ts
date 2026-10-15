@@ -1,10 +1,64 @@
 import express from 'express';
-import { PrismaClient } from '@prisma/client';
+import prisma from '../config/prisma';
 import { authenticateToken } from '../middleware/auth.middleware';
+import { requireRoles } from '../middleware/authorization.middleware';
 import { getRouteParam } from '../utils/route-param';
 
 const router = express.Router();
-const prisma = new PrismaClient();
+
+// -------------------------------------------------------
+// GET /api/notifications/my
+// Notifications for authenticated staff
+// -------------------------------------------------------
+router.get('/my', authenticateToken, requireRoles('staff'), async (req, res) => {
+  try {
+    const user = (req as any).user;
+    if (!user || !user.id || user.role !== 'staff') {
+      return res.status(403).json({ message: 'Yêu cầu quyền nhân viên' });
+    }
+
+    let orderIds: string[] = [];
+    try {
+      const res: any = await prisma.$queryRaw`
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name = 'Order' AND column_name = 'assignedStaffId'
+        LIMIT 1;
+      `;
+      if (Array.isArray(res) && res.length > 0) {
+        const assignedOrders = await prisma.order.findMany({
+          where: { assignedStaffId: user.id },
+          select: { id: true }
+        });
+        orderIds = assignedOrders.map(o => o.id);
+      }
+    } catch {
+      orderIds = [];
+    }
+
+    const where: any = {
+      referenceType: 'Order',
+      referenceId: { in: orderIds }
+    };
+
+    const notifications = await prisma.notification.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+      take: 20
+    });
+
+    const unreadCount = await prisma.notification.count({
+      where: { ...where, isRead: false }
+    });
+
+    res.json({
+      data: notifications,
+      unreadCount
+    });
+  } catch (error) {
+    console.error('Error fetching staff notifications:', error);
+    res.status(500).json({ message: 'Lỗi server' });
+  }
+});
 
 // -------------------------------------------------------
 // GET /api/notifications
@@ -13,7 +67,7 @@ const prisma = new PrismaClient();
 //   page   — trang (mặc định 1)
 //   type   — filter theo loại (ORDER, REVIEW, DISPUTE, INVENTORY, CUSTOMER, PAYMENT)
 // -------------------------------------------------------
-router.get('/', authenticateToken, async (req, res) => {
+router.get('/', authenticateToken, requireRoles('admin', 'superadmin'), async (req, res) => {
   try {
     const page  = Math.max(1, parseInt((req.query.page  as string) || '1',  10));
     const limit = Math.min(100, Math.max(1, parseInt((req.query.limit as string) || '20', 10)));
@@ -52,7 +106,7 @@ router.get('/', authenticateToken, async (req, res) => {
 // PATCH /api/notifications/:id/read
 // Đánh dấu một notification đã đọc
 // -------------------------------------------------------
-router.patch('/:id/read', authenticateToken, async (req, res) => {
+router.patch('/:id/read', authenticateToken, requireRoles('admin', 'superadmin'), async (req, res) => {
   try {
     const id = getRouteParam(req.params.id);
     const notification = await prisma.notification.update({
@@ -70,7 +124,7 @@ router.patch('/:id/read', authenticateToken, async (req, res) => {
 // PATCH /api/notifications/read-all
 // Đánh dấu tất cả notifications đã đọc
 // -------------------------------------------------------
-router.patch('/read-all', authenticateToken, async (req, res) => {
+router.patch('/read-all', authenticateToken, requireRoles('admin', 'superadmin'), async (req, res) => {
   try {
     await prisma.notification.updateMany({
       where: { isRead: false },

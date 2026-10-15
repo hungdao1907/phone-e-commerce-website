@@ -94,25 +94,11 @@ export function WatchBrandPage({ brand }: WatchBrandPageProps) {
                 .filter((p: number) => !isNaN(p) && p > 0) || [];
               const basePrice = variantPrices.length > 0 ? Math.min(...variantPrices) : (Number(ap.basePrice) || 0);
 
-              const variantSalePrices = ap.variants
-                ?.map((v: any) => Number(v.salePrice))
+              const effectivePrices = ap.variants
+                ?.map((v: any) => Number(v.effectivePrice ?? (v.salePrice != null && v.salePrice < v.price ? v.salePrice : v.price)))
                 .filter((p: number) => !isNaN(p) && p > 0) || [];
-              const minSalePrice = variantSalePrices.length > 0 ? Math.min(...variantSalePrices) : undefined;
-
-              let finalPrice = basePrice;
-              let originalPrice: number | undefined = undefined;
-
-              if (ap.activeCampaign) {
-                originalPrice = basePrice;
-                if (ap.activeCampaign.discountType === 'percentage') {
-                  finalPrice = Math.max(0, basePrice - (basePrice * ap.activeCampaign.discountValue / 100));
-                } else {
-                  finalPrice = Math.max(0, basePrice - ap.activeCampaign.discountValue);
-                }
-              } else if (minSalePrice !== undefined && minSalePrice < basePrice) {
-                finalPrice = minSalePrice;
-                originalPrice = basePrice;
-              }
+              const finalPrice = effectivePrices.length > 0 ? Math.min(...effectivePrices) : basePrice;
+              const originalPrice: number | undefined = finalPrice < basePrice ? basePrice : undefined;
 
               // 2. Specifications resolution
               const getSpec = (keyword: string) => {

@@ -21,6 +21,23 @@ enum PaymentStatus {
   REFUNDED
 }
 
+enum QuotationStatus {
+  PENDING_CUSTOMER_CONFIRMATION
+  CUSTOMER_CONFIRMED
+  APPROVED
+  NEEDS_REQUOTE
+  REJECTED
+  CUSTOMER_REJECTED
+  EXPIRED
+  CONVERTED
+}
+
+enum QuotationReviewDecision {
+  APPROVED
+  REJECTED
+  NEEDS_REQUOTE
+}
+
 model Plan {
   id            String   @id @default(uuid())
   title         String
@@ -40,25 +57,32 @@ model User {
   role      String   @default("admin")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  assignedOrders     Order[]           @relation("OrderAssignedStaff")
+  assignedQuotations Quotation[]       @relation("QuotationAssignedStaff")
+  quotationReviews   QuotationReview[] @relation("QuotationReviewActor")
 }
 
 model Customer {
-  id        String    @id @default(uuid())
-  username  String?   @unique
-  fullName  String?
-  email     String    @unique
-  phone     String?
-  address   String?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  otp       String?
-  otpExpiry DateTime?
-  password  String
-  verified  Boolean   @default(false)
-  Dispute   Dispute[]
-  Order     Order[]
-  Review    Review[]
-  Wishlist  Wishlist[]
+  id         String      @id @default(uuid())
+  fullName   String?
+  email      String      @unique
+  username   String?     @unique
+  phone      String?
+  address    String?
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+  otp        String?
+  otpExpiry  DateTime?
+  password   String
+  verified   Boolean     @default(false)
+  Dispute    Dispute[]
+  Order      Order[]
+  checkoutIdempotency CheckoutIdempotency[]
+  quotations Quotation[]
+  quotationCreateIdempotency QuotationCreateIdempotency[]
+  Review     Review[]
+  Wishlist   Wishlist[]
 }
 
 model Category {
@@ -90,24 +114,25 @@ model CategoryAttribute {
 }
 
 model Product {
-  id             String           @id @default(uuid())
-  name           String
-  status         String           @default("active")
-  image          String?
-  createdAt      DateTime         @default(now())
-  updatedAt      DateTime         @updatedAt
-  categoryId     String?
-  description    String?
-  specifications Json?
-  brand          String?
-  images         String[]
-  category       Category?        @relation(fields: [categoryId], references: [id])
-  variants       ProductVariant[]
-  homeFeaturedProduct HomeFeaturedProduct?
+  id                     String                  @id @default(uuid())
+  name                   String
+  status                 String                  @default("active")
+  image                  String?
+  createdAt              DateTime                @default(now())
+  updatedAt              DateTime                @updatedAt
+  categoryId             String?
+  description            String?
+  specifications         Json?
+  brand                  String?
+  images                 String[]
+  category               Category?               @relation(fields: [categoryId], references: [id])
+  variants               ProductVariant[]
+  homeFeaturedProduct    HomeFeaturedProduct?
   bannerCampaignProducts BannerCampaignProduct[]
-  Review         Review[]
-  Dispute        Dispute[]
-  Wishlist       Wishlist[]
+  Review                 Review[]
+  Dispute                Dispute[]
+  Wishlist               Wishlist[]
+  quotationItems         QuotationItem[]
 }
 
 model HomeFeaturedProduct {
@@ -122,48 +147,70 @@ model HomeFeaturedProduct {
 }
 
 model ProductVariant {
-  id         String      @id @default(uuid())
-  sku        String      @unique
-  price      Int
-  stock      Int         @default(0)
-  attributes Json
-  colorCode  String?
-  image      String?
-  productId  String
-  createdAt  DateTime    @default(now())
-  updatedAt  DateTime    @updatedAt
-  salePrice  Int?
-  OrderItem  OrderItem[]
-  Review     Review[]
-  Dispute    Dispute[]
+  id                     String                  @id @default(uuid())
+  sku                    String                  @unique
+  price                  Int
+  stock                  Int                     @default(0)
+  attributes             Json
+  colorCode              String?
+  image                  String?
+  productId              String
+  createdAt              DateTime                @default(now())
+  updatedAt              DateTime                @updatedAt
+  salePrice              Int?
   bannerCampaignProducts BannerCampaignProduct[]
-  product    Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
+  OrderItem              OrderItem[]
+  Review                 Review[]
+  Dispute                Dispute[]
+  quotationItems         QuotationItem[]
+  product                Product                 @relation(fields: [productId], references: [id], onDelete: Cascade)
 }
 
 model Order {
-  id                String    @id @default(uuid())
-  orderCode         String    @unique
+  id                String     @id @default(uuid())
+  orderCode         String     @unique
   customerId        String
-  customer          Customer  @relation(fields: [customerId], references: [id])
-  status            String    @default("pending") // pending, pending_payment, confirmed, shipping, delivered, completed, cancelled, returned
-  paymentMethod     String    @default("COD") // COD, BANK_TRANSFER
-  paymentStatus     String    @default("PENDING") // PENDING, PAID, REFUNDED
+  quotationId       String?    @unique
+  assignedStaffId   String?
+  customer          Customer   @relation(fields: [customerId], references: [id])
+  quotation         Quotation? @relation(fields: [quotationId], references: [id], onDelete: Restrict)
+  assignedStaff     User?      @relation("OrderAssignedStaff", fields: [assignedStaffId], references: [id], onDelete: SetNull)
+  status            String     @default("pending") // pending, pending_payment, confirmed, shipping, delivered, completed, cancelled, returned
+  paymentMethod     String     @default("COD") // COD, BANK_TRANSFER
+  paymentStatus     String     @default("PENDING") // PENDING, PAID, REFUNDED
   shippingAddress   String
   shippingPhone     String
-  shippingFee       Int       @default(0)
+  shippingFee       Int        @default(0)
   totalAmount       Int
-  discountAmount    Int       @default(0)
+  discountAmount    Int        @default(0)
   promoCodeId       String?
   note              String?
   estimatedDelivery DateTime?
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
 
   Dispute Dispute[]
   Invoice Invoice?
   items   OrderItem[]
   Payment Payment[]
   Review  Review[]
+  checkoutIdempotency CheckoutIdempotency?
+}
+
+// Draft foundation for durable Direct Checkout replay protection. The source
+// path must not use this model until its migration has been reviewed and applied.
+model CheckoutIdempotency {
+  id          String   @id @default(uuid())
+  customerId  String
+  keyHash     String
+  requestHash String
+  orderId     String?  @unique
+  createdAt   DateTime @default(now())
+
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  order    Order?   @relation(fields: [orderId], references: [id], onDelete: SetNull)
+
+  @@unique([customerId, keyHash])
 }
 
 model OrderItem {
@@ -182,17 +229,135 @@ model OrderItem {
   Dispute     Dispute[]
 }
 
-model Review {
+model Quotation {
+  id                  String          @id @default(uuid())
+  quoteNumber         String          @unique
+  version             Int             @default(1)
+  previousVersionId   String?         @unique
+  requoteReason       String?
+  customerId          String
+  assignedStaffId     String?
+  status              QuotationStatus @default(PENDING_CUSTOMER_CONFIRMATION)
+  currency            String          @default("VND")
+  subtotal            Int
+  discountAmount      Int             @default(0)
+  shippingFee         Int             @default(0)
+  totalAmount         Int
+  paymentMethod       String          @default("COD")
+  deliveryMethod      String          @default("delivery")
+  promoCodeId         String?
+  shippingAddress     String
+  shippingPhone       String
+  note                String?
+  sourceSessionId     String?
+  expiresAt           DateTime
+  customerConfirmedAt DateTime?
+  customerRejectedAt  DateTime?
+  approvedAt          DateTime?
+  convertedAt         DateTime?
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+
+  customer      Customer          @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  promoCode     PromoCode?        @relation(fields: [promoCodeId], references: [id], onDelete: Restrict)
+  assignedStaff User?             @relation("QuotationAssignedStaff", fields: [assignedStaffId], references: [id], onDelete: SetNull)
+  previousVersion Quotation?      @relation("QuotationVersions", fields: [previousVersionId], references: [id], onDelete: Restrict)
+  nextVersion     Quotation?      @relation("QuotationVersions")
+  items         QuotationItem[]
+  reviews       QuotationReview[]
+  files         QuotationFile[]
+  orders        Order[]
+  createIdempotency QuotationCreateIdempotency?
+
+  @@index([customerId, status, createdAt])
+  @@index([assignedStaffId, status, createdAt])
+  @@index([status, expiresAt])
+  @@index([promoCodeId])
+}
+
+// Draft foundation for durable Customer quotation-create replay protection.
+// Keep claims after hard deletion too; a null quotationId is a permanent replay tombstone.
+model QuotationCreateIdempotency {
   id          String   @id @default(uuid())
-  orderId     String?
   customerId  String
-  productId   String
-  variantId   String?
-  orderItemId String?  @unique
-  rating      Int
-  comment     String?
-  images      String[]
-  status      String   @default("PENDING")
+  keyHash     String
+  requestHash String
+  quotationId String?  @unique
+  createdAt   DateTime @default(now())
+
+  customer  Customer  @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  quotation Quotation? @relation(fields: [quotationId], references: [id], onDelete: Restrict)
+
+  @@unique([customerId, keyHash])
+  @@index([customerId, createdAt])
+}
+
+model QuotationItem {
+  id                String   @id @default(uuid())
+  quotationId       String
+  productId         String?
+  variantId         String?
+  productName       String
+  variantSku        String?
+  variantAttributes Json
+  quantity          Int
+  unitPrice         Int
+  originalUnitPrice Int?
+  saleUnitPrice     Int?
+  lineTotal         Int
+  createdAt         DateTime @default(now())
+
+  quotation Quotation       @relation(fields: [quotationId], references: [id], onDelete: Cascade)
+  product   Product?        @relation(fields: [productId], references: [id], onDelete: SetNull)
+  variant   ProductVariant? @relation(fields: [variantId], references: [id], onDelete: SetNull)
+
+  @@index([quotationId])
+  @@index([productId])
+  @@index([variantId])
+}
+
+model QuotationReview {
+  id             String                  @id @default(uuid())
+  quotationId    String
+  reviewerUserId String
+  decision       QuotationReviewDecision
+  note           String?
+  idempotencyKey String                  @unique
+  createdAt      DateTime                @default(now())
+
+  quotation Quotation @relation(fields: [quotationId], references: [id], onDelete: Restrict)
+  reviewer  User      @relation("QuotationReviewActor", fields: [reviewerUserId], references: [id], onDelete: Restrict)
+
+  @@index([quotationId, createdAt])
+  @@index([reviewerUserId, createdAt])
+}
+
+model QuotationFile {
+  id          String   @id @default(uuid())
+  quotationId String
+  storageKey  String   @unique
+  fileName    String
+  mimeType    String   @default("application/pdf")
+  sizeBytes   Int
+  sha256      String
+  createdAt   DateTime @default(now())
+
+  quotation Quotation @relation(fields: [quotationId], references: [id], onDelete: Restrict)
+
+  @@index([quotationId, createdAt])
+}
+
+model Review {
+  id                String   @id @default(uuid())
+  orderId           String?
+  customerId        String
+  productId         String
+  variantId         String?
+  orderItemId       String?  @unique
+  rating            Int
+  comment           String?
+  images            String[]
+  status            String   @default("PENDING")
   experienceRatings Json?
 
   adminReply   String?
@@ -212,10 +377,10 @@ model Review {
 }
 
 model Dispute {
-  id          String   @id @default(uuid())
-  orderId     String
-  customerId  String
-  
+  id         String @id @default(uuid())
+  orderId    String
+  customerId String
+
   orderItemId String
   productId   String
   variantId   String
@@ -225,17 +390,17 @@ model Dispute {
   images      String[]
   status      String   @default("PENDING")
   resolution  String?
-  
+
   adminReplyAt DateTime?
   adminReplyBy String?
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  customer    Customer @relation(fields: [customerId], references: [id])
-  order       Order    @relation(fields: [orderId], references: [id])
-  orderItem   OrderItem @relation(fields: [orderItemId], references: [id])
-  product     Product   @relation(fields: [productId], references: [id])
-  variant     ProductVariant @relation(fields: [variantId], references: [id])
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+  customer  Customer       @relation(fields: [customerId], references: [id])
+  order     Order          @relation(fields: [orderId], references: [id])
+  orderItem OrderItem      @relation(fields: [orderItemId], references: [id])
+  product   Product        @relation(fields: [productId], references: [id])
+  variant   ProductVariant @relation(fields: [variantId], references: [id])
 }
 
 model Invoice {
@@ -270,85 +435,21 @@ model Payment {
 
 // ========== MARKETING & BANNER ==========
 model Campaign {
-  id            String   @id @default(uuid())
-  name          String
-  description   String?
-  discountType  String
-  discountValue Int
-  startDate     DateTime
-  endDate       DateTime
-  isActive      Boolean  @default(true)
-  appliesTo     String
-  targetIds     String[]
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  bannerUrl     String?
-
-  // Banner campaign products per category
-  bannerProducts BannerCampaignProduct[]
+  id                     String                  @id @default(uuid())
+  name                   String
+  description            String?
+  discountType           String
+  discountValue          Int
+  startDate              DateTime
+  endDate                DateTime
+  isActive               Boolean                 @default(true)
+  appliesTo              String
+  targetIds              String[]
+  createdAt              DateTime                @default(now())
+  updatedAt              DateTime                @updatedAt
+  bannerUrl              String?
+  bannerCampaignProducts BannerCampaignProduct[]
 }
-
-// Sản phẩm khuyến mãi trong banner theo từng category
-model BannerCampaignProduct {
-  id             String   @id @default(uuid())
-  campaignId     String
-  campaign       Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
-
-  // Reference đến product thật
-  productId      String
-  product        Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
-
-  // Reference đến variant (dùng để lấy đúng giá)
-  variantId      String?
-  variant        ProductVariant? @relation(fields: [variantId], references: [id], onDelete: SetNull)
-
-  // Category mà sản phẩm này thuộc về trong banner (phone, laptop, tablet, watch)
-  categorySlug   String
-
-  // Ảnh riêng đã cắt nền dành cho banner (cutout image)
-  bannerImage    String
-
-  // Admin chỉ nhập discountPercent, sale price tự tính
-  discountPercent Int     @default(0)
-
-  // Thứ tự hiển thị trong banner (dot navigation)
-  sortOrder      Int      @default(0)
-
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-
-  // Tags liên kết
-  tags           BannerCampaignProductTag[]
-
-  // Unique: mỗi product chỉ xuất hiện 1 lần trong 1 campaign + category
-  @@unique([campaignId, productId, categorySlug])
-  @@index([campaignId, categorySlug, sortOrder])
-}
-
-// Marketing tags (HOT, BEST SELLER, NEW, TRENDING, etc.)
-model MarketingTag {
-  id        String   @id @default(uuid())
-  name      String   @unique  // HOT, BEST SELLER, NEW, TRENDING, LIMITED, SALE
-  color     String?           // Màu hiển thị tag (hex)
-  isActive  Boolean  @default(true)
-  sortOrder Int      @default(0)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  productTags BannerCampaignProductTag[]
-}
-
-// Pivot table: liên kết BannerCampaignProduct với MarketingTag
-model BannerCampaignProductTag {
-  id                     String               @id @default(uuid())
-  bannerCampaignProductId String
-  bannerCampaignProduct  BannerCampaignProduct @relation(fields: [bannerCampaignProductId], references: [id], onDelete: Cascade)
-  tagId                  String
-  tag                    MarketingTag          @relation(fields: [tagId], references: [id], onDelete: Cascade)
-
-  @@unique([bannerCampaignProductId, tagId])
-}
-
 
 model PromoCode {
   id            String   @id @default(uuid())
@@ -363,6 +464,7 @@ model PromoCode {
   minOrderValue Int      @default(0)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+  quotations    Quotation[]
 }
 
 model Banner {
@@ -378,6 +480,50 @@ model Banner {
   endDate   DateTime?
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
+}
+
+model BannerCampaignProduct {
+  id              String   @id @default(uuid())
+  campaignId      String
+  productId       String
+  variantId       String?
+  categorySlug    String
+  discountPercent Int      @default(0)
+  sortOrder       Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @default(now())
+  bannerImage     String
+
+  campaign Campaign                   @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  product  Product                    @relation(fields: [productId], references: [id], onDelete: Cascade)
+  variant  ProductVariant?            @relation(fields: [variantId], references: [id], onDelete: SetNull)
+  tags     BannerCampaignProductTag[]
+
+  @@unique([campaignId, productId, categorySlug])
+  @@index([campaignId, categorySlug, sortOrder])
+}
+
+model BannerCampaignProductTag {
+  id                      String @id @default(uuid())
+  bannerCampaignProductId String
+  tagId                   String
+
+  bannerCampaignProduct BannerCampaignProduct @relation(fields: [bannerCampaignProductId], references: [id], onDelete: Cascade)
+  tag                   MarketingTag          @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@unique([bannerCampaignProductId, tagId])
+}
+
+model MarketingTag {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  color     String?
+  isActive  Boolean  @default(true)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+
+  bannerCampaignProductTags BannerCampaignProductTag[]
 }
 
 model FooterSection {
@@ -487,23 +633,47 @@ model Wishlist {
 
 // ========== BANK TRANSACTIONS ==========
 model BankTransaction {
-  id              String   @id @default(uuid())
-  transactionId   String   @unique
+  id              String    @id @default(uuid())
+  transactionId   String    @unique
   amount          Int
   description     String
   transactionDate DateTime
   bankName        String?
   accountNumber   String?
-  transactionType String   @default("IN") // IN, OUT
-  status          String   @default("UNMATCHED") // UNMATCHED, MATCHED, INVALID_AMOUNT, INVALID_CONTENT, MANUAL_REVIEW
-  orderId         String?  // Reference to Order if matched
-  orderCode       String?  // The extracted order code
+  transactionType String    @default("IN") // IN, OUT
+  status          String    @default("UNMATCHED") // UNMATCHED, MATCHED, INVALID_AMOUNT, INVALID_CONTENT, MANUAL_REVIEW
+  orderId         String? // Reference to Order if matched
+  orderCode       String? // The extracted order code
   matchedAt       DateTime?
-  matchedBy       String?  // SYSTEM, ADMIN
+  matchedBy       String? // SYSTEM, ADMIN
   rawData         Json?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 
   @@index([transactionId])
   @@index([status])
+}
+
+// ========== CUSTOMER CHAT CONTEXT ==========
+
+model ChatConversation {
+  id        String        @id @default(uuid())
+  sessionId String        @unique
+  context   Json?
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  messages  ChatMessage[]
+
+  @@index([updatedAt])
+}
+
+model ChatMessage {
+  id             String           @id @default(uuid())
+  conversationId String
+  role           String // user, assistant
+  content        String
+  createdAt      DateTime         @default(now())
+  conversation   ChatConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId, createdAt])
 }

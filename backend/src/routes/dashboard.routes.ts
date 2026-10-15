@@ -1,15 +1,18 @@
 import express from 'express';
-import { PrismaClient } from '@prisma/client';
+import prisma from '../config/prisma';
+import { authenticateToken } from '../middleware/auth.middleware';
+import { requireRoles } from '../middleware/authorization.middleware';
 
 const router = express.Router();
-const prisma = new PrismaClient();
+
+router.use(authenticateToken, requireRoles('admin', 'superadmin', 'staff'));
 
 router.get('/summary', async (req, res) => {
   try {
     const now = new Date();
     const startOfCurrentMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     const startOfNextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
-    
+
     const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
     const endOfLastMonth = startOfCurrentMonth;
 
@@ -189,7 +192,7 @@ router.get('/top-products', async (req, res) => {
       const name = item.productName || 'Unknown Product';
       const revenue = item.quantity * item.unitPrice;
       const sales = item.quantity;
-      
+
       if (!productStats.has(name)) {
         productStats.set(name, { sales: 0, revenue: 0 });
       }
@@ -218,7 +221,7 @@ router.get('/top-products', async (req, res) => {
 router.get('/pending-orders', async (req, res) => {
   try {
     const PENDING_STATUSES = ['pending', 'PENDING', 'pending_payment', 'PENDING_PAYMENT'];
-    
+
     // Get total count
     const count = await prisma.order.count({
       where: { status: { in: PENDING_STATUSES } }
@@ -228,8 +231,12 @@ router.get('/pending-orders', async (req, res) => {
     const orders = await prisma.order.findMany({
       where: { status: { in: PENDING_STATUSES } },
       orderBy: { createdAt: 'desc' },
-      take: 3,
-      include: {
+      select: {
+        id: true,
+        orderCode: true,
+        totalAmount: true,
+        createdAt: true,
+        status: true,
         customer: {
           select: { fullName: true }
         },

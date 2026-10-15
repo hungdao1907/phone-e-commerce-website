@@ -3,6 +3,7 @@ import { Prisma } from '@prisma/client';
 import type { Banner } from '@prisma/client';
 import prisma from '../config/prisma';
 import { authenticateToken } from '../middleware/auth.middleware';
+import { requireRoles } from '../middleware/authorization.middleware';
 import { getRouteParam } from '../utils/route-param';
 
 const router = express.Router();
@@ -196,8 +197,8 @@ router.get('/active', async (req, res) => {
   }
 });
 
-// Admin: returns every banner so scheduled, expired and disabled banners remain manageable.
-router.get('/', authenticateToken, async (_req, res) => {
+// Admin/Staff: returns every banner so scheduled, expired and disabled banners remain manageable.
+router.get('/', authenticateToken, requireRoles('staff', 'admin', 'superadmin'), async (_req, res) => {
   try {
     const banners = await prisma.banner.findMany({
       orderBy: [{ position: 'asc' }, { sortOrder: 'asc' }, { createdAt: 'asc' }],
@@ -210,7 +211,7 @@ router.get('/', authenticateToken, async (_req, res) => {
   }
 });
 
-router.post('/', authenticateToken, async (req, res) => {
+router.post('/', authenticateToken, requireRoles('staff', 'admin', 'superadmin'), async (req, res) => {
   try {
     const data = parseBannerPayload(asBannerPayload(req.body));
     const targetPosition = data.position;
@@ -240,7 +241,7 @@ router.post('/', authenticateToken, async (req, res) => {
   }
 });
 
-router.put('/:id', authenticateToken, async (req, res) => {
+router.put('/:id', authenticateToken, requireRoles('staff', 'admin', 'superadmin'), async (req, res) => {
   try {
     const id = getRouteParam(req.params.id);
     if (!id) return res.status(400).json({ message: 'ID banner không hợp lệ.' });
@@ -314,7 +315,7 @@ router.put('/:id', authenticateToken, async (req, res) => {
   }
 });
 
-router.patch('/:id/move', authenticateToken, async (req, res) => {
+router.patch('/:id/move', authenticateToken, requireRoles('staff', 'admin', 'superadmin'), async (req, res) => {
   try {
     const id = getRouteParam(req.params.id);
     if (!id) return res.status(400).json({ message: 'ID banner không hợp lệ.' });
@@ -359,7 +360,7 @@ router.patch('/:id/move', authenticateToken, async (req, res) => {
   }
 });
 
-router.patch('/:id/status', authenticateToken, async (req, res) => {
+router.patch('/:id/status', authenticateToken, requireRoles('staff', 'admin', 'superadmin'), async (req, res) => {
   try {
     const id = getRouteParam(req.params.id);
     if (!id) return res.status(400).json({ message: 'ID banner không hợp lệ.' });
@@ -400,10 +401,10 @@ const handleDeleteAllBanners = async (_req: express.Request, res: express.Respon
   }
 };
 
-router.delete('/all', authenticateToken, handleDeleteAllBanners);
-router.delete('/', authenticateToken, handleDeleteAllBanners);
+router.delete('/all', authenticateToken, requireRoles('staff', 'admin', 'superadmin'), handleDeleteAllBanners);
+router.delete('/', authenticateToken, requireRoles('staff', 'admin', 'superadmin'), handleDeleteAllBanners);
 
-router.delete('/:id', authenticateToken, async (req, res) => {
+router.delete('/:id', authenticateToken, requireRoles('staff', 'admin', 'superadmin'), async (req, res) => {
   try {
     const id = getRouteParam(req.params.id);
     if (!id) return res.status(400).json({ message: 'ID banner không hợp lệ.' });

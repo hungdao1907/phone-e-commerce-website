@@ -1,7 +1,22 @@
 node_modules/
 dist/
+build/
+coverage/
 .env
+.env.*
+!.env.example
 .env*.local
+*.log
+*.dump
+*.backup
 .DS_Store
 backend/src/config/credentials.json
-# backend/uploads/
+# Local uploads and private generated documents; existing tracked public assets remain tracked.
+backend/uploads/
+backend/private-data/
+backend/backups/
+# Local PDF QA output and tools (not source or regression fixtures).
+/tmp/pdfs/
+/output/pdf/
+playwright-report/
+test-results/

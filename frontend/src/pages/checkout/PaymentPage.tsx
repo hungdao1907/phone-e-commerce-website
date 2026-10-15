@@ -6,7 +6,10 @@ import { useCheckoutStore } from '../../store/useCheckoutStore';
 import { CheckoutProgress } from '../../components/checkout/CheckoutProgress';
 import { useQuery } from '@tanstack/react-query';
 import { CheckoutSidebar } from '../../components/checkout/CheckoutSidebar';
+import { clearCheckoutIntent, getCheckoutIntent } from '../../components/checkout/checkout-idempotency';
 import { CreditCard, Wallet, Banknote, Loader2, CheckCircle2, AlertTriangle, Clock, AlertCircle } from 'lucide-react';
+
+const checkoutIdempotencyEnabled = import.meta.env.VITE_CHECKOUT_IDEMPOTENCY_ENABLED === 'true';
 
 export function PaymentPage() {
   const { user, token } = useAuthStore();
@@ -18,6 +21,11 @@ export function PaymentPage() {
   const [paymentData, setPaymentData] = useState<any>(null);
   const [isOrderPlaced, setIsOrderPlaced] = useState(false);
   const [isCheckingPayment, setIsCheckingPayment] = useState(false);
+  const [serverPricing, setServerPricing] = useState<any>(null);
+  const [pricingConfirmation, setPricingConfirmation] = useState<string | null>(null);
+  const [isLoadingPricing, setIsLoadingPricing] = useState(true);
+  const [pricingMessage, setPricingMessage] = useState<string | null>(null);
+  const [needsReconfirmation, setNeedsReconfirmation] = useState(false);
 
   const { appliedPromo } = useCartStore();
   const orderCode = paymentData?.orderCode;
@@ -60,8 +68,59 @@ export function PaymentPage() {
     }
   }, [token, items, navigate, deliveryInfo, isOrderPlaced]);
 
+  useEffect(() => {
+    if (!token || !user || items.length === 0 || isOrderPlaced) return;
+    let cancelled = false;
+    const loadPrice = async () => {
+      setIsLoadingPricing(true);
+      setPricingConfirmation(null);
+      setPricingMessage(null);
+      setNeedsReconfirmation(false);
+      try {
+        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/orders/price-preview`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify({
+            customerId: user.id,
+            items: items.map(item => ({ variantId: item.variantId || item.id, quantity: item.quantity })),
+            promoCode: appliedPromo?.name || null,
+       deliveryMethod: (deliveryInfo.deliveryMethod === 'store_pickup' ? 'pickup' : 'delivery') as 'pickup' | 'delivery',
+          }),
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.message || 'Không thể lấy giá từ Backend.');
+        if (cancelled) return;
+        setServerPricing(result.pricing);
+        setPricingConfirmation(result.pricingConfirmation);
+        if (result.pricing.promo?.reason) {
+          const reasonText = result.pricing.promo.reason === 'not_found' ? 'không tồn tại'
+            : result.pricing.promo.reason === 'usage_limit' ? 'đã hết lượt sử dụng'
+              : result.pricing.promo.reason === 'minimum_subtotal' ? 'chưa đạt giá trị đơn hàng tối thiểu'
+                : result.pricing.promo.reason === 'expired' ? 'đã hết hạn'
+                  : result.pricing.promo.reason === 'not_started' ? 'chưa đến thời gian áp dụng'
+                    : result.pricing.promo.reason === 'another_offer_is_better' ? 'không được cộng dồn vì ưu đãi khác giảm nhiều hơn'
+                      : 'hiện không đủ điều kiện';
+          setPricingMessage(`Mã ${result.pricing.promo.code} ${reasonText}; tổng tiền bên dưới đã được Backend tính theo ưu đãi hợp lệ.`);
+        }
+      } catch (error) {
+        if (!cancelled) {
+          setPricingMessage(error instanceof Error ? error.message : 'Không thể lấy giá từ Backend.');
+          setPricingConfirmation(null);
+        }
+      } finally {
+        if (!cancelled) setIsLoadingPricing(false);
+      }
+    };
+    void loadPrice();
+    return () => { cancelled = true; };
+  }, [token, user?.id, items, appliedPromo?.name, deliveryInfo.deliveryMethod, isOrderPlaced]);
+
   const handlePlaceOrder = async () => {
     if (!user || !token) return;
+    if (!pricingConfirmation || !serverPricing) {
+      setPricingMessage('Chưa nhận được xác nhận giá chính thức. Vui lòng chờ hoặc tải lại giá trước khi đặt hàng.');
+      return;
+    }
     setIsSubmitting(true);
     
     // Determine actual address
@@ -82,21 +141,56 @@ export function PaymentPage() {
       paymentMethod,
       shippingAddress: finalAddress,
       shippingPhone: deliveryInfo.phone,
-      shippingFee: 0, 
+       deliveryMethod: (deliveryInfo.deliveryMethod === 'store_pickup' ? 'pickup' : 'delivery') as 'pickup' | 'delivery',
       promoCode: appliedPromo?.name,
+      pricingConfirmation,
       note: deliveryInfo.note || '',
       estimatedDelivery: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString()
     };
 
+    let checkoutRequestSent = false;
+    let pendingIdempotencyKey: string | null = null;
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/orders`, {
+      const requestHeaders: Record<string, string> = {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      };
+      let requestSignal: AbortSignal | undefined;
+      let timeout: ReturnType<typeof setTimeout> | undefined;
+      if (checkoutIdempotencyEnabled) {
+        const intent = await getCheckoutIntent(user.id, {
+          items: orderPayload.items.map(item => ({ variantId: item.variantId || '', quantity: item.quantity })),
+          promoCode: appliedPromo?.name || null,
+          deliveryMethod: orderPayload.deliveryMethod,
+          paymentMethod: orderPayload.paymentMethod,
+          shippingAddress: orderPayload.shippingAddress,
+          shippingPhone: orderPayload.shippingPhone,
+          note: orderPayload.note,
+        });
+        pendingIdempotencyKey = intent.key;
+        orderPayload.estimatedDelivery = intent.estimatedDelivery;
+        requestHeaders['Idempotency-Key'] = intent.key;
+        const controller = new AbortController();
+        requestSignal = controller.signal;
+        timeout = setTimeout(() => controller.abort(), 30_000);
+      }
+
+      let res: Response;
+      try {
+        checkoutRequestSent = true;
+        res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/orders`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify(orderPayload)
-      });
+        headers: requestHeaders,
+        body: JSON.stringify(orderPayload),
+        ...(requestSignal ? { signal: requestSignal } : {}),
+        });
+      } finally {
+        if (timeout) clearTimeout(timeout);
+      }
       if (res.ok) {
-        setIsOrderPlaced(true);
         const result = await res.json();
+        if (pendingIdempotencyKey) clearCheckoutIntent(user.id, pendingIdempotencyKey);
+        setIsOrderPlaced(true);
         clearCart();
         
         if (paymentMethod === 'BANK' || paymentMethod === 'BANK_TRANSFER') {
@@ -119,12 +213,29 @@ export function PaymentPage() {
         navigate('/order-success', { state: { orderId: result.orderId || result.order?.id || '#ORD-SUCCESS' } });
       } else {
         const error = await res.json();
+        if (res.status === 409 && error.code === 'PRICE_CONFIRMATION_REQUIRED' && error.pricing && error.pricingConfirmation) {
+          const previousTotal = serverPricing?.grandTotal;
+          setServerPricing(error.pricing);
+          setPricingConfirmation(error.pricingConfirmation);
+          setNeedsReconfirmation(true);
+          setPricingMessage(Number.isSafeInteger(previousTotal) && previousTotal !== error.pricing.grandTotal
+            ? `Tổng tiền đã thay đổi từ ${previousTotal.toLocaleString('vi-VN')}đ thành ${error.pricing.grandTotal.toLocaleString('vi-VN')}đ. Vui lòng kiểm tra giá mới rồi xác nhận lại.`
+            : 'Xác nhận giá trước đã hết hạn hoặc giá/ưu đãi đã thay đổi. Vui lòng kiểm tra lại bảng giá rồi xác nhận trước khi đặt hàng.');
+          setIsSubmitting(false);
+          return;
+        }
         alert(error.message || 'Lỗi đặt hàng');
         setIsSubmitting(false);
       }
     } catch (e) { 
       console.error(e);
-      alert('Lỗi đặt hàng. Vui lòng thử lại sau.');
+      if (!checkoutRequestSent && e instanceof Error) {
+        alert(e.message);
+      } else if (checkoutIdempotencyEnabled) {
+        alert('Chưa nhận được kết quả từ máy chủ. Khóa thử lại của cùng checkout đã được giữ; hãy thử lại cùng giỏ hàng và thông tin nhận hàng để nhận đúng kết quả, không đổi khóa.');
+      } else {
+        alert('Không xác định được máy chủ đã nhận đơn hay chưa. Hãy kiểm tra mục đơn hàng trước khi gửi lại để tránh tạo đơn trùng.');
+      }
       setIsSubmitting(false);
     }
   };
@@ -197,10 +308,15 @@ export function PaymentPage() {
           {/* Order Summary Sidebar */}
           <div className="lg:col-span-1">
             <CheckoutSidebar 
-              buttonText="ĐẶT HÀNG"
+              buttonText={needsReconfirmation ? 'XÁC NHẬN GIÁ MỚI VÀ ĐẶT HÀNG' : 'ĐẶT HÀNG'}
               isSubmitting={isSubmitting}
               onNext={handlePlaceOrder}
               shippingFeeOverride={deliveryInfo.deliveryMethod === 'store_pickup' ? 0 : undefined}
+              pricingSnapshot={serverPricing}
+              pricingLoading={isLoadingPricing}
+              pricingMessage={pricingMessage}
+              disableButton={!pricingConfirmation || !serverPricing}
+              backendPricingRequired
             />
           </div>
         </div>

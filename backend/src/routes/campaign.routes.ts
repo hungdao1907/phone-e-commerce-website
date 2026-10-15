@@ -1,10 +1,11 @@
 import express from 'express';
-import { PrismaClient } from '@prisma/client';
+import prisma from '../config/prisma';
 import { authenticateToken } from '../middleware/auth.middleware';
+import { requireRoles } from '../middleware/authorization.middleware';
 import { getRouteParam } from '../utils/route-param';
+import { getBannerDisplayPricing } from '../services/campaign-banner-pricing';
 
 const router = express.Router();
-const prisma = new PrismaClient();
 
 const API_URL = process.env.VITE_API_URL || 'http://localhost:3001';
 
@@ -49,7 +50,7 @@ router.get('/tags', async (req, res) => {
 });
 
 // POST /api/campaigns/tags — admin
-router.post('/tags', authenticateToken, async (req, res) => {
+router.post('/tags', authenticateToken, requireRoles('staff', 'admin', 'superadmin'), async (req, res) => {
   try {
     const { name, color, sortOrder } = req.body;
     if (!name) return res.status(400).json({ message: 'Tên tag không được bỏ trống' });
@@ -65,7 +66,7 @@ router.post('/tags', authenticateToken, async (req, res) => {
 });
 
 // DELETE /api/campaigns/tags/:tagId — admin
-router.delete('/tags/:tagId', authenticateToken, async (req, res) => {
+router.delete('/tags/:tagId', authenticateToken, requireRoles('staff', 'admin', 'superadmin'), async (req, res) => {
   try {
     await prisma.marketingTag.delete({ where: { id: getRouteParam(req.params.tagId) } });
     res.json({ message: 'Đã xóa tag' });
@@ -79,12 +80,12 @@ router.delete('/tags/:tagId', authenticateToken, async (req, res) => {
 // ============================================================
 
 // GET /api/campaigns — all campaigns (admin)
-router.get('/', async (req, res) => {
+router.get('/', authenticateToken, requireRoles('staff', 'admin', 'superadmin'), async (req, res) => {
   try {
     const campaigns = await prisma.campaign.findMany({
       orderBy: { createdAt: 'desc' },
       include: {
-        bannerProducts: {
+        bannerCampaignProducts: {
           include: {
             product: { select: { id: true, name: true, image: true, images: true, brand: true } },
             variant: { select: { id: true, price: true, salePrice: true, image: true, attributes: true } },
@@ -94,7 +95,7 @@ router.get('/', async (req, res) => {
         },
       },
     });
-    res.json(campaigns);
+    res.json(campaigns.map(c => ({ ...c, bannerProducts: c.bannerCampaignProducts })));
   } catch (error) {
     console.error('Error fetching campaigns:', error);
     res.status(500).json({ message: 'Lỗi server' });
@@ -113,13 +114,13 @@ router.get('/active/:categorySlug', async (req, res) => {
         isActive: true,
         startDate: { lte: now },
         endDate: { gte: now },
-        bannerProducts: {
+        bannerCampaignProducts: {
           some: { categorySlug },
         },
       },
       orderBy: { startDate: 'desc' }, // Lấy campaign mới nhất nếu có nhiều
       include: {
-        bannerProducts: {
+        bannerCampaignProducts: {
           where: { categorySlug },
           include: {
             product: {
@@ -129,9 +130,9 @@ router.get('/active/:categorySlug', async (req, res) => {
                 image: true,
                 images: true,
                 brand: true,
+                categoryId: true,
                 variants: {
                   select: { id: true, price: true, salePrice: true, image: true, attributes: true, colorCode: true },
-                  take: 5,
                 },
               },
             },
@@ -151,10 +152,11 @@ router.get('/active/:categorySlug', async (req, res) => {
     }
 
     // Shape data for frontend consumption
-    const products = campaign.bannerProducts.map((bp) => {
-      const originalPrice = getProductPrice(bp.product, bp.variantId);
-      const discountAmount = Math.round(originalPrice * bp.discountPercent / 100);
-      const salePrice = originalPrice - discountAmount;
+    const activeCampaigns = await prisma.campaign.findMany({ where: { isActive: true, startDate: { lte: now }, endDate: { gte: now } } });
+    const products = campaign.bannerCampaignProducts.map((bp) => {
+      const pricing = getBannerDisplayPricing(bp.product, bp.variantId, activeCampaigns, now);
+      if (!pricing) return null;
+      const { originalPrice, discountAmount, salePrice } = pricing;
 
       // Pick best image: variant image > product.image > product.images[0]
       const imageUrl =
@@ -169,16 +171,17 @@ router.get('/active/:categorySlug', async (req, res) => {
         brand: bp.product.brand,
         image: imageUrl,
         bannerImage: bp.bannerImage,
-        variantId: bp.variantId,
+        variantId: pricing.variantId,
         categorySlug: bp.categorySlug,
         originalPrice,
-        discountPercent: bp.discountPercent,
+        discountPercent: originalPrice > 0 ? Math.floor(discountAmount * 100 / originalPrice) : 0,
+        configuredDiscountPercent: bp.discountPercent,
         discountAmount,
         salePrice,
         sortOrder: bp.sortOrder,
         tags: bp.tags.map((t) => ({ id: t.tag.id, name: t.tag.name, color: t.tag.color })),
       };
-    });
+    }).filter(Boolean);
 
     res.json({
       campaign: {
@@ -196,12 +199,12 @@ router.get('/active/:categorySlug', async (req, res) => {
 });
 
 // GET /api/campaigns/:id — single campaign (admin)
-router.get('/:id', async (req, res) => {
+router.get('/:id', authenticateToken, requireRoles('staff', 'admin', 'superadmin'), async (req, res) => {
   try {
     const campaign = await prisma.campaign.findUnique({
       where: { id: getRouteParam(req.params.id) },
       include: {
-        bannerProducts: {
+        bannerCampaignProducts: {
           include: {
             product: {
               select: {
@@ -217,14 +220,14 @@ router.get('/:id', async (req, res) => {
       },
     });
     if (!campaign) return res.status(404).json({ message: 'Không tìm thấy chiến dịch' });
-    res.json(campaign);
+    res.json({ ...campaign, bannerProducts: campaign.bannerCampaignProducts });
   } catch (error) {
     res.status(500).json({ message: 'Lỗi server' });
   }
 });
 
 // POST /api/campaigns — create campaign
-router.post('/', authenticateToken, async (req, res) => {
+router.post('/', authenticateToken, requireRoles('staff', 'admin', 'superadmin'), async (req, res) => {
   try {
     const { name, description, discountType, discountValue, startDate, endDate, isActive, appliesTo, targetIds, bannerUrl } = req.body;
 
@@ -250,8 +253,8 @@ router.post('/', authenticateToken, async (req, res) => {
   }
 });
 
-// PUT /api/campaigns/:id — update campaign
-router.put('/:id', authenticateToken, async (req, res) => {
+// PUT update campaign
+router.put('/:id', authenticateToken, requireRoles('staff', 'admin', 'superadmin'), async (req, res) => {
   try {
     const { name, description, discountType, discountValue, startDate, endDate, isActive, appliesTo, targetIds, bannerUrl } = req.body;
 
@@ -278,8 +281,8 @@ router.put('/:id', authenticateToken, async (req, res) => {
   }
 });
 
-// DELETE /api/campaigns/:id
-router.delete('/:id', authenticateToken, async (req, res) => {
+// DELETE campaign
+router.delete('/:id', authenticateToken, requireRoles('staff', 'admin', 'superadmin'), async (req, res) => {
   try {
     await prisma.campaign.delete({ where: { id: getRouteParam(req.params.id) } });
     res.json({ message: 'Xóa chiến dịch thành công' });
@@ -293,7 +296,7 @@ router.delete('/:id', authenticateToken, async (req, res) => {
 // ============================================================
 
 // GET /api/campaigns/:id/banner-products — list banner products for a campaign
-router.get('/:id/banner-products', authenticateToken, async (req, res) => {
+router.get('/:id/banner-products', authenticateToken, requireRoles('staff', 'admin', 'superadmin'), async (req, res) => {
   try {
     const { categorySlug } = req.query;
     const where: any = { campaignId: getRouteParam(req.params.id) };
@@ -321,7 +324,7 @@ router.get('/:id/banner-products', authenticateToken, async (req, res) => {
 });
 
 // POST /api/campaigns/:id/banner-products — add a product to campaign banner
-router.post('/:id/banner-products', authenticateToken, async (req, res) => {
+router.post('/:id/banner-products', authenticateToken, requireRoles('staff', 'admin', 'superadmin'), async (req, res) => {
   try {
     const campaignId = getRouteParam(req.params.id);
     const { productId, variantId, categorySlug, discountPercent, tagIds, sortOrder, bannerImage } = req.body;
@@ -331,7 +334,8 @@ router.post('/:id/banner-products', authenticateToken, async (req, res) => {
     if (!categorySlug) return res.status(400).json({ message: 'categorySlug không được bỏ trống' });
     if (!bannerImage) return res.status(400).json({ message: 'bannerImage không được bỏ trống' });
 
-    const discount = Number(discountPercent) || 0;
+    const discount = discountPercent === undefined ? 0 : Number(discountPercent);
+    if (!Number.isSafeInteger(discount)) return res.status(400).json({ message: 'discountPercent must be an integer' });
     if (discount < 0) return res.status(400).json({ message: 'discountPercent không được âm' });
     if (discount > 100) return res.status(400).json({ message: 'discountPercent không được vượt quá 100' });
 
@@ -346,7 +350,7 @@ router.post('/:id/banner-products', authenticateToken, async (req, res) => {
     // Kiểm tra variant (nếu có)
     if (variantId) {
       const variant = await prisma.productVariant.findUnique({ where: { id: variantId } });
-      if (!variant) return res.status(404).json({ message: 'Không tìm thấy biến thể sản phẩm' });
+      if (!variant || variant.productId !== productId) return res.status(404).json({ message: 'Không tìm thấy biến thể sản phẩm' });
     }
 
     // Giới hạn tối đa 4 sản phẩm mỗi category
@@ -400,29 +404,33 @@ router.post('/:id/banner-products', authenticateToken, async (req, res) => {
 });
 
 // PUT /api/campaigns/:id/banner-products/:bpId — update discount/tags/sortOrder
-router.put('/:id/banner-products/:bpId', authenticateToken, async (req, res) => {
+router.put('/:id/banner-products/:bpId', authenticateToken, requireRoles('staff', 'admin', 'superadmin'), async (req, res) => {
   try {
     const bpId = getRouteParam(req.params.bpId);
     const { discountPercent, tagIds, sortOrder, variantId, bannerImage } = req.body;
 
     const discount = discountPercent !== undefined ? Number(discountPercent) : undefined;
-    if (discount !== undefined && (discount < 0 || discount > 100)) {
+    if (discount !== undefined && (!Number.isSafeInteger(discount) || discount < 0 || discount > 100)) {
       return res.status(400).json({ message: 'discountPercent phải từ 0 đến 100' });
     }
 
-    // Update tags: delete all then recreate
-    if (tagIds !== undefined) {
-      await prisma.bannerCampaignProductTag.deleteMany({ where: { bannerCampaignProductId: bpId } });
+    const existing = await prisma.bannerCampaignProduct.findFirst({ where: { id: bpId, campaignId: getRouteParam(req.params.id) } });
+    if (!existing) return res.status(404).json({ message: 'Banner product not found in campaign' });
+    if (variantId) {
+      const variant = await prisma.productVariant.findFirst({ where: { id: variantId, productId: existing.productId }, select: { id: true } });
+      if (!variant) return res.status(400).json({ message: 'Variant does not belong to product' });
     }
+    if (tagIds !== undefined && (!Array.isArray(tagIds) || tagIds.some((id: unknown) => typeof id !== 'string'))) return res.status(400).json({ message: 'Invalid tag IDs' });
 
     const updated = await prisma.bannerCampaignProduct.update({
-      where: { id: bpId },
+      where: { id: bpId, campaignId: getRouteParam(req.params.id) },
       data: {
         discountPercent: discount,
         bannerImage: bannerImage !== undefined ? bannerImage : undefined,
         sortOrder: sortOrder !== undefined ? Number(sortOrder) : undefined,
         variantId: variantId !== undefined ? (variantId || null) : undefined,
         tags: tagIds !== undefined ? {
+          deleteMany: {},
           create: tagIds.map((tagId: string) => ({ tagId })),
         } : undefined,
         updatedAt: new Date(),
@@ -442,9 +450,10 @@ router.put('/:id/banner-products/:bpId', authenticateToken, async (req, res) => 
 });
 
 // DELETE /api/campaigns/:id/banner-products/:bpId
-router.delete('/:id/banner-products/:bpId', authenticateToken, async (req, res) => {
+router.delete('/:id/banner-products/:bpId', authenticateToken, requireRoles('staff', 'admin', 'superadmin'), async (req, res) => {
   try {
-    await prisma.bannerCampaignProduct.delete({ where: { id: getRouteParam(req.params.bpId) } });
+    const deleted = await prisma.bannerCampaignProduct.deleteMany({ where: { id: getRouteParam(req.params.bpId), campaignId: getRouteParam(req.params.id) } });
+    if (!deleted.count) return res.status(404).json({ message: 'Banner product not found in campaign' });
     res.json({ message: 'Đã xóa sản phẩm khỏi chiến dịch' });
   } catch (error) {
     res.status(500).json({ message: 'Lỗi server' });

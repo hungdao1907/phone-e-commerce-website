@@ -5,6 +5,8 @@ import fs from 'fs';
 import { v2 as cloudinary } from 'cloudinary';
 import streamifier from 'streamifier';
 import '../env';
+import { authenticateToken } from '../middleware/auth.middleware';
+import { requireRoles } from '../middleware/authorization.middleware';
 
 const router = express.Router();
 
@@ -60,7 +62,7 @@ const upload = multer({
 });
 
 // POST /api/upload
-router.post('/', (req, res) => {
+router.post('/', authenticateToken, requireRoles('customer', 'staff', 'admin', 'superadmin'), (req, res) => {
   upload.single('image')(req, res, async (err) => {
     if (err instanceof multer.MulterError) {
       if (err.code === 'LIMIT_FILE_SIZE') {

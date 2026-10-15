@@ -57,26 +57,14 @@ export function FilteredProductCard({ product, categorySlug }: FilteredProductCa
   const activeImage = resolveImage(activeColorObj?.image || product.image);
 
   // Use minimum variant price as base price
-  const prices = product.variants?.map((v: any) => v.salePrice || v.price).filter((p: number) => p > 0) || [];
-  const basePrice = prices.length > 0 ? Math.min(...prices) : (product.price || 0);
-
-  let finalPrice = basePrice;
-  let originalPrice: string | undefined = undefined;
-  let discountBadge = '';
-
-  // Apply active campaign discount
-  if (product.activeCampaign) {
-    originalPrice = basePrice.toLocaleString('vi-VN') + '₫';
-    if (product.activeCampaign.discountType === 'percentage') {
-      discountBadge = `-${product.activeCampaign.discountValue}%`;
-      finalPrice = Math.max(0, basePrice - (basePrice * product.activeCampaign.discountValue / 100));
-    } else {
-      finalPrice = Math.max(0, basePrice - product.activeCampaign.discountValue);
-      if (basePrice > 0) {
-        discountBadge = `-${Math.round((product.activeCampaign.discountValue / basePrice) * 100)}%`;
-      }
-    }
-  }
+  const regularPrices = product.variants?.map((v: any) => v.price).filter((p: number) => p > 0) || [];
+  const basePrice = regularPrices.length > 0 ? Math.min(...regularPrices) : (product.price || 0);
+  const effectivePrices = product.variants?.map((v: any) => v.effectivePrice ?? (v.salePrice != null && v.salePrice < v.price ? v.salePrice : v.price)).filter((p: number) => p > 0) || [];
+  const finalPrice = effectivePrices.length > 0 ? Math.min(...effectivePrices) : basePrice;
+  const originalPrice = finalPrice < basePrice ? basePrice.toLocaleString('vi-VN') + '₫' : undefined;
+  const discountBadge = basePrice > 0 && finalPrice < basePrice
+    ? `-${Math.round(((basePrice - finalPrice) / basePrice) * 100)}%`
+    : '';
 
   // Fallback rating data
   const ratingAverage = product.ratingAverage || 0;
@@ -112,14 +100,7 @@ export function FilteredProductCard({ product, categorySlug }: FilteredProductCa
       
       const finalStorageLabel = variant.attributes?.['Dung lượng'] || 'Tiêu chuẩn';
       // Recalculate variant specific price
-      let vPrice = variant.salePrice || variant.price;
-      if (product.activeCampaign) {
-        if (product.activeCampaign.discountType === 'percentage') {
-          vPrice = Math.max(0, vPrice - (vPrice * product.activeCampaign.discountValue / 100));
-        } else {
-          vPrice = Math.max(0, vPrice - product.activeCampaign.discountValue);
-        }
-      }
+      const vPrice = variant.effectivePrice ?? (variant.salePrice != null && variant.salePrice < variant.price ? variant.salePrice : variant.price);
       
       const performAdd = () => {
         addItem({

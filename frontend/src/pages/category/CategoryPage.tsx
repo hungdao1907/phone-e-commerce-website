@@ -40,15 +40,14 @@ const SORT_OPTIONS = [
 
 export function CategoryPage() {
   const { categorySlug } = useParams<{ categorySlug: string }>();
+  const config = categorySlug ? CATEGORY_CONFIGS[categorySlug] : null;
+  return config ? <CategoryPageContent key={config.slug} config={config} /> : <Navigate to="/" replace />;
+}
+
+function CategoryPageContent({ config }: { config: (typeof CATEGORY_CONFIGS)[string] }) {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const [isSortOpen, setIsSortOpen] = useState(false);
-
-  // Validate slug
-  const config = categorySlug ? CATEGORY_CONFIGS[categorySlug] : null;
-  if (!config) {
-    return <Navigate to="/" replace />;
-  }
 
   const sortOption = searchParams.get('sort') || '';
 
@@ -346,7 +345,7 @@ export function CategoryPage() {
         <div className="mb-10">
           <CategoryCards
             items={MAIN_CATEGORIES}
-            activeId={categorySlug || null}
+            activeId={config.slug}
             onSelect={handleCategoryCardClick}
           />
         </div>

@@ -1,19 +1,24 @@
 import express from 'express';
-import { PrismaClient } from '@prisma/client';
+import prisma from '../config/prisma';
 import { authenticateToken } from '../middleware/auth.middleware';
+import { requireRoles } from '../middleware/authorization.middleware';
+import { invoiceScopeForPrincipal } from '../middleware/authorization.policy';
 import { getRouteParam } from '../utils/route-param';
 
 const router = express.Router();
-const prisma = new PrismaClient();
 
 // GET all invoices
-router.get('/', authenticateToken, async (req, res) => {
+router.get('/', authenticateToken, requireRoles('customer', 'staff', 'admin', 'superadmin'), async (req, res) => {
   try {
+    const scope = invoiceScopeForPrincipal((req as any).user);
+    if (!scope) return res.status(403).json({ message: 'Bạn không có quyền xem hóa đơn.' });
+
     const invoices = await prisma.invoice.findMany({
+      where: scope,
       include: {
         order: {
           include: {
-            customer: { select: { fullName: true, email: true, phone: true } },
+            customer: { select: { id: true, fullName: true, email: true, phone: true, address: true } },
             items: true
           }
         }
@@ -28,14 +33,17 @@ router.get('/', authenticateToken, async (req, res) => {
 });
 
 // GET single invoice
-router.get('/:id', authenticateToken, async (req, res) => {
+router.get('/:id', authenticateToken, requireRoles('customer', 'staff', 'admin', 'superadmin'), async (req, res) => {
   try {
-    const invoice = await prisma.invoice.findUnique({
-      where: { id: getRouteParam(req.params.id) },
+    const scope = invoiceScopeForPrincipal((req as any).user);
+    if (!scope) return res.status(403).json({ message: 'Bạn không có quyền xem hóa đơn.' });
+
+    const invoice = await prisma.invoice.findFirst({
+      where: { id: getRouteParam(req.params.id), ...scope },
       include: {
         order: {
           include: {
-            customer: true,
+            customer: { select: { id: true, fullName: true, email: true, phone: true, address: true } },
             items: true
           }
         }

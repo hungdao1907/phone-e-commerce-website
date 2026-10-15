@@ -530,12 +530,9 @@ export function EcosystemExperienceSection() {
       ref={containerRef}
       id={HOME_SECTION_IDS.ecosystem}
       data-home-section={HOME_SECTION_IDS.ecosystem}
-      className="ecosystem-experience-section relative overflow-hidden py-10 sm:py-12 lg:py-14 xl:py-16 select-none border-t border-black/[0.04]"
+      className="ecosystem-experience-section relative overflow-hidden bg-white py-10 sm:py-12 lg:py-14 xl:py-16 select-none"
       aria-labelledby="ecosystem-section-title"
     >
-      {/* Background Ambience Layer */}
-      <div className="ecosystem-atmosphere" aria-hidden="true" />
-
       {/* ─── POSITION:FIXED FLYING CLONE PORTAL ─── */}
       {renderFlyingClone()}
 

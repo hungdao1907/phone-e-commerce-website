@@ -1,17 +1,17 @@
 import express from 'express';
-import { PrismaClient } from '@prisma/client';
+import prisma from '../config/prisma';
 import { authenticateToken, AuthRequest } from '../middleware/auth.middleware';
+import { requireRoles } from '../middleware/authorization.middleware';
 import { getRouteParam } from '../utils/route-param';
 
 const router = express.Router();
-const prisma = new PrismaClient();
 
 // ==========================================
 // PUBLIC ENDPOINTS (CUSTOMER)
 // ==========================================
 
 // GET my complaints
-router.get('/my', authenticateToken, async (req: AuthRequest, res) => {
+router.get('/my', authenticateToken, requireRoles('customer'), async (req: AuthRequest, res) => {
   try {
     const customerId = req.user?.id;
     if (!customerId) return res.status(401).json({ message: 'Unauthorized' });
@@ -46,7 +46,7 @@ router.get('/my', authenticateToken, async (req: AuthRequest, res) => {
 });
 
 // GET single complaint detail for customer
-router.get('/my/:id', authenticateToken, async (req: AuthRequest, res) => {
+router.get('/my/:id', authenticateToken, requireRoles('customer'), async (req: AuthRequest, res) => {
   try {
     const customerId = req.user?.id;
     if (!customerId) return res.status(401).json({ message: 'Unauthorized' });
@@ -71,7 +71,7 @@ router.get('/my/:id', authenticateToken, async (req: AuthRequest, res) => {
 });
 
 // POST create complaint
-router.post('/', authenticateToken, async (req: AuthRequest, res) => {
+router.post('/', authenticateToken, requireRoles('customer'), async (req: AuthRequest, res) => {
   try {
     const customerId = req.user?.id;
     if (!customerId) return res.status(401).json({ message: 'Unauthorized' });
@@ -157,10 +157,10 @@ router.post('/', authenticateToken, async (req: AuthRequest, res) => {
 // ADMIN ENDPOINTS
 // ==========================================
 
-// GET all complaints for admin
-router.get('/admin', authenticateToken, async (req: AuthRequest, res) => {
+// GET all complaints for admin/staff
+router.get('/admin', authenticateToken, requireRoles('staff', 'admin', 'superadmin'), async (req: AuthRequest, res) => {
   try {
-    if (!['admin', 'superadmin'].includes(req.user?.role as string)) {
+    if (!['staff', 'admin', 'superadmin'].includes(req.user?.role as string)) {
       return res.status(403).json({ message: 'Không có quyền truy cập' });
     }
 
@@ -199,10 +199,10 @@ router.get('/admin', authenticateToken, async (req: AuthRequest, res) => {
   }
 });
 
-// GET single complaint for admin
-router.get('/admin/:id', authenticateToken, async (req: AuthRequest, res) => {
+// GET single complaint for admin/staff
+router.get('/admin/:id', authenticateToken, requireRoles('staff', 'admin', 'superadmin'), async (req: AuthRequest, res) => {
   try {
-    if (!['admin', 'superadmin'].includes(req.user?.role as string)) {
+    if (!['staff', 'admin', 'superadmin'].includes(req.user?.role as string)) {
       return res.status(403).json({ message: 'Không có quyền truy cập' });
     }
 
@@ -225,9 +225,9 @@ router.get('/admin/:id', authenticateToken, async (req: AuthRequest, res) => {
 });
 
 // PATCH approve/reject/resolve status
-router.patch('/:id/status', authenticateToken, async (req: AuthRequest, res) => {
+router.patch('/:id/status', authenticateToken, requireRoles('staff', 'admin', 'superadmin'), async (req: AuthRequest, res) => {
   try {
-    if (!['admin', 'superadmin'].includes(req.user?.role as string)) {
+    if (!['staff', 'admin', 'superadmin'].includes(req.user?.role as string)) {
       return res.status(403).json({ message: 'Không có quyền thực hiện hành động này' });
     }
 
@@ -248,10 +248,10 @@ router.patch('/:id/status', authenticateToken, async (req: AuthRequest, res) => 
   }
 });
 
-// POST Admin reply
-router.post('/:id/reply', authenticateToken, async (req: AuthRequest, res) => {
+// POST Admin/Staff reply
+router.post('/:id/reply', authenticateToken, requireRoles('staff', 'admin', 'superadmin'), async (req: AuthRequest, res) => {
   try {
-    if (!['admin', 'superadmin'].includes(req.user?.role as string)) {
+    if (!['staff', 'admin', 'superadmin'].includes(req.user?.role as string)) {
       return res.status(403).json({ message: 'Không có quyền thực hiện hành động này' });
     }
 
@@ -275,7 +275,7 @@ router.post('/:id/reply', authenticateToken, async (req: AuthRequest, res) => {
 });
 
 // For compatibility with old GET /api/disputes route used in older views
-router.get('/', authenticateToken, async (req, res) => {
+router.get('/', authenticateToken, requireRoles('staff', 'admin', 'superadmin'), async (req, res) => {
   try {
     const disputes = await prisma.dispute.findMany({
       include: {
@@ -291,7 +291,7 @@ router.get('/', authenticateToken, async (req, res) => {
 });
 
 // For compatibility with old PUT /api/disputes/:id route
-router.put('/:id', authenticateToken, async (req, res) => {
+router.put('/:id', authenticateToken, requireRoles('staff', 'admin', 'superadmin'), async (req, res) => {
   try {
     const { status, resolution } = req.body;
     const dispute = await prisma.dispute.update({

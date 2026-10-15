@@ -1,10 +1,10 @@
 import express from 'express';
-import { PrismaClient } from '@prisma/client';
+import prisma from '../config/prisma';
 import { authenticateToken, AuthRequest } from '../middleware/auth.middleware';
+import { requireRoles } from '../middleware/authorization.middleware';
 import { getRouteParam } from '../utils/route-param';
 
 const router = express.Router();
-const prisma = new PrismaClient();
 
 // ==========================================
 // PUBLIC ENDPOINTS
@@ -55,7 +55,7 @@ router.get('/product/:productId', async (req, res) => {
     const totalReviews = allRatings.length;
     const ratingBreakdown = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
     let ratingSum = 0;
-    
+
     // Aggregating experience ratings
     const expCounts: Record<string, number> = {};
     const expSums: Record<string, number> = {};
@@ -114,7 +114,7 @@ router.get('/product/:productId', async (req, res) => {
 });
 
 // GET purchase eligibility for current user
-router.get('/eligibility/:productId', authenticateToken, async (req: AuthRequest, res) => {
+router.get('/eligibility/:productId', authenticateToken, requireRoles('customer'), async (req: AuthRequest, res) => {
   try {
     const customerId = req.user?.id;
     if (!customerId) return res.status(401).json({ message: 'Unauthorized' });
@@ -131,7 +131,10 @@ router.get('/eligibility/:productId', authenticateToken, async (req: AuthRequest
           }
         }
       },
-      include: {
+      select: {
+        id: true,
+        orderCode: true,
+        createdAt: true,
         items: {
           where: { variant: { productId } },
           include: { variant: true }
@@ -182,9 +185,9 @@ router.get('/eligibility/:productId', authenticateToken, async (req: AuthRequest
 // ==========================================
 
 // GET all reviews for Admin Dashboard
-router.get('/admin', authenticateToken, async (req: AuthRequest, res) => {
+router.get('/admin', authenticateToken, requireRoles('staff', 'admin', 'superadmin'), async (req: AuthRequest, res) => {
   try {
-    if (!['admin', 'superadmin'].includes(req.user?.role as string)) {
+    if (!['staff', 'admin', 'superadmin'].includes(req.user?.role as string)) {
       return res.status(403).json({ message: 'Không có quyền truy cập' });
     }
 
@@ -230,9 +233,9 @@ router.get('/admin', authenticateToken, async (req: AuthRequest, res) => {
 });
 
 // PATCH approve/reject review
-router.patch('/:id/status', authenticateToken, async (req: AuthRequest, res) => {
+router.patch('/:id/status', authenticateToken, requireRoles('staff', 'admin', 'superadmin'), async (req: AuthRequest, res) => {
   try {
-    if (!['admin', 'superadmin'].includes(req.user?.role as string)) {
+    if (!['staff', 'admin', 'superadmin'].includes(req.user?.role as string)) {
       return res.status(403).json({ message: 'Không có quyền thực hiện hành động này' });
     }
 
@@ -256,9 +259,9 @@ router.patch('/:id/status', authenticateToken, async (req: AuthRequest, res) => 
 });
 
 // POST Admin reply
-router.post('/:id/reply', authenticateToken, async (req: AuthRequest, res) => {
+router.post('/:id/reply', authenticateToken, requireRoles('staff', 'admin', 'superadmin'), async (req: AuthRequest, res) => {
   try {
-    if (!['admin', 'superadmin'].includes(req.user?.role as string)) {
+    if (!['staff', 'admin', 'superadmin'].includes(req.user?.role as string)) {
       return res.status(403).json({ message: 'Không có quyền thực hiện hành động này' });
     }
 
@@ -269,7 +272,7 @@ router.post('/:id/reply', authenticateToken, async (req: AuthRequest, res) => {
 
     const review = await prisma.review.update({
       where: { id },
-      data: { 
+      data: {
         adminReply: reply,
         adminReplyAt: new Date(),
         adminReplyBy: req.user.username || req.user.id
@@ -288,7 +291,7 @@ router.post('/:id/reply', authenticateToken, async (req: AuthRequest, res) => {
 // ==========================================
 
 // POST create review
-router.post('/', authenticateToken, async (req: AuthRequest, res) => {
+router.post('/', authenticateToken, requireRoles('customer'), async (req: AuthRequest, res) => {
   try {
     const customerId = req.user?.id;
     if (!customerId) return res.status(401).json({ message: 'Unauthorized' });
@@ -309,7 +312,7 @@ router.post('/', authenticateToken, async (req: AuthRequest, res) => {
     // Verify the purchase. The new rule states only verified buyers can review.
     // If orderId and orderItemId are provided, verify the purchase
     if (orderId && orderItemId) {
-      const order = await prisma.order.findUnique({ 
+      const order = await prisma.order.findUnique({
         where: { id: orderId },
         include: { items: true }
       });
@@ -327,7 +330,7 @@ router.post('/', authenticateToken, async (req: AuthRequest, res) => {
       if (!orderItem) {
         return res.status(400).json({ message: 'Sản phẩm không thuộc đơn hàng này' });
       }
-      
+
       if (variantId && orderItem.variantId !== variantId) {
         return res.status(400).json({ message: 'Thông tin phiên bản không khớp với đơn hàng' });
       }
@@ -398,7 +401,7 @@ router.post('/', authenticateToken, async (req: AuthRequest, res) => {
 });
 
 // PATCH edit review
-router.patch('/:id', authenticateToken, async (req: AuthRequest, res) => {
+router.patch('/:id', authenticateToken, requireRoles('customer'), async (req: AuthRequest, res) => {
   try {
     const customerId = req.user?.id;
     const id = getRouteParam(req.params.id);
@@ -433,11 +436,11 @@ router.patch('/:id', authenticateToken, async (req: AuthRequest, res) => {
 });
 
 // DELETE review
-router.delete('/:id', authenticateToken, async (req: AuthRequest, res) => {
+router.delete('/:id', authenticateToken, requireRoles('customer', 'admin', 'superadmin'), async (req: AuthRequest, res) => {
   try {
     const id = getRouteParam(req.params.id);
     const existing = await prisma.review.findUnique({ where: { id } });
-    
+
     if (!existing) return res.status(404).json({ message: 'Không tìm thấy đánh giá' });
 
     // Allow Admin OR Owner to delete

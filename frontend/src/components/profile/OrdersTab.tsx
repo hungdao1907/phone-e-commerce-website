@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { ShoppingBag, Package } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 interface OrdersTabProps {
   orders: any[];
@@ -43,22 +44,22 @@ export function OrdersTab({ orders, onReview, onComplete, onOpenComplaint }: Ord
     <div className="bg-white p-6 sm:p-8 rounded-2xl border border-neutral-200/60 shadow-sm animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="mb-6 space-y-4">
         <h2 className="text-xl font-bold text-neutral-900">Đơn hàng của tôi</h2>
-        
+
         {/* Status Filters */}
         <div className="flex overflow-x-auto no-scrollbar gap-2 pb-2">
           {STATUS_FILTERS.map((filter) => {
             const isActive = activeFilter === filter.id;
-            const count = filter.id === 'all' 
-              ? orders.length 
+            const count = filter.id === 'all'
+              ? orders.length
               : orders.filter(o => o.status === filter.id).length;
-              
+
             return (
               <button
                 key={filter.id}
                 onClick={() => setActiveFilter(filter.id)}
                 className={`flex items-center gap-1.5 px-4 py-2 rounded-full whitespace-nowrap text-sm font-semibold transition-all duration-200 border ${
-                  isActive 
-                    ? 'bg-neutral-900 border-neutral-900 text-white' 
+                  isActive
+                    ? 'bg-neutral-900 border-neutral-900 text-white'
                     : 'bg-white border-neutral-200 text-neutral-600 hover:bg-neutral-50'
                 }`}
               >
@@ -84,7 +85,7 @@ export function OrdersTab({ orders, onReview, onComplete, onOpenComplaint }: Ord
         ) : (
           filteredOrders.map((order) => {
             const statusObj = getStatusDisplay(order.status);
-            
+
             return (
               <div key={order.id} className="border border-neutral-200 rounded-xl p-5 hover:border-neutral-300 transition-colors bg-white">
                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-4 pb-4 border-b border-neutral-100">
@@ -140,19 +141,19 @@ export function OrdersTab({ orders, onReview, onComplete, onOpenComplaint }: Ord
                             {item.unitPrice.toLocaleString('vi-VN')}đ
                           </span>
                         </div>
-                        
+
                         {(order.status === 'completed' || order.status === 'delivered') && (
                           <div className="mt-2 flex items-center gap-2">
                             {validProductId && (
-                              <button 
-                                onClick={() => onReview(order.id, validProductId)} 
+                              <button
+                                onClick={() => onReview(order.id, validProductId)}
                                 className="text-xs font-bold text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-full transition-colors"
                               >
                                 Viết đánh giá
                               </button>
                             )}
-                            <button 
-                              onClick={() => onOpenComplaint(item, order)} 
+                            <button
+                              onClick={() => onOpenComplaint(item, order)}
                               className="text-xs font-bold text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-full transition-colors"
                             >
                               Khiếu nại
@@ -168,17 +169,17 @@ export function OrdersTab({ orders, onReview, onComplete, onOpenComplaint }: Ord
                 {/* Actions */}
                 <div className="mt-5 pt-4 flex flex-wrap items-center justify-between border-t border-neutral-100">
                   <div>
-                    <a 
-                      href={`/profile/orders/${order.id}`}
+                    <Link
+                      to={`/profile/orders/${encodeURIComponent(order.id)}`}
                       className="text-sm font-bold text-blue-600 hover:text-blue-800 transition-colors"
                     >
                       Xem chi tiết đơn hàng &rarr;
-                    </a>
+                    </Link>
                   </div>
                   <div className="flex flex-wrap gap-3">
                     {order.status === 'delivered' && (
-                      <button 
-                        onClick={() => onComplete(order.id)} 
+                      <button
+                        onClick={() => onComplete(order.id)}
                         className="px-5 py-2 text-sm font-bold bg-black text-white hover:bg-neutral-800 rounded-full transition-colors shadow-sm active:scale-95"
                       >
                         Đã nhận được hàng

@@ -23,6 +23,7 @@ import { CheckoutPage } from './pages/checkout/CheckoutPage';
 import { PaymentPage } from './pages/checkout/PaymentPage';
 import { OrderSuccessPage } from './pages/checkout/OrderSuccessPage';
 import { OrderDetailPage } from './pages/order/OrderDetailPage';
+import { OrderTrackingPage } from './pages/order/OrderTrackingPage';
 import { CategoryPage } from './pages/category/CategoryPage';
 
 const WatchPage = lazy(() =>
@@ -167,7 +168,7 @@ export default function App() {
                 <Route path="/tablet/ipad" element={<TabletPage brand="ipad" />} />
                 <Route path="/tablet/samsung" element={<TabletPage brand="samsung" />} />
                 <Route path="/tablet/xiaomi" element={<TabletPage brand="xiaomi" />} />
-                
+
                 {/* Laptop Routes */}
                 <Route path="/laptop/macbook" element={<LaptopPage brand="macbook" />} />
                 <Route path="/laptop/asus" element={<LaptopPage brand="asus" />} />
@@ -177,6 +178,7 @@ export default function App() {
                 <Route path="/checkout" element={<CheckoutPage />} />
                 <Route path="/checkout/payment" element={<PaymentPage />} />
                 <Route path="/order-success" element={<OrderSuccessPage />} />
+                <Route path="/tra-cuu-don-hang" element={<OrderTrackingPage />} />
 
                 <Route path="/:categorySlug" element={<CategoryPage />} />
                 <Route path="/iphone" element={<Navigate to="/phone/iphone" replace />} />
@@ -196,7 +198,7 @@ export default function App() {
                 <Route path="/laptop/apple" element={<Navigate to="/laptop/macbook" replace />} />
 
                 {/* Customer Profile Route (Protected inside MainLayout) */}
-                <Route element={<ProtectedRoute allowedRoles={['customer']} />}>
+                <Route element={<ProtectedRoute allowedRoles={['customer']} unauthorizedTo="/login" />}>
                   <Route path="/profile" element={<CustomerProfile />} />
                   <Route path="/profile/orders/:orderId" element={<OrderDetailPage />} />
                 </Route>
@@ -204,11 +206,17 @@ export default function App() {
 
               {/* Standalone Login Route */}
               <Route path="/login" element={<LoginPage />} />
-              
-              {/* Dashboard Route Protected by Authentication (Standalone) */}
-              <Route element={<ProtectedRoute allowedRoles={['superadmin', 'admin', 'manager', 'user']} />}>
+
+              {/* Dashboard Route Protected by Authentication */}
+              <Route element={<ProtectedRoute allowedRoles={['superadmin', 'admin', 'manager', 'user', 'staff']} />}>
                 <Route path="/dashboard" element={<DashboardLayout />} />
                 <Route path="/dashboard/:view" element={<DashboardLayout />} />
+                <Route path="/staff" element={<Navigate to="/dashboard" replace />} />
+                <Route path="/staff/quotations" element={<Navigate to="/dashboard/quotations" replace />} />
+                <Route path="/staff/orders" element={<Navigate to="/dashboard/orders" replace />} />
+                <Route path="/staff/notifications" element={<Navigate to="/dashboard/notifications" replace />} />
+                <Route path="/staff/profile" element={<Navigate to="/dashboard/profile" replace />} />
+                <Route path="/staff/*" element={<Navigate to="/dashboard" replace />} />
               </Route>
             </Routes>
           </Suspense>

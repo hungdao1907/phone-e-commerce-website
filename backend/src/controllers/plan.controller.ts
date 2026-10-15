@@ -31,6 +31,26 @@ export const getPlans = async (req: Request, res: Response) => {
   }
 };
 
+export const getAssignedPlans = async (req: Request, res: Response) => {
+  try {
+    const user = (req as any).user;
+    if (!user || user.role !== 'staff') {
+      return res.status(403).json({ error: 'Unauthorized' });
+    }
+    const identifiers = [user.username, user.id].filter(Boolean);
+    const plans = await prisma.plan.findMany({
+      where: {
+        participants: { hasSome: identifiers }
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+    res.json(plans);
+  } catch (error) {
+    console.error('Error fetching assigned plans:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
 export const createPlan = async (req: Request, res: Response) => {
   try {
     const { title, date, time, location, participants } = req.body;

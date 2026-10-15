@@ -5,12 +5,28 @@ import path from 'path';
 import fs from 'fs';
 import streamifier from 'streamifier';
 import { URL } from 'url';
+import { lookup } from 'node:dns/promises';
+import { isIP } from 'node:net';
+import { Agent as HttpAgent } from 'node:http';
+import { Agent as HttpsAgent } from 'node:https';
+
+export function isPublicImageAddress(address: string): boolean {
+  if (isIP(address) === 4) {
+    const [a, b] = address.split('.').map(Number);
+    return !(a === 0 || a === 10 || a === 127 || a >= 224 || a === 169 && b === 254
+      || a === 172 && b >= 16 && b <= 31 || a === 192 && (b === 168 || b === 0)
+      || a === 100 && b >= 64 && b <= 127 || a === 198 && (b === 18 || b === 19));
+  }
+  // Fail closed for IPv4-mapped, local, link-local, multicast and reserved IPv6.
+  return isIP(address) === 6 && /^[23][0-9a-f]{3}:/i.test(address) && !/^2001:db8:/i.test(address);
+}
 
 // Helper to prevent SSRF
 function isSafeUrl(urlStr: string): boolean {
   try {
     const url = new URL(urlStr);
     if (url.protocol !== 'http:' && url.protocol !== 'https:') return false;
+    if (url.username || url.password) return false;
     // Basic IP check for common private networks
     const hostname = url.hostname;
     if (
@@ -24,6 +40,8 @@ function isSafeUrl(urlStr: string): boolean {
     ) {
       return false;
     }
+    const literal = hostname.replace(/^\[|\]$/g, '');
+    if (isIP(literal)) return isPublicImageAddress(literal);
     return true;
   } catch {
     return false;
@@ -65,7 +83,7 @@ if (!useCloudinary && !fs.existsSync(localUploadsDir)) {
  */
 export async function downloadAndProcessImage(imageUrl: string): Promise<string> {
   if (!imageUrl || typeof imageUrl !== 'string') throw new Error('Invalid URL');
-  
+
   const trimmedUrl = imageUrl.trim();
   if (!isSafeUrl(trimmedUrl)) {
     throw new Error('Unsafe URL rejected');
@@ -82,18 +100,29 @@ export async function downloadAndProcessImage(imageUrl: string): Promise<string>
   let lastError: any;
   for (const candidate of candidates) {
     try {
+      const target = new URL(candidate);
+      const hostname = target.hostname.replace(/^\[|\]$/g, '');
+      const addresses = isIP(hostname) ? [{ address: hostname, family: isIP(hostname) }] : await lookup(hostname, { all: true });
+      if (!addresses.length || addresses.some(entry => !isPublicImageAddress(entry.address))) throw new Error('Non-public image host rejected');
+      // Pin validated DNS results to avoid a second lookup/rebinding. Do not follow redirects to an unchecked host.
+      const pinnedLookup: any = (_host: string, options: any, callback: any) => options?.all
+        ? callback(null, addresses) : callback(null, addresses[0].address, addresses[0].family);
       if (candidate !== trimmedUrl) console.log(`[IMAGE IMPORT] Retrying with normalized URL: ${candidate}`);
       response = await axios.get(candidate, {
         responseType: 'arraybuffer',
         timeout: 15000,
+        maxRedirects: 0,
+        proxy: false,
+        httpAgent: new HttpAgent({ lookup: pinnedLookup }),
+        httpsAgent: new HttpsAgent({ lookup: pinnedLookup }),
         maxContentLength: 10 * 1024 * 1024, // 10MB limit
         headers: { 'User-Agent': BROWSER_UA, Accept: 'image/*,*/*;q=0.8' },
       });
       break;
     } catch (error: any) {
       const status = error.response?.status;
-      lastError = new Error(status ? `HTTP ${status} (${candidate})` : `${error.message} (${candidate})`);
-      console.error(`[IMAGE IMPORT ERROR]\nURL: ${candidate}\nReason: ${lastError.message}`);
+      lastError = new Error(status ? `Image download HTTP ${status}` : 'Image host unavailable or rejected');
+      console.error(`[IMAGE IMPORT ERROR] ${lastError.message}`);
     }
   }
   if (!response) throw lastError || new Error('Download failed');
@@ -108,7 +137,7 @@ export async function downloadAndProcessImage(imageUrl: string): Promise<string>
   const rawContentType = response.headers['content-type'];
   const contentType = Array.isArray(rawContentType) ? rawContentType[0] : String(rawContentType || '');
   console.log(`[IMAGE IMPORT] Content-Type: ${contentType}`);
-  
+
   if (!contentType.startsWith('image/')) {
     const reason = `Invalid content type: ${contentType}`;
     console.error(`[IMAGE IMPORT ERROR]\nURL: ${trimmedUrl}\nReason: ${reason}`);

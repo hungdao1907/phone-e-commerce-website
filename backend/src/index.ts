@@ -27,6 +27,9 @@ import dashboardRoutes from './routes/dashboard.routes';
 import notificationRoutes from './routes/notification.routes';
 import wishlistRoutes from './routes/wishlist.routes';
 import bankRoutes from './routes/bank.routes';
+import { denyPublicQuotationFiles } from './middleware/public-uploads.middleware';
+import { isQuotationApiEnabled, mountQuotationRouters } from './routes/quotation-api.mount';
+import { createProductionQuotationRouters } from './services/quotation-api.runtime';
 
 const app = express();
 const port = process.env.PORT || 3001;
@@ -53,10 +56,10 @@ if (!fs.existsSync(bannersUploadsDir)) {
   fs.mkdirSync(bannersUploadsDir, { recursive: true });
 }
 
-app.use('/uploads', express.static(uploadsDir));
+app.use('/uploads', denyPublicQuotationFiles, express.static(uploadsDir));
 const cwdUploads = path.resolve(process.cwd(), 'uploads');
 if (cwdUploads !== uploadsDir && fs.existsSync(cwdUploads)) {
-  app.use('/uploads', express.static(cwdUploads));
+  app.use('/uploads', denyPublicQuotationFiles, express.static(cwdUploads));
 }
 
 // Routes
@@ -85,6 +88,11 @@ app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/wishlist', wishlistRoutes);
 app.use('/api/bank', bankRoutes);
+
+// Database-dependent Quotation endpoints remain opt-in until migrations are applied.
+if (isQuotationApiEnabled()) {
+  mountQuotationRouters(app, createProductionQuotationRouters());
+}
 
 app.get('/', (req, res) => {
   res.status(200).json({ message: 'Welcome to Phone E-Commerce API', status: 'live' });

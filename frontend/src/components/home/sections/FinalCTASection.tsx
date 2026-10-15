@@ -1,6 +1,6 @@
 import { motion, AnimatePresence, useReducedMotion, type Variants } from 'motion/react';
 import { ArrowRight, ArrowLeft, Check, ChevronRight, Loader2, Info, Sparkles } from 'lucide-react';
-import { useState, useMemo, useRef, useCallback } from 'react';
+import { useState, useMemo, useRef, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   FinalCTAVisual,
@@ -397,8 +397,6 @@ export function FinalCTASection() {
   const [selectedPriority, setSelectedPriority] = useState<PriorityType | null>('performance');
   const [showResult, setShowResult] = useState(false);
   const [sweepTrigger, setSweepTrigger] = useState(0);
-  const [mouseOffset, setMouseOffset] = useState({ x: 0, y: 0 });
-
   // Recommendation State (up to 10 product labels)
   const [recommendedProducts, setRecommendedProducts] = useState<ScoredProduct[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -411,22 +409,6 @@ export function FinalCTASection() {
   const selectedPriorityLabel = useMemo(() => {
     return PRIORITY_OPTIONS.find((opt) => opt.id === selectedPriority)?.label || '';
   }, [selectedPriority]);
-
-  // Subtle pointer parallax handler (desktop only)
-  const handleMouseMove = useCallback(
-    (e: React.MouseEvent<HTMLDivElement>) => {
-      if (shouldReduceMotion || !panelRef.current) return;
-      const rect = panelRef.current.getBoundingClientRect();
-      const x = ((e.clientX - rect.left) / rect.width - 0.5) * 2;
-      const y = ((e.clientY - rect.top) / rect.height - 0.5) * 2;
-      setMouseOffset({ x, y });
-    },
-    [shouldReduceMotion]
-  );
-
-  const handleMouseLeave = useCallback(() => {
-    setMouseOffset({ x: 0, y: 0 });
-  }, []);
 
   // Clear previous recommendation immediately when user changes selection
   const handleSelectUsage = (id: UsageType) => {
@@ -503,14 +485,12 @@ export function FinalCTASection() {
 
   const isReady = selectedUsage !== null && selectedPriority !== null;
 
-  // Choreographed Entry Animation Variants for the whole Panel
+  // GPU-composited Entry Animation (Zero layout shift for silky 120fps scrolling)
   const panelVariants: Variants = {
-    initial: { opacity: shouldReduceMotion ? 1 : 0, scale: shouldReduceMotion ? 1 : 0.985, y: shouldReduceMotion ? 0 : 24 },
+    initial: { opacity: shouldReduceMotion ? 1 : 0 },
     visible: {
       opacity: 1,
-      scale: 1,
-      y: 0,
-      transition: { duration: 0.8, ease: EASING },
+      transition: { duration: 0.35, ease: EASING },
     },
   };
 
@@ -520,19 +500,29 @@ export function FinalCTASection() {
         {/* Dark Graphite Cinematic Closing Panel */}
         <motion.div
           ref={panelRef}
-          className="final-cta-panel"
+          className="final-cta-panel relative overflow-hidden"
           variants={panelVariants}
           initial="initial"
           whileInView="visible"
-          viewport={{ once: true, amount: 0.2 }}
-          onMouseMove={handleMouseMove}
-          onMouseLeave={handleMouseLeave}
+          viewport={{ once: true, amount: 0.05 }}
         >
-          {/* Subtle Ambient Vignette & Noise Texture */}
-          <div className="final-cta-panel__ambient-grid" aria-hidden="true" />
-          <div className="final-cta-panel__glow-spot" aria-hidden="true" />
+          {/* Cosmic Galaxy Background Layer inside the Card */}
+          <div
+            className="final-cta-panel__cosmic-bg pointer-events-none absolute inset-0 z-0 select-none overflow-hidden"
+            aria-hidden="true"
+          >
+            <img
+              src="/images/final-cta-cosmic-bg.jpg"
+              alt=""
+              className="h-full w-full object-cover object-center"
+              loading="lazy"
+            />
+            {/* Dark gradient overlay for text readability & atmospheric depth */}
+            <div className="absolute inset-0 bg-gradient-to-r from-[#060312]/80 via-[#060312]/55 to-[#060312]/40" />
+            <div className="absolute inset-0 bg-[#04010d]/25" />
+          </div>
 
-          <div className="final-cta-panel__grid">
+          <div className="final-cta-panel__grid relative z-10">
             {/* Left Column: Switch between Finder Form and Recommendation Results */}
             <div className="final-cta-panel__content min-h-[500px] lg:min-h-[530px] flex flex-col justify-center">
               <AnimatePresence mode="wait">
@@ -576,20 +566,38 @@ export function FinalCTASection() {
                                 onClick={() => handleSelectUsage(option.id)}
                                 aria-pressed={isSelected}
                                 whileHover={shouldReduceMotion ? undefined : { y: -1 }}
-                                whileTap={shouldReduceMotion ? undefined : { scale: 0.97 }}
+                                whileTap={shouldReduceMotion ? undefined : { scale: 0.96 }}
                                 transition={{ duration: 0.16 }}
                               >
                                 {isSelected && (
-                                  <motion.span
-                                    initial={{ scale: 0.6, opacity: 0 }}
-                                    animate={{ scale: 1, opacity: 1 }}
-                                    transition={{ duration: 0.18 }}
-                                    className="final-cta-chip__icon-wrapper"
-                                  >
-                                    <Check className="final-cta-chip__check-icon" strokeWidth={2.5} aria-hidden="true" />
-                                  </motion.span>
+                                  <motion.div
+                                    layoutId="active-usage-pill"
+                                    className="final-cta-chip__active-pill"
+                                    transition={
+                                      shouldReduceMotion
+                                        ? { duration: 0 }
+                                        : { type: 'spring', stiffness: 450, damping: 32 }
+                                    }
+                                  />
                                 )}
-                                <span>{option.label}</span>
+
+                                <span className="final-cta-chip__content">
+                                  <AnimatePresence mode="popLayout" initial={false}>
+                                    {isSelected && (
+                                      <motion.span
+                                        key="check"
+                                        initial={{ scale: 0, opacity: 0, width: 0 }}
+                                        animate={{ scale: 1, opacity: 1, width: 'auto' }}
+                                        exit={{ scale: 0, opacity: 0, width: 0 }}
+                                        transition={{ type: 'spring', stiffness: 500, damping: 32 }}
+                                        className="final-cta-chip__icon-wrapper"
+                                      >
+                                        <Check className="final-cta-chip__check-icon" strokeWidth={2.5} aria-hidden="true" />
+                                      </motion.span>
+                                    )}
+                                  </AnimatePresence>
+                                  <span>{option.label}</span>
+                                </span>
                               </motion.button>
                             );
                           })}
@@ -612,20 +620,38 @@ export function FinalCTASection() {
                                 onClick={() => handleSelectPriority(option.id)}
                                 aria-pressed={isSelected}
                                 whileHover={shouldReduceMotion ? undefined : { y: -1 }}
-                                whileTap={shouldReduceMotion ? undefined : { scale: 0.97 }}
+                                whileTap={shouldReduceMotion ? undefined : { scale: 0.96 }}
                                 transition={{ duration: 0.16 }}
                               >
                                 {isSelected && (
-                                  <motion.span
-                                    initial={{ scale: 0.6, opacity: 0 }}
-                                    animate={{ scale: 1, opacity: 1 }}
-                                    transition={{ duration: 0.18 }}
-                                    className="final-cta-chip__icon-wrapper"
-                                  >
-                                    <Check className="final-cta-chip__check-icon" strokeWidth={2.5} aria-hidden="true" />
-                                  </motion.span>
+                                  <motion.div
+                                    layoutId="active-priority-pill"
+                                    className="final-cta-chip__active-pill"
+                                    transition={
+                                      shouldReduceMotion
+                                        ? { duration: 0 }
+                                        : { type: 'spring', stiffness: 450, damping: 32 }
+                                    }
+                                  />
                                 )}
-                                <span>{option.label}</span>
+
+                                <span className="final-cta-chip__content">
+                                  <AnimatePresence mode="popLayout" initial={false}>
+                                    {isSelected && (
+                                      <motion.span
+                                        key="check"
+                                        initial={{ scale: 0, opacity: 0, width: 0 }}
+                                        animate={{ scale: 1, opacity: 1, width: 'auto' }}
+                                        exit={{ scale: 0, opacity: 0, width: 0 }}
+                                        transition={{ type: 'spring', stiffness: 500, damping: 32 }}
+                                        className="final-cta-chip__icon-wrapper"
+                                      >
+                                        <Check className="final-cta-chip__check-icon" strokeWidth={2.5} aria-hidden="true" />
+                                      </motion.span>
+                                    )}
+                                  </AnimatePresence>
+                                  <span>{option.label}</span>
+                                </span>
                               </motion.button>
                             );
                           })}
@@ -692,14 +718,14 @@ export function FinalCTASection() {
                           {recommendedProducts.length} Thiết bị phù hợp nhất cho bạn
                         </span>
                       </div>
-                      <h3 className="text-lg sm:text-xl font-bold text-slate-900 tracking-tight">
+                      <h3 className="text-lg sm:text-xl font-bold text-white tracking-tight">
                         Danh sách sản phẩm đề xuất (Điện thoại, Tablet, Laptop)
                       </h3>
                     </div>
 
                     {/* Results Content: Grid of up to 10 Product Labels */}
                     {hasError ? (
-                      <div className="p-4 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs flex items-center gap-2 my-auto">
+                      <div className="p-4 rounded-xl bg-red-950/60 border border-red-500/30 text-red-300 text-xs flex items-center gap-2 my-auto backdrop-blur-md">
                         <Info className="w-4 h-4 shrink-0" />
                         <span>Không thể tải sản phẩm lúc này. Vui lòng thử lại.</span>
                       </div>
@@ -714,10 +740,10 @@ export function FinalCTASection() {
                               animate={{ opacity: 1, y: 0 }}
                               transition={{ duration: 0.25, delay: idx * 0.03, ease: EASING }}
                               onClick={() => handleProductNavigate(product)}
-                              className="group flex items-center gap-2.5 p-2.5 rounded-xl bg-white hover:bg-slate-50 border border-black/8 hover:border-black/20 shadow-sm transition-all duration-200 cursor-pointer text-left"
+                              className="group flex items-center gap-2.5 p-2.5 rounded-xl bg-slate-900/80 hover:bg-slate-800/90 border border-white/12 hover:border-blue-400/40 shadow-sm backdrop-blur-md transition-all duration-200 cursor-pointer text-left"
                             >
                               {/* Product Thumbnail */}
-                              <div className="w-10 h-10 rounded-lg bg-slate-100 p-1 flex items-center justify-center shrink-0 border border-black/5 group-hover:scale-105 transition-transform duration-200">
+                              <div className="w-10 h-10 rounded-lg bg-white/10 p-1 flex items-center justify-center shrink-0 border border-white/10 group-hover:scale-105 transition-transform duration-200">
                                 <img
                                   src={imgUrl}
                                   alt={product.name}
@@ -732,36 +758,36 @@ export function FinalCTASection() {
                               <div className="min-w-0 flex-1">
                                 <div className="flex items-center gap-1.5 mb-0.5">
                                   {product.brand && (
-                                    <span className="text-[9px] font-bold uppercase tracking-wider text-[#0071e3] truncate">
+                                    <span className="text-[9px] font-bold uppercase tracking-wider text-blue-400 truncate">
                                       {product.brand}
                                     </span>
                                   )}
                                   {product.category?.name && (
-                                    <span className="text-[9px] text-slate-400 truncate">
+                                    <span className="text-[9px] text-slate-300 truncate">
                                       • {product.category.name}
                                     </span>
                                   )}
                                 </div>
-                                <h4 className="text-xs font-semibold text-slate-900 truncate group-hover:text-[#0071e3] transition-colors">
+                                <h4 className="text-xs font-semibold text-white truncate group-hover:text-blue-300 transition-colors">
                                   {product.name}
                                 </h4>
                               </div>
 
                               {/* Price & Action Icon */}
                               <div className="shrink-0 flex items-center gap-1 pl-1">
-                                <span className="text-[11px] font-bold text-emerald-600">
+                                <span className="text-[11px] font-bold text-emerald-400">
                                   {priceFormatted}
                                 </span>
-                                <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-slate-800 group-hover:translate-x-0.5 transition-all" />
+                                <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-white group-hover:translate-x-0.5 transition-all" />
                               </div>
                             </motion.div>
                           );
                         })}
                       </div>
                     ) : (
-                      <div className="py-12 text-center text-slate-600 text-xs bg-white rounded-2xl border border-black/8 shadow-sm my-auto">
-                        <p className="font-medium text-slate-800">Chưa tìm thấy sản phẩm phù hợp với lựa chọn này.</p>
-                        <p className="mt-1 text-slate-500">Bạn có thể quay lại và thử một tiêu chí khác.</p>
+                      <div className="py-12 text-center text-slate-300 text-xs bg-slate-900/70 backdrop-blur-md rounded-2xl border border-white/10 shadow-sm my-auto">
+                        <p className="font-medium text-white">Chưa tìm thấy sản phẩm phù hợp với lựa chọn này.</p>
+                        <p className="mt-1 text-slate-400">Bạn có thể quay lại và thử một tiêu chí khác.</p>
                       </div>
                     )}
                   </motion.div>
@@ -775,7 +801,6 @@ export function FinalCTASection() {
                 usage={selectedUsage}
                 priority={selectedPriority}
                 sweepTrigger={sweepTrigger}
-                mouseOffset={mouseOffset}
               />
             </div>
           </div>

@@ -1,6 +1,8 @@
 import express from 'express';
-import { PrismaClient } from '@prisma/client';
+import { Prisma } from '@prisma/client';
+import prisma from '../config/prisma';
 import { authenticateToken } from '../middleware/auth.middleware';
+import { requireRoles } from '../middleware/authorization.middleware';
 import { getRouteParam } from '../utils/route-param';
 
 import multer from 'multer';
@@ -8,44 +10,52 @@ import { parseExcelPreview, processImport } from '../services/import.service';
 import * as xlsx from 'xlsx';
 
 import { extractFiltersFromProducts, normalizeKey, extractAdminFiltersFromProducts } from '../services/filter.service';
+import { calculateV1EffectiveUnitPrice, resolveV1Campaign } from '../services/checkout-pricing.service';
+import { matchesProductNameSearch } from '../services/product-name-search';
 
 const router = express.Router();
-const prisma = new PrismaClient();
+
+class ProductDeletionConflict extends Error {}
+
+async function deleteProductsSafely(productIds: string[], single = false): Promise<void> {
+  await prisma.$transaction(async (tx) => {
+    const protectedProducts = await tx.product.findMany({
+      where: {
+        id: { in: productIds },
+        OR: [
+          { Review: { some: {} } },
+          { Dispute: { some: {} } },
+          { Wishlist: { some: {} } },
+          { homeFeaturedProduct: { isNot: null } },
+          { bannerCampaignProducts: { some: {} } },
+          { variants: { some: { OR: [
+            { OrderItem: { some: {} } },
+            { Review: { some: {} } },
+            { Dispute: { some: {} } },
+            { bannerCampaignProducts: { some: {} } },
+          ] } } },
+        ],
+      },
+      select: { id: true },
+    });
+    if (protectedProducts.length > 0) {
+      throw new ProductDeletionConflict('Product has history or dependent records.');
+    }
+    if (single) await tx.product.delete({ where: { id: productIds[0] } });
+    else await tx.product.deleteMany({ where: { id: { in: productIds } } });
+  }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
+}
+
+function isPrismaErrorCode(error: unknown, code: string): boolean {
+  return Boolean(error && typeof error === 'object' && 'code' in error && error.code === code);
+}
 
 const getBestCampaign = (product: any, activeCampaigns: any[]) => {
-  const matching = activeCampaigns.filter(c => 
-    (c.appliesTo === 'product' && c.targetIds.includes(product.id)) ||
-    (c.appliesTo === 'category' && c.targetIds.includes(product.categoryId || '')) ||
-    (c.appliesTo === 'all')
-  );
-  if (matching.length === 0) return null;
-
-  const getPriority = (appliesTo: string) => appliesTo === 'product' ? 3 : appliesTo === 'category' ? 2 : 1;
-  
-  matching.sort((a, b) => {
-    const pA = getPriority(a.appliesTo);
-    const pB = getPriority(b.appliesTo);
-    if (pA !== pB) return pB - pA;
-    
-    let price = 0;
-    if (product.variants && product.variants.length > 0) {
-      price = product.variants[0].price;
-    } else if (product.price) {
-      price = product.price;
-    }
-    
-    const getDiscountAmount = (camp: any, originalPrice: number) => {
-      if (camp.discountType === 'percentage') return (originalPrice * camp.discountValue) / 100;
-      return camp.discountValue;
-    };
-    
-    return getDiscountAmount(b, price) - getDiscountAmount(a, price);
-  });
-  
-  return matching[0];
+  const variantPrice = product.variants?.[0]?.price ?? product.price ?? 0;
+  return resolveV1Campaign(product, activeCampaigns, variantPrice);
 };
 
-const uploadMemory = multer({ 
+const uploadMemory = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 10 * 1024 * 1024 } // 10MB limit
 });
@@ -55,15 +65,25 @@ const uploadMemory = multer({
 router.post('/sync-mock', async (req, res) => {
   try {
     const p = req.body;
+    if (typeof p?.name !== 'string' || !p.name.trim()) {
+      return res.status(400).json({ message: 'Product name is required' });
+    }
+
     let product = await prisma.product.findFirst({
       where: { name: p.name },
       include: { variants: true, category: { include: { parent: true } } }
     });
 
+    // Preserve legacy storefront lookup for products already in the real catalog,
+    // but never create products, prices, variants, or stock from an anonymous payload.
     if (!product) {
+      return res.status(404).json({ message: 'Product is not present in the catalog' });
+    }
+
+    /* Retired untrusted creation path; only restore with trusted server-side catalog data.
       const numericPrice = typeof p.price === 'string' ? parseInt(p.price.replace(/\D/g, '')) : (p.price || 0);
       const numericOriginalPrice = typeof p.originalPrice === 'string' ? parseInt(p.originalPrice.replace(/\D/g, '')) : null;
-      
+
       let variantsData = [];
       if (p.colors && p.colors.length > 0) {
         variantsData = p.colors.map((c: any, i: number) => ({
@@ -111,6 +131,7 @@ router.post('/sync-mock', async (req, res) => {
       });
     }
 
+    */
     res.json(product);
   } catch (error) {
     console.error('Error syncing mock product:', error);
@@ -154,8 +175,12 @@ router.get('/', async (req, res) => {
         ? Number((pReviews.reduce((sum, r) => sum + r.rating, 0) / reviewCount).toFixed(1))
         : 0;
 
-      return { 
-        ...product, 
+      return {
+        ...product,
+        variants: product.variants.map(variant => ({
+          ...variant,
+          effectivePrice: calculateV1EffectiveUnitPrice({ ...variant, product }, activeCampaigns),
+        })),
         activeCampaign: campaign || null,
         reviewCount,
         ratingAverage
@@ -245,7 +270,7 @@ router.get('/filters', async (req, res) => {
 // ==========================================
 
 // GET /admin/filters - Extract dynamic filters for admin
-router.get('/admin/filters', authenticateToken, async (req, res) => {
+router.get('/admin/filters', authenticateToken, requireRoles('staff', 'admin', 'superadmin'), async (req, res) => {
   try {
     const { category, brand } = req.query;
     let whereClause: any = {};
@@ -283,33 +308,33 @@ router.get('/admin/filters', authenticateToken, async (req, res) => {
 });
 
 // GET /admin/search - Admin Search & Filter with Pagination
-router.get('/admin/search', authenticateToken, async (req, res) => {
+router.get('/admin/search', authenticateToken, requireRoles('staff', 'admin', 'superadmin'), async (req, res) => {
   try {
-    const { 
-      page = '1', 
-      limit = '10', 
-      search, 
-      category, 
-      brand, 
+    const {
+      page = '1',
+      limit = '10',
+      search,
+      category,
+      brand,
       status,
       stock, // "in_stock", "low_stock", "out_of_stock"
       sort,  // "newest", "price_asc", "price_desc", "name_asc", "name_desc"
-      ...dynamicFilters 
+      ...dynamicFilters
     } = req.query;
 
     const pageNumber = parseInt(page as string, 10);
     const limitNumber = parseInt(limit as string, 10);
-    
+
     let whereClause: any = {};
 
     if (status) {
       whereClause.status = status as string;
     }
-    
+
     if (brand) {
       whereClause.brand = { equals: brand as string, mode: 'insensitive' };
     }
-    
+
     if (category) {
       const catSlug = (category as string).toLowerCase();
       if (catSlug === 'phone' || catSlug === 'ien-thoai' || catSlug === 'dien-thoai') {
@@ -343,7 +368,7 @@ router.get('/admin/search', authenticateToken, async (req, res) => {
     }
 
     const dynamicKeys = Object.keys(dynamicFilters).filter(k => k.startsWith('spec_') || k.startsWith('attr_'));
-    
+
     if (dynamicKeys.length > 0) {
       products = products.filter(p => {
         const specsMap: Record<string, string> = {};
@@ -352,7 +377,7 @@ router.get('/admin/search', authenticateToken, async (req, res) => {
             if (s.key && s.value) specsMap[normalizeKey(s.key)] = (s.value as string).trim();
           }
         }
-        
+
         const attrsMap: Record<string, Set<string>> = {};
         for (const v of p.variants) {
           if (v.attributes && typeof v.attributes === 'object') {
@@ -437,7 +462,7 @@ router.get('/admin/search', authenticateToken, async (req, res) => {
 
 
 // POST /import/preview - Preview Excel Import
-router.post('/import/preview', authenticateToken, uploadMemory.single('file'), async (req, res) => {
+router.post('/import/preview', authenticateToken, requireRoles('staff', 'admin', 'superadmin'), uploadMemory.single('file'), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ message: 'Không tìm thấy file tải lên.' });
@@ -451,13 +476,13 @@ router.post('/import/preview', authenticateToken, uploadMemory.single('file'), a
 });
 
 // POST /import/confirm - Confirm Excel Import
-router.post('/import/confirm', authenticateToken, async (req, res) => {
+router.post('/import/confirm', authenticateToken, requireRoles('staff', 'admin', 'superadmin'), async (req, res) => {
   try {
     const { groupedProducts } = req.body;
     if (!groupedProducts || !Array.isArray(groupedProducts)) {
       return res.status(400).json({ message: 'Dữ liệu không hợp lệ.' });
     }
-    
+
     const result = await processImport(groupedProducts);
     res.json(result);
   } catch (error: any) {
@@ -467,7 +492,7 @@ router.post('/import/confirm', authenticateToken, async (req, res) => {
 });
 
 // GET /export - Export Products to Excel
-router.get('/export', authenticateToken, async (req, res) => {
+router.get('/export', authenticateToken, requireRoles('staff', 'admin', 'superadmin'), async (req, res) => {
   try {
     const products = await prisma.product.findMany({
       include: {
@@ -494,7 +519,7 @@ router.get('/export', authenticateToken, async (req, res) => {
             "Gallery Image URLs": p.images?.join('|') || '',
             "Status": p.status || 'active',
           };
-          
+
           const attrs = (v.attributes as any) || {};
           if (attrs['Màu sắc'] || attrs['Color']) row['Color'] = attrs['Màu sắc'] || attrs['Color'];
           if (attrs['Color Code']) row['Color Code'] = attrs['Color Code'];
@@ -502,9 +527,9 @@ router.get('/export', authenticateToken, async (req, res) => {
           if (attrs['Dung lượng'] || attrs['Storage']) row['Storage'] = attrs['Dung lượng'] || attrs['Storage'];
           if (attrs['RAM']) row['RAM'] = attrs['RAM'];
           if (attrs['SSD']) row['SSD'] = attrs['SSD'];
-          
+
           row['Specification JSON'] = p.specifications ? JSON.stringify(p.specifications) : '';
-          
+
           exportData.push(row);
         }
       } else {
@@ -524,9 +549,9 @@ router.get('/export', authenticateToken, async (req, res) => {
     const worksheet = xlsx.utils.json_to_sheet(exportData);
     const workbook = xlsx.utils.book_new();
     xlsx.utils.book_append_sheet(workbook, worksheet, "Products");
-    
+
     const buffer = xlsx.write(workbook, { type: 'buffer', bookType: 'xlsx' });
-    
+
     res.setHeader('Content-Disposition', 'attachment; filename="products_export.xlsx"');
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     res.send(buffer);
@@ -537,7 +562,7 @@ router.get('/export', authenticateToken, async (req, res) => {
 });
 
 // POST /admin/bulk-action - Admin Bulk Actions
-router.post('/admin/bulk-action', authenticateToken, async (req, res) => {
+router.post('/admin/bulk-action', authenticateToken, requireRoles('staff', 'admin', 'superadmin'), async (req: any, res) => {
   try {
     const { action, productIds } = req.body;
     if (!action || !Array.isArray(productIds) || productIds.length === 0) {
@@ -555,13 +580,14 @@ router.post('/admin/bulk-action', authenticateToken, async (req, res) => {
         data: { status: 'inactive' }
       });
     } else if (action === 'delete') {
+      if (req.user?.role !== 'admin' && req.user?.role !== 'superadmin' && req.user?.role !== 'staff') {
+        return res.status(403).json({ message: 'Không có quyền xóa sản phẩm' });
+      }
       try {
-        await prisma.product.deleteMany({
-          where: { id: { in: productIds } }
-        });
+        await deleteProductsSafely(productIds.map(String));
       } catch (err: any) {
-        if (err.code === 'P2003') {
-          return res.status(400).json({ message: 'Không thể xóa sản phẩm vì đã có đơn hàng liên kết. Vui lòng "Ẩn" sản phẩm thay vì xóa.' });
+        if (err instanceof ProductDeletionConflict || err.code === 'P2003') {
+          return res.status(409).json({ message: 'Cannot delete products with protected history or dependent records.' });
         }
         throw err;
       }
@@ -579,12 +605,16 @@ router.post('/admin/bulk-action', authenticateToken, async (req, res) => {
 // GET /search - Search and filter products
 router.get('/search', async (req, res) => {
   try {
-    const { 
-      category, brand, minPrice, maxPrice, 
-      ram, storage, cpu, gpu, screenSize, color, 
+    const {
+      category, brand, minPrice, maxPrice,
+      ram, storage, cpu, gpu, screenSize, color,
       size, connectivity, material, os,
-      sort, page = '1', limit = '12' 
+      sort, search, page = '1', limit = '12'
     } = req.query;
+
+    if (search !== undefined && (typeof search !== 'string' || search.trim().length > 120)) {
+      return res.status(400).json({ message: 'Search query must be a string of at most 120 characters' });
+    }
 
     const pageNumber = parseInt(page as string, 10);
     const limitNumber = parseInt(limit as string, 10);
@@ -642,6 +672,10 @@ router.get('/search', async (req, res) => {
       }
     });
 
+    if (typeof search === 'string' && search.trim()) {
+      products = products.filter(product => matchesProductNameSearch(product, search.trim()));
+    }
+
     const parseArrayParam = (val: unknown): string[] => {
       if (typeof val !== 'string') return [];
       return val.split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
@@ -692,7 +726,7 @@ router.get('/search', async (req, res) => {
           const shortRam = ramMatch ? ramMatch[1] + 'GB' : rawRam.trim();
           if (!ramArr.includes(shortRam) && !ramArr.includes(rawRam)) return false;
         }
-        
+
         // CPU/Chip - extract short value for matching
         if (cpuArr.length > 0) {
           const rawCpu = specs['cpu'] || '';
@@ -706,13 +740,13 @@ router.get('/search', async (req, res) => {
           if (snapMatch) shortCpu = 'Snapdragon ' + snapMatch[1];
           const mMatch = rawCpu.match(/M(\d+)\s*(Pro|Max|Ultra)?/i);
           if (mMatch) { shortCpu = 'M' + mMatch[1]; if (mMatch[2]) shortCpu += ' ' + mMatch[2]; }
-          
+
           if (!cpuArr.includes(shortCpu) && !cpuArr.includes(rawCpu)) return false;
         }
-        
+
         // GPU
         if (gpuArr.length > 0 && !gpuArr.includes(specs['gpu'])) return false;
-        
+
         // Screen Size - extract short value for matching
         if (screenArr.length > 0) {
           const rawScreen = specs['screensize'] || specs['screenSize'] || '';
@@ -840,11 +874,20 @@ router.get('/search', async (req, res) => {
     const paginatedProductsWithReviews = paginatedProducts.map(p => {
       const pReviews = _reviews.filter(r => r.productId === p.id);
       const reviewCount = pReviews.length;
-      const ratingAverage = reviewCount > 0 
+      const ratingAverage = reviewCount > 0
         ? Number((pReviews.reduce((acc, curr) => acc + curr.rating, 0) / reviewCount).toFixed(1))
         : 0;
       const campaign = getBestCampaign(p, activeCampaigns);
-      return { ...p, ratingAverage, reviewCount, activeCampaign: campaign || null };
+      return {
+        ...p,
+        variants: p.variants?.map((variant: any) => ({
+          ...variant,
+          effectivePrice: calculateV1EffectiveUnitPrice({ ...variant, product: p }, activeCampaigns),
+        })),
+        ratingAverage,
+        reviewCount,
+        activeCampaign: campaign || null,
+      };
     });
 
     res.json({
@@ -888,12 +931,16 @@ router.get('/:id', async (req, res) => {
       select: { rating: true }
     });
     const reviewCount = _reviews.length;
-    const ratingAverage = reviewCount > 0 
+    const ratingAverage = reviewCount > 0
       ? Number((_reviews.reduce((acc, curr) => acc + curr.rating, 0) / reviewCount).toFixed(1))
       : 0;
 
-    res.json({ 
-      ...product, 
+    res.json({
+      ...product,
+      variants: product.variants.map(variant => ({
+        ...variant,
+        effectivePrice: calculateV1EffectiveUnitPrice({ ...variant, product }, activeCampaigns),
+      })),
       activeCampaign: campaign || null,
       ratingAverage,
       reviewCount
@@ -921,7 +968,7 @@ function normalizeVariantAttributes(attrs: any): Record<string, string> {
 }
 
 // POST create product with variants
-router.post('/', authenticateToken, async (req, res) => {
+router.post('/', authenticateToken, requireRoles('staff', 'admin', 'superadmin'), async (req, res) => {
   try {
     const { name, description, brand, image, images, categoryId, status, variants, specifications } = req.body;
 
@@ -1022,7 +1069,7 @@ router.post('/', authenticateToken, async (req, res) => {
 });
 
 // PUT update product (safe variant diff, reference check, and transaction)
-router.put('/:id', authenticateToken, async (req, res) => {
+router.put('/:id', authenticateToken, requireRoles('staff', 'admin', 'superadmin'), async (req, res) => {
   try {
     const id = getRouteParam(req.params.id);
     const { name, description, brand, image, images, categoryId, status, variants, specifications } = req.body;
@@ -1153,6 +1200,22 @@ router.put('/:id', authenticateToken, async (req, res) => {
 
     // Execute atomic transaction for safe variant diff
     const result = await prisma.$transaction(async (tx) => {
+      if (removedVariants.length > 0) {
+        const protectedVariant = await tx.productVariant.findFirst({
+          where: {
+            id: { in: removedVariants.map(variant => variant.id) },
+            OR: [
+              { OrderItem: { some: {} } },
+              { Review: { some: {} } },
+              { Dispute: { some: {} } },
+              { bannerCampaignProducts: { some: {} } },
+            ],
+          },
+          select: { id: true },
+        });
+        if (protectedVariant) throw new ProductDeletionConflict('Variant has protected history or dependent records.');
+      }
+
       // 1. Update Product basic fields
       await tx.product.update({
         where: { id },
@@ -1208,17 +1271,20 @@ router.put('/:id', authenticateToken, async (req, res) => {
         where: { id },
         include: { category: true, variants: true }
       });
-    });
+    }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
 
     res.json({ message: 'Cập nhật sản phẩm thành công', product: result });
   } catch (error: any) {
+    if (error instanceof ProductDeletionConflict || error.code === 'P2003') {
+      return res.status(409).json({ message: 'Cannot remove a product variant with protected history or dependent records.' });
+    }
     console.error('Error updating product:', error);
     res.status(500).json({ message: 'Lỗi server: ' + (error.message || '') });
   }
 });
 
 // PATCH update single variant stock (for Inventory quick edit)
-router.patch('/variants/:variantId', authenticateToken, async (req, res) => {
+router.patch('/variants/:variantId', authenticateToken, requireRoles('staff', 'admin', 'superadmin'), async (req, res) => {
   try {
     const { stock } = req.body;
     const updated = await prisma.productVariant.update({
@@ -1232,12 +1298,16 @@ router.patch('/variants/:variantId', authenticateToken, async (req, res) => {
   }
 });
 
-// DELETE product (cascades to variants)
-router.delete('/:id', authenticateToken, async (req, res) => {
+// DELETE product only when no protected history or cascading dependents exist.
+router.delete('/:id', authenticateToken, requireRoles('staff', 'admin', 'superadmin'), async (req, res) => {
   try {
-    await prisma.product.delete({ where: { id: getRouteParam(req.params.id) } });
+    await deleteProductsSafely([getRouteParam(req.params.id)], true);
     res.json({ message: 'Xóa sản phẩm thành công' });
   } catch (error) {
+    if (error instanceof ProductDeletionConflict || isPrismaErrorCode(error, 'P2003')) {
+      return res.status(409).json({ message: 'Cannot delete a product with protected history or dependent records.' });
+    }
+    if (isPrismaErrorCode(error, 'P2025')) return res.status(404).json({ message: 'Product not found.' });
     console.error('Error deleting product:', error);
     res.status(500).json({ message: 'Lỗi server' });
   }

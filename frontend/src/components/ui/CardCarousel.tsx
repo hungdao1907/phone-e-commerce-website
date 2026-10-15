@@ -14,15 +14,6 @@ export interface CarouselProduct {
   name: string;
 }
 
-function updateSlideOpacity(swiper: SwiperInstance) {
-  swiper.slides.forEach((slide) => {
-    const progress = Math.abs((slide as HTMLElement & { progress?: number }).progress ?? 0);
-    const distance = Math.min(progress, 2);
-    const opacity = 1 - distance * 0.23;
-
-    slide.style.setProperty('--featured-slide-opacity', opacity.toFixed(3));
-  });
-}
 
 interface CarouselNavButtonProps {
   direction: 'previous' | 'next';
@@ -75,7 +66,7 @@ export function CardCarousel<T extends CarouselProduct>({
   const carouselRef = useRef<HTMLDivElement>(null);
   const swiperRef = useRef<SwiperInstance | null>(null);
   const shouldReduceMotion = useReducedMotion() === true;
-  const isInView = useInView(carouselRef, { amount: 0.25 });
+  const isInView = useInView(carouselRef, { amount: 0.15 });
 
   useEffect(() => {
     const autoplay = swiperRef.current?.autoplay;
@@ -164,10 +155,8 @@ export function CardCarousel<T extends CarouselProduct>({
           }}
           onSwiper={(swiper) => {
             swiperRef.current = swiper;
-            updateSlideOpacity(swiper);
             if (shouldReduceMotion || !isInView) swiper.autoplay.stop();
           }}
-          onSetTranslate={updateSlideOpacity}
           onBeforeDestroy={() => {
             swiperRef.current = null;
           }}

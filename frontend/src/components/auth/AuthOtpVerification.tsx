@@ -44,18 +44,18 @@ export const AuthOtpVerification = ({ email, purpose, onVerified, onBack }: Auth
       // Trigger API call when entering check phase
       const verify = async () => {
         try {
-          const endpoint = purpose === 'register' 
-            ? '/api/auth/customer/verify-otp' 
+          const endpoint = purpose === 'register'
+            ? '/api/auth/customer/verify-otp'
             : '/api/auth/customer/verify-reset-otp';
-            
+
           const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}${endpoint}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email: email.trim().toLowerCase(), otp: val })
           });
-          
+
           const data = await response.json();
-          
+
           if (!response.ok) {
             throw new Error(data.message || 'Mã xác thực không hợp lệ.');
           }
@@ -63,7 +63,7 @@ export const AuthOtpVerification = ({ email, purpose, onVerified, onBack }: Auth
           if (data.resetToken) {
             setResetToken(data.resetToken);
           }
-          
+
           setPhase("ok");
         } catch (error: any) {
           setErrorMessage(error.message || 'Mã xác thực không đúng. Vui lòng thử lại.');
@@ -101,33 +101,33 @@ export const AuthOtpVerification = ({ email, purpose, onVerified, onBack }: Auth
 
   const resend = async () => {
     if (secs > 0) return;
-    
+
     try {
-      const endpoint = purpose === 'register' 
+      const endpoint = purpose === 'register'
         ? '/api/auth/customer/register' // Wait, register re-sends OTP? But register requires password.
         // Actually, for register, we might need a dedicated resend endpoint if we don't want to re-pass password.
         // Let's assume the backend supports a standard forgot-password for resending if we don't have a dedicated one,
         // or for register, we just use the forgot-password endpoint to send an OTP? No, they use different templates.
         // Let's just use forgot-password for forgot-password. For register, let's call the forgot-password as well since it just generates an OTP, or just let user go back.
         : '/api/auth/customer/forgot-password';
-        
+
       if (purpose === 'register') {
         // We can't easily resend register OTP without the full payload (password, etc) in current backend.
         // Let's just alert for now or let them go back.
         // Or actually we can just call forgot-password API to generate an OTP for them since the OTP field is the same.
       }
-      
+
       const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/auth/customer/forgot-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: email.trim().toLowerCase() })
       });
-      
+
       const data = await response.json();
       if (!response.ok) {
         throw new Error(data.message || 'Không thể gửi lại mã. Vui lòng thử lại.');
       }
-      
+
       setVal("");
       setSecs(60);
       setErrorMessage("");
@@ -142,7 +142,7 @@ export const AuthOtpVerification = ({ email, purpose, onVerified, onBack }: Auth
     if (phase === 'check') return { title: 'Đang xác thực', sub: 'Vui lòng đợi giây lát...' };
     if (phase === 'ok') return { title: 'Xác thực thành công', sub: 'Đang hoàn tất yêu cầu của bạn...' };
     if (phase === 'err') return { title: 'Mã không đúng', sub: errorMessage || 'Mã xác thực không khớp. Vui lòng thử lại.' };
-    
+
     return {
       title: 'Xác thực email',
       sub: (
@@ -161,24 +161,24 @@ export const AuthOtpVerification = ({ email, purpose, onVerified, onBack }: Auth
     <div className="otp-wrap">
       <div className={`otp-card ${phase === 'ok' ? 'ok' : ''} ${phase === 'err' ? 'err' : ''}`}>
         <div className="otp-handle" />
-        
+
         <div className="otp-title otp-fade" key={`t-${phase}`}>
           {title}
         </div>
-        
+
         <p className="otp-sub otp-fade" key={`s-${phase}`}>
           {sub}
         </p>
 
         <div className={`otp-row ${phase}`} onClick={() => ref.current?.focus()}>
           {Array.from({ length: LEN }, (_, i) => (
-            <div 
+            <div
               key={i}
               className={`otp-c ${phase === "in" && i === focusIdx ? " f" : ""}`}
-              style={{ 
-                "--i": i - (LEN - 1) / 2, 
-                "--q": Math.pow(i - (LEN - 1) / 2, 2), 
-                "--n": i 
+              style={{
+                "--i": i - (LEN - 1) / 2,
+                "--q": Math.pow(i - (LEN - 1) / 2, 2),
+                "--n": i
               } as React.CSSProperties}
             >
               {val[i]
@@ -190,15 +190,15 @@ export const AuthOtpVerification = ({ email, purpose, onVerified, onBack }: Auth
             <rect x="1.5" y="1.5" width="55" height="71" rx="16" pathLength="100" />
             <path d="M19 38 l8 8 l14 -15" pathLength="100" />
           </svg>
-          <input 
-            ref={ref} 
-            value={val} 
-            onChange={onChange} 
+          <input
+            ref={ref}
+            value={val}
+            onChange={onChange}
             disabled={phase !== "in"}
-            inputMode="numeric" 
-            autoComplete="one-time-code" 
-            maxLength={LEN} 
-            aria-label="Verification code" 
+            inputMode="numeric"
+            autoComplete="one-time-code"
+            maxLength={LEN}
+            aria-label="Verification code"
           />
         </div>
 

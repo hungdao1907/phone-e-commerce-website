@@ -1,11 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Package, MapPin, CreditCard, UploadCloud, CheckCircle2, AlertCircle, XCircle, Image as ImageIcon, X, Clock } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { useCartStore } from '../../store/useCartStore';
-import { OrderDeliveryTimeline, OrderStatus } from '../../components/order/OrderDeliveryTimeline';
+import { OrderDeliveryTimeline, type OrderStatus } from '../../components/order/OrderDeliveryTimeline';
 import { cn } from '../../lib/utils';
-
+import { fetchCustomerOrderDetail, type CustomerOrderDetail } from './customer-order-detail';
 const PAYMENT_STATUS_MAP: Record<string, { label: string, color: string, bg: string, icon: any }> = {
   unpaid: { label: 'Chưa thanh toán', color: 'text-orange-500', bg: 'bg-orange-50', icon: AlertCircle },
   UNPAID: { label: 'Chưa thanh toán', color: 'text-orange-500', bg: 'bg-orange-50', icon: AlertCircle },
@@ -31,49 +31,18 @@ const ORDER_STATUS_MAP: Record<string, { label: string, color: string, bg: strin
   returned: { label: 'Đã trả hàng', color: 'text-neutral-700', bg: 'bg-neutral-100' }
 };
 
-export function OrderDetailPage() {
-  const { orderId } = useParams<{ orderId: string }>();
+
+export function CustomerOrderDetailView({ order: initialOrder, onChanged }: { order: CustomerOrderDetail; onChanged?: () => void }) {
+  const [order, setOrder] = useState<any>(initialOrder);
+  useEffect(() => setOrder(initialOrder), [initialOrder]);
   const { token } = useAuthStore();
   const { addItem } = useCartStore();
   const navigate = useNavigate();
-  const [order, setOrder] = useState<any>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  // States for Cancel
   const [showCancelModal, setShowCancelModal] = useState(false);
-  const [cancelReason, setCancelReason] = useState('Tôi không còn nhu cầu');
+  const [cancelReason, setCancelReason] = useState('T\u00f4i kh\u00f4ng c\u00f2n nhu c\u1ea7u');
   const [cancelNote, setCancelNote] = useState('');
   const [isCancelling, setIsCancelling] = useState(false);
   const [showShippingModal, setShowShippingModal] = useState(false);
-
-  useEffect(() => {
-    if (!token) {
-      navigate('/login');
-      return;
-    }
-
-    const fetchOrder = async () => {
-      try {
-        const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/orders/${orderId}`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (res.ok) {
-          const foundOrder = await res.json();
-          setOrder(foundOrder);
-        } else if (res.status === 404 || res.status === 403) {
-          setOrder(null);
-        }
-      } catch (error) {
-        console.error(error);
-        setOrder(null);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchOrder();
-  }, [orderId, token, navigate]);
-
   const isPaid = order?.paymentStatus === 'PAID' || order?.paymentStatus === 'paid';
 
   const handleCancelClick = () => {
@@ -95,10 +64,10 @@ export function OrderDetailPage() {
   };
 
   const handleCancelOrder = async () => {
-    if (!token || !order) return;
+    if (!token || !order || isCancelling) return;
     setIsCancelling(true);
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/orders/${order.id}/cancel`, {
+      const res = await fetch(`${import.meta.env?.VITE_API_URL || 'http://localhost:3001'}/api/orders/${order.id}/cancel`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ reason: cancelReason, note: cancelNote })
@@ -107,6 +76,7 @@ export function OrderDetailPage() {
         alert('Đã hủy đơn hàng thành công');
         setOrder({ ...order, status: 'cancelled' });
         setShowCancelModal(false);
+        onChanged?.();
       } else {
         const data = await res.json();
         alert(data.message || 'Hủy đơn hàng thất bại');
@@ -122,14 +92,14 @@ export function OrderDetailPage() {
   const handleReorder = () => {
     if (!order?.items) return;
     let addedCount = 0;
-    
+
     order.items.forEach((item: any) => {
       const product = item.variant?.product;
       const variant = item.variant;
       if (product && variant && product.status === 'active' && variant.stock > 0) {
         const skuSplit = variant.sku ? variant.sku.split('-') : [];
         const colorName = skuSplit.length > 2 ? skuSplit[skuSplit.length - 1] : 'Khác';
-        
+
         addItem({
           productId: product.id,
           productSlug: product.id,
@@ -150,19 +120,11 @@ export function OrderDetailPage() {
 
     if (addedCount > 0) {
       alert(`Đã thêm ${addedCount} sản phẩm vào giỏ hàng`);
-      navigate('/checkout'); 
+      navigate('/checkout');
     } else {
       alert('Xin lỗi, các sản phẩm trong đơn hàng này đã hết hàng hoặc ngừng kinh doanh.');
     }
   };
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[#f7f8fa]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black"></div>
-      </div>
-    );
-  }
 
   if (!order) {
     return (
@@ -184,14 +146,8 @@ export function OrderDetailPage() {
   const storeId = isStorePickup ? order.shippingAddress.replace('Nhận tại cửa hàng:', '').trim() : null;
 
   // Real timeline logic mapped to our UI states
-  const fakeHistory = [
-    { status: 'pending' as OrderStatus, timestamp: order.createdAt },
-    ...(order.status !== 'pending' && order.status !== 'cancelled' ? [{ status: 'confirmed' as OrderStatus, timestamp: order.updatedAt }] : []),
-    ...(['processing', 'shipping', 'delivered', 'completed'].includes(order.status) ? [{ status: 'processing' as OrderStatus, timestamp: order.updatedAt }] : []),
-    ...(['shipping', 'delivered', 'completed'].includes(order.status) ? [{ status: 'shipping' as OrderStatus, timestamp: order.updatedAt }] : []),
-    ...(['delivered', 'completed'].includes(order.status) ? [{ status: 'delivered' as OrderStatus, timestamp: order.updatedAt }] : []),
-    ...(order.status === 'completed' ? [{ status: 'completed' as OrderStatus, timestamp: order.updatedAt }] : [])
-  ];
+  // Do not fabricate status timestamps.
+  const recordedHistory = [{ status: 'pending' as OrderStatus, timestamp: order.createdAt }];
 
   const STORES = [
     { id: 'store_1', name: 'Apple Store Quận 1', address: '123 Lê Lợi, P. Bến Nghé, Q.1, TP.HCM', phone: '0972501501' },
@@ -200,7 +156,7 @@ export function OrderDetailPage() {
   const matchedStore = storeId ? STORES.find(s => s.id === storeId) : null;
 
   const firstProductId = order.items?.[0]?.productId || order.items?.[0]?.variant?.productId || '';
-  
+
   const txStatus = order.bankTransaction?.status;
   const isInvalidAmount = txStatus === 'INVALID_AMOUNT' || txStatus === 'UNMATCHED';
   const isManualReview = txStatus === 'MANUAL_REVIEW';
@@ -208,9 +164,9 @@ export function OrderDetailPage() {
   const statusConfig = ORDER_STATUS_MAP[order.status] || { label: order.status, color: 'text-neutral-700', bg: 'bg-neutral-100' };
 
   return (
-    <div className="min-h-screen bg-[#f7f8fa] py-8 px-4 sm:px-6 lg:px-8">
+    <div data-order-id={order.id} className="min-h-screen bg-[#f7f8fa] py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-[1200px] mx-auto">
-        
+
         {/* HEADER */}
         <div className="mb-6">
           <Link to="/profile" className="inline-flex items-center gap-2 text-sm font-medium text-neutral-500 hover:text-black transition-colors">
@@ -234,11 +190,11 @@ export function OrderDetailPage() {
               </span>
             </div>
           </div>
-          
+
           <div className="flex flex-wrap items-center gap-3 shrink-0">
             {order.status === 'pending' && !isPaid && (
-              <button 
-                onClick={() => navigate(`/checkout/payment?orderId=${order.orderCode || order.id}`)}
+              <button
+                onClick={() => navigate(`/checkout/payment?orderId=${order.id}`)}
                 className="px-5 py-2.5 text-sm font-semibold bg-black text-white hover:bg-neutral-800 rounded-lg transition-colors"
               >
                 Thanh toán ngay
@@ -258,7 +214,7 @@ export function OrderDetailPage() {
             )}
 
             {(order.status === 'delivered' || order.status === 'completed') && (
-              <button 
+              <button
                 onClick={() => {
                   if (firstProductId) window.location.href = `/product/${firstProductId}#reviews`;
                 }}
@@ -269,7 +225,7 @@ export function OrderDetailPage() {
             )}
 
             {(['delivered', 'completed', 'cancelled', 'shipping'].includes(order.status)) && (
-              <button 
+              <button
                 onClick={handleReorder}
                 className="px-5 py-2.5 text-sm font-semibold bg-white text-neutral-700 border border-neutral-200 hover:bg-neutral-50 rounded-lg transition-colors"
               >
@@ -277,8 +233,8 @@ export function OrderDetailPage() {
               </button>
             )}
 
-            {order.status !== 'cancelled' && order.status !== 'delivered' && order.status !== 'completed' && (
-              <button 
+            {!isPaid && !['REFUNDED', 'refunded'].includes(order.paymentStatus) && ['pending', 'pending_payment', 'confirmed', 'processing'].includes(order.status) && (
+              <button
                 onClick={handleCancelClick}
                 className="px-5 py-2.5 text-sm font-semibold text-red-600 bg-white border border-red-200 hover:bg-red-50 rounded-lg transition-colors"
               >
@@ -291,14 +247,14 @@ export function OrderDetailPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* LEFT COLUMN */}
           <div className="lg:col-span-2 space-y-6">
-            
+
             {/* SẢN PHẨM */}
             <div className="bg-white p-6 rounded-xl border border-neutral-200 shadow-sm">
               <h2 className="text-sm font-bold text-neutral-900 uppercase tracking-wider mb-5">Sản phẩm</h2>
               <div className="divide-y divide-neutral-100">
                 {order.items?.map((item: any, idx: number) => {
                   const rawImage = item.variant?.product?.image || item.variant?.product?.images?.[0] || item.productImage;
-                  const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+                  const apiUrl = import.meta.env?.VITE_API_URL || 'http://localhost:3001';
                   const imageSrc = rawImage ? (rawImage.startsWith('/uploads') ? `${apiUrl}${rawImage}` : rawImage) : 'https://via.placeholder.com/150';
                   return (
                     <div key={idx} className="py-5 flex gap-5">
@@ -311,7 +267,7 @@ export function OrderDetailPage() {
                         <p className="text-sm text-neutral-500 mt-1">SL: {item.quantity}</p>
                       </div>
                       <div className="text-right shrink-0">
-                        <p className="text-base font-bold text-neutral-900">{(item.unitPrice * item.quantity).toLocaleString('vi-VN')}đ</p>
+                        <p className="text-base font-bold text-neutral-900">{item.lineTotal.toLocaleString('vi-VN')}đ</p>
                       </div>
                     </div>
                   );
@@ -323,7 +279,7 @@ export function OrderDetailPage() {
                 <div className="space-y-3 text-sm">
                   <div className="flex justify-between text-neutral-600">
                     <span>Tạm tính</span>
-                    <span className="font-semibold text-neutral-900">{(order.totalAmount - (order.shippingFee || 0) + (order.discountAmount || 0)).toLocaleString('vi-VN')}đ</span>
+                    <span className="font-semibold text-neutral-900">{order.subtotal.toLocaleString('vi-VN')}đ</span>
                   </div>
                   <div className="flex justify-between text-neutral-600">
                     <span>Phí vận chuyển</span>
@@ -390,12 +346,12 @@ export function OrderDetailPage() {
             {/* PHƯƠNG THỨC THANH TOÁN */}
             <div className="bg-white p-6 rounded-xl border border-neutral-200 shadow-sm">
               <h2 className="text-sm font-bold text-neutral-900 uppercase tracking-wider mb-5">Phương thức thanh toán</h2>
-              
+
               {order.status === 'cancelled' && isPaid ? (
                 <div className="bg-red-50 border border-red-100 p-4 rounded-lg text-center">
                   <p className="text-red-700 font-bold mb-2 text-sm">Đơn hàng đã được thanh toán và đã hủy</p>
                   <p className="text-sm text-red-600 mb-4">Vui lòng liên hệ cửa hàng để được hỗ trợ hoàn tiền.</p>
-                  <button 
+                  <button
                     onClick={() => document.getElementById('stores-modal')?.classList.remove('hidden')}
                     className="px-4 py-2 bg-white text-red-600 font-semibold text-sm rounded-lg border border-red-200 hover:bg-red-50"
                   >
@@ -428,7 +384,7 @@ export function OrderDetailPage() {
                   {order.paymentMethod === 'BANK_TRANSFER' && !isPaid && order.status !== 'cancelled' && (
                     <div className="mt-4 space-y-3">
                       <p className="text-sm text-neutral-600">Đơn hàng đang chờ thanh toán. Giao dịch sẽ được hệ thống đối soát tự động.</p>
-                      
+
                       {isInvalidAmount && (
                         <div className="bg-red-50 border border-red-100 p-3 rounded-lg text-red-700 text-xs">
                           <p className="font-bold flex items-center gap-1.5 mb-1"><AlertCircle className="w-3.5 h-3.5" /> Thanh toán chưa khớp</p>
@@ -442,7 +398,7 @@ export function OrderDetailPage() {
                         </div>
                       )}
 
-                      <button 
+                      <button
                         onClick={() => navigate(`/checkout/payment?orderId=${order.orderCode || order.id}`)}
                         className="px-4 py-2 text-sm font-semibold bg-black text-white rounded-lg hover:bg-neutral-800 transition-colors inline-block"
                       >
@@ -458,7 +414,7 @@ export function OrderDetailPage() {
             {order.paymentMethod === 'BANK_TRANSFER' && isPaid && order.bankTransaction && (
               <div className="bg-white p-6 rounded-xl border border-neutral-200 shadow-sm">
                 <h2 className="text-sm font-bold text-neutral-900 uppercase tracking-wider mb-4">Thông tin giao dịch</h2>
-                
+
                 <div className="flex items-center gap-2 mb-4 p-3 bg-emerald-50/50 text-emerald-700 rounded-lg text-sm font-medium border border-emerald-100/50">
                   <CheckCircle2 className="w-4 h-4" />
                   Thanh toán đã được hệ thống xác nhận
@@ -488,18 +444,18 @@ export function OrderDetailPage() {
 
           {/* RIGHT COLUMN */}
           <div className="lg:col-span-1 space-y-6">
-            
+
             {/* TRẠNG THÁI ĐƠN HÀNG */}
             <div className="bg-white p-6 rounded-xl border border-neutral-200 shadow-sm sticky top-24">
               <h2 className="text-sm font-bold text-neutral-900 uppercase tracking-wider mb-6">Trạng thái đơn hàng</h2>
-              
+
               {order.status === 'cancelled' ? (
                 <div className="flex items-center gap-3 p-4 bg-red-50 text-red-600 rounded-lg border border-red-100">
                   <XCircle className="w-5 h-5" />
                   <span className="font-semibold text-sm">Đơn hàng đã bị hủy</span>
                 </div>
               ) : (
-                <OrderDeliveryTimeline currentStatus={order.status} history={fakeHistory} />
+                <OrderDeliveryTimeline currentStatus={order.status} history={recordedHistory} />
               )}
             </div>
 
@@ -507,9 +463,9 @@ export function OrderDetailPage() {
             <div className="bg-white p-6 rounded-xl border border-neutral-200 shadow-sm">
               <h2 className="text-sm font-bold text-neutral-900 uppercase tracking-wider mb-3">Cần hỗ trợ?</h2>
               <p className="text-sm text-neutral-600 mb-4 leading-relaxed">Vui lòng liên hệ với chúng tôi nếu bạn có bất kỳ câu hỏi nào về đơn hàng.</p>
-              
+
               <div className="space-y-3">
-                <button 
+                <button
                   onClick={() => window.open('tel:0972501501', '_self')}
                   className="w-full py-2.5 bg-neutral-100 hover:bg-neutral-200 text-neutral-900 text-sm font-semibold rounded-lg transition-colors flex items-center justify-center gap-2"
                 >
@@ -528,17 +484,17 @@ export function OrderDetailPage() {
             <div className="p-6">
               <h2 className="text-xl font-bold text-neutral-900 mb-2">Hủy đơn hàng</h2>
               <p className="text-sm text-neutral-500 mb-6">Bạn có chắc chắn muốn hủy đơn hàng #{order.orderCode || order.id}?</p>
-              
+
               <div className="space-y-4">
                 <label className="block text-sm font-medium text-neutral-700">Lý do hủy đơn</label>
                 <div className="space-y-2">
                   {['Tôi muốn thay đổi sản phẩm', 'Tôi muốn thay đổi địa chỉ nhận hàng', 'Tôi không còn nhu cầu', 'Tìm được sản phẩm khác', 'Khác'].map(reason => (
                     <label key={reason} className="flex items-center gap-3 cursor-pointer p-3 border rounded-lg hover:bg-neutral-50">
-                      <input 
-                        type="radio" 
-                        name="cancelReason" 
-                        value={reason} 
-                        checked={cancelReason === reason} 
+                      <input
+                        type="radio"
+                        name="cancelReason"
+                        value={reason}
+                        checked={cancelReason === reason}
                         onChange={e => setCancelReason(e.target.value)}
                         className="w-4 h-4 text-black focus:ring-black"
                       />
@@ -556,15 +512,15 @@ export function OrderDetailPage() {
                 )}
               </div>
             </div>
-            
+
             <div className="p-4 bg-neutral-50 border-t border-neutral-100 flex justify-end gap-3">
-              <button 
+              <button
                 onClick={() => setShowCancelModal(false)}
                 className="px-5 py-2.5 text-sm font-semibold text-neutral-600 hover:bg-neutral-200 rounded-lg transition-colors"
               >
                 Quay lại
               </button>
-              <button 
+              <button
                 onClick={handleCancelOrder}
                 disabled={isCancelling}
                 className="px-5 py-2.5 text-sm font-semibold bg-red-600 text-white hover:bg-red-700 rounded-lg transition-colors shadow-sm disabled:opacity-50"
@@ -593,7 +549,7 @@ export function OrderDetailPage() {
               <a href="tel:0972501501" className="flex items-center justify-center w-full py-3 bg-black text-white text-sm font-semibold rounded-lg hover:bg-neutral-800 transition-colors">
                 Gọi 0972501501
               </a>
-              <button 
+              <button
                 onClick={() => {
                   document.getElementById('cancel-modal')?.classList.add('hidden');
                   document.getElementById('stores-modal')?.classList.remove('hidden');
@@ -602,7 +558,7 @@ export function OrderDetailPage() {
               >
                 Xem cửa hàng gần nhất
               </button>
-              <button 
+              <button
                 onClick={() => document.getElementById('cancel-modal')?.classList.add('hidden')}
                 className="w-full py-3 text-neutral-500 text-sm font-semibold hover:text-neutral-900 transition-colors"
               >
@@ -626,8 +582,8 @@ export function OrderDetailPage() {
                 Đơn hàng <span className="font-bold text-neutral-900">#{order.orderCode || order.id}</span> đang trên đường giao tới bạn.<br/><br/>
                 Vui lòng liên hệ đơn vị vận chuyển hoặc tổng đài để yêu cầu hủy đơn nếu cần.
               </p>
-              
-              <button 
+
+              <button
                 onClick={() => setShowShippingModal(false)}
                 className="w-full px-5 py-3 text-sm font-semibold bg-neutral-100 text-neutral-700 hover:bg-neutral-200 rounded-lg transition-colors"
               >
@@ -643,7 +599,7 @@ export function OrderDetailPage() {
         <div className="bg-white w-full max-w-lg rounded-xl shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]">
           <div className="flex items-center justify-between p-4 sm:p-6 border-b border-neutral-100 shrink-0">
             <h3 className="text-lg font-bold text-neutral-900">Hệ thống cửa hàng</h3>
-            <button 
+            <button
               onClick={() => document.getElementById('stores-modal')?.classList.add('hidden')}
               className="p-2 text-neutral-400 hover:text-neutral-900 hover:bg-neutral-100 rounded-lg transition-colors"
             >
@@ -656,7 +612,7 @@ export function OrderDetailPage() {
                 <h4 className="font-bold text-neutral-900 mb-1">{store.name}</h4>
                 <p className="text-sm text-neutral-600 mb-1">{store.address}</p>
                 <p className="text-sm text-neutral-600 mb-4">SĐT: {store.phone}</p>
-                <a 
+                <a
                   href={`https://maps.google.com/?q=${encodeURIComponent(store.address)}`}
                   target="_blank" rel="noreferrer"
                   className="inline-flex items-center justify-center px-4 py-2 bg-neutral-100 text-neutral-900 text-xs font-semibold rounded-lg hover:bg-neutral-200 transition-colors"
@@ -671,4 +627,32 @@ export function OrderDetailPage() {
 
     </div>
   );
+}
+
+export function OrderDetailPage() {
+  const { orderId } = useParams<{ orderId: string }>();
+  const { token, user } = useAuthStore();
+  const [order, setOrder] = useState<CustomerOrderDetail | null>(null);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [retry, setRetry] = useState(0);
+  useEffect(() => {
+    const controller = new AbortController();
+    setOrder(null); setError(''); setLoading(true);
+    if (!orderId || !token || user?.role !== 'customer') {
+      setError('Vui lòng đăng nhập bằng tài khoản khách hàng.'); setLoading(false);
+      return () => controller.abort();
+    }
+    void fetchCustomerOrderDetail(orderId, token, user.id, {
+      baseUrl: import.meta.env.VITE_API_URL || 'http://localhost:3001', signal: controller.signal,
+    }).then(value => { if (!controller.signal.aborted) setOrder(value); })
+      .catch(cause => { if (!controller.signal.aborted) setError(cause instanceof Error ? cause.message : 'Không thể tải đơn hàng.'); })
+      .finally(() => { if (!controller.signal.aborted) setLoading(false); });
+    return () => controller.abort();
+  }, [orderId, token, user?.id, user?.role, retry]);
+  return <main className="min-h-screen bg-[#f8f9fc] px-4 py-10 sm:px-6">
+    {loading ? <p role="status" className="py-16 text-center text-neutral-500">Đang tải chi tiết đơn hàng…</p>
+      : error ? <div role="alert" className="mx-auto max-w-xl rounded-2xl border border-rose-200 bg-white p-6 text-center"><p>{error}</p><button onClick={() => setRetry(value => value + 1)} className="mt-4 rounded-lg bg-neutral-900 px-4 py-2 text-white">Thử lại</button><Link to="/profile" className="ml-4 text-sm text-blue-700">Về tài khoản</Link></div>
+        : order ? <CustomerOrderDetailView order={order} onChanged={() => setRetry(v => v + 1)} /> : null}
+  </main>;
 }

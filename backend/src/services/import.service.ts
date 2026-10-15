@@ -2,10 +2,9 @@ import * as xlsx from 'xlsx';
 import axios from 'axios';
 import fs from 'fs';
 import path from 'path';
-import { PrismaClient } from '@prisma/client';
+import prisma from '../config/prisma';
 import { downloadAndProcessImage } from '../utils/image-downloader';
 
-const prisma = new PrismaClient();
 const UPLOADS_DIR = path.resolve(__dirname, '..', '..', 'uploads', 'products');
 
 if (!fs.existsSync(UPLOADS_DIR)) {
@@ -19,21 +18,21 @@ export const parseSpecificationJSON = (rawValue: any, productName: string): { sp
     if (!Array.isArray(parsed)) {
       return { specs: [], error: `Sản phẩm [${productName}]: Specification JSON không phải là một Array hợp lệ.` };
     }
-    
+
     const finalSpecs = [];
     for (let i = 0; i < parsed.length; i++) {
       const group = parsed[i];
       if (!group || typeof group !== 'object') continue;
-      
+
       const title = group.title ? String(group.title).trim() : '';
       if (!title) {
          return { specs: [], error: `Sản phẩm [${productName}]: Nhóm thông số thứ ${i + 1} thiếu title.` };
       }
-      
+
       if (!Array.isArray(group.items)) {
          return { specs: [], error: `Sản phẩm [${productName}]: Nhóm [${title}] có items không hợp lệ.` };
       }
-      
+
       const validItems = [];
       for (const item of group.items) {
          if (!item || typeof item !== 'object') continue;
@@ -44,7 +43,7 @@ export const parseSpecificationJSON = (rawValue: any, productName: string): { sp
          }
          validItems.push({ label, value });
       }
-      
+
       if (validItems.length > 0) {
          finalSpecs.push({
            title,
@@ -106,7 +105,7 @@ export const parseExcelPreview = async (buffer: Buffer) => {
     let matchedCategoryId = '';
     if (catRaw) {
       const normalizedCat = catRaw.toLowerCase().replace(/đ/g, 'd').normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
-      const matchedCat = categories.find(c => 
+      const matchedCat = categories.find(c =>
         c.name.toLowerCase().replace(/đ/g, 'd').normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim() === normalizedCat ||
         c.slug.includes(normalizedCat.replace(/\s+/g, '-')) ||
         normalizedCat.includes(c.slug.replace(/-/g, ' '))
@@ -119,13 +118,13 @@ export const parseExcelPreview = async (buffer: Buffer) => {
     }
 
     const parseArray = (str: any) => str ? String(str).split('|').map(s => s.trim()) : [];
-    
+
     const colors = parseArray(raw['Color']);
     const colorCodes = parseArray(raw['Color Code']);
     const colorImages = parseArray(raw['Color Image URL']);
-    
+
     const storages = parseArray(raw['Storage']);
-    
+
     const parsePriceMap = (str: any, fieldName: string) => {
       const map: Record<string, number> = {};
       if (!str) return map;
@@ -158,11 +157,11 @@ export const parseExcelPreview = async (buffer: Buffer) => {
     }
 
     const cList = colors.length > 0 ? colors.map((c, idx) => ({ Color: c, ColorCode: colorCodes[idx] || '', ColorImage: colorImages[idx] || '' })) : [null];
-    
+
     const sList = storages.length > 0 ? storages.map(s => {
       let price = storagePriceMap[s];
       let salePrice = storageSalePriceMap[s] || 0;
-      
+
       if (price === undefined) {
          if (basePrice > 0) {
             price = basePrice;
@@ -238,7 +237,7 @@ export const parseExcelPreview = async (buffer: Buffer) => {
     }
 
     let finalSpecs: any[] = [];
-    
+
     const specJsonRaw = raw['Specification JSON'];
     if (specJsonRaw) {
       const { specs: parsedSpecs, error: specError } = parseSpecificationJSON(specJsonRaw, productName || `Row ${i+2}`);
@@ -379,7 +378,7 @@ export const processImport = async (groupedProducts: GroupedProduct[]) => {
     try {
       const productSlug = group.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
       const mainImagePath = await getOrDownloadImage(group.imageUrl);
-      
+
       const galleryPaths: string[] = [];
       const uniqueGalleryUrls = Array.from(new Set(group.galleryUrls));
       for (const url of uniqueGalleryUrls) {
@@ -405,7 +404,7 @@ export const processImport = async (groupedProducts: GroupedProduct[]) => {
 
         for (const v of group.variants) {
           const varImagePath = await getOrDownloadImage(v.image);
-          
+
           await tx.productVariant.create({
             data: {
               sku: v.sku,
@@ -421,7 +420,7 @@ export const processImport = async (groupedProducts: GroupedProduct[]) => {
           results.variantsCreated++;
         }
       });
-      
+
     } catch (e: any) {
       console.error('Error importing product group:', group.name, e);
       results.errors.push(`Group ${group.name}: ${e.message}`);
