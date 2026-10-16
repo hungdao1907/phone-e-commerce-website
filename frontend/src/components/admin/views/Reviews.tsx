@@ -75,12 +75,14 @@ export function Reviews() {
                 <div className="flex justify-between items-start mb-4">
                   <div>
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="text-sm font-semibold">{review.customer.fullName}</span>
-                      <span className="text-sm text-white/40">({review.customer.email})</span>
+                      <span className="text-sm font-semibold">{review.customer?.fullName || 'Khách hàng'}</span>
+                      {review.customer?.email && (
+                        <span className="text-sm text-white/40">({review.customer.email})</span>
+                      )}
                     </div>
                     <div className="flex items-center gap-1">
                       {[1,2,3,4,5].map(star => (
-                        <Star key={star} className={`w-4 h-4 ${star <= review.rating ? 'fill-yellow-400 text-yellow-400' : 'text-white/20'}`} />
+                        <Star key={star} className={`w-4 h-4 ${star <= (review.rating || 5) ? 'fill-yellow-400 text-yellow-400' : 'text-white/20'}`} />
                       ))}
                     </div>
                   </div>

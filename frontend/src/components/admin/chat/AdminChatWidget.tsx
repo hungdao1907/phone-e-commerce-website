@@ -225,17 +225,17 @@ export function AdminChatWidget() {
                   initial={{ opacity: 0, x: 20, scale: 0.9 }}
                   animate={{ opacity: 1, x: 0, scale: 1 }}
                   exit={{ opacity: 0, x: 10, scale: 0.9 }}
-                  className="hidden sm:flex items-center gap-2 bg-white/95 backdrop-blur-md px-3.5 py-2 rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.12)] border border-neutral-200/80 text-xs text-neutral-800 font-medium cursor-pointer select-none"
+                  className="hidden sm:flex items-center gap-2 bg-[rgba(8,28,20,0.85)] backdrop-blur-xl px-4 py-2.5 rounded-full shadow-[0_0_24px_-6px_rgba(62,224,140,0.5)] border border-[#3ee08c]/50 text-xs text-[#eefaf3] font-medium cursor-pointer select-none"
                   onClick={() => setIsOpen(true)}
                 >
-                  <Sparkles className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" />
+                  <Sparkles className="w-3.5 h-3.5 text-[#3ee08c] flex-shrink-0" />
                   <span>Cần hỗ trợ quản trị? Nhắn trợ lý nhé!</span>
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
                       setShowTooltip(false);
                     }}
-                    className="ml-1 text-neutral-400 hover:text-neutral-600 p-0.5"
+                    className="ml-1 text-[#eefaf3]/50 hover:text-[#eefaf3] p-0.5"
                     aria-label="Đóng gợi ý"
                   >
                     <X className="w-3 h-3" />

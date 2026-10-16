@@ -108,8 +108,14 @@ export function VerticalDock({ activeView, onNavigate }: { activeView: string; o
           damping: 24,
           mass: 1
         }}
-        style={{ transformOrigin: "top left" }}
-        className="h-full flex flex-col p-3 bg-black/20 backdrop-blur-sm border border-white/5 rounded-3xl shadow-2xl overflow-hidden transform-gpu will-change-transform"
+        style={{
+          transformOrigin: "top left",
+          background: 'rgba(4, 22, 15, 0.55)',
+          backdropFilter: 'blur(20px)',
+          border: '1px solid rgba(255, 255, 255, 0.12)',
+          boxShadow: '0 20px 50px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.15)'
+        }}
+        className="h-full flex flex-col p-3 rounded-3xl overflow-hidden transform-gpu will-change-transform"
       >
 
         {/* Brand Logo Box */}
@@ -150,30 +156,38 @@ export function VerticalDock({ activeView, onNavigate }: { activeView: string; o
                   onMouseEnter={() => setHoveredId(item.id)}
                   onMouseLeave={() => setHoveredId(null)}
                 >
-                  {/* Gradient background — same effect as sub-items */}
+                  {/* Subtle hover background */}
                   <motion.div
                     className="absolute inset-0 rounded-2xl pointer-events-none"
                     animate={{
                       opacity: isActive ? 1 : isItemHovered ? 0.5 : 0
                     }}
                     style={{
-                      background: "linear-gradient(to right, transparent 0%, rgba(255,255,255,0.04) 35%, rgba(255,255,255,0.12) 100%)"
+                      background: "linear-gradient(to right, transparent 0%, rgba(46,232,138,0.04) 35%, rgba(46,232,138,0.12) 100%)"
                     }}
                     transition={{ duration: 0.35, ease: "easeOut" }}
                   />
 
-                  {/* Icon Container */}
+                  {/* Icon Container with Emerald Glass circle when Active */}
                   <motion.div
-                    animate={{ scale: isItemHovered ? 1.2 : 1 }}
+                    animate={{ scale: isItemHovered ? 1.15 : 1 }}
                     transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                    className="w-10 h-10 shrink-0 flex items-center justify-center"
+                    className={cn(
+                      "w-10 h-10 shrink-0 flex items-center justify-center rounded-full transition-all duration-300",
+                      isActive
+                        ? "bg-[#3EE08C] text-[#04140C] shadow-[0_0_26px_rgba(62,224,140,0.6)]"
+                        : "text-[#eefaf3]/55 hover:text-[#eefaf3] hover:bg-white/[0.07]"
+                    )}
                   >
                     {item.isLottie ? (
-                      <div className="w-7 h-7 flex items-center justify-center">
+                      <div className={cn(
+                        "w-6 h-6 flex items-center justify-center transition-all",
+                        isActive ? "brightness-0" : "brightness-90 opacity-80"
+                      )}>
                         <LottieIcon path={item.icon as string} playing={isItemHovered} />
                       </div>
                     ) : (
-                      <item.icon className="w-6 h-6 text-white/80" />
+                      <item.icon className="w-5 h-5" />
                     )}
                   </motion.div>
 
@@ -184,7 +198,7 @@ export function VerticalDock({ activeView, onNavigate }: { activeView: string; o
                     transition={{ duration: 0.2 }}
                     className={cn(
                       "whitespace-nowrap ml-4 font-medium transition-colors duration-200 flex-1 flex items-center justify-between",
-                      isActive ? "text-white" : "text-white/60 group-hover:text-white/90"
+                      isActive ? "text-[#3EE08C] font-semibold" : "text-[#eefaf3]/55 group-hover:text-[#eefaf3]"
                     )}
                   >
                     <span>{item.label}</span>
@@ -230,7 +244,7 @@ export function VerticalDock({ activeView, onNavigate }: { activeView: string; o
                                   left: "20px",
                                   width: "2px",
                                   borderRadius: "999px",
-                                  background: "linear-gradient(to bottom, rgba(158,255,0,0.7), rgba(158,255,0,0.15))"
+                                  background: "linear-gradient(to bottom, rgba(62,224,140,0.7), rgba(62,224,140,0.15))"
                                 }}
                                 initial={{ height: 0 }}
                                 animate={{ height: lineH }}
@@ -245,8 +259,8 @@ export function VerticalDock({ activeView, onNavigate }: { activeView: string; o
                                   width: "8px",
                                   height: "8px",
                                   borderRadius: "50%",
-                                  backgroundColor: "#9eff00",
-                                  boxShadow: "0 0 8px 2px rgba(158,255,0,0.8)",
+                                  backgroundColor: "#3EE08C",
+                                  boxShadow: "0 0 10px 2px rgba(62,224,140,0.8)",
                                   zIndex: 20
                                 }}
                                 initial={{ y: 0, opacity: 0 }}
@@ -267,12 +281,12 @@ export function VerticalDock({ activeView, onNavigate }: { activeView: string; o
                               className="relative flex items-center h-9 pr-4 group overflow-hidden rounded-2xl text-left w-full"
                               style={{ paddingLeft: "56px" }}
                             >
-                               {/* Gradient fade-in background: trong suốt bên trái, sáng dần bên phải */}
+                               {/* Gradient fade-in background */}
                                <motion.div 
                                  className="absolute inset-0 rounded-2xl"
                                  style={{
                                    background: isSubActive
-                                     ? "linear-gradient(to right, transparent 0%, rgba(255,255,255,0.04) 35%, rgba(255,255,255,0.12) 100%)"
+                                     ? "linear-gradient(to right, transparent 0%, rgba(62,224,140,0.06) 35%, rgba(62,224,140,0.15) 100%)"
                                      : "transparent"
                                  }}
                                  initial={{ opacity: 0 }}
@@ -282,7 +296,7 @@ export function VerticalDock({ activeView, onNavigate }: { activeView: string; o
                                
                                <span className={cn(
                                  "relative z-10 text-sm font-medium whitespace-nowrap transition-colors",
-                                 isSubActive ? "text-white" : "text-white/50 group-hover:text-white/80"
+                                 isSubActive ? "text-[#3EE08C] font-semibold" : "text-[#eefaf3]/55 group-hover:text-[#eefaf3]"
                                )}>
                                  {sub.label}
                                </span>
@@ -299,9 +313,7 @@ export function VerticalDock({ activeView, onNavigate }: { activeView: string; o
         </div>
 
         {/* Footer Icons: Settings, Notif, Avatar */}
-        <div className="mt-auto pt-4 border-t border-white/10 flex flex-col gap-3 w-full relative">
-          
-
+        <div className="mt-auto pt-4 border-t border-[rgba(46,232,138,0.12)] flex flex-col gap-3 w-full relative">
 
           {/* Settings */}
           <div className="w-full flex flex-col">
@@ -314,13 +326,13 @@ export function VerticalDock({ activeView, onNavigate }: { activeView: string; o
               <motion.div
                 className="absolute inset-0 rounded-2xl pointer-events-none"
                 animate={{ opacity: isSettingsHovered ? 0.5 : 0 }}
-                style={{ background: "linear-gradient(to right, transparent 0%, rgba(255,255,255,0.04) 35%, rgba(255,255,255,0.12) 100%)" }}
+                style={{ background: "linear-gradient(to right, transparent 0%, rgba(46,232,138,0.04) 35%, rgba(46,232,138,0.12) 100%)" }}
                 transition={{ duration: 0.35, ease: "easeOut" }}
               />
               <motion.div 
                 animate={{ scale: isSettingsHovered ? 1.2 : 1 }}
                 transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                className="w-10 h-10 shrink-0 flex items-center justify-center"
+                className="w-10 h-10 shrink-0 flex items-center justify-center text-[#7A998C] group-hover:text-white"
               >
                 <div className="w-7 h-7">
                   <LottieIcon path="/lottie/setting.json" playing={isSettingsHovered} />
@@ -331,7 +343,7 @@ export function VerticalDock({ activeView, onNavigate }: { activeView: string; o
                 initial={{ opacity: 0 }}
                 animate={{ opacity: isExpanded ? 1 : 0 }}
                 transition={{ duration: 0.2 }}
-                className="whitespace-nowrap ml-4 font-medium transition-colors duration-200 flex-1 flex items-center justify-between text-white/60 group-hover:text-white/90"
+                className="whitespace-nowrap ml-4 font-medium transition-colors duration-200 flex-1 flex items-center justify-between text-[#7A998C] group-hover:text-white"
               >
                 <span>Cài đặt</span>
               </motion.div>

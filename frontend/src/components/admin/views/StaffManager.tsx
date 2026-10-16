@@ -22,15 +22,23 @@ export function StaffManager() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const currentUser = useAuthStore((state) => state.user);
+  const token = useAuthStore((state) => state.token);
 
   const fetchUsers = async () => {
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/users`);
-      if (!res.ok) throw new Error('Failed to fetch users');
+      setIsLoading(true);
+      setError('');
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/users`, {
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+      });
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.message || 'Không thể tải danh sách nhân sự');
+      }
       const data = await res.json();
-      setUsers(data);
+      setUsers(Array.isArray(data) ? data : []);
     } catch (err: any) {
-      setError(err.message);
+      setError(err.message || 'Lỗi kết nối khi tải danh sách người dùng');
     } finally {
       setIsLoading(false);
     }
@@ -38,7 +46,7 @@ export function StaffManager() {
 
   useEffect(() => {
     fetchUsers();
-  }, []);
+  }, [token]);
 
   const handleAddStaff = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,10 +54,13 @@ export function StaffManager() {
     setIsSubmitting(true);
 
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/auth/register`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/users`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: newUsername, password: newPassword })
+        headers: { 
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify({ username: newUsername, password: newPassword, role: 'staff' })
       });
 
       const data = await res.json();
@@ -68,6 +79,24 @@ export function StaffManager() {
       setAddError(err.message);
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleDeleteUser = async (u: StaffUser) => {
+    if (!confirm(`Bạn có chắc muốn xóa nhân sự ${u.username}?`)) return;
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/users/${u.id}`, {
+        method: 'DELETE',
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+      });
+      if (res.ok) {
+        fetchUsers();
+      } else {
+        const data = await res.json().catch(() => ({}));
+        alert(data.message || 'Xóa nhân sự thất bại');
+      }
+    } catch (err) {
+      alert('Lỗi kết nối khi xóa nhân sự');
     }
   };
 
@@ -177,14 +206,25 @@ export function StaffManager() {
                       {new Date(u.createdAt).toLocaleDateString('vi-VN')}
                     </td>
                     <td className="p-4 text-right">
-                      {u.role !== 'superadmin' && (
-                        <button className="p-2 hover:bg-red-500/10 hover:text-red-500 rounded-lg transition-colors text-white/40">
+                      {u.role !== 'superadmin' && currentUser?.id !== u.id && (
+                        <button 
+                          onClick={() => handleDeleteUser(u)}
+                          className="p-2 hover:bg-red-500/10 hover:text-red-500 rounded-lg transition-colors text-white/40"
+                          title="Xóa nhân sự"
+                        >
                           <Trash2 className="w-4 h-4" />
                         </button>
                       )}
                     </td>
                   </tr>
                 ))}
+                {users.length === 0 && (
+                  <tr>
+                    <td colSpan={4} className="p-8 text-center text-white/40">
+                      Chưa có nhân sự nào.
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>

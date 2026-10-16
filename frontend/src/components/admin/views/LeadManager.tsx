@@ -1,16 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Search, Filter, Phone, Mail, CheckCircle, XCircle } from 'lucide-react';
+import { useAuthStore } from '@/store/authStore';
 
 export function LeadManager() {
   const [leads, setLeads] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const token = useAuthStore((state) => state.token);
 
   const fetchLeads = async () => {
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/leads`);
+      setIsLoading(true);
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/leads`, {
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+      });
       if (res.ok) {
         const data = await res.json();
-        setLeads(data);
+        setLeads(Array.isArray(data) ? data : []);
       }
     } catch (err) {
       console.error(err);
@@ -21,14 +26,17 @@ export function LeadManager() {
 
   useEffect(() => {
     fetchLeads();
-  }, []);
+  }, [token]);
 
   const handleConvert = async (leadId: string) => {
     // Basic converting just updates status for now, since user said no need to auto-create auth account.
     try {
       const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/leads/${leadId}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        },
         body: JSON.stringify({ status: 'converted' })
       });
       if (res.ok) {
@@ -46,7 +54,8 @@ export function LeadManager() {
     if (!confirm('Xóa Lead này?')) return;
     try {
       const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/leads/${leadId}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
       });
       if (res.ok) {
         alert('Đã xóa Lead');
@@ -157,10 +166,10 @@ export function LeadManager() {
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#99e300]/20 to-[#99e300]/5 border border-[#99e300]/20 flex items-center justify-center text-[#99e300] font-bold">
-                          {lead.fullName.charAt(0).toUpperCase()}
+                          {(lead.fullName?.trim()?.charAt(0) || lead.phone?.charAt(0) || 'K').toUpperCase()}
                         </div>
                         <div>
-                          <div className="font-semibold text-white">{lead.fullName}</div>
+                          <div className="font-semibold text-white">{lead.fullName || 'Khách hàng'}</div>
                           <div className="flex items-center gap-2 text-xs text-white/50 mt-1">
                             {lead.phone && <span className="flex items-center gap-1"><Phone className="w-3 h-3"/> {lead.phone}</span>}
                             {lead.email && <span className="flex items-center gap-1"><Mail className="w-3 h-3"/> {lead.email}</span>}

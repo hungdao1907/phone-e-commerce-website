@@ -357,17 +357,19 @@ export function ProductList() {
     for (const cat of cats) {
       result.push({ id: cat.id, name: cat.name, slug: (cat as any).slug || '', depth });
       if (cat.children) {
-        result = result.concat(flattenCategories(cat.children, depth + 1));
+        if (cat.children && Array.isArray(cat.children) && cat.children.length > 0) {
+          result = result.concat(flattenCategories(cat.children, depth + 1));
+        }
       }
     }
     return result;
   };
-  const flatCats = flattenCategories(categories);
+  const flatCats = flattenCategories(categories || []);
   const selectableFormCategories = flatCats.filter((category) => (
-    Boolean(NAVBAR_CATEGORY_FAMILY_BY_SLUG[category.slug.toLowerCase()])
+    Boolean(category?.slug && NAVBAR_CATEGORY_FAMILY_BY_SLUG[category.slug.toLowerCase()])
   ));
   const filteredCats = selectableFormCategories.filter((category) => (
-    category.name.toLowerCase().includes(catSearch.toLowerCase())
+    Boolean(category?.name && category.name.toLowerCase().includes((catSearch || '').toLowerCase()))
   ));
 
   // Category Configuration logic
@@ -1142,60 +1144,72 @@ export function ProductList() {
 
   // ===== RENDER LIST VIEW =====
   return (
-    <div className="flex flex-col h-full gap-4 text-white w-full relative">
+    <div className="flex flex-col h-full gap-5 text-white w-full relative">
       {/* HEADER */}
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shrink-0 bg-[#A4CE95]/70 backdrop-blur-md p-4 rounded-2xl border border-white/10">
-        <div>
-          <h1 className="text-xl font-bold tracking-tight text-white">Sản phẩm</h1>
-          <p className="text-xs text-white/50 mt-1">Quản lý {pagination.total} sản phẩm</p>
+      <section className="header-glow-green px-7 py-5 flex flex-wrap items-center justify-between gap-4 shrink-0">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 rounded-2xl glass-btn-3d flex items-center justify-center text-emerald-300 shrink-0">
+            <Package className="w-6 h-6" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2.5">
+              <h1 className="text-2xl font-bold tracking-tight text-white">Sản phẩm</h1>
+              <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/20 text-[#2ee88a] border border-emerald-400/30">
+                {pagination.total} mặt hàng
+              </span>
+            </div>
+            <p className="text-xs text-zinc-400 mt-0.5">Quản lý danh mục sản phẩm, biến thể SKU và cảnh báo tồn kho</p>
+          </div>
         </div>
         
-        <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
+        <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
           {/* Bulk Actions */}
           {selectedProductIds.length > 0 && (
-            <div className="flex items-center gap-2 bg-emerald-500/10 px-3 py-1.5 rounded-xl border border-emerald-500/20 mr-2">
-              <span className="text-xs text-emerald-400 font-medium">Đã chọn {selectedProductIds.length}</span>
+            <div className="flex items-center gap-2 glass-btn-3d px-3 py-1.5 rounded-xl border border-emerald-500/30 mr-1">
+              <span className="text-xs text-[#2ee88a] font-medium">Đã chọn {selectedProductIds.length}</span>
               <div className="h-4 w-px bg-emerald-500/20 mx-1"></div>
-              <button onClick={() => handleBulkAction('activate')} className="text-[10px] bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 px-2 py-1 rounded transition-colors">Hiện</button>
-              <button onClick={() => handleBulkAction('deactivate')} className="text-[10px] bg-orange-500/20 text-orange-400 hover:bg-orange-500/30 px-2 py-1 rounded transition-colors">Ẩn</button>
-              <button onClick={() => handleBulkAction('delete')} className="text-[10px] bg-red-500/20 text-red-400 hover:bg-red-500/30 px-2 py-1 rounded transition-colors">Xoá</button>
+              <button onClick={() => handleBulkAction('activate')} className="text-[10px] bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30 px-2 py-1 rounded transition-colors font-medium">Hiện</button>
+              <button onClick={() => handleBulkAction('deactivate')} className="text-[10px] bg-amber-500/20 text-amber-300 hover:bg-amber-500/30 px-2 py-1 rounded transition-colors font-medium">Ẩn</button>
+              <button onClick={() => handleBulkAction('delete')} className="text-[10px] bg-red-500/20 text-red-300 hover:bg-red-500/30 px-2 py-1 rounded transition-colors font-medium">Xoá</button>
             </div>
           )}
 
-          <div className="relative flex-1 md:w-64">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
+          {/* Search */}
+          <div className="relative flex-1 sm:w-56 md:w-60">
+            <Search className="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
             <input 
               type="text" 
               placeholder="Tìm tên, SKU..." 
               value={search} 
               onChange={e => setSearch(e.target.value)}
-              className="w-full h-10 pl-9 pr-4 rounded-xl bg-black/20 border border-white/10 text-sm outline-none focus:border-emerald-500 transition-colors placeholder:text-white/30" 
+              className="w-full pl-10 pr-4 py-2 rounded-xl bg-black/45 border border-white/10 text-sm text-white placeholder-zinc-400 focus:outline-none focus:border-emerald-400/60 transition" 
             />
           </div>
 
+          {/* Sort */}
           <div className="relative">
             <select 
               value={listSort} 
               onChange={e => setListSort(e.target.value)}
-              className="h-10 pl-3 pr-8 rounded-xl bg-black/20 border border-white/10 text-sm outline-none focus:border-emerald-500 appearance-none text-white/80"
+              className="glass-btn-3d px-4 py-2 pr-9 rounded-xl text-sm text-zinc-200 outline-none appearance-none cursor-pointer"
             >
-              <option value="newest">Mới nhất</option>
-              <option value="price_asc">Giá tăng dần</option>
-              <option value="price_desc">Giá giảm dần</option>
-              <option value="name_asc">Tên A-Z</option>
-              <option value="name_desc">Tên Z-A</option>
+              <option value="newest" className="bg-[#06120d] text-white">Mới nhất</option>
+              <option value="price_asc" className="bg-[#06120d] text-white">Giá tăng dần</option>
+              <option value="price_desc" className="bg-[#06120d] text-white">Giá giảm dần</option>
+              <option value="name_asc" className="bg-[#06120d] text-white">Tên A-Z</option>
+              <option value="name_desc" className="bg-[#06120d] text-white">Tên Z-A</option>
             </select>
-            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40 pointer-events-none" />
+            <ChevronDown className="w-4 h-4 text-zinc-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
           </div>
 
           {/* View Toggle */}
-          <div className="flex items-center bg-black/20 border border-white/10 rounded-xl p-1 h-10 shrink-0">
+          <div className="flex items-center p-1 rounded-xl bg-black/50 border border-white/10">
             <button
               onClick={() => setViewMode('grid')}
               aria-label="Chuyển sang dạng lưới"
               className={cn(
-                "p-1.5 rounded-lg flex items-center justify-center transition-all duration-200 w-9 h-full",
-                viewMode === 'grid' ? "bg-white/10 text-white shadow-sm" : "text-white/40 hover:text-white/80 hover:bg-white/5"
+                "p-1.5 rounded-lg transition-all duration-200",
+                viewMode === 'grid' ? "bg-emerald-500/25 text-[#2ee88a] border border-emerald-400/30 shadow-sm" : "text-zinc-400 hover:text-white"
               )}
             >
               <LayoutGrid className="w-4 h-4" />
@@ -1204,30 +1218,35 @@ export function ProductList() {
               onClick={() => setViewMode('list')}
               aria-label="Chuyển sang dạng danh sách"
               className={cn(
-                "p-1.5 rounded-lg flex items-center justify-center transition-all duration-200 w-9 h-full",
-                viewMode === 'list' ? "bg-white/10 text-white shadow-sm" : "text-white/40 hover:text-white/80 hover:bg-white/5"
+                "p-1.5 rounded-lg transition-all duration-200",
+                viewMode === 'list' ? "bg-emerald-500/25 text-[#2ee88a] border border-emerald-400/30 shadow-sm" : "text-zinc-400 hover:text-white"
               )}
             >
               <List className="w-4 h-4" />
             </button>
           </div>
 
-          <button onClick={handleExport} className="h-10 px-4 rounded-xl bg-white/10 hover:bg-white/20 text-white flex items-center gap-2 transition-colors text-sm font-semibold whitespace-nowrap border border-white/10">
-            <Download className="w-4 h-4" /> Export
+          {/* Export */}
+          <button onClick={handleExport} className="glass-btn-3d px-4 py-2 rounded-xl text-sm font-medium text-zinc-200 flex items-center gap-2">
+            <Download className="w-4 h-4 text-emerald-300" /> Export
           </button>
-          <button onClick={() => setIsImportModalOpen(true)} className="h-10 px-4 rounded-xl bg-white/10 hover:bg-white/20 text-white flex items-center gap-2 transition-colors text-sm font-semibold whitespace-nowrap border border-white/10">
-            <Upload className="w-4 h-4" /> Import
+
+          {/* Import */}
+          <button onClick={() => setIsImportModalOpen(true)} className="glass-btn-3d px-4 py-2 rounded-xl text-sm font-medium text-zinc-200 flex items-center gap-2">
+            <Upload className="w-4 h-4 text-amber-300" /> Import
           </button>
-          <button onClick={handleOpenCreate} className="h-10 px-4 rounded-xl bg-gradient-to-r from-emerald-400 to-cyan-400 text-black flex items-center gap-2 hover:opacity-90 transition-opacity text-sm font-bold shadow-[0_0_15px_rgba(52,211,153,0.3)] whitespace-nowrap">
+
+          {/* Add New */}
+          <button onClick={handleOpenCreate} className="btn-neon-primary px-5 py-2 rounded-xl text-sm flex items-center gap-2 font-semibold">
             <Plus className="w-4 h-4" /> Thêm mới
           </button>
         </div>
-      </div>
+      </section>
 
       {/* MAIN CONTENT AREA */}
-      <div className="flex-1 flex gap-6 min-h-0 relative">
+      <div className="flex-1 flex flex-col lg:flex-row gap-5 min-h-0 relative items-start">
         {/* SIDEBAR */}
-        <div className="hidden lg:block w-64 shrink-0 overflow-y-auto custom-scrollbar pb-4 pr-1">
+        <div className="w-full lg:w-64 xl:w-72 shrink-0">
           <AdminProductFilterSidebar 
             categories={flatCats}
             currentCategory={listCategory}
@@ -1244,39 +1263,50 @@ export function ProductList() {
           />
         </div>
 
-        {/* GRID VIEW */}
-        <div className="flex-1 flex flex-col min-h-0 bg-gradient-to-br from-[#5A827E]/90 to-[#26667F]/90 backdrop-blur-md border border-white/[0.08] rounded-2xl p-4 overflow-hidden">
+        {/* PRODUCT GRID / LIST PANEL */}
+        <div className="flex-1 w-full neon-panel p-6 flex flex-col justify-between min-h-[500px] overflow-hidden relative">
           
-          <div className="flex items-center justify-between mb-4 text-xs font-semibold text-white/50 px-2 shrink-0">
-            <div className="flex items-center">
-              <label className="flex items-center gap-2 cursor-pointer hover:text-white transition-colors">
-                <input 
-                  type="checkbox" 
-                  className="rounded border-white/20 bg-transparent text-emerald-500 focus:ring-emerald-500 focus:ring-offset-gray-900"
-                  checked={listData.length > 0 && selectedProductIds.length === listData.length}
-                  onChange={(e) => {
-                    if (e.target.checked) {
-                      setSelectedProductIds(listData.map(p => p.id));
-                    } else {
-                      setSelectedProductIds([]);
-                    }
-                  }}
-                />
-                Chọn tất cả trang này
-              </label>
-              {isFetchingList && <div className="ml-4 flex items-center gap-2 text-emerald-400"><RefreshCw className="w-3 h-3 animate-spin"/> Đang tải...</div>}
+          {/* Header of Product Panel */}
+          <div className="flex items-center justify-between pb-4 mb-4 border-b border-white/10 shrink-0">
+            <label className="flex items-center gap-3 text-sm text-zinc-300 cursor-pointer select-none">
+              <input 
+                type="checkbox" 
+                className="neon-checkbox cursor-pointer"
+                checked={listData.length > 0 && selectedProductIds.length === listData.length}
+                onChange={(e) => {
+                  if (e.target.checked) {
+                    setSelectedProductIds(listData.map(p => p.id));
+                  } else {
+                    setSelectedProductIds([]);
+                  }
+                }}
+              />
+              <span>Chọn tất cả trang này</span>
+            </label>
+            <div className="flex items-center gap-3">
+              {isFetchingList && (
+                <div className="flex items-center gap-2 text-emerald-400 text-xs font-medium">
+                  <RefreshCw className="w-3.5 h-3.5 animate-spin"/> Đang tải...
+                </div>
+              )}
+              <span className="text-xs text-zinc-400">
+                Hiển thị <strong className="text-white">{listData.length}</strong> trên <strong className="text-white">{pagination.total}</strong> kết quả
+              </span>
             </div>
-            <div>{listData.length} kết quả</div>
           </div>
 
-          <div className="flex-1 overflow-y-auto custom-scrollbar pb-10">
+          {/* Cards or Table */}
+          <div className="flex-1 overflow-y-auto custom-scrollbar pb-6 pr-1">
             {listData.length === 0 && !isFetchingList ? (
-              <div className="h-full flex flex-col items-center justify-center text-white/40">
-                <Package className="w-12 h-12 mb-3 opacity-20" />
-                <p>Không tìm thấy sản phẩm nào</p>
+              <div className="h-full min-h-[300px] flex flex-col items-center justify-center text-zinc-400">
+                <div className="w-16 h-16 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mb-3">
+                  <Package className="w-8 h-8 text-emerald-300/40" />
+                </div>
+                <p className="text-sm font-medium">Không tìm thấy sản phẩm nào</p>
+                <p className="text-xs text-zinc-500 mt-1">Hãy thử thay đổi từ khóa hoặc bộ lọc</p>
               </div>
             ) : viewMode === 'grid' ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4 p-1">
                 {listData.map((product) => (
                   <AdminProductCard
                     key={product.id}
@@ -1298,10 +1328,10 @@ export function ProductList() {
                 ))}
               </div>
             ) : (
-              <div className="w-full overflow-x-auto p-2">
+              <div className="w-full overflow-x-auto p-1">
                 <table className="w-full text-left border-collapse">
                   <thead>
-                    <tr className="text-[11px] font-bold text-white/40 uppercase tracking-wider border-b border-white/10">
+                    <tr className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider border-b border-white/10">
                       <th className="p-3 w-10"></th>
                       <th className="p-3 min-w-[250px]">Sản phẩm</th>
                       <th className="p-3">Danh mục</th>
@@ -1340,24 +1370,30 @@ export function ProductList() {
 
           {/* PAGINATION */}
           {pagination.totalPages > 1 && (
-            <div className="mt-4 pt-4 border-t border-white/10 flex items-center justify-between shrink-0 px-2">
-              <div className="text-xs text-white/40">
-                Trang {pagination.page} / {pagination.totalPages}
-              </div>
+            <div className="flex flex-wrap items-center justify-between gap-4 pt-5 mt-3 border-t border-white/10 shrink-0 px-2">
+              <span className="text-xs text-zinc-400">
+                Trang <strong className="text-white">{pagination.page}</strong> / {pagination.totalPages}
+              </span>
+
               <div className="flex items-center gap-2">
                 <button 
                   disabled={pagination.page <= 1}
                   onClick={() => setPagination(p => ({ ...p, page: p.page - 1 }))}
-                  className="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-sm hover:bg-white/10 disabled:opacity-30 transition-colors"
+                  className="glass-btn-3d px-3.5 py-1.5 rounded-xl text-xs text-zinc-300 hover:text-white disabled:opacity-30 disabled:pointer-events-none transition-colors"
                 >
                   Trước
                 </button>
-                <div className="flex items-center gap-1 overflow-x-auto max-w-[200px] sm:max-w-none">
+                <div className="flex items-center gap-1.5 overflow-x-auto max-w-[200px] sm:max-w-none">
                   {Array.from({ length: pagination.totalPages }).map((_, i) => (
                     <button
                       key={i}
                       onClick={() => setPagination(p => ({ ...p, page: i + 1 }))}
-                      className={`w-8 h-8 shrink-0 rounded-lg text-sm flex items-center justify-center transition-colors ${pagination.page === i + 1 ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'hover:bg-white/10 text-white/60'}`}
+                      className={cn(
+                        "w-8 h-8 rounded-xl text-xs flex items-center justify-center transition-all",
+                        pagination.page === i + 1 
+                          ? "btn-neon-primary font-bold" 
+                          : "glass-btn-3d text-zinc-300 hover:text-white"
+                      )}
                     >
                       {i + 1}
                     </button>
@@ -1366,7 +1402,7 @@ export function ProductList() {
                 <button 
                   disabled={pagination.page >= pagination.totalPages}
                   onClick={() => setPagination(p => ({ ...p, page: p.page + 1 }))}
-                  className="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-sm hover:bg-white/10 disabled:opacity-30 transition-colors"
+                  className="glass-btn-3d px-3.5 py-1.5 rounded-xl text-xs text-zinc-300 hover:text-white disabled:opacity-30 disabled:pointer-events-none transition-colors"
                 >
                   Sau
                 </button>

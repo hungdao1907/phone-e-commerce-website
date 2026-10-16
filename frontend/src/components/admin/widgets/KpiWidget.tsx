@@ -1,6 +1,5 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { TrendingUp, TrendingDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface KpiWidgetProps {
@@ -9,61 +8,108 @@ interface KpiWidgetProps {
   change?: string;
   changeType?: 'up' | 'down';
   changeLabel?: string;
+  subDescription?: string;
   icon: React.ReactNode;
   index?: number;
   isLoading?: boolean;
   subtitle?: React.ReactNode;
+  variant?: 'emerald' | 'orange' | 'blue' | 'mint' | 'green';
+  actionText?: string;
+  onAction?: () => void;
+  className?: string;
 }
 
-export function KpiWidget({ title, value, change, changeType = 'up', changeLabel, icon, index = 0, isLoading = false, subtitle }: KpiWidgetProps) {
+export function KpiWidget({
+  title,
+  value,
+  change,
+  changeType = 'up',
+  changeLabel,
+  subDescription,
+  icon,
+  index = 0,
+  isLoading = false,
+  subtitle,
+  variant,
+  actionText,
+  onAction,
+  className
+}: KpiWidgetProps) {
+  // Determine variant based on prop or index
+  const activeVariant = variant || (index === 0 ? 'green' : index === 1 ? 'orange' : index === 2 ? 'blue' : 'green');
+  const glowClass =
+    activeVariant === 'orange'
+      ? 'glow-orange'
+      : activeVariant === 'blue'
+      ? 'glow-blue'
+      : 'glow-green';
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.08, duration: 0.5, ease: 'easeOut' }}
-      className="bg-gradient-to-br from-[#5A827E]/90 to-[#26667F]/90 backdrop-blur-md border border-white/[0.08] rounded-2xl p-5 flex flex-col gap-3 hover:brightness-110 transition-all duration-300"
+      className={cn(
+        "glow-card p-5 flex flex-col justify-between min-h-[190px] h-full select-none",
+        glowClass,
+        className
+      )}
     >
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <span className="text-white/50 text-xs font-medium uppercase tracking-wider">{title}</span>
-        <div className="w-8 h-8 rounded-xl bg-white/[0.06] flex items-center justify-center text-white/40">
+      {/* Top: 3D Icon Box & Title */}
+      <div className="flex items-start justify-between">
+        <div className="icon-box-3d !w-9 !h-9 !rounded-xl">
           {icon}
         </div>
+        <span className="text-[11px] font-medium uppercase tracking-wider text-zinc-400 truncate ml-2">
+          {title}
+        </span>
       </div>
 
-      {/* Value */}
-      {isLoading ? (
-        <div className="h-8 w-1/2 bg-white/10 rounded-md animate-pulse mt-1" />
-      ) : (
-        <p className="text-2xl font-bold text-white tracking-tight">{value}</p>
-      )}
-
-      {/* Footer Area */}
-      <div className="flex items-center justify-between gap-1 mt-auto pt-1 w-full overflow-hidden">
+      {/* Middle: Big Value & Subtitle */}
+      <div className="my-2">
         {isLoading ? (
-          <div className="h-4 w-20 bg-white/10 rounded-md animate-pulse" />
-        ) : change ? (
-          <div className="flex items-center gap-1 min-w-0">
-            <div className={cn(
-              "flex items-center gap-0.5 px-1 py-0.5 rounded text-[9px] font-semibold whitespace-nowrap shrink-0",
-              changeType === 'up' ? "bg-emerald-500/15 text-emerald-400" : "bg-red-500/15 text-red-400"
-            )}>
-              {changeType === 'up' ? <TrendingUp className="w-2.5 h-2.5" /> : <TrendingDown className="w-2.5 h-2.5" />}
-              {change}
-            </div>
-            {changeLabel && (
-              <span className="text-white/30 text-[9px] whitespace-nowrap truncate">{changeLabel}</span>
-            )}
+          <div className="h-8 w-2/3 bg-white/10 rounded-md animate-pulse my-1" />
+        ) : (
+          <div className="text-xl sm:text-2xl font-bold tracking-tight text-white truncate">
+            {value}
           </div>
-        ) : <div />}
+        )}
+        <p className="text-[11px] text-zinc-400 mt-1 truncate">
+          {subDescription || changeLabel}
+        </p>
+      </div>
 
-        {/* Subtitle / Extra Info */}
-        {!isLoading && subtitle && (
-          <div className="shrink-0">
-            {subtitle}
-          </div>
+      {/* Bottom: Pill Badge & Action Link */}
+      <div className="flex items-center justify-between pt-1">
+        {isLoading ? (
+          <div className="h-6 w-16 bg-white/10 rounded-full animate-pulse" />
+        ) : subtitle ? (
+          subtitle
+        ) : change ? (
+          <span
+            className={cn(
+              "inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium border",
+              changeType === 'up'
+                ? "bg-emerald-500/20 text-emerald-200 border-emerald-400/30"
+                : "bg-red-500/15 text-red-300 border-red-400/20"
+            )}
+          >
+            {changeType === 'up' ? '↗' : '↘'} {change}
+          </span>
+        ) : (
+          <div />
+        )}
+
+        {actionText && (
+          <button
+            onClick={onAction}
+            className="text-xs font-semibold text-white flex items-center gap-1 hover:opacity-80 transition-opacity cursor-pointer ml-auto"
+          >
+            {actionText}
+          </button>
         )}
       </div>
     </motion.div>
   );
 }
+

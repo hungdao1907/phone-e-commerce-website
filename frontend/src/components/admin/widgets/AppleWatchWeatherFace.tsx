@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useAuthStore } from '@/store/authStore';
+import { Calendar, MapPin, Sparkles } from 'lucide-react';
 
 const WEATHER_API_KEY = '95f1dbef8e3f8588cf54ea22cf595c33';
 const CITY = 'Ho Chi Minh City';
@@ -80,6 +82,30 @@ interface WeatherData {
 export function AppleWatchWeatherFace() {
   const [time, setTime] = useState(new Date());
   const [weather, setWeather] = useState<WeatherData | null>(null);
+  const user = useAuthStore((state) => state.user);
+
+  const userDisplayName = user?.fullName || user?.username || 'Admin';
+  const userInitial = (userDisplayName[0] || 'A').toUpperCase();
+
+  const currentHour = time.getHours();
+  const greeting = useMemo(() => {
+    if (currentHour >= 5 && currentHour < 12) {
+      return { text: 'Chào buổi sáng', icon: '🌅', sub: 'Chúc bạn một ngày làm việc tràn đầy năng lượng!' };
+    } else if (currentHour >= 12 && currentHour < 18) {
+      return { text: 'Chào buổi chiều', icon: '☀️', sub: 'Chúc bạn một buổi chiều làm việc hiệu quả!' };
+    } else {
+      return { text: 'Chào buổi tối', icon: '🌙', sub: 'Chúc bạn một buổi tối thư thái và an lành!' };
+    }
+  }, [currentHour]);
+
+  const formattedDate = useMemo(() => {
+    const str = time.toLocaleDateString('vi-VN', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+    });
+    return str.charAt(0).toUpperCase() + str.slice(1);
+  }, [time]);
 
   useEffect(() => {
     const timer = setInterval(() => setTime(new Date()), 1000);
@@ -172,174 +198,238 @@ export function AppleWatchWeatherFace() {
     return result;
   }, []);
 
-  const weatherDescription = weather
+  const weatherDescription = weather?.description
     ? weather.description.charAt(0).toUpperCase() + weather.description.slice(1)
     : '...';
 
   return (
     <div
-      className="w-full h-full relative select-none"
+      className="w-full h-full relative select-none flex items-stretch overflow-hidden"
       style={{
-        backgroundImage: "url('/images/bgWatch.jpg')",
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        overflow: 'hidden',
+        background: 'linear-gradient(135deg, #28D882 0%, #157A54 45%, #0C291E 100%)',
       }}
     >
-      {/* ── Sky texture overlay ── */}
-      <div className="absolute inset-0" style={{
-        background: `
-          radial-gradient(ellipse at 20% 10%, rgba(255,255,255,0.12) 0%, transparent 55%),
-          radial-gradient(ellipse at 80% 90%, rgba(255,255,255,0.06) 0%, transparent 45%)
-        `,
-      }} />
+      {/* ── Radiant Emerald Mesh Overlay ── */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background: `
+            radial-gradient(circle at 85% 15%, rgba(255,255,255,0.22) 0%, transparent 45%),
+            radial-gradient(circle at 15% 85%, rgba(0,0,0,0.5) 0%, transparent 60%)
+          `,
+        }}
+      />
 
-      {/* ── Background Circles (Outer for numbers, Middle for icons, Inner for temp) ── */}
-      <div className="absolute inset-0 flex items-center justify-center" style={{ top: '4%' }}>
-        {/* Outer Ring Background (for numbers) */}
-        <div
-              className="absolute rounded-full"
-              style={{
-                width: '75%', // tightened to wrap numbers exactly
-                aspectRatio: '1',
-                background: 'rgba(0, 0, 0, 0.04)', // subtle base circle
-              }}
-            />
-            {/* Middle Ring Background (for icons) */}
-            <div
-              className="absolute rounded-full"
-              style={{
-                width: '64%',
-                aspectRatio: '1',
-                background: 'rgba(0, 0, 0, 0.08)', // slightly darker than sky
-              }}
-            />
-            {/* Inner Circle Background (for temp) */}
-            <div
-              className="absolute rounded-full"
-              style={{
-                width: '45%',
-                aspectRatio: '1',
-                background: 'rgba(255, 255, 255, 0.04)', // Làm sáng lên để tiệp màu với vòng ngoài cùng (vòng số giờ) và trong suốt nhẹ
-              }}
-            />
-          </div>
-
-          {/* ── Top Bar: Menu | Time | Weather Icon ── */}
+      {/* ── Left Column: Apple Watch Clock Face (Strict aspect-ratio so circle NEVER stretches) ── */}
+      <div className="relative h-full aspect-[180/220] shrink-0 select-none">
+        {/* Background Circles (Outer for numbers, Middle for icons, Inner for temp) */}
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{ top: '4%' }}>
+          {/* Outer Ring Background (for numbers) */}
           <div
-            className="absolute z-30 flex justify-between items-center"
-            style={{ top: '7%', left: '8%', right: '3%' }}
-          >
-            {/* Empty spacer to keep time centered after removing menu icon */}
-            <div style={{ width: 11 }} />
+            className="absolute rounded-full"
+            style={{
+              width: '75%', // tightened to wrap numbers exactly
+              aspectRatio: '1',
+              background: 'rgba(0, 0, 0, 0.12)',
+            }}
+          />
+          {/* Middle Ring Background (for icons) */}
+          <div
+            className="absolute rounded-full"
+            style={{
+              width: '64%',
+              aspectRatio: '1',
+              background: 'rgba(0, 0, 0, 0.20)',
+            }}
+          />
+          {/* Inner Circle Background (for temp) */}
+          <div
+            className="absolute rounded-full"
+            style={{
+              width: '45%',
+              aspectRatio: '1',
+              background: 'rgba(255, 255, 255, 0.08)',
+            }}
+          />
+        </div>
 
-        {/* Current time */}
-        <span className="text-white font-semibold tracking-wide" style={{ fontSize: 20 }}>
-          {timeStr}
-        </span>
+        {/* Top Bar: Spacer | Time | Weather Icon */}
+        <div
+          className="absolute z-30 flex justify-between items-center"
+          style={{ top: '7%', left: '8%', right: '8%' }}
+        >
+          {/* Empty spacer to keep time centered */}
+          <div style={{ width: 11 }} />
 
-        {/* Current weather icon */}
-        <div className="opacity-90">
-          {weather ? getWeatherIconComponent(weather.icon, 18) : <SmallCloudIcon size={18} />}
+          {/* Current time */}
+          <span className="text-white font-semibold tracking-wide" style={{ fontSize: 20 }}>
+            {timeStr}
+          </span>
+
+          {/* Current weather icon */}
+          <div className="opacity-90">
+            {weather ? getWeatherIconComponent(weather.icon, 18) : <SmallCloudIcon size={18} />}
+          </div>
+        </div>
+
+        {/* Hour Dial: 12 positions */}
+        {hourPositions.map(({ hour, numX, numY, iconX, iconY }) => {
+          const isCurrent = hour === currentHour12;
+
+          let rotation = hour * 30;
+          if (hour >= 4 && hour <= 8) {
+            rotation -= 180;
+          }
+
+          return (
+            <React.Fragment key={hour}>
+              {/* Hour Number (Outer ring) */}
+              <div
+                className="absolute z-20 flex items-center justify-center"
+                style={{
+                  left: `${numX}%`,
+                  top: `${numY}%`,
+                  transform: 'translate(-50%, -50%)',
+                }}
+              >
+                <span
+                  className="leading-none text-center"
+                  style={{
+                    fontSize: isCurrent ? 10 : 8,
+                    fontWeight: isCurrent ? 700 : 600,
+                    color: isCurrent ? '#000' : 'rgba(255,255,255,0.95)',
+                    display: 'inline-block',
+                    transform: `rotate(${rotation}deg)`,
+                    ...(isCurrent ? {
+                      background: 'rgba(255, 255, 255, 0.75)',
+                      borderRadius: '7px',
+                      padding: '0px 7px',
+                    } : {}),
+                  }}
+                >
+                  {hour}
+                </span>
+              </div>
+
+              {/* Weather Icon (Middle ring) */}
+              <div
+                className="absolute z-20 flex items-center justify-center"
+                style={{
+                  left: `${iconX}%`,
+                  top: `${iconY}%`,
+                  transform: `translate(-50%, -50%) ${isCurrent ? `rotate(${hour * 30}deg)` : ''}`,
+                  ...(isCurrent ? {
+                    background: 'linear-gradient(to right, transparent 40%, rgba(255, 255, 255, 0.08) 100%)',
+                    borderRadius: '25px',
+                    padding: '0.5px 5px',
+                    boxShadow: '8px 0px 6px -4px rgba(0, 0, 0, 0.4)',
+                  } : {
+                    width: 18,
+                    height: 18,
+                  }),
+                }}
+              >
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    filter: 'none',
+                    transform: isCurrent ? `rotate(${-(hour * 30)}deg)` : 'none',
+                  }}
+                >
+                  {getHourIcon(hour, isCurrent ? 15 : 14)}
+                </div>
+              </div>
+            </React.Fragment>
+          );
+        })}
+
+        {/* Center Temperature Display */}
+        <div
+          className="absolute inset-0 flex flex-col items-center justify-center z-10 pointer-events-none"
+          style={{ top: '4%' }}
+        >
+          <span className="text-white font-light leading-none" style={{ fontSize: 32 }}>
+            {weather ? weather.temp : '--'}°
+          </span>
+          <span className="text-white/70 font-medium mt-1" style={{ fontSize: 8 }}>
+            H:{weather ? weather.tempMax : '--'}° L:{weather ? weather.tempMin : '--'}°
+          </span>
+        </div>
+
+        {/* Bottom Text (Condition) */}
+        <div className="absolute bottom-3 left-0 right-0 flex justify-center">
+          <span className="text-white font-medium text-[11px] px-3 py-1 bg-black/10 rounded-full backdrop-blur-md">
+            {weatherDescription}
+          </span>
         </div>
       </div>
 
-      {/* ── Hour Dial: 12 positions ── */}
-      {hourPositions.map(({ hour, numX, numY, iconX, iconY }) => {
-        const isCurrent = hour === currentHour12;
+      {/* ── Right Column: Welcome User Section (Xin chào người dùng) ── */}
+      <div className="flex-1 h-full min-w-0 py-3 pr-3.5 pl-0.5 z-20 flex flex-col justify-center">
+        <div className="w-full h-full rounded-[22px] bg-black/25 hover:bg-black/30 transition-colors backdrop-blur-md border border-white/20 p-4 flex flex-col justify-between shadow-xl relative overflow-hidden group">
+          {/* Subtle Ambient light glow */}
+          <div className="absolute -top-10 -right-10 w-28 h-28 rounded-full bg-white/15 blur-2xl pointer-events-none group-hover:bg-white/25 transition-all duration-500" />
 
-        // Xoay số theo độ cong, lật ngược các số từ 4 đến 8 để dễ đọc
-        let rotation = hour * 30;
-        if (hour >= 4 && hour <= 8) {
-          rotation -= 180;
-        }
+          {/* Top Row: User Avatar + Name + Role Badge */}
+          <div className="flex items-start justify-between gap-2.5 relative z-10">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="relative shrink-0">
+                {user?.avatar ? (
+                  <img
+                    src={user.avatar}
+                    alt={userDisplayName}
+                    className="w-10 h-10 rounded-full object-cover ring-2 ring-white/40 shadow-md"
+                  />
+                ) : (
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-[#2EE88A] via-[#157A54] to-[#0A1F17] flex items-center justify-center font-bold text-[#06120E] text-sm shadow-md ring-2 ring-white/40">
+                    {userInitial}
+                  </div>
+                )}
+                <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-[#2EE88A] rounded-full ring-2 ring-[#06120E] shadow-sm" />
+              </div>
 
-        return (
-          <React.Fragment key={hour}>
-            {/* Hour Number (Outer ring) */}
-            <div
-              className="absolute z-20 flex items-center justify-center"
-              style={{
-                left: `${numX}%`,
-                top: `${numY}%`,
-                transform: 'translate(-50%, -50%)',
-              }}
-            >
-              <span
-                className="leading-none text-center"
-                style={{
-                  fontSize: isCurrent ? 10 : 8,
-                  fontWeight: isCurrent ? 700 : 600,
-                  color: isCurrent ? '#000' : 'rgba(255,255,255,0.95)', // dark text for current hour pill
-                  display: 'inline-block',
-                  transform: `rotate(${rotation}deg)`,
-                  ...(isCurrent ? {
-                    background: 'rgba(255, 255, 255, 0.75)', // Màu nhạt lại và trong suốt (chỉnh số 0.75 để thay đổi độ trong suốt)
-                    borderRadius: '7px', // <--- CHỈNH ĐỘ BO GÓC CỦA VIÊN THUỐC SỐ GIỜ Ở ĐÂY
-                    padding: '0px 7px',
-                  } : {}),
-                }}
-              >
-                {hour}
-              </span>
-            </div>
-
-            {/* Weather Icon (Middle ring) */}
-            <div
-              className="absolute z-20 flex items-center justify-center"
-              style={{
-                left: `${iconX}%`,
-                top: `${iconY}%`,
-                // Dùng hour * 30 thay vì rotation để luôn thuận chiều kim đồng hồ (không bị ảnh hưởng bởi lật số 4->8)
-                transform: `translate(-50%, -50%) ${isCurrent ? `rotate(${hour * 30}deg)` : ''}`,
-                ...(isCurrent ? {
-                  background: 'linear-gradient(to right, transparent 40%, rgba(255, 255, 255, 0.08) 100%)', // Đổi sang 'to right' để hoà nền dọc theo chiều kim đồng hồ
-                  borderRadius: '25px',
-                  padding: '0.5px 5px',
-                  // Bóng lệch X (8px) và Y (0px) để hắt bóng về phía giờ tiếp theo
-                  boxShadow: '8px 0px 6px -4px rgba(0, 0, 0, 0.4)',
-                } : {
-                  width: 18,
-                  height: 18,
-                }),
-              }}
-            >
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  filter: 'none',
-                  // Giữ cho icon luôn đứng thẳng
-                  transform: isCurrent ? `rotate(${-(hour * 30)}deg)` : 'none',
-                }}
-              >
-                {getHourIcon(hour, isCurrent ? 15 : 14)}
+              <div className="min-w-0">
+                <span className="text-[11px] font-medium text-white/80 flex items-center gap-1">
+                  <span>{greeting.icon}</span>
+                  <span>{greeting.text}</span>
+                </span>
+                <p className="text-white font-bold text-sm leading-tight truncate drop-shadow-sm">
+                  {userDisplayName}
+                </p>
               </div>
             </div>
-          </React.Fragment>
-        );
-      })}
 
-      {/* ── Center Temperature Display ── */}
-      <div
-        className="absolute inset-0 flex flex-col items-center justify-center z-10 pointer-events-none"
-        style={{ top: '4%' }} // align with CY
-      >
-        <span className="text-white font-light leading-none" style={{ fontSize: 32 }}>
-          {weather ? weather.temp : '--'}°
-        </span>
-        <span className="text-white/70 font-medium mt-1" style={{ fontSize: 8 }}>
-          H:{weather ? weather.tempMax : '--'}° L:{weather ? weather.tempMin : '--'}°
-        </span>
-      </div>
-
-          {/* Bottom Text (Condition) */}
-          <div className="absolute bottom-3 left-0 right-0 flex justify-center">
-            <span className="text-white font-medium text-[11px] px-3 py-1 bg-black/10 rounded-full backdrop-blur-md">
-              {weatherDescription}
+            <span className="text-[9px] uppercase font-bold tracking-wider text-[#06120E] bg-[#2EE88A] px-2.5 py-0.5 rounded-full shadow-[0_0_10px_rgba(46,232,138,0.4)] shrink-0">
+              {user?.role || 'Admin'}
             </span>
           </div>
+
+          {/* Middle Row: Date & Inspiring Message */}
+          <div className="space-y-1 relative z-10 my-1">
+            <div className="flex items-center gap-1.5 text-white/90 text-xs font-semibold">
+              <Calendar className="w-3.5 h-3.5 text-white/80 shrink-0" />
+              <span>{formattedDate}</span>
+            </div>
+            <p className="text-white/80 text-[11px] leading-relaxed line-clamp-2">
+              {greeting.sub}
+            </p>
+          </div>
+
+          {/* Bottom Row: Location & Status */}
+          <div className="flex items-center gap-2 pt-2 border-t border-white/15 relative z-10">
+            <div className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-black/30 text-[10px] text-white/90 font-medium backdrop-blur-sm border border-white/10">
+              <MapPin className="w-3 h-3 text-white/80" />
+              <span className="truncate max-w-[90px]">TP. HCM</span>
+            </div>
+            <div className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#2EE88A]/25 text-[10px] text-white font-medium border border-[#2EE88A]/40 backdrop-blur-sm shadow-[0_0_8px_rgba(46,232,138,0.2)]">
+              <Sparkles className="w-3 h-3 text-[#2EE88A]" />
+              <span>Trực tuyến</span>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

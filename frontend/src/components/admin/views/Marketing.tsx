@@ -117,10 +117,10 @@ export function Marketing() {
     } catch (error) { alert('Lỗi cập nhật trạng thái'); }
   };
 
-  const filteredCampaigns = campaigns.filter(c => c.name.toLowerCase().includes(search.toLowerCase()));
+  const filteredCampaigns = (campaigns || []).filter(c => (c?.name || '').toLowerCase().includes((search || '').toLowerCase()));
 
   // Product Selector Logic
-  const filteredProducts = products.filter(p => p.name.toLowerCase().includes(productSearch.toLowerCase()));
+  const filteredProducts = (products || []).filter(p => (p?.name || '').toLowerCase().includes((productSearch || '').toLowerCase()));
   
   const toggleProductSelect = (id: string) => {
     setFormData(prev => ({

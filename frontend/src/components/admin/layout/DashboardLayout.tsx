@@ -49,30 +49,32 @@ const VIEW_LABELS: Record<string, string> = {
 export function DashboardLayout() {
   const { view: routeView } = useParams<{ view?: string }>();
   const navigate = useNavigate();
-  const [activeView, setActiveView] = useState(() => routeView || 'dashboard');
+  const activeView = routeView || 'dashboard';
   const role = useAuthStore((state) => state.user?.role);
   const isStaff = role === 'staff';
   const isAdmin = role === 'admin' || role === 'superadmin';
   const [isNotifCenterOpen, setIsNotifCenterOpen] = useState(false);
 
-  useEffect(() => {
-    if (routeView && routeView !== activeView) {
-      setActiveView(routeView);
-    } else if (!routeView && activeView !== 'dashboard') {
-      setActiveView('dashboard');
-    }
-  }, [routeView, activeView]);
-
   const handleNavigate = (newView: string) => {
-    setActiveView(newView);
-    navigate(newView === 'dashboard' ? '/dashboard' : `/dashboard/${newView}`, { replace: false });
+    navigate(newView === 'dashboard' ? '/dashboard' : `/dashboard/${newView}`);
   };
 
   const handleOpenNotifCenter = useCallback(() => setIsNotifCenterOpen(true), []);
 
   return (
-    <div className="relative min-h-screen w-full overflow-hidden bg-gradient-to-br from-[#183D61] to-[#ACD99C] text-white font-sans">
-
+    <div
+      className="relative min-h-screen w-full overflow-hidden text-white font-sans"
+      style={{
+        background: `
+          radial-gradient(60% 50% at 85% 0%, rgba(90, 255, 170, 0.38), transparent 70%),
+          radial-gradient(50% 45% at 10% 20%, rgba(30, 170, 110, 0.35), transparent 70%),
+          radial-gradient(70% 40% at 50% 100%, rgba(62, 224, 140, 0.14), transparent),
+          linear-gradient(170deg, #0e6347 0%, #0a4430 30%, #062a1e 60%, #030d09 100%)
+        `,
+        backgroundColor: '#040b08',
+        color: '#eefaf3'
+      }}
+    >
 
       {/* Main Content Area */}
       <div className="relative z-10 flex h-screen p-4 pl-24">
@@ -89,7 +91,7 @@ export function DashboardLayout() {
 
             {/* Center Search */}
             <div className="w-[320px] z-[100] flex justify-center">
-              <SearchButton onNavigate={setActiveView} />
+              <SearchButton onNavigate={handleNavigate} />
             </div>
 
             {/* Right Icons */}

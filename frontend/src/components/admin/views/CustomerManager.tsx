@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, UserCircle, MapPin, Mail, Phone, Trash2 } from 'lucide-react';
+import { Plus, UserCircle, MapPin, Mail, Phone, Trash2, RefreshCw } from 'lucide-react';
+import { useAuthStore } from '@/store/authStore';
 
 interface Customer {
   id: string;
@@ -19,6 +20,7 @@ export function CustomerManager() {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
+  const token = useAuthStore((state) => state.token);
   
   // Form state for adding new customer
   const [isAdding, setIsAdding] = useState(false);
@@ -31,12 +33,19 @@ export function CustomerManager() {
 
   const fetchCustomers = async () => {
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/customers`);
-      if (!res.ok) throw new Error('Failed to fetch customers');
+      setIsLoading(true);
+      setError('');
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/customers`, {
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+      });
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.message || 'Không thể tải danh sách khách hàng');
+      }
       const data = await res.json();
-      setCustomers(data);
+      setCustomers(Array.isArray(data) ? data : []);
     } catch (err: any) {
-      setError(err.message);
+      setError(err.message || 'Lỗi kết nối khi tải khách hàng');
     } finally {
       setIsLoading(false);
     }
@@ -44,7 +53,7 @@ export function CustomerManager() {
 
   useEffect(() => {
     fetchCustomers();
-  }, []);
+  }, [token]);
 
   const handleAddCustomer = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,7 +63,10 @@ export function CustomerManager() {
     try {
       const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/customers`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        },
         body: JSON.stringify({ 
           fullName: newFullName, 
           email: newEmail,
@@ -220,15 +232,20 @@ export function CustomerManager() {
                     <td className="p-4 text-right">
                       <button 
                         onClick={async () => {
-                          if (!confirm(`Bạn có chắc muốn xóa khách hàng ${c.fullName}?`)) return;
+                          if (!confirm(`Bạn có chắc muốn xóa khách hàng ${c.fullName || c.email}?`)) return;
                           try {
                             const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/customers/${c.id}`, {
-                              method: 'DELETE'
+                              method: 'DELETE',
+                              headers: token ? { 'Authorization': `Bearer ${token}` } : {}
                             });
-                            if (res.ok) fetchCustomers();
-                            else alert('Xóa thất bại');
+                            if (res.ok) {
+                              fetchCustomers();
+                            } else {
+                              const data = await res.json().catch(() => ({}));
+                              alert(data.message || 'Xóa thất bại');
+                            }
                           } catch (err) {
-                            alert('Lỗi xóa khách hàng');
+                            alert('Lỗi kết nối khi xóa khách hàng');
                           }
                         }}
                         className="p-2 hover:bg-red-500/10 hover:text-red-500 rounded-lg transition-colors text-white/40" 
@@ -241,7 +258,7 @@ export function CustomerManager() {
                 ))}
                 {customers.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="p-8 text-center text-white/40">
+                    <td colSpan={7} className="p-8 text-center text-white/40">
                       Chưa có khách hàng nào.
                     </td>
                   </tr>

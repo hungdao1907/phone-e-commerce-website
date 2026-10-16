@@ -191,8 +191,9 @@ export function SidebarFilter({ filters, isLoading, hideCategoryAndBrand, catego
     };
 
     const getColorHex = (name: string) => {
+      if (!name) return '#cccccc';
       if (colorCodes[name]) return colorCodes[name];
-      const lower = name.toLowerCase();
+      const lower = (name || '').toLowerCase();
       for (const [key, hex] of Object.entries(fallbackColorMap)) {
         if (lower.includes(key)) return hex;
       }
@@ -200,7 +201,7 @@ export function SidebarFilter({ filters, isLoading, hideCategoryAndBrand, catego
     };
 
     const BASIC_COLORS = ['đen', 'trắng', 'đỏ', 'vàng', 'hồng', 'tím', 'bạc', 'xám', 'titan', 'xanh dương', 'xanh lá', 'xanh', 'black', 'white', 'red', 'yellow', 'pink', 'purple', 'silver', 'gray', 'grey', 'blue', 'green', 'gold'];
-    const isBasic = (name: string) => BASIC_COLORS.includes(name.toLowerCase().trim());
+    const isBasic = (name: string) => BASIC_COLORS.includes((name || '').toLowerCase().trim());
 
     // Always show selected colors, plus basic colors
     const basicColors = colorOptions.filter(c => isBasic(c) || selectedValues.includes(c));

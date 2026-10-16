@@ -36,9 +36,10 @@ export function Invoices() {
   useEffect(() => { fetchInvoices(); }, []);
 
   const filteredInvoices = invoices.filter(inv => 
-    inv.invoiceCode.toLowerCase().includes(search.toLowerCase()) ||
-    inv.order.orderCode.toLowerCase().includes(search.toLowerCase()) ||
-    inv.order.customer.fullName.toLowerCase().includes(search.toLowerCase())
+    inv.invoiceCode?.toLowerCase().includes(search.toLowerCase()) ||
+    inv.order?.orderCode?.toLowerCase().includes(search.toLowerCase()) ||
+    inv.order?.customer?.fullName?.toLowerCase().includes(search.toLowerCase()) ||
+    inv.order?.shippingPhone?.includes(search)
   );
 
   return (
@@ -86,8 +87,8 @@ export function Invoices() {
                 onClick={() => setSelectedInvoice(inv)}
               >
                 <div className="col-span-2 font-mono text-sm font-medium text-emerald-400 pl-2">{inv.invoiceCode}</div>
-                <div className="col-span-2 font-mono text-sm text-white/60">{inv.order.orderCode}</div>
-                <div className="col-span-3 font-medium text-white truncate">{inv.order.customer.fullName}</div>
+                <div className="col-span-2 font-mono text-sm text-white/60">{inv.order?.orderCode || '---'}</div>
+                <div className="col-span-3 font-medium text-white truncate">{inv.order?.customer?.fullName || inv.order?.shippingPhone || 'Khách vãng lai'}</div>
                 <div className="col-span-2 text-sm text-white/80">{formatDate(inv.issuedAt)}</div>
                 <div className="col-span-2 text-right font-bold text-white">{formatCurrency(inv.total)}</div>
                 <div className="col-span-1 flex justify-center">
@@ -143,14 +144,14 @@ export function Invoices() {
                   <div className="flex justify-between mb-10 pb-6 border-b border-gray-200">
                     <div>
                       <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Thông tin khách hàng</h3>
-                      <p className="font-bold text-black text-lg mb-1">{selectedInvoice.order.customer.fullName}</p>
-                      <p className="text-sm text-gray-600 mb-1">{selectedInvoice.order.shippingPhone}</p>
-                      <p className="text-sm text-gray-600 max-w-[250px]">{selectedInvoice.order.shippingAddress}</p>
+                      <p className="font-bold text-black text-lg mb-1">{selectedInvoice.order?.customer?.fullName || selectedInvoice.order?.shippingPhone || 'Khách vãng lai'}</p>
+                      <p className="text-sm text-gray-600 mb-1">{selectedInvoice.order?.shippingPhone || selectedInvoice.order?.customer?.phone || '---'}</p>
+                      <p className="text-sm text-gray-600 max-w-[250px]">{selectedInvoice.order?.shippingAddress || 'Chưa có thông tin địa chỉ'}</p>
                     </div>
                     <div className="text-right">
                       <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Chi tiết thanh toán</h3>
-                      <p className="text-sm text-gray-600 mb-1">Mã đơn hàng: <strong className="text-black font-mono">{selectedInvoice.order.orderCode}</strong></p>
-                      <p className="text-sm text-gray-600 mb-1">PTTT: {selectedInvoice.order.paymentMethod.toUpperCase()}</p>
+                      <p className="text-sm text-gray-600 mb-1">Mã đơn hàng: <strong className="text-black font-mono">{selectedInvoice.order?.orderCode || '---'}</strong></p>
+                      <p className="text-sm text-gray-600 mb-1">PTTT: {(selectedInvoice.order?.paymentMethod || 'COD').toUpperCase()}</p>
                       <p className="text-sm text-emerald-600 font-medium">Đã thanh toán</p>
                     </div>
                   </div>
@@ -166,7 +167,7 @@ export function Invoices() {
                       </tr>
                     </thead>
                     <tbody>
-                      {selectedInvoice.order.items.map((item: any, i: number) => (
+                      {(selectedInvoice.order?.items || []).map((item: any, i: number) => (
                         <tr key={item.id} className="border-b border-gray-200">
                           <td className="py-4 px-2">
                             <p className="font-semibold text-black">{item.productName}</p>

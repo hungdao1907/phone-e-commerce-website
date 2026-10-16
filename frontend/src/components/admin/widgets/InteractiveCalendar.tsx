@@ -3,6 +3,13 @@ import { motion, AnimatePresence, HTMLMotionProps } from 'framer-motion';
 import { Columns3, Grid, X, MapPin, Clock, Users, CalendarDays, MoreHorizontal } from 'lucide-react';
 import MotionButton from '@/components/ui/MotionButton';
 import { LottieIcon } from '@/components/ui/LottieIcon';
+import { useAuthStore } from '@/store/authStore';
+
+const formatParticipants = (participants: any) => {
+  if (Array.isArray(participants)) return participants.join(', ');
+  if (typeof participants === 'string') return participants;
+  return '';
+};
 
 export type DayType = {
   day: string;
@@ -144,7 +151,11 @@ const MeetingActions = ({ mIndex, day, meeting, fetchPlans, onEdit }: { mIndex: 
               <button
                 onClick={async () => {
                   try {
-                    await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/plans/${meeting.id}`, { method: 'DELETE' });
+                    const token = useAuthStore.getState().token;
+                    await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/plans/${meeting.id}`, { 
+                      method: 'DELETE',
+                      headers: token ? { Authorization: `Bearer ${token}` } : {}
+                    });
                     fetchPlans();
                   } catch (e) { console.error(e); }
                 }}
@@ -233,10 +244,22 @@ const InteractiveCalendar = React.forwardRef((
 
   const fetchPlans = async () => {
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/plans`);
+      const token = useAuthStore.getState().token;
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/plans`, {
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
+        }
+      });
       const data = await res.json();
-      setFetchedPlans(data);
-    } catch (err) { console.error(err); }
+      if (Array.isArray(data)) {
+        setFetchedPlans(data);
+      } else {
+        setFetchedPlans([]);
+      }
+    } catch (err) {
+      console.error(err);
+      setFetchedPlans([]);
+    }
   };
 
   React.useEffect(() => {
@@ -247,25 +270,29 @@ const InteractiveCalendar = React.forwardRef((
 
   const mergedDays = React.useMemo(() => {
     const newDays = JSON.parse(JSON.stringify(currentDays)) as DayType[];
-    fetchedPlans.forEach(plan => {
-      const planDate = new Date(plan.date);
-      if (planDate.getFullYear() === currentDate.getFullYear() && planDate.getMonth() === currentDate.getMonth()) {
-        const dayStr = planDate.getDate() < 10 ? `0${planDate.getDate()}` : `${planDate.getDate()}`;
-        const dayObj = newDays.find(d => d.day === dayStr);
-        if (dayObj) {
-          if (!dayObj.meetingInfo) dayObj.meetingInfo = [];
-          dayObj.classNames += ' cursor-pointer shadow-lg bg-white/10 border border-white/20'; // highlight days with plans slightly
-          dayObj.meetingInfo.push({
-            id: plan.id,
-            date: plan.date,
-            time: plan.time,
-            title: plan.title,
-            participants: plan.participants,
-            location: plan.location
-          });
+    if (Array.isArray(fetchedPlans)) {
+      fetchedPlans.forEach(plan => {
+        if (!plan || !plan.date) return;
+        const planDate = new Date(plan.date);
+        if (isNaN(planDate.getTime())) return;
+        if (planDate.getFullYear() === currentDate.getFullYear() && planDate.getMonth() === currentDate.getMonth()) {
+          const dayStr = planDate.getDate() < 10 ? `0${planDate.getDate()}` : `${planDate.getDate()}`;
+          const dayObj = newDays.find(d => d.day === dayStr);
+          if (dayObj) {
+            if (!dayObj.meetingInfo) dayObj.meetingInfo = [];
+            dayObj.classNames += ' cursor-pointer shadow-lg bg-white/10 border border-white/20'; // highlight days with plans slightly
+            dayObj.meetingInfo.push({
+              id: plan.id,
+              date: plan.date,
+              time: plan.time || '',
+              title: plan.title || '',
+              participants: Array.isArray(plan.participants) ? plan.participants : (plan.participants ? [plan.participants] : []),
+              location: plan.location || ''
+            });
+          }
         }
-      }
-    });
+      });
+    }
 
     let currentIndex = 0;
     newDays.forEach(day => {
@@ -288,12 +315,16 @@ const InteractiveCalendar = React.forwardRef((
 
   const handleSubmitPlan = async () => {
     try {
+      const token = useAuthStore.getState().token;
       await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/plans`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
+        },
         body: JSON.stringify({
           ...formData,
-          participants: formData.participants.split(',').map(p => p.trim())
+          participants: (formData.participants || '').split(',').map(p => p.trim()).filter(Boolean)
         })
       });
       setFormData({ title: '', date: '', time: '', location: '', participants: '' });
@@ -311,11 +342,11 @@ const InteractiveCalendar = React.forwardRef((
 
   const handleEditClick = (meeting: any, layoutId: string) => {
     setFormData({
-      title: meeting.title,
-      date: meeting.date,
-      time: meeting.time,
-      location: meeting.location,
-      participants: meeting.participants.join(', ')
+      title: meeting.title || '',
+      date: meeting.date || '',
+      time: meeting.time || '',
+      location: meeting.location || '',
+      participants: formatParticipants(meeting.participants)
     });
     setEditingPlanId(meeting.id);
     setEditingLayoutId(layoutId);
@@ -323,12 +354,16 @@ const InteractiveCalendar = React.forwardRef((
 
   const handleUpdatePlan = async () => {
     try {
+      const token = useAuthStore.getState().token;
       await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/plans/${editingPlanId}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
+        },
         body: JSON.stringify({
           ...formData,
-          participants: formData.participants.split(',').map(p => p.trim())
+          participants: (formData.participants || '').split(',').map(p => p.trim()).filter(Boolean)
         })
       });
       setFormData({ title: '', date: '', time: '', location: '', participants: '' });
@@ -639,7 +674,7 @@ const InteractiveCalendar = React.forwardRef((
                                 <span className="text-xs text-white/50">{meeting.time}</span>
                               </div>
                               <h3 className="mb-1 pr-8 text-base font-semibold text-white">{meeting.title}</h3>
-                              <p className="mb-2 pr-8 text-sm text-zinc-500">{meeting.participants.join(', ')}</p>
+                              <p className="mb-2 pr-8 text-sm text-zinc-500">{formatParticipants(meeting.participants)}</p>
                               <div className="flex items-center text-blue-400 gap-1 pr-8">
                                 <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}

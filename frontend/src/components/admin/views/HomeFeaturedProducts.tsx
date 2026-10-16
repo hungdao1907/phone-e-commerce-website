@@ -104,7 +104,7 @@ export function HomeFeaturedProducts() {
     const query = search.trim().toLowerCase();
     return products
       .filter((product) => product.status === 'active' && !featuredProductIds.has(product.id))
-      .filter((product) => !query || product.name.toLowerCase().includes(query) || product.brand?.toLowerCase().includes(query) || product.category?.name?.toLowerCase().includes(query));
+      .filter((product) => !query || (product.name || '').toLowerCase().includes(query) || product.brand?.toLowerCase().includes(query) || product.category?.name?.toLowerCase().includes(query));
   }, [featuredProductIds, products, search]);
 
   const selectedProduct = useMemo(() => {

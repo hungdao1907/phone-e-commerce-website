@@ -16,15 +16,15 @@ interface OrderItem {
 }
 
 interface Customer {
-  fullName: string;
-  email: string;
-  phone: string | null;
+  fullName?: string | null;
+  email?: string | null;
+  phone?: string | null;
 }
 
 interface Order {
   id: string;
   orderCode: string;
-  customer: Customer;
+  customer?: Customer | null;
   status: string;
   paymentMethod: string;
   paymentStatus: string;
@@ -45,7 +45,9 @@ const formatCurrency = (amount: number) => {
 };
 
 const formatDate = (dateString: string) => {
+  if (!dateString) return '---';
   const date = new Date(dateString);
+  if (isNaN(date.getTime())) return '---';
   return date.toLocaleDateString('vi-VN', {
     hour: '2-digit', minute: '2-digit',
     day: '2-digit', month: '2-digit', year: 'numeric'
@@ -53,14 +55,14 @@ const formatDate = (dateString: string) => {
 };
 
 const STATUS_MAP: Record<string, { label: string, color: string, icon: any, bg: string }> = {
-  pending: { label: 'Chờ xác nhận', color: 'text-yellow-400', bg: 'bg-yellow-400/10 border-yellow-400/20', icon: Clock },
-  pending_payment: { label: 'Chờ xác nhận', color: 'text-yellow-400', bg: 'bg-yellow-400/10 border-yellow-400/20', icon: Clock },
-  confirmed: { label: 'Đã xác nhận', color: 'text-blue-400', bg: 'bg-blue-400/10 border-blue-400/20', icon: CheckCircle2 },
-  shipping: { label: 'Đang giao hàng', color: 'text-purple-400', bg: 'bg-purple-400/10 border-purple-400/20', icon: Truck },
-  delivered: { label: 'Đã giao', color: 'text-emerald-400', bg: 'bg-emerald-400/10 border-emerald-400/20', icon: Package },
-  completed: { label: 'Hoàn thành', color: 'text-[#22C55E]', bg: 'bg-[#22C55E]/10 border-[#22C55E]/20', icon: CheckCircle2 },
-  cancelled: { label: 'Đã hủy', color: 'text-red-400', bg: 'bg-red-400/10 border-red-400/20', icon: XCircle },
-  returned: { label: 'Đã trả hàng', color: 'text-orange-500', bg: 'bg-orange-500/10 border-orange-500/20', icon: XCircle },
+  pending: { label: 'Chờ xác nhận', color: 'text-amber-300', bg: 'bg-amber-500/15 border-amber-400/30', icon: Clock },
+  pending_payment: { label: 'Chờ xác nhận', color: 'text-amber-300', bg: 'bg-amber-500/15 border-amber-400/30', icon: Clock },
+  confirmed: { label: 'Đã xác nhận', color: 'text-cyan-300', bg: 'bg-cyan-500/15 border-cyan-400/30', icon: CheckCircle2 },
+  shipping: { label: 'Đang giao hàng', color: 'text-purple-300', bg: 'bg-purple-500/15 border-purple-400/30', icon: Truck },
+  delivered: { label: 'Đã giao', color: 'text-[#2ee88a]', bg: 'bg-emerald-500/20 border-emerald-400/30', icon: Package },
+  completed: { label: 'Hoàn thành', color: 'text-[#2ee88a]', bg: 'bg-emerald-500/20 border-emerald-400/30', icon: CheckCircle2 },
+  cancelled: { label: 'Đã hủy', color: 'text-rose-400', bg: 'bg-rose-500/15 border-rose-400/30', icon: XCircle },
+  returned: { label: 'Đã trả hàng', color: 'text-orange-400', bg: 'bg-orange-500/15 border-orange-400/30', icon: XCircle },
 };
 
 const PAYMENT_METHOD_MAP: Record<string, string> = {
@@ -73,13 +75,13 @@ const PAYMENT_METHOD_MAP: Record<string, string> = {
 };
 
 const PAYMENT_STATUS_MAP: Record<string, { label: string, color: string, bg: string }> = {
-  unpaid: { label: 'Chưa thanh toán', color: 'text-orange-400', bg: 'bg-orange-400/10 border-orange-400/20' },
-  UNPAID: { label: 'Chưa thanh toán', color: 'text-orange-400', bg: 'bg-orange-400/10 border-orange-400/20' },
-  PENDING: { label: 'Chưa thanh toán', color: 'text-orange-400', bg: 'bg-orange-400/10 border-orange-400/20' },
-  paid: { label: 'Đã thanh toán', color: 'text-emerald-400', bg: 'bg-emerald-400/10 border-emerald-400/20' },
-  PAID: { label: 'Đã thanh toán', color: 'text-emerald-400', bg: 'bg-emerald-400/10 border-emerald-400/20' },
-  refunded: { label: 'Đã hoàn tiền', color: 'text-red-400', bg: 'bg-red-400/10 border-red-400/20' },
-  REFUNDED: { label: 'Đã hoàn tiền', color: 'text-red-400', bg: 'bg-red-400/10 border-red-400/20' }
+  unpaid: { label: 'Chưa thanh toán', color: 'text-amber-400', bg: 'bg-amber-500/10 border-amber-400/20' },
+  UNPAID: { label: 'Chưa thanh toán', color: 'text-amber-400', bg: 'bg-amber-500/10 border-amber-400/20' },
+  PENDING: { label: 'Chưa thanh toán', color: 'text-amber-400', bg: 'bg-amber-500/10 border-amber-400/20' },
+  paid: { label: 'Đã thanh toán', color: 'text-[#2ee88a]', bg: 'bg-emerald-500/15 border-emerald-400/30' },
+  PAID: { label: 'Đã thanh toán', color: 'text-[#2ee88a]', bg: 'bg-emerald-500/15 border-emerald-400/30' },
+  refunded: { label: 'Đã hoàn tiền', color: 'text-rose-400', bg: 'bg-rose-500/15 border-rose-400/30' },
+  REFUNDED: { label: 'Đã hoàn tiền', color: 'text-rose-400', bg: 'bg-rose-500/15 border-rose-400/30' }
 };
 
 export function Orders() {
@@ -164,10 +166,12 @@ export function Orders() {
     if (search) {
       const q = search.toLowerCase();
       result = result.filter(o => 
-        o.orderCode.toLowerCase().includes(q) ||
-        o.customer.fullName.toLowerCase().includes(q) ||
-        o.customer.phone?.includes(q) ||
-        o.customer.email?.toLowerCase().includes(q)
+        (o.orderCode && o.orderCode.toLowerCase().includes(q)) ||
+        (o.customer?.fullName && o.customer.fullName.toLowerCase().includes(q)) ||
+        (o.customer?.phone && o.customer.phone.includes(q)) ||
+        (o.customer?.email && o.customer.email.toLowerCase().includes(q)) ||
+        (o.shippingPhone && o.shippingPhone.includes(q)) ||
+        (o.shippingAddress && o.shippingAddress.toLowerCase().includes(q))
       );
     }
 
@@ -208,9 +212,54 @@ export function Orders() {
   const totalPages = Math.ceil(processedOrders.length / limit) || 1;
   const paginatedOrders = processedOrders.slice((page - 1) * limit, page * limit);
 
+  const paginationRange = useMemo(() => {
+    const delta = 2;
+    const range: number[] = [];
+    const start = Math.max(1, page - delta);
+    const end = Math.min(totalPages, page + delta);
+    for (let i = start; i <= end; i++) {
+      range.push(i);
+    }
+    return range;
+  }, [page, totalPages]);
+
   useEffect(() => {
     if (page > totalPages) setPage(1);
   }, [totalPages, page]);
+
+  const handleExportData = () => {
+    const ordersToExport = selectedIds.length > 0 
+      ? orders.filter(o => selectedIds.includes(o.id))
+      : processedOrders;
+    
+    if (ordersToExport.length === 0) {
+      alert('Không có đơn hàng nào để xuất');
+      return;
+    }
+
+    const headers = ['Mã đơn hàng', 'Khách hàng', 'Số điện thoại', 'Ngày đặt', 'Tổng tiền (VND)', 'Phương thức TT', 'Trạng thái TT', 'Trạng thái đơn hàng', 'Địa chỉ giao hàng'];
+    const rows = ordersToExport.map(o => [
+      `"${o.orderCode}"`,
+      `"${(o.customer?.fullName || 'Khách vãng lai').replace(/"/g, '""')}"`,
+      `"${o.customer?.phone || o.shippingPhone || ''}"`,
+      `"${formatDate(o.createdAt)}"`,
+      `"${o.totalAmount + o.shippingFee}"`,
+      `"${PAYMENT_METHOD_MAP[o.paymentMethod] || o.paymentMethod}"`,
+      `"${PAYMENT_STATUS_MAP[o.paymentStatus]?.label || o.paymentStatus}"`,
+      `"${STATUS_MAP[o.status]?.label || o.status}"`,
+      `"${(o.shippingAddress || '').replace(/"/g, '""')}"`
+    ]);
+
+    const csvContent = '\uFEFF' + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `don-hang-export-${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   const toggleSelectAll = () => {
     if (selectedIds.length === paginatedOrders.length && paginatedOrders.length > 0) setSelectedIds([]);
@@ -302,149 +351,225 @@ export function Orders() {
   };
 
   return (
-    <div className="flex flex-col h-full gap-5 text-white w-full">
+    <div className="flex flex-col min-h-full gap-5 text-white w-full pb-16">
       {/* HEADER */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between shrink-0 gap-4">
+      <header className="flex flex-wrap items-center justify-between gap-4 px-1 pt-1 shrink-0">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-white">Quản lý Đơn hàng</h1>
-          <p className="text-sm text-white/50 mt-1">Theo dõi, cập nhật trạng thái và quản lý giao dịch.</p>
+          <p className="text-xs text-zinc-400 mt-1">Theo dõi, cập nhật trạng thái và quản lý giao dịch.</p>
         </div>
-        <button onClick={() => setIsBankHistoryOpen(true)} className="flex items-center gap-2 px-4 py-2 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 rounded-xl text-sm font-medium transition-colors w-fit">
+        <button 
+          onClick={() => setIsBankHistoryOpen(true)} 
+          className="btn-neon-primary px-5 py-2.5 rounded-full text-sm flex items-center gap-2 cursor-pointer shadow-[0_0_20px_rgba(46,232,138,0.4)]"
+        >
           <CreditCard className="w-4 h-4" />
           Lịch sử ngân hàng
         </button>
-      </div>
+      </header>
 
-      {/* KPI METRICS */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4 shrink-0">
-        <div onClick={() => setFilterStatus('all')} className="bg-white/5 hover:bg-white/10 cursor-pointer border border-white/10 p-4 rounded-2xl flex flex-col transition-colors">
-          <span className="text-white/50 text-xs font-medium mb-1 uppercase">Tổng đơn hàng</span>
-          <span className="text-2xl font-bold text-white">{orders.length}</span>
+      {/* 5 THẺ KPI ĐƠN HÀNG (ĐỒNG BỘ NEON RIM GLOW) */}
+      <section className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 shrink-0">
+        {/* Tổng đơn hàng */}
+        <div 
+          onClick={() => setFilterStatus('all')} 
+          className={cn(
+            "kpi-glow-card p-5 flex flex-col justify-between cursor-pointer transition-all",
+            filterStatus === 'all' && "ring-1 ring-emerald-400/60 shadow-[0_0_25px_rgba(46,232,138,0.25)]"
+          )}
+        >
+          <span className="text-xs font-medium uppercase tracking-wider text-zinc-400">Tổng đơn hàng</span>
+          <div className="text-3xl font-bold text-white mt-3">{orders.length}</div>
         </div>
-        <div onClick={() => setFilterStatus('pending')} className="bg-yellow-500/5 hover:bg-yellow-500/10 cursor-pointer border border-yellow-500/20 p-4 rounded-2xl flex flex-col transition-colors">
-          <span className="text-yellow-400/80 text-xs font-medium mb-1 uppercase">Chờ xác nhận</span>
-          <span className="text-2xl font-bold text-yellow-400">{orders.filter(o => o.status === 'pending' || o.status === 'pending_payment').length}</span>
+
+        {/* Chờ xác nhận (Cảnh báo Cam Hổ Phách) */}
+        <div 
+          onClick={() => setFilterStatus('pending')} 
+          className={cn(
+            "kpi-glow-card kpi-glow-amber p-5 flex flex-col justify-between cursor-pointer transition-all",
+            filterStatus === 'pending' && "ring-1 ring-amber-400/60 shadow-[0_0_25px_rgba(255,180,50,0.25)]"
+          )}
+        >
+          <span className="text-xs font-medium uppercase tracking-wider text-amber-300/90">Chờ xác nhận</span>
+          <div className="text-3xl font-bold text-amber-300 mt-3">
+            {orders.filter(o => o.status === 'pending' || o.status === 'pending_payment').length}
+          </div>
         </div>
-        <div onClick={() => setFilterStatus('shipping')} className="bg-purple-500/5 hover:bg-purple-500/10 cursor-pointer border border-purple-500/20 p-4 rounded-2xl flex flex-col transition-colors">
-          <span className="text-purple-400/80 text-xs font-medium mb-1 uppercase">Đang giao</span>
-          <span className="text-2xl font-bold text-purple-400">{orders.filter(o => o.status === 'shipping' || o.status === 'delivered').length}</span>
+
+        {/* Đang giao (Tông Cyan) */}
+        <div 
+          onClick={() => setFilterStatus('shipping')} 
+          className={cn(
+            "kpi-glow-card kpi-glow-cyan p-5 flex flex-col justify-between cursor-pointer transition-all",
+            filterStatus === 'shipping' && "ring-1 ring-cyan-400/60 shadow-[0_0_25px_rgba(56,189,248,0.25)]"
+          )}
+        >
+          <span className="text-xs font-medium uppercase tracking-wider text-cyan-300/90">Đang giao</span>
+          <div className="text-3xl font-bold text-cyan-300 mt-3">
+            {orders.filter(o => o.status === 'shipping' || o.status === 'delivered').length}
+          </div>
         </div>
-        <div onClick={() => setFilterStatus('completed')} className="bg-[#22C55E]/5 hover:bg-[#22C55E]/10 cursor-pointer border border-[#22C55E]/20 p-4 rounded-2xl flex flex-col transition-colors">
-          <span className="text-[#22C55E]/80 text-xs font-medium mb-1 uppercase">Hoàn thành</span>
-          <span className="text-2xl font-bold text-[#22C55E]">{orders.filter(o => o.status === 'completed').length}</span>
+
+        {/* Hoàn thành (Neon Mint) */}
+        <div 
+          onClick={() => setFilterStatus('completed')} 
+          className={cn(
+            "kpi-glow-card p-5 flex flex-col justify-between cursor-pointer transition-all",
+            filterStatus === 'completed' && "ring-1 ring-emerald-400/60 shadow-[0_0_25px_rgba(46,232,138,0.25)]"
+          )}
+        >
+          <span className="text-xs font-medium uppercase tracking-wider text-emerald-300/90">Hoàn thành</span>
+          <div className="text-3xl font-bold text-[#2ee88a] mt-3">
+            {orders.filter(o => o.status === 'completed').length}
+          </div>
         </div>
-        <div className="bg-[#22C55E]/5 border border-[#22C55E]/20 p-4 rounded-2xl flex flex-col">
-          <span className="text-[#22C55E]/80 text-xs font-medium mb-1 uppercase">Doanh thu hoàn thành</span>
-          <span className="text-2xl font-bold text-[#22C55E] truncate" title={formatCurrency(orders.filter(o => o.status === 'completed').reduce((sum, o) => sum + o.totalAmount + o.shippingFee, 0))}>
+
+        {/* Doanh thu hoàn thành */}
+        <div className="kpi-glow-card p-5 flex flex-col justify-between col-span-2 md:col-span-1">
+          <span className="text-xs font-medium uppercase tracking-wider text-zinc-400">Doanh thu hoàn thành</span>
+          <div 
+            className="text-xl sm:text-2xl font-bold text-[#2ee88a] mt-3 tracking-tight truncate" 
+            title={formatCurrency(orders.filter(o => o.status === 'completed').reduce((sum, o) => sum + o.totalAmount + o.shippingFee, 0))}
+          >
             {formatCurrency(orders.filter(o => o.status === 'completed').reduce((sum, o) => sum + o.totalAmount + o.shippingFee, 0))}
-          </span>
+          </div>
         </div>
-      </div>
+      </section>
 
-      {/* TOOLBAR */}
-      <div className="bg-white/5 border border-white/10 p-3 rounded-2xl flex flex-col md:flex-row gap-3 shrink-0 backdrop-blur-md">
-        <div className="relative flex-1 min-w-[200px]">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
+      {/* THANH BỘ LỌC & TÌM KIẾM ĐƠN HÀNG */}
+      <section className="neon-panel px-4 py-3 flex flex-wrap items-center justify-between gap-3 shrink-0">
+        <div className="relative flex-1 min-w-[260px]">
+          <Search className="w-4 h-4 text-zinc-400 absolute left-4 top-1/2 -translate-y-1/2" />
           <input 
             type="text" 
             placeholder="Mã đơn, tên, email, SĐT..." 
             value={search} 
             onChange={e => setSearch(e.target.value)}
-            className="w-full h-10 pl-9 pr-4 rounded-xl bg-black/20 border border-transparent text-sm outline-none focus:border-emerald-500 transition-colors placeholder:text-white/30" 
+            className="w-full pl-11 pr-4 py-2.5 rounded-xl bg-black/45 border border-white/10 text-sm text-white placeholder-zinc-400 focus:outline-none focus:border-emerald-400/60 transition"
           />
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
-          {/* Status */}
+        <div className="flex flex-wrap items-center gap-2.5">
+          {/* Status Filter */}
           <div className="relative">
-            <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} className="h-10 pl-3 pr-8 rounded-xl bg-black/20 border border-white/5 text-sm outline-none focus:border-emerald-500 appearance-none text-white/80">
-              <option value="all">Tất cả trạng thái</option>
+            <select 
+              value={filterStatus} 
+              onChange={e => setFilterStatus(e.target.value)} 
+              className="glass-btn-3d px-4 py-2.5 pr-8 rounded-xl text-xs font-medium text-zinc-200 outline-none appearance-none cursor-pointer"
+            >
+              <option value="all" className="bg-[#06120d] text-white">Tất cả trạng thái</option>
               {Object.entries(STATUS_MAP).map(([key, val]) => (
-                <option key={key} value={key}>{val.label}</option>
+                <option key={key} value={key} className="bg-[#06120d] text-white">{val.label}</option>
               ))}
             </select>
-            <Filter className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40 pointer-events-none" />
+            <Filter className="w-3.5 h-3.5 text-zinc-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
           </div>
 
-          {/* Date */}
+          {/* Date Filter */}
           <div className="relative">
-            <select value={filterDate} onChange={e => setFilterDate(e.target.value)} className="h-10 pl-3 pr-8 rounded-xl bg-black/20 border border-white/5 text-sm outline-none focus:border-emerald-500 appearance-none text-white/80">
-              <option value="all">Mọi thời gian</option>
-              <option value="today">Hôm nay</option>
-              <option value="7days">7 ngày qua</option>
-              <option value="30days">30 ngày qua</option>
-              <option value="this_month">Tháng này</option>
+            <select 
+              value={filterDate} 
+              onChange={e => setFilterDate(e.target.value)} 
+              className="glass-btn-3d px-4 py-2.5 pr-8 rounded-xl text-xs font-medium text-zinc-200 outline-none appearance-none cursor-pointer"
+            >
+              <option value="all" className="bg-[#06120d] text-white">Mọi thời gian</option>
+              <option value="today" className="bg-[#06120d] text-white">Hôm nay</option>
+              <option value="7days" className="bg-[#06120d] text-white">7 ngày qua</option>
+              <option value="30days" className="bg-[#06120d] text-white">30 ngày qua</option>
+              <option value="this_month" className="bg-[#06120d] text-white">Tháng này</option>
             </select>
-            <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40 pointer-events-none" />
+            <Calendar className="w-3.5 h-3.5 text-zinc-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
           </div>
 
-          {/* Sort */}
+          {/* Sort Option */}
           <div className="relative">
-            <select value={sortOption} onChange={e => setSortOption(e.target.value)} className="h-10 pl-3 pr-8 rounded-xl bg-black/20 border border-white/5 text-sm outline-none focus:border-emerald-500 appearance-none text-white/80">
-              <option value="newest">Mới nhất</option>
-              <option value="oldest">Cũ nhất</option>
-              <option value="total_desc">Giá trị cao → thấp</option>
-              <option value="total_asc">Giá trị thấp → cao</option>
+            <select 
+              value={sortOption} 
+              onChange={e => setSortOption(e.target.value)} 
+              className="glass-btn-3d px-4 py-2.5 pr-8 rounded-xl text-xs font-medium text-zinc-200 outline-none appearance-none cursor-pointer"
+            >
+              <option value="newest" className="bg-[#06120d] text-white">Mới nhất</option>
+              <option value="oldest" className="bg-[#06120d] text-white">Cũ nhất</option>
+              <option value="total_desc" className="bg-[#06120d] text-white">Giá trị cao → thấp</option>
+              <option value="total_asc" className="bg-[#06120d] text-white">Giá trị thấp → cao</option>
             </select>
-            <ArrowDownUp className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40 pointer-events-none" />
+            <ArrowDownUp className="w-3.5 h-3.5 text-zinc-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
           </div>
 
           {(search || filterStatus !== 'all' || filterDate !== 'all' || sortOption !== 'newest') && (
             <button 
               onClick={() => { setSearch(''); setFilterStatus('all'); setFilterDate('all'); setSortOption('newest'); }}
-              className="h-10 px-3 rounded-xl bg-red-500/10 text-red-400 text-sm font-medium hover:bg-red-500/20 transition-colors flex items-center gap-1.5"
+              className="glass-btn-3d px-3 py-2.5 rounded-xl text-xs font-medium text-rose-400 hover:text-rose-300 border-rose-500/20 hover:border-rose-500/40 flex items-center gap-1.5 transition cursor-pointer"
             >
               <X className="w-3.5 h-3.5" /> Xoá lọc
             </button>
           )}
         </div>
-      </div>
+      </section>
 
-      {/* BULK ACTIONS */}
+      {/* THANH THAO TÁC HÀNG LOẠT */}
       <AnimatePresence>
         {selectedIds.length > 0 && (
-          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="shrink-0 overflow-hidden">
-            <div className="flex items-center gap-3 bg-blue-500/10 border border-blue-500/20 px-4 py-2.5 rounded-xl">
-              <span className="text-sm font-medium text-blue-400">Đã chọn {selectedIds.length} đơn hàng</span>
-              <div className="h-4 w-px bg-blue-500/20 mx-2" />
-              <button className="text-xs bg-black/20 hover:bg-black/40 text-white/80 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5"><Download className="w-3.5 h-3.5" /> Xuất dữ liệu</button>
+          <motion.section 
+            initial={{ height: 0, opacity: 0 }} 
+            animate={{ height: 'auto', opacity: 1 }} 
+            exit={{ height: 0, opacity: 0 }} 
+            className="neon-panel px-5 py-3 flex flex-wrap items-center justify-between gap-3 bg-emerald-500/[0.08] border-emerald-400/30 shrink-0"
+          >
+            <div className="flex items-center gap-4">
+              <span className="text-xs font-semibold text-[#2ee88a]">Đã chọn {selectedIds.length} đơn hàng</span>
+              <button 
+                onClick={handleExportData} 
+                className="glass-btn-3d px-3.5 py-1.5 rounded-xl text-xs font-medium text-zinc-200 flex items-center gap-2 hover:border-emerald-400/40 transition cursor-pointer"
+              >
+                <Download className="w-3.5 h-3.5 text-emerald-300" />
+                Xuất dữ liệu
+              </button>
             </div>
-          </motion.div>
+            <button 
+              onClick={() => setSelectedIds([])} 
+              className="text-xs text-zinc-400 hover:text-white transition cursor-pointer"
+            >
+              Bỏ chọn tất cả
+            </button>
+          </motion.section>
         )}
       </AnimatePresence>
 
-      {/* TABLE */}
-      <div className="flex-1 flex flex-col bg-black/20 border border-white/5 rounded-2xl overflow-hidden backdrop-blur-md min-h-0">
+      {/* BẢNG DANH SÁCH ĐƠN HÀNG */}
+      <section className="neon-panel overflow-hidden flex flex-col w-full shadow-2xl shrink-0">
         <div className="overflow-x-auto flex-1 custom-scrollbar">
           <table className="w-full text-left border-collapse min-w-[1000px]">
-            <thead className="sticky top-0 z-10 bg-[#15191C]/90 backdrop-blur">
-              <tr className="border-b border-white/5 text-[11px] font-semibold text-white/40 uppercase tracking-wider">
-                <th className="p-4 w-12 text-center">
-                  <div className="flex items-center justify-center cursor-pointer" onClick={toggleSelectAll}>
-                    {selectedIds.length === paginatedOrders.length && paginatedOrders.length > 0 ? <CheckSquare className="w-4 h-4 text-emerald-400" /> : <Square className="w-4 h-4" />}
-                  </div>
+            <thead className="sticky top-0 z-10 bg-black/50 backdrop-blur-md">
+              <tr className="border-b border-white/10 text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">
+                <th className="py-3.5 pl-5 pr-2 w-10 text-center">
+                  <input 
+                    type="checkbox" 
+                    checked={selectedIds.length === paginatedOrders.length && paginatedOrders.length > 0} 
+                    onChange={toggleSelectAll} 
+                    className="neon-checkbox cursor-pointer" 
+                  />
                 </th>
-                <th className="p-4">Mã đơn</th>
-                <th className="p-4">Khách hàng</th>
-                <th className="p-4">Ngày đặt</th>
-                <th className="p-4">Sản phẩm</th>
-                <th className="p-4">Tổng tiền & Thanh toán</th>
-                <th className="p-4">Trạng thái</th>
-                <th className="p-4 text-right">Thao tác</th>
+                <th className="py-3.5 px-3">Mã đơn</th>
+                <th className="py-3.5 px-3">Khách hàng</th>
+                <th className="py-3.5 px-3">Ngày đặt</th>
+                <th className="py-3.5 px-3">Sản phẩm</th>
+                <th className="py-3.5 px-3">Tổng tiền & Thanh toán</th>
+                <th className="py-3.5 px-3">Trạng thái</th>
+                <th className="py-3.5 pl-3 pr-5 text-right">Thao tác</th>
               </tr>
             </thead>
-            <tbody className="text-sm">
+            <tbody className="divide-y divide-white/5 text-sm">
               {isLoading ? (
                 Array.from({ length: 6 }).map((_, i) => (
                   <tr key={i} className="border-b border-white/5">
-                    <td colSpan={8} className="p-4"><div className="h-10 bg-white/5 rounded animate-pulse w-full"></div></td>
+                    <td colSpan={8} className="p-4"><div className="h-10 bg-white/5 rounded-xl animate-pulse w-full"></div></td>
                   </tr>
                 ))
               ) : paginatedOrders.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="p-10 text-center text-white/40">
-                    <Package className="w-10 h-10 mx-auto mb-3 opacity-20" />
-                    Không tìm thấy đơn hàng nào.
+                  <td colSpan={8} className="p-12 text-center text-zinc-400">
+                    <Package className="w-10 h-10 mx-auto mb-3 opacity-20 text-emerald-400" />
+                    Không tìm thấy đơn hàng nào phù hợp
                   </td>
                 </tr>
               ) : (
@@ -454,73 +579,96 @@ export function Orders() {
                   const StatusIcon = statusInfo.icon;
                   const paymentInfo = PAYMENT_STATUS_MAP[order.paymentStatus] || PAYMENT_STATUS_MAP['unpaid'];
 
-                  const firstItem = order.items[0];
-                  const otherCount = order.items.length - 1;
+                  const firstItem = order.items?.[0];
+                  const otherCount = Math.max(0, (order.items?.length || 0) - 1);
                   const itemsSummary = otherCount > 0 ? `${firstItem?.productName || 'Sản phẩm'} + ${otherCount} SP khác` : (firstItem?.productName || 'Sản phẩm');
 
                   return (
-                    <tr key={order.id} 
+                    <tr 
+                      key={order.id} 
                       onClick={() => { setSelectedOrder(order); setIsDetailOpen(true); }}
-                      className={cn("border-b border-white/5 transition-colors group cursor-pointer", isSelected ? "bg-emerald-500/5" : "hover:bg-white/[0.02]")} 
+                      className={cn("border-b border-white/5 transition-colors group cursor-pointer", isSelected ? "bg-emerald-500/[0.08]" : "hover:bg-white/[0.04]")} 
                       style={{ height: '72px' }}
                     >
-                      <td className="p-4 text-center">
-                        <div className="flex items-center justify-center" onClick={(e) => toggleSelectRow(order.id, e)}>
-                          {isSelected ? <CheckSquare className="w-4 h-4 text-emerald-400" /> : <Square className="w-4 h-4 text-white/30 group-hover:text-white/50" />}
-                        </div>
+                      <td className="py-4 pl-5 pr-2 text-center" onClick={(e) => e.stopPropagation()}>
+                        <input 
+                          type="checkbox" 
+                          checked={isSelected} 
+                          onChange={(e) => toggleSelectRow(order.id, e as any)} 
+                          className="neon-checkbox cursor-pointer" 
+                        />
                       </td>
-                      <td className="p-4">
-                        <span className="font-mono text-[13px] font-semibold text-emerald-400 group-hover:underline">{order.orderCode}</span>
+                      <td className="py-4 px-3">
+                        <span className="font-mono text-[13px] font-semibold text-[#2ee88a] group-hover:underline">
+                          {order.orderCode}
+                        </span>
                       </td>
-                      <td className="p-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center shrink-0 border border-white/5 text-white/50 text-xs font-bold">
-                            {order.customer.fullName.charAt(0).toUpperCase()}
+                      <td className="py-4 px-3">
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-8 h-8 rounded-full bg-emerald-900/60 border border-emerald-400/30 text-emerald-300 font-bold text-xs flex items-center justify-center shrink-0">
+                            {(order.customer?.fullName?.trim()?.charAt(0) || order.shippingPhone?.charAt(0) || 'K').toUpperCase()}
                           </div>
                           <div className="flex flex-col">
-                            <span className="font-medium text-white/90 truncate max-w-[150px]">{order.customer.fullName}</span>
-                            <span className="text-xs text-white/40">{order.customer.phone}</span>
+                            <span className="font-medium text-white truncate max-w-[150px]">
+                              {order.customer?.fullName || order.shippingPhone || 'Khách vãng lai'}
+                            </span>
+                            <span className="text-[11px] text-zinc-400">
+                              {order.customer?.phone || order.shippingPhone || '---'}
+                            </span>
                           </div>
                         </div>
                       </td>
-                      <td className="p-4 text-white/70 whitespace-nowrap">
+                      <td className="py-4 px-3 text-xs text-zinc-300 whitespace-nowrap">
+                        <div>{formatDate(order.createdAt).split(' ')[0] || ''}</div>
+                        <div className="text-zinc-500 text-[11px] mt-0.5">{formatDate(order.createdAt).split(' ')[1] || ''}</div>
+                      </td>
+                      <td className="py-4 px-3">
+                        <span className="text-zinc-200 text-[13px] truncate max-w-[200px] inline-block" title={itemsSummary}>
+                          {itemsSummary}
+                        </span>
+                      </td>
+                      <td className="py-4 px-3 whitespace-nowrap">
                         <div className="flex flex-col">
-                          <span>{formatDate(order.createdAt).split(' ')[0]}</span>
-                          <span className="text-xs text-white/40">{formatDate(order.createdAt).split(' ')[1]}</span>
+                          <span className="font-bold text-white text-[14px]">
+                            {formatCurrency(order.totalAmount + order.shippingFee)}
+                          </span>
+                          <span className={cn("text-[11px] font-medium mt-0.5", paymentInfo.color)}>
+                            {paymentInfo.label}
+                          </span>
                         </div>
                       </td>
-                      <td className="p-4">
-                        <span className="text-white/80 text-[13px] truncate max-w-[200px] inline-block" title={itemsSummary}>{itemsSummary}</span>
-                      </td>
-                      <td className="p-4 whitespace-nowrap">
-                        <div className="flex flex-col">
-                          <span className="font-bold text-white text-[14px]">{formatCurrency(order.totalAmount + order.shippingFee)}</span>
-                          <span className={cn("text-[11px] font-medium mt-0.5", paymentInfo.color)}>{paymentInfo.label}</span>
-                        </div>
-                      </td>
-                      <td className="p-4 whitespace-nowrap">
-                        <span className={cn("inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold border", statusInfo.bg, statusInfo.color)}>
+                      <td className="py-4 px-3 whitespace-nowrap">
+                        <span className={cn("inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border", statusInfo.bg, statusInfo.color)}>
                           <StatusIcon className="w-3.5 h-3.5" />
                           {statusInfo.label}
                         </span>
                       </td>
-                      <td className="p-4 text-right">
-                        <div className="relative inline-block text-left">
-                          <button onClick={(e) => { e.stopPropagation(); setActiveMenu(activeMenu === order.id ? null : order.id); }} className="p-1.5 hover:bg-white/10 rounded-lg text-white/40 hover:text-white transition-colors">
+                      <td className="py-4 pl-3 pr-5 text-right">
+                        <div className="relative inline-block text-left" onClick={e => e.stopPropagation()}>
+                          <button 
+                            onClick={(e) => { e.stopPropagation(); setActiveMenu(activeMenu === order.id ? null : order.id); }} 
+                            className="w-8 h-8 rounded-lg glass-btn-3d inline-flex items-center justify-center text-zinc-300 hover:text-white transition"
+                          >
                             <MoreVertical className="w-4 h-4" />
                           </button>
                           
                           {activeMenu === order.id && (
-                            <div className="absolute right-0 mt-2 w-48 rounded-xl bg-[#2a2a2c] shadow-lg ring-1 ring-white/10 z-50 overflow-hidden" onClick={e => e.stopPropagation()}>
+                            <div className="absolute right-0 mt-2 w-48 rounded-xl bg-[#091a13] shadow-2xl ring-1 ring-emerald-400/20 border border-emerald-400/30 z-50 overflow-hidden" onClick={e => e.stopPropagation()}>
                               <div className="py-1">
-                                <button onClick={() => { setActiveMenu(null); setSelectedOrder(order); setIsDetailOpen(true); }} className="flex items-center gap-2 px-4 py-2 text-sm text-white/80 hover:bg-white/5 hover:text-white w-full text-left transition-colors"><Eye className="w-4 h-4" /> Xem chi tiết</button>
+                                <button onClick={() => { setActiveMenu(null); setSelectedOrder(order); setIsDetailOpen(true); }} className="flex items-center gap-2 px-4 py-2 text-sm text-zinc-200 hover:bg-emerald-500/10 hover:text-[#2ee88a] w-full text-left transition-colors">
+                                  <Eye className="w-4 h-4" /> Xem chi tiết
+                                </button>
                                 
                                 {['pending', 'pending_payment'].includes(order.status) && (
-                                  <button onClick={(e) => { setActiveMenu(null); openConfirm(order.id, 'Xác nhận đơn hàng', 'confirmed', 'success', undefined, e); }} className="flex items-center gap-2 px-4 py-2 text-sm text-emerald-400 hover:bg-white/5 w-full text-left transition-colors"><CheckCircle2 className="w-4 h-4" /> Xác nhận đơn</button>
+                                  <button onClick={(e) => { setActiveMenu(null); openConfirm(order.id, 'Xác nhận đơn hàng', 'confirmed', 'success', undefined, e); }} className="flex items-center gap-2 px-4 py-2 text-sm text-emerald-400 hover:bg-emerald-500/10 w-full text-left transition-colors">
+                                    <CheckCircle2 className="w-4 h-4" /> Xác nhận đơn
+                                  </button>
                                 )}
                                 
                                 {['pending', 'pending_payment', 'confirmed'].includes(order.status) && (
-                                  <button onClick={(e) => { setActiveMenu(null); openConfirm(order.id, 'Hủy đơn hàng', 'cancelled', 'danger', undefined, e); }} className="flex items-center gap-2 px-4 py-2 text-sm text-red-400 hover:bg-white/5 w-full text-left transition-colors"><Ban className="w-4 h-4" /> Hủy đơn hàng</button>
+                                  <button onClick={(e) => { setActiveMenu(null); openConfirm(order.id, 'Hủy đơn hàng', 'cancelled', 'danger', undefined, e); }} className="flex items-center gap-2 px-4 py-2 text-sm text-rose-400 hover:bg-rose-500/10 w-full text-left transition-colors">
+                                    <Ban className="w-4 h-4" /> Hủy đơn hàng
+                                  </button>
                                 )}
                               </div>
                             </div>
@@ -535,52 +683,105 @@ export function Orders() {
           </table>
         </div>
 
-        {/* PAGINATION */}
-        <div className="p-4 border-t border-white/5 flex items-center justify-between text-sm shrink-0 bg-black/20">
-          <div className="text-white/50">
-            Hiển thị <span className="text-white font-medium">{(page - 1) * limit + (paginatedOrders.length > 0 ? 1 : 0)}</span> – <span className="text-white font-medium">{(page - 1) * limit + paginatedOrders.length}</span> / <span className="text-white font-medium">{processedOrders.length}</span> đơn hàng
-          </div>
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <span className="text-white/40">Hiển thị:</span>
-              <select value={limit} onChange={e => { setLimit(Number(e.target.value)); setPage(1); }} className="bg-white/5 border border-white/10 rounded px-2 py-1 outline-none focus:border-emerald-500 text-white/80">
-                <option value={10}>10</option>
-                <option value={20}>20</option>
-                <option value={50}>50</option>
-              </select>
-            </div>
-            <div className="flex items-center gap-1">
-              <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="p-1 rounded hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"><ChevronLeft className="w-5 h-5 text-white/70" /></button>
-              <div className="flex gap-1 px-2">
-                <span className="px-2.5 py-1 rounded bg-white/10 font-medium text-white">{page}</span>
-              </div>
-              <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages || totalPages === 0} className="p-1 rounded hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"><ChevronRight className="w-5 h-5 text-white/70" /></button>
+        {/* PHÂN TRANG */}
+        <div className="px-5 py-3.5 border-t border-white/10 flex flex-wrap items-center justify-between gap-4 text-xs text-zinc-400 bg-black/40 shrink-0">
+          <span>
+            Hiển thị <strong className="text-white">{(page - 1) * limit + (paginatedOrders.length > 0 ? 1 : 0)} – {(page - 1) * limit + paginatedOrders.length}</strong> trên <strong className="text-white">{processedOrders.length}</strong> đơn hàng
+          </span>
+          <div className="flex items-center gap-3">
+            <span>Hiển thị:</span>
+            <select 
+              value={limit} 
+              onChange={e => { setLimit(Number(e.target.value)); setPage(1); }} 
+              className="bg-black/50 border border-white/15 rounded-lg px-2.5 py-1 text-white focus:outline-none focus:border-emerald-400/50 cursor-pointer"
+            >
+              <option value={10}>10</option>
+              <option value={20}>20</option>
+              <option value={50}>50</option>
+            </select>
+            <div className="flex items-center gap-1.5">
+              <button 
+                onClick={() => setPage(p => Math.max(1, p - 1))} 
+                disabled={page === 1} 
+                className="w-7 h-7 rounded-lg glass-btn-3d flex items-center justify-center disabled:opacity-30 disabled:pointer-events-none text-zinc-300 hover:text-white transition"
+              >
+                &lt;
+              </button>
+              {paginationRange[0] > 1 && (
+                <>
+                  <button
+                    onClick={() => setPage(1)}
+                    className={cn(
+                      "w-7 h-7 rounded-lg flex items-center justify-center transition-all",
+                      page === 1 ? "btn-neon-primary font-bold text-xs" : "glass-btn-3d text-xs text-zinc-300 hover:text-white"
+                    )}
+                  >
+                    1
+                  </button>
+                  {paginationRange[0] > 2 && <span className="text-zinc-500 px-0.5">...</span>}
+                </>
+              )}
+              {paginationRange.map((p) => (
+                <button
+                  key={p}
+                  onClick={() => setPage(p)}
+                  className={cn(
+                    "w-7 h-7 rounded-lg flex items-center justify-center transition-all",
+                    page === p ? "btn-neon-primary font-bold text-xs" : "glass-btn-3d text-xs text-zinc-300 hover:text-white"
+                  )}
+                >
+                  {p}
+                </button>
+              ))}
+              {paginationRange[paginationRange.length - 1] < totalPages && (
+                <>
+                  {paginationRange[paginationRange.length - 1] < totalPages - 1 && <span className="text-zinc-500 px-0.5">...</span>}
+                  <button
+                    onClick={() => setPage(totalPages)}
+                    className={cn(
+                      "w-7 h-7 rounded-lg flex items-center justify-center transition-all",
+                      page === totalPages ? "btn-neon-primary font-bold text-xs" : "glass-btn-3d text-xs text-zinc-300 hover:text-white"
+                    )}
+                  >
+                    {totalPages}
+                  </button>
+                </>
+              )}
+              <button 
+                onClick={() => setPage(p => Math.min(totalPages, p + 1))} 
+                disabled={page === totalPages || totalPages === 0} 
+                className="w-7 h-7 rounded-lg glass-btn-3d flex items-center justify-center disabled:opacity-30 disabled:pointer-events-none text-zinc-300 hover:text-white transition"
+              >
+                &gt;
+              </button>
             </div>
           </div>
         </div>
-      </div>
+      </section>
 
       {/* ===== MODAL: CHI TIẾT ĐƠN HÀNG ===== */}
       <AnimatePresence>
         {isDetailOpen && selectedOrder && (
           <div className="fixed inset-0 z-40 flex items-center justify-end">
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsDetailOpen(false)} className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsDetailOpen(false)} className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
             <motion.div initial={{ opacity: 0, x: '100%' }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: '100%' }} transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="relative w-full max-w-[500px] h-full bg-[#181a1b] shadow-2xl flex flex-col border-l border-white/10 z-50"
+              className="relative w-full max-w-[520px] h-full bg-[#06120d] shadow-2xl flex flex-col border-l border-emerald-400/20 z-50 backdrop-blur-2xl"
             >
               {/* HEADER */}
-              <div className="flex items-center justify-between p-5 border-b border-white/5 bg-[#1f2123] shrink-0">
+              <div className="flex items-center justify-between p-5 border-b border-white/10 bg-black/40 shrink-0">
                 <div>
                   <h2 className="text-lg font-bold flex items-center gap-2 text-white">
                     Chi tiết đơn hàng 
                   </h2>
                   <div className="flex items-center gap-2 mt-1">
-                    <span className="font-mono text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded border border-emerald-400/20 text-sm">{selectedOrder.orderCode}</span>
+                    <span className="font-mono text-[#2ee88a] bg-emerald-950 px-2 py-0.5 rounded border border-emerald-400/30 text-sm">{selectedOrder.orderCode}</span>
                     <span className="text-xs text-white/40">·</span>
-                    <span className="text-xs text-white/50">{formatDate(selectedOrder.createdAt)}</span>
+                    <span className="text-xs text-zinc-400">{formatDate(selectedOrder.createdAt)}</span>
                   </div>
                 </div>
-                <button onClick={() => setIsDetailOpen(false)} className="p-2 hover:bg-white/10 rounded-full transition-colors"><X className="w-5 h-5 text-white/50 hover:text-white" /></button>
+                <button onClick={() => setIsDetailOpen(false)} className="w-8 h-8 rounded-lg glass-btn-3d flex items-center justify-center text-zinc-300 hover:text-white transition cursor-pointer">
+                  <X className="w-4 h-4" />
+                </button>
               </div>
 
               {/* BODY */}
@@ -600,20 +801,20 @@ export function Orders() {
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center shrink-0"><User className="w-4 h-4 text-white/60" /></div>
                         <div>
-                          <p className="font-medium text-white text-sm">{selectedOrder.customer.fullName}</p>
-                          {selectedOrder.customer.email && <p className="text-xs text-white/50 mt-0.5">{selectedOrder.customer.email}</p>}
+                          <p className="font-medium text-white text-sm">{selectedOrder.customer?.fullName || selectedOrder.shippingPhone || 'Khách vãng lai'}</p>
+                          {selectedOrder.customer?.email && <p className="text-xs text-white/50 mt-0.5">{selectedOrder.customer.email}</p>}
                         </div>
                       </div>
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center shrink-0"><Phone className="w-4 h-4 text-white/60" /></div>
                         <div>
-                          <p className="font-medium text-white text-sm">{selectedOrder.shippingPhone}</p>
+                          <p className="font-medium text-white text-sm">{selectedOrder.customer?.phone || selectedOrder.shippingPhone || '---'}</p>
                         </div>
                       </div>
                       <div className="flex items-start gap-3">
                         <div className="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center shrink-0 mt-0.5"><MapPin className="w-4 h-4 text-white/60" /></div>
                         <div>
-                          <p className="text-sm text-white/80 leading-relaxed">{selectedOrder.shippingAddress}</p>
+                          <p className="text-sm text-white/80 leading-relaxed">{selectedOrder.shippingAddress || 'Chưa có thông tin địa chỉ'}</p>
                         </div>
                       </div>
                     </div>
@@ -668,10 +869,10 @@ export function Orders() {
 
                 {/* SẢN PHẨM */}
                 <div>
-                  <h3 className="text-xs font-semibold text-white/40 uppercase tracking-wider mb-3">Sản phẩm đã đặt ({selectedOrder.items.reduce((s,i)=>s+i.quantity,0)})</h3>
+                  <h3 className="text-xs font-semibold text-white/40 uppercase tracking-wider mb-3">Sản phẩm đã đặt ({(selectedOrder.items || []).reduce((s,i)=>s+i.quantity,0)})</h3>
                   <div className="border border-white/5 rounded-2xl overflow-hidden bg-black/20">
                     <div className="divide-y divide-white/5">
-                      {selectedOrder.items.map((item) => (
+                      {(selectedOrder.items || []).map((item) => (
                         <div key={item.id} className="flex gap-4 p-4 items-center">
                           <div className="w-12 h-12 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center shrink-0">
                             {item.image ? <img src={item.image} alt="" className="w-full h-full object-contain p-1" /> : <Package className="w-5 h-5 text-white/20" />}

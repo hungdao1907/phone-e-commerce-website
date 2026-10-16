@@ -17,11 +17,14 @@ export function CustomerListWidget() {
   };
 
   const getAvatarInitials = (name: string) => {
-    const parts = name.trim().split(' ');
+    if (!name || typeof name !== 'string') return 'KH';
+    const parts = name.trim().split(' ').filter(Boolean);
     if (parts.length >= 2) {
-      return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+      const first = parts[0]?.[0] || '';
+      const last = parts[parts.length - 1]?.[0] || '';
+      return (first + last).toUpperCase() || 'KH';
     }
-    return name.slice(0, 2).toUpperCase();
+    return (name.slice(0, 2) || 'KH').toUpperCase();
   };
 
   const formatTimeAgo = (isoStr: string) => {
@@ -43,54 +46,61 @@ export function CustomerListWidget() {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.5, duration: 0.5 }}
-      className="bg-gradient-to-br from-[#5A827E]/90 to-[#26667F]/90 backdrop-blur-md  border border-white/[0.08] rounded-2xl flex flex-col h-full overflow-hidden"
+      className="backdrop-blur-xl flex flex-col h-full overflow-hidden relative"
+      style={{
+        background: 'linear-gradient(to top, rgba(255, 128, 64, 0.22), transparent 45%), rgba(4, 22, 15, 0.5)',
+        border: '1px solid rgba(255, 128, 64, 0.35)',
+        borderRadius: '28px',
+        boxShadow: 'inset 0 -12px 22px -10px rgba(255, 128, 64, 0.8), 0 10px 40px -14px rgba(255, 128, 64, 0.5)'
+      }}
     >
       {/* Header */}
-      <div className="px-6 pt-5 pb-4 flex items-center justify-between shrink-0 border-b border-white/[0.04]">
+      <div className="px-6 pt-6 pb-4 flex items-center justify-between shrink-0 border-b border-white/[0.08]">
         <div className="flex items-center gap-3">
-          <h3 className="text-white font-semibold text-base">Đơn hàng chờ xác nhận</h3>
+          <h3 className="text-[#eefaf3] font-semibold text-base">Đơn hàng chờ xác nhận</h3>
           {!isLoading && count > 0 && (
-            <span className="text-amber-400 font-bold text-xs bg-amber-400/10 px-2 py-0.5 rounded-md border border-amber-400/20">
-              [{count}]
+            <span className="text-[#ffc24d] font-bold text-xs bg-[rgba(255,190,60,0.12)] px-2.5 py-0.5 rounded-lg border border-[rgba(255,190,60,0.45)] shadow-sm">
+              {count}
             </span>
           )}
         </div>
       </div>
 
       {/* Table Header */}
-      <div className="px-6 py-3 grid grid-cols-[1.8fr_2fr_1.2fr] gap-4 text-white/30 text-[11px] font-medium uppercase tracking-wider shrink-0">
+      <div className="px-6 py-3 grid grid-cols-[1.8fr_2fr_1.2fr] gap-4 text-[#eefaf3]/55 text-[11px] font-medium uppercase tracking-wider shrink-0">
         <span>Khách hàng</span>
         <span>Sản phẩm</span>
         <span className="text-right">Tổng tiền</span>
       </div>
 
       {/* Content Area */}
-      <div className="flex-1 overflow-y-auto custom-scrollbar px-3 relative min-h-[220px]">
+      <div className="flex-1 px-4 relative">
         {isLoading && (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <Loader2 className="w-6 h-6 text-white/30 animate-spin" />
+          <div className="py-12 flex items-center justify-center">
+            <Loader2 className="w-6 h-6 text-[#ff8040] animate-spin" />
           </div>
         )}
 
         {isError && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
-            <p className="text-white/50 text-sm">Không thể tải đơn hàng</p>
-            <button className="text-blue-400 text-xs hover:underline">Thử lại</button>
+          <div className="py-8 flex flex-col items-center justify-center gap-2">
+            <p className="text-[#eefaf3]/60 text-sm">Không thể tải đơn hàng</p>
+            <button className="text-[#ff8040] text-xs hover:underline">Thử lại</button>
           </div>
         )}
 
         {!isLoading && !isError && orders.length === 0 && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-4">
-            <PackageX className="w-8 h-8 text-white/20 mb-3" />
-            <p className="text-white/60 text-sm font-medium">Không có đơn hàng chờ xác nhận</p>
-            <p className="text-white/30 text-[11px] mt-1">Tất cả đơn hàng mới đã được xử lý.</p>
+          <div className="py-8 flex flex-col items-center justify-center text-center px-4">
+            <PackageX className="w-8 h-8 text-[#eefaf3]/30 mb-3" />
+            <p className="text-[#eefaf3]/80 text-sm font-medium">Không có đơn hàng chờ xác nhận</p>
+            <p className="text-[#eefaf3]/55 text-[11px] mt-1">Tất cả đơn hàng mới đã được xử lý.</p>
           </div>
         )}
 
-        {!isLoading && !isError && orders.map((order, i) => {
-          const mainItem = order.items[0];
-          const hasMoreItems = order.items.length > 1;
-          const remainingItemsCount = order.items.slice(1).reduce((sum, item) => sum + item.quantity, 0);
+        {!isLoading && !isError && orders.slice(0, 3).map((order, i) => {
+          const items = order.items || [];
+          const mainItem = items[0];
+          const hasMoreItems = items.length > 1;
+          const remainingItemsCount = items.slice(1).reduce((sum, item) => sum + (item.quantity || 1), 0);
 
           let mainProductText = `${mainItem?.productName || 'Sản phẩm'} ${mainItem?.variantInfo && mainItem.variantInfo !== 'Mặc định' ? `- ${mainItem.variantInfo}` : ''}`;
           
@@ -101,18 +111,18 @@ export function CustomerListWidget() {
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.1 + i * 0.08 }}
               onClick={() => navigate(`/dashboard/orders?search=${order.orderCode}`)}
-              className="grid grid-cols-[1.8fr_2fr_1.2fr] gap-4 items-center px-3 py-3 rounded-xl hover:brightness-110 transition-colors cursor-pointer mb-1"
+              className="grid grid-cols-[1.8fr_2fr_1.2fr] gap-4 items-center px-3 py-3 rounded-2xl hover:bg-white/[0.05] transition-colors cursor-pointer mb-1 border-b border-white/[0.06] last:border-b-0"
             >
               {/* Customer */}
               <div className="flex items-center gap-3 min-w-0">
-                <div className="w-9 h-9 rounded-full bg-amber-500/20 flex items-center justify-center text-amber-400 text-[11px] font-bold shrink-0 border border-amber-500/20">
+                <div className="w-9 h-9 rounded-full bg-[rgba(255,128,64,0.15)] flex items-center justify-center text-[#ff8040] text-[11px] font-bold shrink-0 border border-[rgba(255,128,64,0.35)] shadow-sm">
                   {getAvatarInitials(order.customer?.fullName || 'Khách Hàng')}
                 </div>
                 <div className="min-w-0">
-                  <p className="text-sm font-medium text-white/90 truncate">
+                  <p className="text-sm font-medium text-[#eefaf3] truncate">
                     {order.customer?.fullName || 'Khách Hàng'}
                   </p>
-                  <p className="text-[11px] text-white/40 truncate font-mono mt-0.5">
+                  <p className="text-[11px] text-[#eefaf3]/55 truncate font-mono mt-0.5">
                     {order.orderCode}
                   </p>
                 </div>
@@ -120,11 +130,11 @@ export function CustomerListWidget() {
 
               {/* Product */}
               <div className="min-w-0 flex flex-col justify-center">
-                <p className="text-sm text-white/80 font-medium truncate" title={mainProductText}>
-                  {mainProductText} <span className="text-white/40 font-normal">× {mainItem?.quantity || 1}</span>
+                <p className="text-sm text-[#eefaf3]/90 font-medium truncate" title={mainProductText}>
+                  {mainProductText} <span className="text-[#eefaf3]/55 font-normal">× {mainItem?.quantity || 1}</span>
                 </p>
                 {hasMoreItems && (
-                  <p className="text-[11px] text-amber-400/80 font-medium mt-0.5">
+                  <p className="text-[11px] text-[#ffc24d] font-medium mt-0.5">
                     + {remainingItemsCount} sản phẩm khác
                   </p>
                 )}
@@ -132,12 +142,12 @@ export function CustomerListWidget() {
 
               {/* Total & Time */}
               <div className="text-right min-w-0 flex flex-col justify-center">
-                <p className="text-sm text-white/90 font-semibold truncate">
+                <p className="text-sm text-[#eefaf3] font-semibold truncate">
                   {formatCurrency(order.totalAmount)}
                 </p>
                 <div className="flex items-center justify-end gap-1.5 mt-0.5">
-                  <div className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0" />
-                  <p className="text-[10px] text-amber-400/70 truncate">
+                  <div className="w-1.5 h-1.5 rounded-full bg-[#ff8040] shrink-0 shadow-[0_0_6px_#ff8040]" />
+                  <p className="text-[10px] text-[#eefaf3]/55 truncate">
                     {formatTimeAgo(order.createdAt)}
                   </p>
                 </div>
@@ -148,13 +158,13 @@ export function CustomerListWidget() {
       </div>
 
       {/* Footer / View All */}
-      {!isLoading && !isError && count > 0 && (
-        <div className="px-6 py-3 border-t border-white/[0.04] shrink-0 bg-white/[0.01]">
+      {!isLoading && !isError && (
+        <div className="px-6 py-3 border-t border-white/[0.08] shrink-0 bg-white/[0.02]">
           <button
             onClick={() => navigate('/dashboard/orders?status=PENDING')}
-            className="w-full flex items-center justify-center gap-2 text-xs font-medium text-white/50 hover:text-white transition-colors"
+            className="w-full flex items-center justify-center gap-2 text-xs font-semibold text-[#ff8040] hover:text-[#ff9e6c] transition-colors py-0.5"
           >
-            <span>[{count}] Xem tất cả</span>
+            <span>{count > 0 ? `Xem tất cả (${count})` : 'Xem tất cả đơn hàng'}</span>
             <ArrowRight className="w-3.5 h-3.5" />
           </button>
         </div>

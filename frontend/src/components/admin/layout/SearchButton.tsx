@@ -400,21 +400,28 @@ export const SearchButton = ({ onNavigate }: SearchButtonProps) => {
             key="search-input-container"
             layoutId="search-input-container"
             transition={{ layout: { duration: 0.5, type: 'spring', bounce: 0.2 } }}
-            style={{ transformOrigin: 'left center', borderRadius: 9999 }}
-            className="w-full flex flex-col items-center justify-start z-10 relative overflow-hidden bg-[#222222] border border-white/10"
+            style={{
+              transformOrigin: 'left center',
+              borderRadius: 9999,
+              background: 'rgba(4, 22, 15, 0.5)',
+              borderColor: 'rgba(255, 255, 255, 0.12)',
+              boxShadow: '0 0 16px rgba(62, 224, 140, 0.15)',
+              backdropFilter: 'blur(20px)'
+            }}
+            className="w-full flex flex-col items-center justify-start z-10 relative overflow-hidden border"
           >
             {/* Input row */}
             <div className="flex items-center w-full gap-2 px-4 h-10">
               {breadcrumb.length > 0 ? (
-                <button onClick={goBack} className="shrink-0 text-white/40 hover:text-white transition-colors">
+                <button onClick={goBack} className="shrink-0 text-[#eefaf3]/70 hover:text-white transition-colors">
                   <ArrowLeft size={16} />
                 </button>
               ) : (
-                <motion.div layoutId="search-icon"><Search size={16} /></motion.div>
+                <motion.div layoutId="search-icon" className="text-[#eefaf3]/60"><Search size={16} /></motion.div>
               )}
               <div className="flex-1 relative text-sm flex items-center">
                 {!displayValue && (
-                  <div className="absolute inset-0 flex items-center pointer-events-none z-10 text-gray-500">
+                  <div className="absolute inset-0 flex items-center pointer-events-none z-10 text-[#eefaf3]/55">
                     <span className="block truncate w-full">
                       {hoveredShortcut !== null ? SHORTCUT_ICONS[hoveredShortcut].label : 'Tìm kiếm sản phẩm, đơn hàng...'}
                     </span>
@@ -426,7 +433,7 @@ export const SearchButton = ({ onNavigate }: SearchButtonProps) => {
                   value={displayValue}
                   onChange={handleInputChange}
                   onFocus={() => setHovered(true)}
-                  className="w-full bg-transparent outline-none ring-0 border-none m-0 p-0 text-sm text-white truncate pr-4"
+                  className="w-full bg-transparent outline-none ring-0 border-none m-0 p-0 text-sm text-[#eefaf3] truncate pr-4 placeholder:text-[#eefaf3]/55"
                 />
               </div>
             </div>
@@ -442,7 +449,14 @@ export const SearchButton = ({ onNavigate }: SearchButtonProps) => {
                 transition={{ duration: 0.2 }}
                 className="absolute top-full left-0 w-full pt-2 z-50"
               >
-                <div className="w-full bg-[#222222] border border-white/10 rounded-2xl overflow-hidden shadow-2xl max-h-[420px] overflow-y-auto custom-scrollbar">
+                <div
+                  className="w-full rounded-2xl overflow-hidden shadow-2xl max-h-[420px] overflow-y-auto custom-scrollbar border"
+                  style={{
+                    background: 'rgba(4, 22, 15, 0.88)',
+                    borderColor: 'rgba(255, 255, 255, 0.12)',
+                    backdropFilter: 'blur(20px)'
+                  }}
+                >
                   {/* Breadcrumb trail */}
                   {breadcrumb.length > 0 && (
                     <div className="px-4 pt-3 pb-1 flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-white/30">

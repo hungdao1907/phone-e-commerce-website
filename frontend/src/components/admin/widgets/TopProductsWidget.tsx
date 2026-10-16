@@ -8,7 +8,7 @@ interface TopProduct {
   revenue: number;
 }
 
-const COLORS = ['#DDEB9D', '#ACD99C', '#E0CD39', '#15919B'];
+const COLORS = ['#3ee08c', '#ff8040', '#33ccaa', '#5a8cff'];
 
 export function TopProductsWidget() {
   const [products, setProducts] = useState<TopProduct[]>([]);
@@ -37,25 +37,34 @@ export function TopProductsWidget() {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.55, duration: 0.5 }}
-      className="bg-gradient-to-br from-[#5A827E]/90 to-[#26667F]/90 backdrop-blur-md  border border-white/[0.08] rounded-2xl flex flex-col h-full overflow-hidden"
+      className="backdrop-blur-xl flex flex-col h-full overflow-hidden relative"
+      style={{
+        background: 'rgba(4, 22, 15, 0.5)',
+        border: '1px solid rgba(255, 255, 255, 0.12)',
+        borderRadius: '28px',
+        boxShadow: '0 10px 40px -14px rgba(62, 224, 140, 0.25)'
+      }}
     >
       {/* Header */}
-      <div className="px-5 pt-5 pb-3 flex items-center justify-between shrink-0">
-        <h3 className="text-white font-semibold text-sm">Top sản phẩm</h3>
-        <button className="text-white/30 hover:text-white/60 transition-colors">
+      <div className="px-6 pt-6 pb-3 flex items-center justify-between shrink-0">
+        <h3 className="text-[#eefaf3] font-semibold text-sm">Top sản phẩm</h3>
+        <button className="text-[#eefaf3]/50 hover:text-[#eefaf3] transition-colors">
           <MoreVertical className="w-4 h-4" />
         </button>
       </div>
 
       {/* Product List */}
-      <div className="flex-1 overflow-y-auto custom-scrollbar px-4 pb-4">
+      <div className="flex-1 overflow-y-auto custom-scrollbar px-5 pb-5">
         {isLoading ? (
           <div className="h-full flex items-center justify-center">
-            <div className="w-6 h-6 border-2 border-white/20 border-t-white/60 rounded-full animate-spin" />
+            <div className="w-6 h-6 border-2 border-[#3ee08c]/20 border-t-[#3ee08c] rounded-full animate-spin" />
           </div>
         ) : products.length === 0 ? (
-          <div className="h-full flex items-center justify-center text-white/40 text-xs">
-            Chưa có dữ liệu đơn hàng thành công
+          <div className="h-full flex flex-col items-center justify-center text-center p-4">
+            <div className="w-12 h-12 rounded-2xl bg-[#3ee08c]/15 border border-[#3ee08c]/30 text-[#3ee08c] text-xl flex items-center justify-center mb-3">
+              📦
+            </div>
+            <p className="text-[#eefaf3]/60 text-xs">Chưa có dữ liệu đơn hàng thành công</p>
           </div>
         ) : (
           products.map((product, i) => {
@@ -69,11 +78,11 @@ export function TopProductsWidget() {
                 className="py-3"
               >
                 <div className="flex items-center justify-between mb-2">
-                  <p className="text-xs font-medium text-white/80 truncate">{product.name}</p>
-                  <p className="text-xs text-white/40 shrink-0 ml-2">{product.sales} sold</p>
+                  <p className="text-xs font-medium text-[#eefaf3] truncate">{product.name}</p>
+                  <p className="text-xs text-[#eefaf3]/55 shrink-0 ml-2">{product.sales} sold</p>
                 </div>
                 {/* Progress Bar */}
-                <div className="w-full h-1.5 bg-white/[0.06] rounded-full overflow-hidden">
+                <div className="w-full h-1.5 bg-white/[0.08] rounded-full overflow-hidden">
                   <motion.div
                     initial={{ width: 0 }}
                     animate={{ width: `${percentage}%` }}
@@ -82,7 +91,7 @@ export function TopProductsWidget() {
                     style={{ backgroundColor: COLORS[i % COLORS.length] }}
                   />
                 </div>
-                <p className="text-[11px] text-white/30 mt-1">{formatCurrency(product.revenue)}</p>
+                <p className="text-[11px] font-medium text-[#3ee08c] mt-1">{formatCurrency(product.revenue)}</p>
               </motion.div>
             );
           })

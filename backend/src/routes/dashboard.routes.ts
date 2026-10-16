@@ -156,7 +156,7 @@ router.get('/revenue-by-category', async (req, res) => {
       sortedCategories = top3;
     }
 
-    const colors = ["#DDEB9D", "#ACD99C", "#E0CD39", "#15919B"];
+    const colors = ["#2EE88A", "#FF6B2C", "#10B981", "#38BDF8"];
     const result = sortedCategories.map((item, index) => ({
       ...item,
       color: colors[index % colors.length]
