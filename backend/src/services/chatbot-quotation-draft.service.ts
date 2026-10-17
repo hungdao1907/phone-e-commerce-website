@@ -70,7 +70,10 @@ export async function prepareQuotationDraftResponse(value: Record<string, any>, 
   state.pending_question = pendingResult ? { type: 'quotation', field: 'variant', product_id: pendingResult.product?.id,
     product_name: pendingResult.product?.name, quantity: pendingResult.requested.quantity,
     options: pendingResult.available_variants?.map(v => ({ id: v.id, variant_id: v.id })) }
-    : status === 'invalid_request' ? { type: 'quotation', field: 'product', options: [] } : null;
+    : ready && products.length === 1 ? { type: 'quotation', field: 'ready', product_id: products[0].id,
+      product_name: products[0].name, quantity: results[0]!.requested.quantity,
+      options: [{ id: products[0].selected_variant_id, variant_id: products[0].selected_variant_id }] }
+      : status === 'invalid_request' ? { type: 'quotation', field: 'product', options: [] } : null;
   let response = ready
     ? 'Đã xác định sản phẩm và phiên bản bạn chọn. Hãy kiểm tra lựa chọn trên thẻ và nhấn “Yêu cầu báo giá” để tiếp tục xác nhận trong tài khoản WebPhone.'
     : status === 'invalid_request' ? 'Bạn muốn báo giá sản phẩm nào? Hãy cho biết tên hoặc dòng máy.'
@@ -82,6 +85,17 @@ export async function prepareQuotationDraftResponse(value: Record<string, any>, 
       const label = Object.values(v.attributes).filter(value => typeof value === 'string' || typeof value === 'number').join(' · ') || v.sku || `Tùy chọn ${index + 1}`;
       return `${index + 1}. ${label} — ${new Intl.NumberFormat('vi-VN').format(v.price!)} đ`;
     }).join('\n') + '\n\nBạn muốn chọn phiên bản nào?').join('\n\n');
+  if (ready) {
+    const catalogLines = results.flatMap(result => {
+      const variant = result.available_variants?.find(v => v.id === result.resolved_product?.variant_id);
+      const unit = variant?.price, quantity = result.requested.quantity;
+      const total = typeof unit === 'number' ? unit * quantity : null;
+      return typeof unit === 'number' && Number.isSafeInteger(unit) && unit >= 0 && Number.isSafeInteger(total)
+        ? [`${result.product?.name}: ${quantity} chiếc × ${unit.toLocaleString('vi-VN')} đ = ${total!.toLocaleString('vi-VN')} đ (tham khảo từ catalog Backend).`]
+        : [];
+    });
+    if (catalogLines.length) response = catalogLines.join('\n') + '\nGiá tham khảo chưa phải báo giá cuối cùng; Backend sẽ xác minh lại giá, ưu đãi và vận chuyển khi bạn gửi yêu cầu.\n' + response;
+  }
   return { sessionId, result_type: 'quotation', response_type: 'text', quote_status: status,
     success: ready, ready_to_quote: ready, response, request_results: results, products,
     total: products.length, total_requested: results.length, total_resolved: results.filter(r => r.status === 'ready').length,

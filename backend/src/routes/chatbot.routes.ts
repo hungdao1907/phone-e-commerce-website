@@ -7,6 +7,7 @@ import { safeErrorSummary, safeFetchErrorSummary } from '../utils/safe-error-sum
 import { chatbotProductHints, groundChatbotProse, reconcileChatbotCatalogState, scopeChatbotFactProducts } from '../services/chatbot-response-grounding';
 import { isQuotationDraftResponse, prepareQuotationDraftResponse } from '../services/chatbot-quotation-draft.service';
 import { chatbotWebhookHeaders } from '../services/chatbot-webhook-auth';
+import { verifiedCatalogAdvice } from '../services/chatbot-verified-advice';
 import { filterGroundedCatalogProducts, groundedCatalogResponseText, GroundedContractError, MAX_GROUNDED_VND, normalizeGroundedText, parseGroundedBudget, parseGroundedConstraints, requestedGroundedBudget, validatedStateTimestamp } from '../services/chatbot-grounded-constraints';
 
 const CHAT_CONTEXT_MESSAGE_LIMIT = 6;
@@ -367,7 +368,7 @@ export async function prepareCustomerChatbotResponse(value: unknown, sessionId: 
     (match, count, noun) => Number(count) === record.total ? `${products.length} ${noun}` : match) : rawText;
   const factProducts = scopeChatbotFactProducts(products, rawProducts, projectedState.selected_variant_id);
   let response = groundChatbotProse(redactWorkflowText(countedText), factProducts, rawProducts, kind);
-  if (constraints) response = groundedCatalogResponseText(products);
+  if (constraints) response = verifiedCatalogAdvice(requestContext?.message || '', products) || groundedCatalogResponseText(products);
   if (!response) response = products.length ? 'Bạn có thể xem dữ liệu hiện tại trên các thẻ sản phẩm dưới đây.' : String(base.response);
   if (hasCatalog && (!available || products.length !== hintedIds.length || !hintedIds.length)) {
     response += '\n\n' + (available ? 'Một số gợi ý không còn xác minh được trong danh mục hiện tại. Bạn có thể thử tên sản phẩm khác.' : 'Danh mục Backend tạm thời không khả dụng. Vui lòng thử lại để xem giá và tồn kho hiện tại.');

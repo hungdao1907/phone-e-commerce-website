@@ -15,6 +15,7 @@ import {
 import { clearQuotationDraft, loadQuotationDraft, saveQuotationDraft, type QuotationSelectionItem } from './quotation-draft';
 import { subscribeToQuotationDraftChanges } from './quotation-events';
 import type { QuotationRecord } from './QuotationDetails';
+import { PaymentMethodDropdown } from './PaymentMethodDropdown';
 
 type DraftLine = QuotationSelectionItem & { quantityText: string };
 type CustomerQuotationRequestFormProps = { onCreated: (quotation: QuotationRecord) => void };
@@ -248,15 +249,17 @@ export function CustomerQuotationRequestForm({ onCreated }: CustomerQuotationReq
             <label className="text-xs font-semibold text-slate-600">Địa chỉ giao hàng<input required maxLength={1000} value={shippingAddress} onChange={event => setShippingAddress(event.target.value)} className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm font-normal" autoComplete="street-address" /></label>
             <label className="text-xs font-semibold text-slate-600">Số điện thoại<input required minLength={6} maxLength={40} value={shippingPhone} onChange={event => setShippingPhone(event.target.value)} className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm font-normal" autoComplete="tel" /></label>
           </div>
-          <label className="block text-xs font-semibold text-slate-600">Phương thức thanh toán
-            <select value={paymentMethod} onChange={event => setPaymentMethod(event.target.value as 'COD' | 'BANK_TRANSFER')} className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm">
-              <option value="COD">Thanh toán khi nhận hàng (COD)</option>
-              <option value="BANK_TRANSFER">Chuyển khoản ngân hàng</option>
-            </select>
-          </label>
+          <PaymentMethodDropdown value={paymentMethod} onChange={setPaymentMethod} disabled={busy} />
 
           {error && <p role="alert" className="flex items-start gap-2 rounded-lg bg-rose-50 p-3 text-sm text-rose-800"><AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />{error}</p>}
           {!token && <p className="text-sm text-amber-800">Bạn cần đăng nhập bằng tài khoản khách hàng trước khi gửi yêu cầu.</p>}
+          {token && !busy && !catalogLoading && !catalogError && quotationApiEnabled() && recoveryState !== 'checking' && !canSubmit && <p id="quotation-submit-help" role="status" className="text-sm text-amber-800">
+            {!resolvedLines.every(item => item.valid)
+              ? 'Vui lòng chọn phiên bản còn hàng và số lượng hợp lệ trước khi gửi.'
+              : !shippingAddress.trim() || shippingAddress.trim().length > 1000
+                ? 'Vui lòng nhập địa chỉ giao hàng hợp lệ (tối đa 1.000 ký tự).'
+                : 'Vui lòng nhập số điện thoại từ 6 đến 40 ký tự trước khi gửi.'}
+          </p>}
           <button type="submit" disabled={!canSubmit} className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-50">
             {busy ? <><Loader2 className="h-4 w-4 animate-spin" /> Đang gửi yêu cầu…</> : 'Gửi yêu cầu báo giá'}
           </button>

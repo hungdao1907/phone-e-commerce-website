@@ -61,6 +61,7 @@ export function ProductCarousel({ products }: ProductCarouselProps) {
   const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
     // Only handle primary left click
     if (e.button !== 0 || !scrollRef.current) return;
+    if ((e.target as HTMLElement).closest('button, input, select, textarea, [role="combobox"]')) return;
     isDownRef.current = true;
     startXRef.current = e.pageX;
     scrollLeftRef.current = scrollRef.current.scrollLeft;
@@ -100,7 +101,9 @@ export function ProductCarousel({ products }: ProductCarouselProps) {
   const handleScrollBy = (direction: 'left' | 'right') => {
     const el = scrollRef.current;
     if (!el) return;
-    const scrollAmount = 245;
+    const card = el.firstElementChild as HTMLElement | null;
+    const gap = Number.parseFloat(window.getComputedStyle(el).columnGap) || 0;
+    const scrollAmount = card ? card.getBoundingClientRect().width + gap : el.clientWidth;
     el.scrollBy({
       left: direction === 'left' ? -scrollAmount : scrollAmount,
       behavior: 'smooth'
@@ -162,7 +165,7 @@ export function ProductCarousel({ products }: ProductCarouselProps) {
         onMouseUp={handleMouseUp}
         onClickCapture={handleClickCapture}
         className={cn(
-          "flex overflow-x-auto pb-2.5 pt-0.5 gap-3 overscroll-contain px-0.5 custom-scrollbar transition-all w-full max-w-full min-w-0",
+          "flex overflow-x-auto pb-2 pt-0.5 gap-2.5 overscroll-contain px-0.5 custom-scrollbar transition-all w-full max-w-full min-w-0",
           isDragging ? "cursor-grabbing select-none" : "cursor-grab"
         )}
         style={{

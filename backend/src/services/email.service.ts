@@ -1,5 +1,6 @@
 import dotenv from 'dotenv';
 import { mailer } from './mailer';
+import { trackingEmailErrorCategory, trackingOtpDiagnostic } from '../utils/tracking-otp-diagnostics';
 
 dotenv.config();
 
@@ -339,15 +340,23 @@ export const sendTrackingOtpEmail = async (customerEmail: string, customerName: 
       </div>
     `;
 
-    if (!process.env.SMTP_HOST && (!process.env.SMTP_EMAIL || !process.env.SMTP_PASSWORD)) return;
+    if (!process.env.SMTP_HOST && (!process.env.SMTP_EMAIL || !process.env.SMTP_PASSWORD)) {
+      trackingOtpDiagnostic('email_config', 'skipped');
+      return;
+    }
 
-    await transporter.sendMail({
+    trackingOtpDiagnostic('email_send', 'attempted');
+    const result = await transporter.sendMail({
       from: `"AppleWeb Store" <${process.env.SMTP_EMAIL || 'no-reply@localhost'}>`,
       to: customerEmail,
       subject: `[AppleWeb] Mã xác thực OTP tra cứu đơn hàng #${orderCode}`,
       html: htmlContent,
     });
+    const accepted = Array.isArray(result?.accepted) && result.accepted.length > 0;
+    const rejected = Array.isArray(result?.rejected) && result.rejected.length > 0;
+    trackingOtpDiagnostic('email_send', accepted ? 'accepted' : rejected ? 'rejected' : result?.messageId ? 'accepted' : 'completed');
   } catch (error) {
+    trackingOtpDiagnostic('email_send', trackingEmailErrorCategory(error));
     console.error('Error sending tracking OTP email.');
   }
 };

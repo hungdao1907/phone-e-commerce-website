@@ -37,7 +37,8 @@ test('natural product introduction and one verified carousel render without dupl
     React.createElement(ChatMarkdown, { content: result.text }), React.createElement(ProductCarousel, { products: result.products })));
   assert.ok(html.includes('WebPhone có bán iPhone')); assert.ok(html.includes('Bạn muốn xem mẫu nào?'));
   assert.ok(html.includes('Gợi ý sản phẩm phù hợp')); assert.equal(result.products.length, 5);
-  for (const card of cards) assert.equal((html.match(new RegExp(card.name, 'g')) || []).length, 1);
+  const visibleText = html.replace(/<[^>]*>/g, '');
+  for (const card of cards) assert.equal((visibleText.match(new RegExp(card.name, 'g')) || []).length, 1);
   assert.ok(!html.includes('Danh sách dưới đây được xác minh'));
 });
 
