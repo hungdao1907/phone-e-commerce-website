@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Trash2, Edit2, CheckCircle2 } from 'lucide-react';
 import { useRewardsStore, Milestone } from '@/store/useRewardsStore';
+import { useAuthStore } from '@/store/authStore';
 
 export function CartRewardsSetting() {
+  const { token } = useAuthStore();
   const { milestones, setMilestones, fetchMilestones } = useRewardsStore();
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -24,7 +26,7 @@ export function CartRewardsSetting() {
       if (editingId !== null) {
         const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/rewards/${editingId}`, {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', ...(token ? { 'Authorization': `Bearer ${token}` } : {}) },
           body: JSON.stringify({
             amount,
             label,
@@ -38,7 +40,7 @@ export function CartRewardsSetting() {
       } else {
         const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/rewards`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', ...(token ? { 'Authorization': `Bearer ${token}` } : {}) },
           body: JSON.stringify({
             amount,
             label,
@@ -85,7 +87,7 @@ export function CartRewardsSetting() {
     try {
       const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/rewards/${id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...(token ? { 'Authorization': `Bearer ${token}` } : {}) },
         body: JSON.stringify({ isActive: !currentStatus })
       });
       if (response.ok) {
@@ -100,7 +102,8 @@ export function CartRewardsSetting() {
     if(confirm('Bạn có chắc chắn muốn xóa mốc thưởng này?')) {
       try {
         const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/rewards/${id}`, {
-          method: 'DELETE'
+          method: 'DELETE',
+          headers: token ? { 'Authorization': `Bearer ${token}` } : {}
         });
         if (response.ok) {
           fetchMilestones();
