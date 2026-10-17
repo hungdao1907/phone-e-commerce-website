@@ -23,11 +23,11 @@ export function SmartphonePage({ brand }: SmartphonePageProps) {
         const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/products`);
         if (res.ok) {
           const data = await res.json();
-          // Filter by brand (category name contains brand or product name contains brand)
+          const brandLower = (brand || '').toLowerCase();
           const apiProducts = data.filter((p: any) => {
             const isPhone = p.category?.slug === 'phone' || p.category?.name?.toLowerCase().includes('phone') || p.category?.name?.toLowerCase().includes('điện thoại');
             if (!isPhone) return false;
-            return p.category?.name?.toLowerCase().includes(brand.toLowerCase()) || p.name?.toLowerCase().includes(brand.toLowerCase());
+            return p.category?.name?.toLowerCase().includes(brandLower) || p.name?.toLowerCase().includes(brandLower);
           });
 
           if (apiProducts.length > 0) {

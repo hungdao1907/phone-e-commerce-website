@@ -84,7 +84,7 @@ const DonutChart = React.forwardRef<HTMLDivElement, DonutChartProps>(
             cy={size / 2}
             r={radius}
             fill="transparent"
-            stroke="hsl(var(--border) / 0.5)" // Use theme variable for bg
+            stroke="rgba(255, 255, 255, 0.06)"
             strokeWidth={strokeWidth}
           />
           

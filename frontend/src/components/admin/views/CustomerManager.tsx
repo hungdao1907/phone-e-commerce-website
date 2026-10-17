@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { Plus, UserCircle, MapPin, Mail, Phone, Trash2, RefreshCw } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
-import { Plus, UserCircle, MapPin, Mail, Phone, Trash2 } from 'lucide-react';
 
 interface Customer {
   id: string;
-  fullName: string | null;
+  fullName: string;
   email: string;
   phone: string | null;
   address: string | null;
@@ -20,38 +20,40 @@ export function CustomerManager() {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
-
+  const token = useAuthStore((state) => state.token);
+  
   // Form state for adding new customer
   const [isAdding, setIsAdding] = useState(false);
   const [newFullName, setNewFullName] = useState('');
   const [newEmail, setNewEmail] = useState('');
-  const [newPassword, setNewPassword] = useState('');
   const [newPhone, setNewPhone] = useState('');
   const [newAddress, setNewAddress] = useState('');
   const [addError, setAddError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { token, user } = useAuthStore();
-  const canAccess = user?.role === 'admin' || user?.role === 'superadmin' || user?.role === 'staff';
-  const isStaff = user?.role === 'staff';
 
   const fetchCustomers = async () => {
     try {
+      setIsLoading(true);
+      setError('');
       const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/customers`, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
       });
-      if (!res.ok) throw new Error('Failed to fetch customers');
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.message || 'Không thể tải danh sách khách hàng');
+      }
       const data = await res.json();
-      setCustomers(data);
+      setCustomers(Array.isArray(data) ? data : []);
     } catch (err: any) {
-      setError(err.message);
+      setError(err.message || 'Lỗi kết nối khi tải khách hàng');
     } finally {
       setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    if (canAccess) fetchCustomers();
-  }, [canAccess, token]);
+    fetchCustomers();
+  }, [token]);
 
   const handleAddCustomer = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -61,18 +63,20 @@ export function CustomerManager() {
     try {
       const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/customers`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({
-          fullName: newFullName,
+        headers: { 
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify({ 
+          fullName: newFullName, 
           email: newEmail,
-          password: newPassword,
           phone: newPhone,
           address: newAddress
         })
       });
 
       const data = await res.json();
-
+      
       if (!res.ok) {
         throw new Error(data.message || 'Thêm khách hàng thất bại');
       }
@@ -80,22 +84,17 @@ export function CustomerManager() {
       // Reset form and refresh list
       setNewFullName('');
       setNewEmail('');
-      setNewPassword('');
       setNewPhone('');
       setNewAddress('');
       setIsAdding(false);
       fetchCustomers();
-
+      
     } catch (err: any) {
       setAddError(err.message);
     } finally {
       setIsSubmitting(false);
     }
   };
-
-  if (!canAccess) {
-    return <div className="rounded-xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-900">Chỉ người dùng có thẩm quyền mới được xem dữ liệu khách hàng.</div>;
-  }
 
   return (
     <div className="flex flex-col gap-6 h-full text-white">
@@ -105,7 +104,7 @@ export function CustomerManager() {
           <h1 className="text-2xl font-bold">Danh Sách Khách Hàng (Customers)</h1>
           <p className="text-white/40 text-sm mt-1">Dữ liệu người dùng hệ thống và lịch sử mua sắm</p>
         </div>
-        <button
+        <button 
           onClick={() => setIsAdding(!isAdding)}
           className="flex items-center gap-2 px-4 py-2 bg-[#99e300] hover:bg-[#88ca00] text-black font-semibold rounded-xl transition-all"
         >
@@ -124,8 +123,8 @@ export function CustomerManager() {
                 <label className="text-sm text-white/60">Họ và Tên</label>
                 <div className="relative">
                   <UserCircle className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
-                  <input
-                    type="text"
+                  <input 
+                    type="text" 
                     value={newFullName}
                     onChange={(e) => setNewFullName(e.target.value)}
                     className="w-full h-10 pl-10 pr-4 bg-black/40 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:border-[#99e300] transition-colors"
@@ -138,8 +137,8 @@ export function CustomerManager() {
                 <label className="text-sm text-white/60">Email</label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
-                  <input
-                    type="email"
+                  <input 
+                    type="email" 
                     value={newEmail}
                     onChange={(e) => setNewEmail(e.target.value)}
                     className="w-full h-10 pl-10 pr-4 bg-black/40 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:border-[#99e300] transition-colors"
@@ -149,28 +148,14 @@ export function CustomerManager() {
                 </div>
               </div>
             </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-700">Mật khẩu ban đầu</label>
-              <input
-                type="password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                minLength={8}
-                autoComplete="new-password"
-                className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 shadow-sm focus:border-emerald-500 focus:outline-none"
-                placeholder="Ít nhất 8 ký tự"
-                required
-              />
-              <p className="text-xs text-slate-500">Tài khoản được tạo chưa xác thực; đăng ký công khai vẫn dùng quy trình OTP.</p>
-            </div>
+            
             <div className="flex gap-4">
               <div className="flex-1 space-y-2">
                 <label className="text-sm text-white/60">Số điện thoại</label>
                 <div className="relative">
                   <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
-                  <input
-                    type="text"
+                  <input 
+                    type="text" 
                     value={newPhone}
                     onChange={(e) => setNewPhone(e.target.value)}
                     className="w-full h-10 pl-10 pr-4 bg-black/40 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:border-[#99e300] transition-colors"
@@ -182,8 +167,8 @@ export function CustomerManager() {
                 <label className="text-sm text-white/60">Địa chỉ</label>
                 <div className="relative">
                   <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
-                  <input
-                    type="text"
+                  <input 
+                    type="text" 
                     value={newAddress}
                     onChange={(e) => setNewAddress(e.target.value)}
                     className="w-full h-10 pl-10 pr-4 bg-black/40 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:border-[#99e300] transition-colors"
@@ -192,9 +177,9 @@ export function CustomerManager() {
                 </div>
               </div>
             </div>
-
+            
             <div className="flex justify-end mt-2">
-              <button
+              <button 
                 type="submit"
                 disabled={isSubmitting}
                 className="h-10 px-6 bg-white hover:bg-neutral-200 text-black font-semibold rounded-lg transition-colors disabled:opacity-50"
@@ -233,33 +218,37 @@ export function CustomerManager() {
               </thead>
               <tbody>
                 {customers.map((c) => (
-                  <tr key={c.id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
-                    <td className="p-4 font-semibold text-slate-900">{c.fullName || 'Khách hàng'}</td>
-                    <td className="p-4 text-sm text-slate-600">{c.email}</td>
-                    <td className="p-4 text-sm text-slate-600">{c.phone || <span className="text-slate-400 italic">Trống</span>}</td>
-                    <td className="p-4 text-sm text-slate-800 font-semibold">{c.Order?.length || 0}</td>
-                    <td className="p-4 text-sm text-emerald-600 font-bold">
+                  <tr key={c.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                    <td className="p-4 font-medium text-white">{c.fullName}</td>
+                    <td className="p-4 text-sm text-white/80">{c.email}</td>
+                    <td className="p-4 text-sm text-white/80">{c.phone || <span className="text-white/20">Trống</span>}</td>
+                    <td className="p-4 text-sm text-white/80 font-bold">{c.Order?.length || 0}</td>
+                    <td className="p-4 text-sm text-[#99e300] font-bold">
                       {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(c.Order?.reduce((sum, o) => sum + o.totalAmount, 0) || 0)}
                     </td>
                     <td className="p-4 text-sm text-white/60">
                       {new Date(c.createdAt).toLocaleDateString('vi-VN')}
                     </td>
                     <td className="p-4 text-right">
-                      <button
+                      <button 
                         onClick={async () => {
-                          if (!confirm(`Bạn có chắc muốn xóa khách hàng ${c.fullName || 'Khách hàng'}?`)) return;
+                          if (!confirm(`Bạn có chắc muốn xóa khách hàng ${c.fullName || c.email}?`)) return;
                           try {
                             const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/customers/${c.id}`, {
                               method: 'DELETE',
-                              headers: { Authorization: `Bearer ${token}` },
+                              headers: token ? { 'Authorization': `Bearer ${token}` } : {}
                             });
-                            if (res.ok) fetchCustomers();
-                            else alert('Xóa thất bại');
+                            if (res.ok) {
+                              fetchCustomers();
+                            } else {
+                              const data = await res.json().catch(() => ({}));
+                              alert(data.message || 'Xóa thất bại');
+                            }
                           } catch (err) {
-                            alert('Lỗi xóa khách hàng');
+                            alert('Lỗi kết nối khi xóa khách hàng');
                           }
                         }}
-                        className="p-2 hover:bg-red-500/10 hover:text-red-500 rounded-lg transition-colors text-white/40"
+                        className="p-2 hover:bg-red-500/10 hover:text-red-500 rounded-lg transition-colors text-white/40" 
                         title="Xóa khách hàng"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -269,7 +258,7 @@ export function CustomerManager() {
                 ))}
                 {customers.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="p-8 text-center text-white/40">
+                    <td colSpan={7} className="p-8 text-center text-white/40">
                       Chưa có khách hàng nào.
                     </td>
                   </tr>

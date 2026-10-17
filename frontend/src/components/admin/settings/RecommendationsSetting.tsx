@@ -31,7 +31,7 @@ export function RecommendationsSetting() {
           <h2 className="text-xl font-bold text-white">Sản phẩm Gợi ý (Recommendations)</h2>
           <p className="text-sm text-white/50 mt-1">Cấu hình các sản phẩm được ghim để tự động gợi ý (Upsell/Cross-sell) trong Giỏ hàng.</p>
         </div>
-        <button
+        <button 
           onClick={() => setIsAdding(!isAdding)}
           className="flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-xl text-sm font-bold transition-colors"
         >
@@ -56,16 +56,16 @@ export function RecommendationsSetting() {
               <div className="absolute top-4 right-4 bg-emerald-500/20 text-emerald-400 p-1.5 rounded-lg border border-emerald-500/30">
                 <Pin className="w-4 h-4" />
               </div>
-
+              
               <div className="w-24 h-24 bg-white rounded-xl p-2 mb-4">
                 <img src={item.image} alt={item.name} className="w-full h-full object-contain" />
               </div>
-
+              
               <h3 className="text-sm font-bold text-white mb-1">{item.name}</h3>
               <p className="text-xs text-white/50 mb-4">{item.category?.name || 'Phụ kiện'}</p>
               <p className="text-base font-bold text-emerald-400 mb-5">{item.price?.toLocaleString('vi-VN')}đ</p>
-
-              <button
+              
+              <button 
                 onClick={() => removeRec(item.id)}
                 className="w-full flex items-center justify-center gap-2 py-2.5 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-xl text-sm font-bold transition-colors"
               >

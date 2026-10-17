@@ -43,7 +43,7 @@ export function RichTextEditor({ content, onChange, placeholder }: RichTextEdito
 
   const addImage = useCallback(() => {
     if (!editor) return;
-
+    
     // Create a hidden file input
     const input = document.createElement('input');
     input.type = 'file';
@@ -56,14 +56,10 @@ export function RichTextEditor({ content, onChange, placeholder }: RichTextEdito
       try {
         const uploadData = new FormData();
         uploadData.append('image', file);
-        const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/upload`, {
-          method: 'POST',
-          headers: { Authorization: `Bearer ${localStorage.getItem('token') || ''}` },
-          body: uploadData,
-        });
-
+        const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/upload`, { method: 'POST', body: uploadData });
+        
         if (!res.ok) throw new Error('Upload failed');
-
+        
         const data = await res.json();
         const url = data.url || data.imageUrl;
         if (url) {

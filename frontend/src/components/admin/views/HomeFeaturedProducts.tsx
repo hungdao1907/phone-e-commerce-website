@@ -36,8 +36,7 @@ function ProductThumbnail({ product, size = 'md' }: { product: HomeFeaturedProdu
 }
 
 export function HomeFeaturedProducts() {
-  const { token, user } = useAuthStore();
-  const isStaff = user?.role === 'staff';
+  const { token } = useAuthStore();
   const authHeaders = useMemo(() => token ? { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } : { 'Content-Type': 'application/json' }, [token]);
   const [featuredProducts, setFeaturedProducts] = useState<HomeFeaturedProduct[]>([]);
   const [products, setProducts] = useState<HomeFeaturedProductData[]>([]);
@@ -105,7 +104,7 @@ export function HomeFeaturedProducts() {
     const query = search.trim().toLowerCase();
     return products
       .filter((product) => product.status === 'active' && !featuredProductIds.has(product.id))
-      .filter((product) => !query || product.name.toLowerCase().includes(query) || product.brand?.toLowerCase().includes(query) || product.category?.name?.toLowerCase().includes(query));
+      .filter((product) => !query || (product.name || '').toLowerCase().includes(query) || product.brand?.toLowerCase().includes(query) || product.category?.name?.toLowerCase().includes(query));
   }, [featuredProductIds, products, search]);
 
   const selectedProduct = useMemo(() => {
@@ -287,7 +286,7 @@ export function HomeFeaturedProducts() {
 
                 {/* Dropdown Menu Panel (Text Only) */}
                 {isDropdownOpen && (
-                  <div className="absolute left-0 right-0 top-full z-50 mt-1.5 overflow-hidden rounded-2xl border border-slate-200/90 bg-white/95 backdrop-blur-xl shadow-[0_16px_40px_-8px_rgba(15,23,42,0.18),0_4px_12px_-2px_rgba(15,23,42,0.08)] animate-in fade-in zoom-in-95 duration-150">
+                  <div className="absolute left-0 right-0 top-full z-50 mt-2 overflow-hidden rounded-2xl border border-white/15 bg-neutral-900/95 shadow-2xl backdrop-blur-2xl animate-in fade-in zoom-in-95 duration-150">
                     {/* Search Input Box */}
                     <div className="p-3 border-b border-white/10">
                       <div className="relative">
@@ -392,7 +391,7 @@ export function HomeFeaturedProducts() {
                 </button>
 
                 {isPositionDropdownOpen && (
-                  <div className="absolute left-0 right-0 top-full z-50 mt-1.5 max-h-60 overflow-y-auto rounded-2xl border border-slate-200/90 bg-white/95 backdrop-blur-xl p-1.5 shadow-[0_16px_40px_-8px_rgba(15,23,42,0.18),0_4px_12px_-2px_rgba(15,23,42,0.08)] animate-in fade-in zoom-in-95 duration-150 custom-scrollbar space-y-0.5">
+                  <div className="absolute left-0 right-0 top-full z-50 mt-2 max-h-60 overflow-y-auto rounded-2xl border border-white/15 bg-neutral-900/98 p-1.5 shadow-2xl backdrop-blur-2xl animate-in fade-in zoom-in-95 duration-150 scrollbar-thin scrollbar-thumb-white/10">
                     {Array.from({ length: totalPositions }, (_, i) => i + 1).map((pos) => {
                       const isSelected = String(pos) === String(sortOrder);
                       return (

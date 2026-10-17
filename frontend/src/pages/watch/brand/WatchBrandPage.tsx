@@ -204,7 +204,7 @@ export function WatchBrandPage({ brand }: WatchBrandPageProps) {
                   battery: getSpec('pin') || 'Pin bền bỉ cho ngày dài',
                   storage: getSpec('lưu trữ') || getSpec('dung lượng') || getSpec('rom') || getSpec('kích thước') || 'Thiết kế tinh xảo',
                 },
-                featured: idx < 3,
+                featured: idx < 4,
               };
             });
 

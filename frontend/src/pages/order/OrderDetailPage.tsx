@@ -142,8 +142,8 @@ export function CustomerOrderDetailView({ order: initialOrder, onChanged }: { or
 
   // --- LOGIC ---
   const displayPaymentMethod = order.paymentMethod === 'COD' ? 'Thanh toán khi nhận hàng (COD)' : order.paymentMethod === 'BANK_TRANSFER' ? 'Chuyển khoản ngân hàng' : order.paymentMethod;
-  const isStorePickup = order.shippingAddress?.startsWith('Nhận tại cửa hàng:');
-  const storeId = isStorePickup ? order.shippingAddress.replace('Nhận tại cửa hàng:', '').trim() : null;
+  const isStorePickup = Boolean(order.shippingAddress?.startsWith('Nhận tại cửa hàng:'));
+  const storeId = isStorePickup ? order.shippingAddress?.replace('Nhận tại cửa hàng:', '').trim() : null;
 
   // Real timeline logic mapped to our UI states
   // Do not fabricate status timestamps.

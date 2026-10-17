@@ -134,7 +134,7 @@ export function AddressTab({ initialFullName, initialPhone, initialAddress, onUp
     setMessage({ text: '', type: '' });
   };
 
-  const displayName = initialFullName || user?.username.split('@')[0] || 'Người dùng';
+  const displayName = initialFullName || user?.username?.split('@')[0] || 'Người dùng';
   const displayPhone = initialPhone || 'Chưa cập nhật số điện thoại';
   
   let formattedAddress = '';

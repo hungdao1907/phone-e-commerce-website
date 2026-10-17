@@ -1,60 +1,82 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { TrendingUp, DollarSign } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
-export function PerformanceWidget() {
+interface PerformanceWidgetProps {
+  className?: string;
+  value?: string;
+  growth?: string;
+  isLoading?: boolean;
+}
+
+export function PerformanceWidget({
+  className,
+  value,
+  growth = '+42.0%',
+  isLoading = false
+}: PerformanceWidgetProps) {
+  const displayValue = value || '25.600.000 ₫';
+
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ delay: 0.3, duration: 0.5 }}
-      className="bg-gradient-to-br from-[#5A827E]/90 to-[#26667F]/90 backdrop-blur-md  border border-white/[0.08] rounded-2xl p-5 flex flex-col justify-between h-full"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.25, duration: 0.5, ease: 'easeOut' }}
+      className={cn(
+        "glow-card glow-green p-7 flex flex-col justify-between min-h-[260px] select-none",
+        className
+      )}
     >
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-xl bg-purple-500/15 flex items-center justify-center">
-            <TrendingUp className="w-4 h-4 text-purple-400" />
+      {/* Top: 3D Icon Box & Growth Pill */}
+      <div className="flex items-start justify-between">
+        <div className="icon-box-3d">
+          <svg className="w-5 h-5 text-emerald-200" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18 9 11.25l4.306 4.306a11.95 11.95 0 0 1 5.814-5.518l2.74-1.22m0 0-5.94-2.281m5.94 2.28-2.28 5.941"/>
+          </svg>
+        </div>
+        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-200 border border-emerald-400/30">
+          ↗ {growth}
+        </span>
+      </div>
+
+      {/* Middle: Label & Value */}
+      <div className="my-3">
+        <div className="text-xs text-zinc-400 uppercase tracking-wider">Doanh thu tuần</div>
+        {isLoading ? (
+          <div className="h-8 w-32 bg-white/10 rounded-md animate-pulse my-1" />
+        ) : (
+          <div className="text-2xl font-bold tracking-tight text-white mt-0.5">
+            {displayValue}
           </div>
-          <span className="text-white/50 text-xs font-medium">Total profit:</span>
-        </div>
-        <div className="flex items-center gap-1 text-emerald-400 text-xs font-semibold">
-          <TrendingUp className="w-3 h-3" />
-          +42%
-        </div>
+        )}
       </div>
 
-      {/* Value */}
-      <div className="mt-3">
-        <p className="text-xl font-bold text-white">$25.6k</p>
-        <p className="text-white/30 text-[11px] mt-0.5">Weekly Profit</p>
-      </div>
-
-      {/* Mini Chart (SVG demo) */}
-      <div className="mt-3 w-full h-[60px]">
-        <svg viewBox="0 0 200 60" className="w-full h-full" preserveAspectRatio="none">
+      {/* Bottom: Mini Sparkline SVG from widget.html */}
+      <div className="pt-1">
+        <svg className="w-full h-10 overflow-visible" viewBox="0 0 200 40">
           <defs>
-            <linearGradient id="perfGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#10b981" stopOpacity="0.3" />
-              <stop offset="100%" stopColor="#10b981" stopOpacity="0" />
+            <linearGradient id="lineGlowWidget" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stopColor="#10b981" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#6ee7b7" stopOpacity="1" />
             </linearGradient>
           </defs>
           <motion.path
-            d="M0,50 Q20,45 40,35 T80,30 T120,20 T160,25 T200,10"
+            d="M5 34 Q 45 26, 80 24 T 150 18 T 195 6"
             fill="none"
-            stroke="#10b981"
-            strokeWidth="2"
+            stroke="url(#lineGlowWidget)"
+            strokeWidth="2.5"
+            strokeLinecap="round"
             initial={{ pathLength: 0 }}
             animate={{ pathLength: 1 }}
-            transition={{ duration: 1.5, ease: "easeOut" }}
+            transition={{ duration: 1.2, ease: "easeOut" }}
           />
-          <path
-            d="M0,50 Q20,45 40,35 T80,30 T120,20 T160,25 T200,10 L200,60 L0,60 Z"
-            fill="url(#perfGrad)"
-            opacity="0.5"
-          />
+          <circle cx="195" cy="6" r="4" fill="#ffffff" stroke="#34d399" strokeWidth="2" />
         </svg>
       </div>
     </motion.div>
   );
 }
+
+export const WeeklyRevenueWidget = PerformanceWidget;
+
+

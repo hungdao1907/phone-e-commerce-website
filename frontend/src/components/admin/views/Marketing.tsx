@@ -3,7 +3,6 @@ import { useAuthStore } from '@/store/authStore';
 import { Megaphone, Plus, Search, Calendar, Tag, Percent, Trash2, Edit2, Play, Square, Image as ImageIcon, X, LayoutGrid } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
-import { AdminSelect } from '@/components/admin/common/AdminSelect';
 import { BannerCampaignManager } from './BannerCampaignManager';
 
 export function Marketing() {
@@ -14,13 +13,12 @@ export function Marketing() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'campaigns' | 'banner-products'>('campaigns');
-
+  
   // Multi-select product modal state
   const [isProductSelectorOpen, setIsProductSelectorOpen] = useState(false);
   const [productSearch, setProductSearch] = useState('');
-
-  const { token, user } = useAuthStore();
-  const isStaff = user?.role === 'staff';
+  
+  const { token } = useAuthStore();
 
   const [formData, setFormData] = useState({
     name: '',
@@ -53,13 +51,13 @@ export function Marketing() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
+    
     // Validation
     if (formData.appliesTo === 'product' && formData.targetIds.length === 0) {
       alert('Vui lòng chọn ít nhất một sản phẩm.');
       return;
     }
-
+    
     if (formData.discountType === 'percentage') {
       if (formData.discountValue <= 0 || formData.discountValue > 100) {
         alert('Mức giảm phần trăm phải lớn hơn 0 và nhỏ hơn hoặc bằng 100.');
@@ -75,7 +73,7 @@ export function Marketing() {
     try {
       const url = editingId ? `${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/campaigns/${editingId}` : `${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/campaigns`;
       const method = editingId ? 'PUT' : 'POST';
-
+      
       const payload = {
         ...formData,
         discountValue: Number(formData.discountValue),
@@ -88,7 +86,7 @@ export function Marketing() {
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify(payload)
       });
-
+      
       if (res.ok) {
         setIsModalOpen(false);
         fetchData();
@@ -119,15 +117,15 @@ export function Marketing() {
     } catch (error) { alert('Lỗi cập nhật trạng thái'); }
   };
 
-  const filteredCampaigns = campaigns.filter(c => c.name.toLowerCase().includes(search.toLowerCase()));
+  const filteredCampaigns = (campaigns || []).filter(c => (c?.name || '').toLowerCase().includes((search || '').toLowerCase()));
 
   // Product Selector Logic
-  const filteredProducts = products.filter(p => p.name.toLowerCase().includes(productSearch.toLowerCase()));
-
+  const filteredProducts = (products || []).filter(p => (p?.name || '').toLowerCase().includes((productSearch || '').toLowerCase()));
+  
   const toggleProductSelect = (id: string) => {
     setFormData(prev => ({
       ...prev,
-      targetIds: prev.targetIds.includes(id)
+      targetIds: prev.targetIds.includes(id) 
         ? prev.targetIds.filter(pid => pid !== id)
         : [...prev.targetIds, id]
     }));
@@ -174,7 +172,7 @@ export function Marketing() {
               isActive: true, appliesTo: 'all', targetIds: [], bannerUrl: ''
             });
             setIsModalOpen(true);
-          }}
+          }} 
           className="flex items-center gap-2 px-4 py-2 bg-white text-black rounded-xl font-medium hover:bg-white/90 transition-colors"
         >
           <Plus className="w-5 h-5" /> Tạo chiến dịch
@@ -235,7 +233,7 @@ export function Marketing() {
           filteredCampaigns.map((camp, index) => {
             const isOngoing = camp.isActive && new Date(camp.startDate) <= new Date() && new Date(camp.endDate) >= new Date();
             const isEnded = new Date(camp.endDate) < new Date();
-
+            
             let previewProducts = [];
             if (camp.appliesTo === 'product' && camp.targetIds && camp.targetIds.length > 0) {
               previewProducts = camp.targetIds.map((id: string) => products.find(p => p.id === id)).filter(Boolean);
@@ -243,12 +241,12 @@ export function Marketing() {
 
             return (
               <motion.div key={camp.id} initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: index * 0.05 }}
-                className={cn("bg-black/40 border p-6 rounded-3xl flex flex-col relative overflow-hidden",
+                className={cn("bg-black/40 border p-6 rounded-3xl flex flex-col relative overflow-hidden", 
                   camp.isActive ? "border-white/20 shadow-xl shadow-emerald-500/5" : "border-white/5 opacity-70")}
               >
                 {/* Background Glow */}
                 {isOngoing && <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/20 blur-[50px] rounded-full pointer-events-none" />}
-
+                
                 <div className="flex justify-between items-start mb-4 relative z-10">
                   <div className="flex items-center gap-3">
                     {camp.bannerUrl ? (
@@ -256,16 +254,16 @@ export function Marketing() {
                         <img src={camp.bannerUrl} alt="Banner" className="w-full h-full object-cover" />
                       </div>
                     ) : (
-                      <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center shrink-0",
+                      <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center shrink-0", 
                         camp.isActive ? "bg-gradient-to-br from-emerald-400 to-teal-500 text-black" : "bg-white/10 text-white/50")}>
                         <Percent className="w-6 h-6" />
                       </div>
                     )}
-
+                    
                     <div>
                       <h3 className="font-bold text-lg text-white leading-tight">{camp.name}</h3>
                       <div className="flex items-center gap-2 mt-1">
-                        <span className={cn("text-xs font-bold px-2 py-0.5 rounded uppercase tracking-wider",
+                        <span className={cn("text-xs font-bold px-2 py-0.5 rounded uppercase tracking-wider", 
                           !camp.isActive ? "bg-white/10 text-white/50" :
                           isEnded ? "bg-red-500/20 text-red-400" :
                           isOngoing ? "bg-emerald-500/20 text-emerald-400" : "bg-blue-500/20 text-blue-400"
@@ -345,30 +343,18 @@ export function Marketing() {
                   <label className="block text-sm text-white/70 mb-1">Tên chiến dịch</label>
                   <input required type="text" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-white outline-none focus:border-white/30" />
                 </div>
-
+                
                 <div>
                   <label className="block text-sm text-white/70 mb-1">Mô tả (tùy chọn)</label>
                   <textarea value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-white outline-none focus:border-white/30 h-16 resize-none" />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Mô tả (tùy chọn)</label>
-                  <textarea value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-slate-900 outline-none focus:border-emerald-500 focus:bg-white h-16 resize-none" />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1.5">Phạm vi áp dụng</label>
-                  <AdminSelect
-                    value={formData.appliesTo}
-                    onChange={(v) => setFormData({ ...formData, appliesTo: v, targetIds: [] })}
-                    options={[
-                      { value: 'all', label: 'Tất cả sản phẩm' },
-                      { value: 'product', label: 'Sản phẩm cụ thể' },
-                    ]}
-                    className="w-full"
-                    menuWidth="w-full"
-                    highlightActive={false}
-                  />
+                  <label className="block text-sm text-white/70 mb-1">Phạm vi áp dụng</label>
+                  <select value={formData.appliesTo} onChange={e => setFormData({...formData, appliesTo: e.target.value, targetIds: []})} className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-white outline-none focus:border-white/30">
+                    <option value="all">Tất cả sản phẩm</option>
+                    <option value="product">Sản phẩm cụ thể</option>
+                  </select>
                 </div>
 
                 {formData.appliesTo === 'product' && (
@@ -379,7 +365,7 @@ export function Marketing() {
                         + Chọn sản phẩm
                       </button>
                     </div>
-
+                    
                     {formData.targetIds.length > 0 ? (
                       <>
                         <p className="text-xs text-white/50 mb-3">Đã chọn {formData.targetIds.length} sản phẩm</p>
@@ -404,18 +390,11 @@ export function Marketing() {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1.5">Loại giảm giá</label>
-                    <AdminSelect
-                      value={formData.discountType}
-                      onChange={(v) => setFormData({ ...formData, discountType: v })}
-                      options={[
-                        { value: 'percentage', label: '% Phần trăm', icon: <Percent className="w-3.5 h-3.5" /> },
-                        { value: 'fixed', label: 'Số tiền cố định (₫)', icon: <Tag className="w-3.5 h-3.5" /> },
-                      ]}
-                      className="w-full"
-                      menuWidth="w-full"
-                      highlightActive={false}
-                    />
+                    <label className="block text-sm text-white/70 mb-1">Loại giảm giá</label>
+                    <select value={formData.discountType} onChange={e => setFormData({...formData, discountType: e.target.value})} className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-white outline-none focus:border-white/30">
+                      <option value="percentage">% Phần trăm</option>
+                      <option value="fixed">Số tiền cố định</option>
+                    </select>
                   </div>
                   <div>
                     <label className="block text-sm text-white/70 mb-1">Mức giảm</label>
@@ -481,7 +460,7 @@ export function Marketing() {
                 <h2 className="text-xl font-bold">Chọn sản phẩm</h2>
                 <button onClick={() => setIsProductSelectorOpen(false)} className="p-2 hover:bg-white/10 rounded-full"><X className="w-5 h-5" /></button>
               </div>
-
+              
               <div className="p-5 border-b border-white/10 shrink-0 space-y-4">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />

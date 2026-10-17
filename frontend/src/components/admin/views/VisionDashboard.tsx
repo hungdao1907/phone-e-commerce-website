@@ -126,8 +126,16 @@ export default function VisionDashboard({
               {pendingOrders.map(o => (
                 <div key={o.id} className="vd-table-row">
                   <div className="vd-row" style={{ justifyContent: 'flex-start' }}>
-                    <div className="vd-avatar">{o.customer.slice(0, 2).toUpperCase()}</div>
-                    <div><div>{o.customer}</div><div className="vd-label">{o.id}</div></div>
+                    <div className="vd-avatar">
+                      {(typeof o.customer === 'string'
+                        ? o.customer.slice(0, 2)
+                        : (o.customer as any)?.fullName?.slice(0, 2) || 'KH'
+                      ).toUpperCase()}
+                    </div>
+                    <div>
+                      <div>{typeof o.customer === 'string' ? o.customer : (o.customer as any)?.fullName || 'Khách hàng'}</div>
+                      <div className="vd-label">{o.id}</div>
+                    </div>
                   </div>
                   <span className="vd-label">{o.product}</span>
                   <div style={{ textAlign: 'right' }}><b>{fmt(o.total)}</b><div className="vd-label">{o.ago}</div></div>

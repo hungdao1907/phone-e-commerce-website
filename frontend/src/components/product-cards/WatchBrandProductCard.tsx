@@ -214,7 +214,7 @@ export function WatchBrandProductCard({ product, priority = false, index = 0 }: 
         {/* Title */}
         <div className="mb-4">
           <h4
-            className="text-xl font-bold text-neutral-900 tracking-tight transition-colors duration-200 hover:text-[var(--watch-accent)]"
+            className="text-lg sm:text-xl font-bold text-neutral-900 tracking-tight transition-colors duration-200 hover:text-[var(--watch-accent)] line-clamp-2 min-h-[56px]"
           >
             {product.name}
           </h4>

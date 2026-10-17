@@ -4,34 +4,17 @@ import { CartRewardsSetting } from '../settings/CartRewardsSetting';
 import { PromoCodesSetting } from '../settings/PromoCodesSetting';
 import { FooterManagement } from './FooterManagement';
 
-import { useAuthStore } from '@/store/authStore';
-
 type SettingsTab = 'general' | 'cart-rewards' | 'promo-codes' | 'footer';
 
-interface SettingsManagerProps {
-  initialTab?: SettingsTab;
-}
+export function SettingsManager() {
+  const [activeTab, setActiveTab] = useState<SettingsTab>('cart-rewards');
 
-export function SettingsManager({ initialTab }: SettingsManagerProps = {}) {
-  const isStaff = useAuthStore((state) => state.user?.role === 'staff');
-  const [activeTab, setActiveTab] = useState<SettingsTab>(() => {
-    if (initialTab && (isStaff ? initialTab !== 'general' : true)) return initialTab;
-    return 'cart-rewards';
-  });
-
-  React.useEffect(() => {
-    if (initialTab && (isStaff ? initialTab !== 'general' : true)) {
-      setActiveTab(initialTab);
-    }
-  }, [initialTab, isStaff]);
-
-  const allTabs = [
+  const tabs = [
     { id: 'general', label: 'Cài đặt chung', icon: Settings },
     { id: 'cart-rewards', label: 'Mốc thưởng Giỏ hàng', icon: Gift },
     { id: 'promo-codes', label: 'Mã giảm giá', icon: Tag },
     { id: 'footer', label: 'Quản lý Footer', icon: PanelBottom }
   ];
-  const tabs = isStaff ? allTabs.filter(t => t.id !== 'general') : allTabs;
 
   return (
     <div className="flex h-[calc(100vh-140px)] bg-black/20 rounded-3xl overflow-hidden border border-white/5">
@@ -51,8 +34,8 @@ export function SettingsManager({ initialTab }: SettingsManagerProps = {}) {
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as SettingsTab)}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200 ${
-                  isActive
-                    ? 'bg-white/10 text-white shadow-lg shadow-white/5'
+                  isActive 
+                    ? 'bg-white/10 text-white shadow-lg shadow-white/5' 
                     : 'text-white/50 hover:bg-white/5 hover:text-white/80'
                 }`}
               >

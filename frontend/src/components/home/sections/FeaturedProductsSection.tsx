@@ -52,27 +52,28 @@ function truncateCardText(value: string, maxLength: number): string {
 }
 
 function toFeaturedProduct(item: HomeFeaturedProduct): FeaturedProduct {
-  const brand = (item.product.brand || item.product.category?.name || 'Sản phẩm nổi bật').trim();
+  const product = item?.product;
+  const brand = (product?.brand || product?.category?.name || 'Sản phẩm nổi bật').trim();
   const presentation = BRAND_PRESENTATION[brand.toLowerCase()] ?? {
     accent: '#5f6b7a',
     glow: 'rgba(95, 107, 122, 0.16)',
     imageClassName: '',
   };
-  const fullTagline = plainText(item.product.description);
+  const fullTagline = plainText(product?.description || '');
 
   return {
     id: item.id,
     brand: brand.toUpperCase(),
-    fullName: item.product.name,
-    name: truncateCardText(item.product.name, CARD_NAME_LIMIT),
+    fullName: product?.name || 'Sản phẩm',
+    name: truncateCardText(product?.name || 'Sản phẩm', CARD_NAME_LIMIT),
     fullTagline,
     tagline: truncateCardText(fullTagline, CARD_TAGLINE_LIMIT),
-    price: formatFeaturedProductPrice(item.product),
-    image: getFeaturedProductImage(item.product),
+    price: product ? formatFeaturedProductPrice(product) : 'Liên hệ',
+    image: product ? getFeaturedProductImage(product) : '',
     imageClassName: presentation.imageClassName,
     accent: presentation.accent,
     glow: presentation.glow,
-    href: `/product/${item.product.id}`,
+    href: `/product/${product?.id || item.productId}`,
   };
 }
 
@@ -149,7 +150,7 @@ export function FeaturedProductsSection() {
     return () => controller.abort();
   }, []);
 
-  const products = useMemo(() => items.map(toFeaturedProduct), [items]);
+  const products = useMemo(() => (items || []).filter(item => item?.product).map(toFeaturedProduct), [items]);
   if (!isLoading && (hasError || products.length === 0)) return null;
 
   return (
