@@ -1,13 +1,13 @@
 // @ts-nocheck
-import React, { useState, useRef, useEffect } from 'react';
-import lottie from 'lottie-web';
+import React, { useState, useEffect } from 'react';
 import { ChevronRight, LogOut } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { LottieIcon } from '@/components/ui/LottieIcon';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/store/authStore';
+import { canSeeDockItem } from './dashboard-navigation';
 
-const DOCK_ITEMS = [
+export const DOCK_ITEMS = [
   { id: 'dashboard', icon: "/lottie/dashboard.json", label: 'Tổng quan', isLottie: true, path: '/dashboard' },
   { 
     id: 'calendar', 
@@ -77,14 +77,34 @@ const DOCK_ITEMS = [
       { id: 'home-featured-products', label: 'Sản phẩm nổi bật' }
     ]
   },
+  {
+    id: 'quotations',
+    icon: '/lottie/performance.json',
+    label: 'Báo giá Chatbot',
+    isLottie: true,
+    path: '/quotations',
+    subItems: [
+      { id: 'quotations-list', label: 'Danh sách báo giá' },
+      { id: 'quotations-pending', label: 'Báo giá chờ duyệt' },
+      { id: 'quotations-processed', label: 'Báo giá đã xử lý' },
+    ],
+  },
 ];
 
 export function VerticalDock({ activeView, onNavigate }: { activeView: string; onNavigate: (view: string) => void }) {
+  const currentUser = useAuthStore(state => state.user);
+  const role = currentUser?.role;
+  const dockItems = DOCK_ITEMS.filter(item => canSeeDockItem(role, item.id));
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [isExpanded, setIsExpanded] = useState(false);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [isSettingsHovered, setIsSettingsHovered] = useState(false);
 
+  useEffect(() => {
+    const parent = DOCK_ITEMS.find(item => canSeeDockItem(role, item.id)
+      && (item.id === activeView || item.subItems?.some(sub => sub.id === activeView)));
+    setOpenMenuId(parent?.subItems ? parent.id : null);
+  }, [activeView, role]);
 
   return (
     <div
@@ -133,8 +153,8 @@ export function VerticalDock({ activeView, onNavigate }: { activeView: string; o
           </motion.div>
         </div>
 
-        <div className="flex flex-col gap-3 w-full">
-          {DOCK_ITEMS.map((item) => {
+        <div className="flex flex-col gap-3 w-full flex-1 min-h-0 overflow-y-auto custom-scrollbar">
+          {dockItems.map((item) => {
             const hasSubItems = !!item.subItems;
             const isSubMenuOpen = openMenuId === item.id;
             const isActive = activeView === item.id || (hasSubItems && item.subItems!.some(s => activeView === s.id));
@@ -152,6 +172,9 @@ export function VerticalDock({ activeView, onNavigate }: { activeView: string; o
               <div key={item.id} className="w-full flex flex-col">
                 <button
                   onClick={handleParentClick}
+                  aria-label={item.label}
+                  aria-expanded={hasSubItems ? isSubMenuOpen : undefined}
+                  aria-controls={hasSubItems ? `dock-submenu-${item.id}` : undefined}
                   className="relative group outline-none flex items-center w-full rounded-2xl"
                   onMouseEnter={() => setHoveredId(item.id)}
                   onMouseLeave={() => setHoveredId(null)}
@@ -212,6 +235,7 @@ export function VerticalDock({ activeView, onNavigate }: { activeView: string; o
                 <AnimatePresence>
                   {hasSubItems && isSubMenuOpen && isExpanded && (
                     <motion.div
+                      id={`dock-submenu-${item.id}`}
                       initial={{ height: 0, opacity: 0 }}
                       animate={{ height: "auto", opacity: 1 }}
                       exit={{ height: 0, opacity: 0 }}
@@ -313,7 +337,7 @@ export function VerticalDock({ activeView, onNavigate }: { activeView: string; o
         </div>
 
         {/* Footer Icons: Settings, Notif, Avatar */}
-        <div className="mt-auto pt-4 border-t border-[rgba(46,232,138,0.12)] flex flex-col gap-3 w-full relative">
+        <div className="mt-auto pt-4 border-t border-[rgba(46,232,138,0.12)] flex flex-col gap-3 w-full relative shrink-0">
 
           {/* Settings */}
           <div className="w-full flex flex-col">
@@ -360,7 +384,7 @@ export function VerticalDock({ activeView, onNavigate }: { activeView: string; o
                 <div className="w-10 h-10 shrink-0 flex items-center justify-center">
                   <div className="w-8 h-8 rounded-xl overflow-hidden border border-white/10 group-hover:border-white/30 transition-colors shadow-lg">
                     <img 
-                      src="https://ui-avatars.com/api/?name=Admin&background=random&color=fff" 
+                      src={`https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser?.username || 'User')}&background=random&color=fff`}
                       alt="User Avatar" 
                       className="w-full h-full object-cover"
                     />
@@ -373,8 +397,8 @@ export function VerticalDock({ activeView, onNavigate }: { activeView: string; o
                   transition={{ duration: 0.2 }}
                   className="whitespace-nowrap ml-4 transition-colors duration-200 flex-1 flex flex-col items-start justify-center overflow-hidden text-left"
                 >
-                  <span className="text-sm font-medium text-white/90 leading-tight">Admin</span>
-                  <span className="text-xs text-white/50 leading-tight">Super Admin</span>
+                  <span className="text-sm font-medium text-white/90 leading-tight">{currentUser?.username || 'User'}</span>
+                  <span className="text-xs text-white/50 leading-tight">{role === 'superadmin' ? 'Super Admin' : role === 'admin' ? 'Quản trị viên' : role === 'staff' ? 'Nhân viên vận hành' : role || 'User'}</span>
                 </motion.div>
               </button>
 
