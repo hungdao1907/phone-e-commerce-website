@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
+import { PaymentMethodDropdown } from './PaymentMethodDropdown';
 import { customerQuotationStatus } from './customer-quotation-status';
 import { downloadApprovedCustomerQuotation, getQuotationPdfBlob } from './quotation-api';
 import type { QuotationRecord } from './QuotationDetails';
@@ -10,6 +11,24 @@ import { subscribeToPersistedQuotationUpdates, publishQuotationCreated, publishQ
 const quote: QuotationRecord = { id: 'quote-owned', quoteNumber: 'QT-REAL-SNAPSHOT-MOCK', version: 2, status: 'APPROVED',
   subtotal: 40500000, discountAmount: 2025000, shippingFee: 0, totalAmount: 38475000,
   expiresAt: '2099-01-01T00:00:00Z', items: [] };
+
+test('payment dropdown displays the current COD or bank-transfer value without submitting the form', () => {
+  for (const [value, label] of [['COD', 'Thanh toán khi nhận hàng'], ['BANK_TRANSFER', 'Chuyển khoản ngân hàng']] as const) {
+    let changes = 0;
+    const html = renderToStaticMarkup(React.createElement(PaymentMethodDropdown, { value, onChange: () => { changes++; } }));
+    assert.ok(html.includes(label));
+    assert.ok(html.includes('role="combobox"'));
+    assert.ok(html.includes('type="button"'));
+    assert.ok(html.includes('aria-expanded="false"'));
+    assert.equal(changes, 0);
+  }
+});
+
+test('payment dropdown is disabled while the quotation request is being submitted', () => {
+  const html = renderToStaticMarkup(React.createElement(PaymentMethodDropdown, { value: 'COD', onChange: () => {}, disabled: true }));
+  assert.ok(html.includes('disabled=""'));
+  assert.ok(!html.includes('role="listbox"'));
+});
 
 test('only approved valid or converted historical quotations get the approved PDF message', () => {
   assert.equal(customerQuotationStatus(quote).downloadable, true);

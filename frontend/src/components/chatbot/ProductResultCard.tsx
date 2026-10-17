@@ -6,6 +6,7 @@ import { isValidChatbotQuantity, makeQuotationSelection } from './quotation-sele
 import { addQuotationDraftSelection } from '../quotations/quotation-draft';
 import { useAuthStore } from '../../store/authStore';
 import { ShoppingBag, ChevronRight, Sparkles, FileText } from 'lucide-react';
+import { VariantDropdown } from './VariantDropdown';
 
 interface ProductResultCardProps {
   product: ChatbotProduct;
@@ -96,9 +97,9 @@ export function ProductResultCard({ product }: ProductResultCardProps) {
   };
 
   return (
-    <article className="group relative flex w-[235px] sm:w-[245px] flex-shrink-0 flex-col overflow-hidden rounded-2xl border border-neutral-200/90 bg-white text-left shadow-[0_2px_8px_rgba(0,0,0,0.04)] transition-all duration-300 hover:border-blue-400/60 hover:shadow-[0_8px_20px_rgba(0,0,0,0.09)]">
+    <article className="group relative flex w-[216px] sm:w-[224px] flex-shrink-0 flex-col overflow-hidden rounded-xl border border-neutral-200/90 bg-white text-left shadow-[0_2px_8px_rgba(0,0,0,0.04)] transition-all duration-300 hover:border-blue-400/60 hover:shadow-[0_8px_20px_rgba(0,0,0,0.09)]">
       <Link to={product.id ? `/product/${product.id}` : '/'} draggable={false} className="block">
-        <div className="relative flex aspect-[4/3] items-center justify-center overflow-hidden bg-gradient-to-b from-neutral-50 to-neutral-100/70 p-3">
+        <div className="relative flex h-28 items-center justify-center overflow-hidden bg-gradient-to-b from-neutral-50 to-neutral-100/70 px-5 pb-2 pt-7 sm:h-30">
           <div className="pointer-events-none absolute left-2.5 top-2.5 z-10 flex items-center gap-1.5">
             <span className="inline-flex items-center gap-1 rounded-full border border-blue-100 bg-white/90 px-2 py-0.5 text-[10px] font-semibold text-blue-600 shadow-xs backdrop-blur-md">
               <Sparkles className="h-2.5 w-2.5" /> WebPhone
@@ -109,32 +110,32 @@ export function ProductResultCard({ product }: ProductResultCardProps) {
         </div>
       </Link>
 
-      <div className="flex flex-1 flex-col justify-between bg-white p-3.5">
+      <div className="flex flex-1 flex-col justify-between bg-white p-3">
         <div>
           <div className="mb-0.5 text-[11px] font-medium uppercase tracking-wider text-neutral-400">{product.brand || 'Sản phẩm WebPhone'}</div>
-          <Link to={product.id ? `/product/${product.id}` : '/'} className="line-clamp-2 text-[13px] font-semibold leading-snug text-neutral-900 hover:text-blue-600">{product.name || 'Sản phẩm'}</Link>
+          <Link to={product.id ? `/product/${product.id}` : '/'} title={product.name || 'Sản phẩm'} className="line-clamp-2 text-[13px] font-semibold leading-snug text-neutral-900 hover:text-blue-600">{product.name || 'Sản phẩm'}</Link>
 
           {variants.length > 0 ? (
-            <label className="mt-3 block text-[11px] font-semibold text-neutral-600">
-              Phiên bản
-              <select value={variantId} onChange={event => { setVariantId(event.target.value); setQuantity('1'); setActionError(''); }} className="mt-1 w-full rounded-lg border border-neutral-200 bg-white px-2 py-2 text-xs font-medium text-neutral-800">
-                {variants.map((variant, index) => <option key={variant.id} value={variant.id} disabled={variant.availability !== 'in_stock'}>{variantLabel(variant, index)}{variant.availability !== 'in_stock' ? ' — Hết hàng' : ''}</option>)}
-              </select>
-            </label>
+            <VariantDropdown value={variantId}
+              options={variants.map((variant, index) => ({ value: variant.id, label: variantLabel(variant, index), stock: variant.stock,
+                disabled: variant.availability !== 'in_stock' || variant.stock <= 0 }))}
+              onChange={value => { setVariantId(value); setQuantity('1'); setActionError(''); }} />
           ) : <p className="mt-3 rounded-lg bg-amber-50 p-2 text-[11px] text-amber-800">Chưa xác minh được phiên bản sản phẩm để tạo báo giá.</p>}
 
           {price !== null ? <div className="mt-2.5 flex flex-wrap items-baseline gap-2"><span className="text-[15px] font-bold tracking-tight text-rose-600">{price}</span>{originalPrice && selectedVariant?.original_price! > (selectedVariant?.price || 0) && <span className="text-[11px] text-neutral-400 line-through">{originalPrice}</span>}</div> : <p className="mt-2.5 text-xs font-medium text-neutral-500">{selectedVariant ? 'Không thể xác minh giá hiện tại.' : 'Chưa có phiên bản khả dụng.'}</p>}
-          {selectedVariant && <p className={`mt-1 text-[11px] ${available ? 'text-emerald-700' : 'text-rose-600'}`}>{available ? `Còn ${selectedVariant.stock} sản phẩm` : 'Phiên bản hiện không có sẵn'}</p>}
-          {available && <label className="mt-2 block text-[11px] font-semibold text-neutral-600">Số lượng<input aria-label="Số lượng yêu cầu báo giá" type="number" min={1} max={selectedVariant.stock} step={1} value={quantity} onChange={event => setQuantity(event.target.value)} className="mt-1 w-full rounded-lg border border-neutral-200 px-2 py-1.5 text-xs" /></label>}
+          <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
+            {selectedVariant && <p className={`text-[11px] ${available ? 'text-emerald-700' : 'text-rose-600'}`}>{available ? `Còn ${selectedVariant.stock} sản phẩm` : 'Phiên bản hiện không có sẵn'}</p>}
+            {available && <label className="flex items-center gap-1.5 text-[11px] font-medium text-neutral-600">SL<input aria-label="Số lượng yêu cầu báo giá" type="number" min={1} max={selectedVariant.stock} step={1} value={quantity} onChange={event => setQuantity(event.target.value)} className="h-8 w-14 rounded-lg border border-neutral-200 bg-neutral-50 px-2 text-xs text-neutral-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/30" /></label>}
+          </div>
           {!validQuantity && available && <p className="mt-1 text-[11px] text-rose-600">Nhập số nguyên từ 1 đến {selectedVariant.stock}.</p>}
           {actionError && <p role="alert" className="mt-2 text-[11px] text-rose-700">{actionError}</p>}
         </div>
 
-        <div className="mt-3 space-y-2 border-t border-neutral-100 pt-2.5">
-          <button type="button" onClick={requestQuotation} disabled={!validQuantity} className="inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-blue-600 px-2 py-2 text-[11px] font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-neutral-300">
+        <div className="mt-2.5 space-y-1 border-t border-neutral-100 pt-2">
+          <button type="button" onClick={requestQuotation} disabled={!validQuantity} className="inline-flex min-h-9 w-full items-center justify-center gap-1.5 rounded-lg bg-blue-600 px-2 py-2 text-[11px] font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-neutral-300">
             <FileText className="h-3.5 w-3.5" /> Yêu cầu báo giá
           </button>
-          <Link to={product.id ? `/product/${product.id}` : '/'} className="inline-flex w-full items-center justify-center text-[11px] font-semibold text-blue-600 hover:text-blue-700">Xem sản phẩm <ChevronRight className="ml-0.5 h-3.5 w-3.5" /></Link>
+          <Link to={product.id ? `/product/${product.id}` : '/'} className="inline-flex min-h-7 w-full items-center justify-center text-[11px] font-semibold text-blue-600 hover:text-blue-700">Xem sản phẩm <ChevronRight className="ml-0.5 h-3.5 w-3.5" /></Link>
         </div>
       </div>
     </article>
