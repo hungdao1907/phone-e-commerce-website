@@ -6,7 +6,7 @@
     "start": "node dist/src/index.js",
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
-    "test": "npm run build && node --import tsx --test tests/authorization.test.ts tests/category-delete-safety.test.ts tests/chatbot-integration-contract.test.ts tests/product-name-search.test.ts tests/checkout-stock.test.ts tests/customer-delete-safety.test.ts tests/n8n-workflow-candidate.test.ts tests/order-code.service.test.ts tests/order-idempotency.service.test.ts tests/pricing.service.test.ts tests/promo-usage.test.ts tests/prisma-runtime-url.test.ts tests/quotation-api-contract.test.ts tests/quotation-create-idempotency.test.ts tests/quotation-create-rate-limit.test.ts tests/quotation-notification-contract.test.ts tests/quotation-private-pdf.test.ts tests/quotation-workflow.test.ts tests/quotation-deletion.test.ts tests/merge-regression.test.ts"
+    "test": "npm run build && node --import tsx --test tests/authorization.test.ts tests/category-delete-safety.test.ts tests/chatbot-integration-contract.test.ts tests/product-name-search.test.ts tests/checkout-stock.test.ts tests/customer-delete-safety.test.ts tests/n8n-workflow-candidate.test.ts tests/order-code.service.test.ts tests/order-idempotency.service.test.ts tests/pricing.service.test.ts tests/promo-usage.test.ts tests/prisma-runtime-url.test.ts tests/quotation-api-contract.test.ts tests/quotation-create-idempotency.test.ts tests/quotation-create-rate-limit.test.ts tests/quotation-notification-contract.test.ts tests/quotation-private-pdf.test.ts tests/quotation-workflow.test.ts tests/quotation-deletion.test.ts tests/merge-regression.test.ts tests/order-tracking-otp-diagnostics.test.ts tests/chatbot-verified-advice.test.ts"
   },
   "keywords": [],
   "author": "",

@@ -9,6 +9,7 @@
     "strict": true,
     "skipLibCheck": true
   },
+  "exclude": ["scripts/n8n-quotation/**/isolated-test.workflow.ts"],
   "include": [
     "src/**/*",
     "prisma/**/*",

@@ -43,6 +43,7 @@ import {
   isOrderManagerRole,
 } from './order-authorization';
 import { safeErrorSummary } from '../utils/safe-error-summary';
+import { trackingOtpDiagnostic } from '../utils/tracking-otp-diagnostics';
 import { presentCustomerOrderDetail } from '../services/customer-order-detail';
 import { cancelUnpaidOrder, OrderCancellationError } from '../services/order-cancellation.service';
 
@@ -189,6 +190,7 @@ function trackingContactMatches(
 
 // POST request OTP for public order tracking
 router.post('/track/request-otp', async (req, res) => {
+  trackingOtpDiagnostic('request', 'received');
   try {
     const { orderCode, contact } = req.body;
 
@@ -204,9 +206,11 @@ router.post('/track/request-otp', async (req, res) => {
 
     const lookupFingerprint = createTrackingLookupFingerprint(orderCode, normalizedContact);
     if (!allowTrackingRequest(requestIp(req), lookupFingerprint)) {
+      trackingOtpDiagnostic('rate_limit', 'blocked');
       return res.status(429).json({ success: false, message: GENERIC_TRACKING_RATE_LIMIT_MESSAGE });
     }
 
+    trackingOtpDiagnostic('rate_limit', 'allowed');
     const order = await prisma.order.findFirst({
       where: {
         OR: orderCodeCandidates.map(candidate => ({
@@ -220,6 +224,9 @@ router.post('/track/request-otp', async (req, res) => {
       }
     });
 
+    trackingOtpDiagnostic('order_lookup', order ? 'matched' : 'not_matched');
+    trackingOtpDiagnostic('contact_match', order && trackingContactMatches(normalizedContact, order) ? 'matched' : 'not_matched');
+    trackingOtpDiagnostic('recipient', normalizeTrackingContact(order?.customer?.email)?.type === 'email' ? 'valid' : 'unavailable');
     const isValidLookup = Boolean(
       order
       && trackingContactMatches(normalizedContact, order)
@@ -235,6 +242,7 @@ router.post('/track/request-otp', async (req, res) => {
         otp,
       );
       challengeId = challenge.challengeId;
+      trackingOtpDiagnostic('challenge', challenge.shouldSend ? 'created' : 'cooldown');
 
       if (challenge.shouldSend) {
         await sendTrackingOtpEmail(

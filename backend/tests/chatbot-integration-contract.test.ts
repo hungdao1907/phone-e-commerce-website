@@ -40,7 +40,272 @@ import {
   normalizeTrackingContact,
   verifyTrackingChallenge,
 } from '../src/services/order-tracking-security';
-import { safeErrorSummary } from '../src/utils/safe-error-summary';
+import { safeErrorSummary, safeFetchErrorSummary } from '../src/utils/safe-error-summary';
+import { parseGroundedBudget, parseGroundedConstraints, requestedGroundedBudget, validatedStateTimestamp, GroundedContractError } from '../src/services/chatbot-grounded-constraints';
+
+const groundedCategories = [
+  { id: 'phone-root', parentId: null, isActive: true }, { id: 'tablet-root', parentId: null, isActive: true },
+  { id: 'laptop-root', parentId: null, isActive: true }, { id: 'watch-root', parentId: null, isActive: true },
+  { id: 'phone-child', parentId: 'phone-root', isActive: true },
+];
+const groundedRecords = [
+  ['asus', 'ASUS Vivobook', 'ASUS', 'laptop-root'], ['vivo', 'Vivo V40', 'Vivo', 'phone-root'],
+  ['iphone', 'iPhone 16', 'Apple', 'phone-child'], ['ipad', 'iPad Pro', 'Apple', 'tablet-root'],
+  ['galaxy', 'Samsung Galaxy S25', 'Samsung', 'phone-root'], ['tab', 'Samsung Galaxy Tab S10', 'Samsung', 'tablet-root'],
+  ['watch', 'Apple Watch Ultra', 'Apple', 'watch-root'],
+].map(([id, name, brand, categoryId]) => ({ id, name, brand, categoryId, status: 'active', category: { name: categoryId, slug: categoryId, isActive: true },
+  variants: [
+    { id: id + '-cheap', price: 2900000, salePrice: null, stock: 2, attributes: { 'Dung lượng': '128GB', 'Màu sắc': 'Bạc' } },
+    { id: id + '-edge', price: 3000000, salePrice: null, stock: 0, attributes: { 'Dung lượng': '256GB', 'Màu sắc': 'Bạc' } },
+    { id: id + '-expensive', price: 5000000, salePrice: null, stock: 3, attributes: { 'Dung lượng': '512GB', 'Màu sắc': 'Xanh' } },
+  ] }));
+function groundedDb(rows = groundedRecords) {
+  return { product: { findMany: async ({ where }: any) => rows.filter(p => where.id.in.includes(p.id)) },
+    campaign: { findMany: async () => [] }, category: { findMany: async () => groundedCategories } } as any;
+}
+function groundedRecord(overrides: Record<string, any> = {}, ids = ['iphone']) {
+  return { result_type: 'recommendation', response: 'Invented extra product price 1 VND', products: ids.map(id => ({ id, variants: groundedRecords.find(p => p.id === id)!.variants.map(v => ({ id: v.id, price: 1, stock: 999 })) })),
+    grounding: { constraints: { brands: [], categoryIds: [], modelIds: [], modelTokens: [], attrTerms: [], inStock: false, outOfStock: false, budget: null, ...overrides } },
+    conversation_state: { state_version: 2, updated_at: new Date().toISOString(), active_filters: {}, last_result_set: [] } };
+}
+
+for (const [label, budget, expected] of [
+  ['strict under 3 million', { max: 3000000, maxInclusive: false }, ['iphone-cheap']],
+  ['inclusive at most 3 million', { max: 3000000, maxInclusive: true }, ['iphone-cheap', 'iphone-edge']],
+  ['inclusive 3 to 5 million', { min: 3000000, minInclusive: true, max: 5000000, maxInclusive: true }, ['iphone-edge', 'iphone-expensive']],
+  ['strict above 3 million', { min: 3000000, minInclusive: false }, ['iphone-expensive']],
+  ['at least 3 million', { min: 3000000, minInclusive: true }, ['iphone-edge', 'iphone-expensive']],
+] as const) test('grounded adapter budget: ' + label, async () => {
+  const dto: any = await prepareCustomerChatbotResponse(groundedRecord({ budget }), 'grounded-A', groundedDb());
+  assert.deepEqual(dto.products[0].variants.map((v: any) => v.id), expected); assert.ok(!dto.response.includes('1 VND'));
+  assert.equal(dto.products[0].price, Math.min(...dto.products[0].variants.map((v: any) => v.price)));
+});
+for (const text of ['dưới 3 triệu', 'dưới 3tr', 'dưới 3.000.000đ']) test('server request budget overrides relaxed workflow ceiling: ' + text, async () => {
+  const dto: any = await prepareCustomerChatbotResponse(groundedRecord({ budget: { max: 9000000, maxInclusive: true } }), 'grounded-A', groundedDb(), { message: text });
+  assert.deepEqual(dto.products[0].variants.map((v: any) => v.id), ['iphone-cheap']);
+  assert.deepEqual(dto.conversation_state.active_filters.grounded_budget, { max: 3000000, maxInclusive: false });
+});
+test('approximate budget without an approved tolerance asks a range and returns no cards', async () => {
+  assert.equal(requestedGroundedBudget('khoảng 20 triệu'), 'clarification');
+  const dto: any = await prepareCustomerChatbotResponse(groundedRecord({ budget: { min: 1000000, max: 40000000, minInclusive: true, maxInclusive: true } }), 'A', groundedDb(), { message: 'khoảng 20 triệu' });
+  assert.equal(dto.result_type, 'clarification'); assert.deepEqual(dto.products, []);
+});
+test('bounded approved explicit tolerance survives state validation without deriving new money policy', () => {
+  const b = { min: 19000000, max: 21000000, minInclusive: true, maxInclusive: true, toleranceBps: 500 };
+  assert.deepEqual(parseGroundedBudget(b), b);
+});
+test('bare VND and shorthand parse without confusing storage with a budget', () => {
+  for (const text of ['3tr', '3.000.000đ', '3000000']) assert.deepEqual(requestedGroundedBudget(text), { max: 3000000, maxInclusive: true });
+  assert.equal(requestedGroundedBudget('iPhone 16 256GB'), null);
+  assert.deepEqual(requestedGroundedBudget('từ 3 đến 5 triệu'), { min: 3000000, max: 5000000, minInclusive: true, maxInclusive: true });
+});
+test('invalid budgets reject strings, NaN, inverted bounds, missing operators and excess numeric range', async () => {
+  for (const b of [{ max: '3000000', maxInclusive: true }, { max: NaN, maxInclusive: true }, { min: 5000000, max: 3000000, minInclusive: true, maxInclusive: true }, { max: 3000000 }, { max: 1e15, maxInclusive: true }, { min: 3, minInclusive: false, max: 3, maxInclusive: true }]) {
+    assert.throws(() => parseGroundedBudget(b), GroundedContractError);
+    const dto: any = await prepareCustomerChatbotResponse(groundedRecord({ budget: b }), 'A', groundedDb());
+    assert.equal(dto.result_type, 'error'); assert.deepEqual(dto.products, []);
+  }
+});
+test('missing budget keeps only verified hinted variants, no extra expensive variant reappears', async () => {
+  const record = groundedRecord(); record.products[0].variants = [{ id: 'iphone-cheap', price: 1, stock: 999 }];
+  const dto: any = await prepareCustomerChatbotResponse(record, 'A', groundedDb());
+  assert.deepEqual(dto.products[0].variants.map((v: any) => v.id), ['iphone-cheap']); assert.equal(dto.products[0].price, 2900000); assert.equal(dto.products[0].stock, 2);
+});
+test('stock and partial existence are rebuilt from current database rather than AI stock', async () => {
+  const stock: any = await prepareCustomerChatbotResponse(groundedRecord({ inStock: true }), 'A', groundedDb());
+  assert.deepEqual(stock.products[0].variants.map((v: any) => v.id), ['iphone-cheap', 'iphone-expensive']);
+  const all: any = await prepareCustomerChatbotResponse(groundedRecord(), 'A', groundedDb()); assert.equal(all.products[0].existence_status, 'PARTIALLY_AVAILABLE');
+  const out: any = await prepareCustomerChatbotResponse(groundedRecord({ outOfStock: true }), 'A', groundedDb());
+  assert.equal(out.products[0].stock, 0); assert.equal(out.products[0].availability, 'out_of_stock'); assert.equal(out.products[0].existence_status, 'OUT_OF_STOCK');
+});
+test('nonexistent and other-product variant IDs cannot be promoted into cards', async () => {
+  const record = groundedRecord(); record.products[0].variants = [{ id: 'ipad-cheap', price: 1, stock: 999 }, { id: 'fake', price: 1, stock: 999 }];
+  const dto: any = await prepareCustomerChatbotResponse(record, 'A', groundedDb()); assert.deepEqual(dto.products, []); assert.equal(dto.total, 0);
+});
+test('duplicates in product/product-list and variants do not create duplicate cards', async () => {
+  const record: any = groundedRecord(); record.products.push(record.products[0]); record.product = record.products[0];
+  const dto: any = await prepareCustomerChatbotResponse(record, 'A', groundedDb()); assert.equal(dto.products.length, 1); assert.equal(dto.products[0].variants.length, 3);
+});
+for (const [label, brands, categoryIds, expected] of [
+  ['ASUS laptop', ['ASUS'], ['laptop-root'], ['asus']], ['Vivo smartphone', ['Vivo'], ['phone-root'], ['vivo']],
+  ['Apple smartphone excludes iPad and Watch', ['Apple'], ['phone-root'], ['iphone']], ['Apple tablet excludes iPhone', ['Apple'], ['tablet-root'], ['ipad']],
+  ['Samsung phone excludes Galaxy Tab', ['Samsung'], ['phone-root'], ['galaxy']], ['Samsung tablet excludes Galaxy Phone', ['Samsung'], ['tablet-root'], ['tab']],
+  ['Apple watch excludes iPhone', ['Apple'], ['watch-root'], ['watch']],
+] as const) test('grounded adapter brand/category: ' + label, async () => {
+  const dto: any = await prepareCustomerChatbotResponse(groundedRecord({ brands, categoryIds }, groundedRecords.map(p => p.id)), 'A', groundedDb());
+  assert.deepEqual(dto.products.map((p: any) => p.id), expected);
+});
+test('Vivobook does not match Vivo using brand equality and token boundaries', async () => {
+  const dto: any = await prepareCustomerChatbotResponse(groundedRecord({ brands: ['Vivo'], modelTokens: ['Vivobook'] }, ['asus', 'vivo']), 'A', groundedDb()); assert.deepEqual(dto.products, []);
+});
+test('inactive category ancestors and cycles fail closed', async () => {
+  for (const parents of [[{ id: 'phone-child', parentId: 'phone-root', isActive: true }, { id: 'phone-root', parentId: null, isActive: false }], [{ id: 'phone-child', parentId: 'phone-root', isActive: true }, { id: 'phone-root', parentId: 'phone-child', isActive: true }]]) {
+    const db = groundedDb(); db.category.findMany = async () => parents;
+    const dto: any = await prepareCustomerChatbotResponse(groundedRecord({ categoryIds: ['phone-root'] }), 'A', db); assert.deepEqual(dto.products, []);
+  }
+});
+test('attributes and current sale-price are revalidated without trusting raw price', async () => {
+  const records = groundedRecords.map(p => ({ ...p, variants: p.variants.map(v => v.id === 'iphone-edge' ? { ...v, salePrice: 2700000, stock: 1 } : v) }));
+  const dto: any = await prepareCustomerChatbotResponse(groundedRecord({ attrTerms: [{ kind: 'capacity', term: '256GB' }, { kind: 'color', term: 'Bạc' }], budget: { max: 3000000, maxInclusive: false }, inStock: true }), 'A', groundedDb(records));
+  assert.deepEqual(dto.products[0].variants.map((v: any) => v.id), ['iphone-edge']); assert.equal(dto.products[0].price, 2700000);
+});
+test('legacy Product Detail keeps complete variants and Quotation is not filtered globally', async () => {
+  const dto: any = await prepareCustomerChatbotResponse({ result_type: 'product_detail', response: 'Bạn muốn xem thêm phiên bản nào?', product: { id: 'iphone', variants: [{ id: 'iphone-cheap' }] }, conversation_state: { state_version: 2, active_filters: { price_max: 3000000 } } }, 'A', groundedDb());
+  assert.equal(dto.product.variants.length, 3);
+});
+test('grounded budget survives Backend public DTO -> server payload round-trip', async () => {
+  const b = { min: 3000000, max: 5000000, minInclusive: false, maxInclusive: true };
+  const dto: any = await prepareCustomerChatbotResponse(groundedRecord({ budget: b }), 'A', groundedDb());
+  const payload: any = buildCustomerN8nPayload({ message: 'tiếp tục', sessionId: 'A', history: [], conversationState: dto.conversation_state });
+  assert.deepEqual(payload.conversationState.active_filters.grounded_budget, b); assert.ok(validatedStateTimestamp(payload.conversationState.updated_at));
+  assert.equal(payload.sessionId, 'A'); assert.equal(buildCustomerN8nPayload({ message: 'hello', sessionId: 'B', history: [], conversationState: null }).conversationState, null);
+});
+test('grounded contract without optional upstream state still emits bounded Backend-owned V2 state', async () => {
+  const record: any = groundedRecord({ budget: { max: 3000000, maxInclusive: false } }); delete record.conversation_state;
+  const dto: any = await prepareCustomerChatbotResponse(record, 'A', groundedDb()); assert.equal(dto.conversation_state.state_version, 2);
+  assert.deepEqual(dto.conversation_state.active_filters.grounded_budget, { max: 3000000, maxInclusive: false });
+  assert.equal(dto.conversation_state.last_result_set[0].id, 'iphone'); assert.ok(validatedStateTimestamp(dto.conversation_state.updated_at));
+});
+test('changed current request constraints replace previous workflow budget safely', async () => {
+  const dto: any = await prepareCustomerChatbotResponse(groundedRecord({ budget: { max: 3000000, maxInclusive: false } }), 'A', groundedDb(), { message: 'từ 3 đến 5 triệu' });
+  assert.deepEqual(dto.products[0].variants.map((v: any) => v.id), ['iphone-edge', 'iphone-expensive']); assert.equal(dto.conversation_state.active_filters.grounded_budget.min, 3000000);
+});
+test('valid server prior budget survives follow-up even if workflow drops it; new topic does not inherit globally', async () => {
+  const priorState = { state_version: 2, updated_at: new Date().toISOString(), active_filters: { grounded_budget: { max: 3000000, maxInclusive: false } } };
+  const follow: any = await prepareCustomerChatbotResponse(groundedRecord(), 'A', groundedDb(), { message: 'máy này', priorState });
+  assert.deepEqual(follow.products[0].variants.map((v: any) => v.id), ['iphone-cheap']);
+  const topic: any = await prepareCustomerChatbotResponse(groundedRecord(), 'A', groundedDb(), { message: 'xem iPhone 16', priorState }); assert.equal(topic.products[0].variants.length, 3);
+  const changed: any = await prepareCustomerChatbotResponse(groundedRecord(), 'A', groundedDb(), { message: 'máy này từ 3 đến 5 triệu', priorState }); assert.equal(changed.products[0].variants.length, 2);
+});
+test('valid quotation pending state survives sanitization with strict budget and timestamp', () => {
+  const state = { state_version: 2, updated_at: new Date().toISOString(), active_filters: { grounded_budget: { max: 3000000, maxInclusive: false } }, selected_product_id: 'iphone', selected_variant_id: 'iphone-cheap', pending_question: { type: 'quotation', field: 'variant', product_id: 'iphone', options: [{ id: 'iphone-cheap' }] } };
+  const payload: any = buildCustomerN8nPayload({ message: 'bảo hành thế nào?', sessionId: 'A', history: [], conversationState: state });
+  assert.deepEqual(payload.conversationState.active_filters.grounded_budget, state.active_filters.grounded_budget); assert.equal(payload.conversationState.pending_question.product_id, 'iphone'); assert.equal(payload.conversationState.selected_variant_id, 'iphone-cheap');
+});
+test('expired, malformed and future timestamps cannot refresh shopping/quotation selections', () => {
+  for (const updated_at of ['2000-01-01T00:00:00.000Z', 'not-a-date', new Date(Date.now() + 3600000).toISOString()]) {
+    const payload: any = buildCustomerN8nPayload({ message: 'tiếp tục', sessionId: 'A', history: [], conversationState: { state_version: 2, updated_at, active_filters: { grounded_budget: { max: 3000000, maxInclusive: false } }, selected_product_id: 'iphone', pending_question: { type: 'quotation', product_id: 'iphone' } } });
+    assert.deepEqual(payload.conversationState.active_filters, {}); assert.equal(payload.conversationState.selected_product_id, null); assert.equal(payload.conversationState.pending_question, null);
+  }
+});
+test('malformed state budget fails closed; extra catalog/identity/secret fields never spread', () => {
+  const invalid: any = buildCustomerN8nPayload({ message: 'hello', sessionId: 'A', history: [], conversationState: { active_filters: { grounded_budget: { max: '3000000' } } } }); assert.deepEqual(invalid.conversationState.active_filters, {});
+  const valid: any = buildCustomerN8nPayload({ message: 'hello', sessionId: 'A', history: [], conversationState: { state_version: 2, updated_at: new Date().toISOString(), active_filters: { grounded_budget: { max: 3000000, maxInclusive: false }, stock: 999, jwt: 'private-fixture' }, verifiedCatalog: [{ id: 'fake', price: 1 }], customerId: 'private', secret: 'private' } });
+  assert.ok(!/private|999|fake/.test(JSON.stringify(valid.conversationState)));
+});
+test('malformed grounding types fail closed instead of silently dropping filters', () => {
+  for (const overrides of [{ inStock: 'true' }, { categoryIds: ['../../private'] }, { brands: 'ASUS' }, { attrTerms: [{ kind: 'unknown', term: 'X' }] }]) assert.throws(() => parseGroundedConstraints(groundedRecord(overrides)), GroundedContractError);
+});
+test('actual message handler loads session-specific server state and ignores client-forged catalog/constraints', async () => {
+  const oldUrl = process.env.N8N_CHAT_WEBHOOK_URL;
+  process.env.N8N_CHAT_WEBHOOK_URL = 'https://workflow.example.invalid/mock-only';
+  const b = { max: 3000000, maxInclusive: false };
+  const database: any = { ...groundedDb(), $transaction: async (work: any) => work({
+    chatConversation: { upsert: async ({ where }: any) => ({ id: where.sessionId, context: where.sessionId === 'A' ? { state_version: 2, updated_at: new Date().toISOString(), active_filters: { grounded_budget: b } } : null }) },
+    chatMessage: { findMany: async () => [], create: async () => ({}) },
+  }), chatConversation: { upsert: async () => ({ id: 'mock' }) }, chatMessage: { create: async () => ({}) } };
+  const payloads: any[] = [];
+  try {
+    const router: any = createChatbotRouter({ database, fetcher: (async (_url: any, options: any) => { payloads.push(JSON.parse(options.body)); return Response.json({ result_type: 'text', response: 'Xin chào' }); }) as any });
+    const handler = router.stack.find((entry: any) => entry.route?.path === '/message').route.stack[0].handle;
+    for (const sessionId of ['A', 'B']) {
+      let httpStatus = 200, reply: any;
+      const headers: Record<string, string> = {};
+      await handler({ body: { message: 'hello', sessionId, conversationState: { active_filters: { grounded_budget: { max: 999999999999 } }, stock: 999, price: 1 }, products: [{ id: 'forged' }] } }, {
+        setHeader(name: string, value: string) { headers[name.toLowerCase()] = value; return this; },
+        status(value: number) { httpStatus = value; return this; }, json(value: any) { reply = value; return this; },
+      });
+      assert.equal(httpStatus, 200); assert.equal(reply.result_type, 'text'); assert.equal(reply.sessionId, sessionId);
+      assert.equal(headers['cache-control'], 'private, no-store');
+    }
+    assert.deepEqual(payloads[0].conversationState.active_filters.grounded_budget, b); assert.equal(payloads[1].conversationState, null);
+    assert.ok(!/forged|999999999999/.test(JSON.stringify(payloads)));
+    let invalidStatus = 200, invalidReply: any;
+    await handler({ body: { message: '', sessionId: 'A' } }, { status(value: number) { invalidStatus = value; return this; }, json(value: any) { invalidReply = value; return this; }, setHeader() {} });
+    assert.equal(invalidStatus, 400); assert.equal(invalidReply.result_type, 'error'); assert.equal(payloads.length, 2);
+  } finally { if (oldUrl === undefined) delete process.env.N8N_CHAT_WEBHOOK_URL; else process.env.N8N_CHAT_WEBHOOK_URL = oldUrl; }
+});
+test('captured universal candidate -> actual Backend adapter: every active product and variant stays verified (offline DB mocks)', async () => {
+  const folder = path.resolve(__dirname, '../scripts/n8n-quotation/universal-grounding');
+  const fixture = JSON.parse(readFileSync(path.join(folder, 'catalog.fixture.json'), 'utf8'));
+  const candidate = JSON.parse(readFileSync(path.join(folder, 'candidate.workflow.json'), 'utf8'));
+  const code = candidate.nodes.find((n: any) => n.name === 'Universal Product Grounding').parameters.jsCode;
+  const rows = fixture.products;
+  const campaignGroups = new Map<string, any>();
+  for (const p of rows) if (p.activeCampaign) {
+    const group = campaignGroups.get(p.activeCampaign.id) || { ...p.activeCampaign, appliesTo: 'product', targetIds: [], isActive: true, startDate: new Date(Date.now() - 60000), endDate: new Date(Date.now() + 60000) };
+    group.targetIds.push(p.id); campaignGroups.set(p.activeCampaign.id, group);
+  }
+  const database: any = { product: { findMany: async ({ where }: any) => rows.filter((p: any) => where.id.in.includes(p.id)) },
+    campaign: { findMany: async () => [...campaignGroups.values()] }, category: { findMany: async () => fixture.categories } };
+  const active = rows.filter((p: any) => p.status === 'active'); assert.equal(active.length, 58);
+  for (const p of active) {
+    const normalized = { chatInput: p.name, sessionId: 'offline-product-' + p.id, conversationState: null };
+    const upstream: any = { 'Normalize Input': normalized, 'Resolve Quotation Turn': { intent: 'product_detail' }, 'API - Universal Products': rows, 'API - Universal Categories': fixture.categories };
+    const access = (name: string) => { if (!(name in upstream)) throw new Error('Node not executed'); const values = Array.isArray(upstream[name]) ? upstream[name] : [upstream[name]]; return { first: () => ({ json: values[0] }), all: () => values.map((json: any) => ({ json })) }; };
+    const grounded = new Function('$json', '$', code)({}, access)[0].json;
+    const raw = new Function('$json', '$', candidate.nodes.find((n: any) => n.name === 'Build Conversation State').parameters.jsCode)(grounded, access).json;
+    const dto: any = await prepareCustomerChatbotResponse(raw, normalized.sessionId, database, { message: p.name });
+    assert.equal(dto.result_type, 'product_detail', p.name); assert.ok(dto.products.some((item: any) => item.id === p.id), p.name);
+    for (const product of dto.products) {
+      const rawHints = raw.products.find((item: any) => item.id === product.id), actual = rows.find((item: any) => item.id === product.id);
+      assert.ok(rawHints && actual);
+      for (const v of product.variants) { assert.ok(rawHints.variants.some((hint: any) => hint.id === v.id)); assert.equal(v.price, actual.variants.find((item: any) => item.id === v.id).effectivePrice); }
+    }
+    const payload: any = buildCustomerN8nPayload({ message: 'máy này', sessionId: normalized.sessionId, history: [], conversationState: dto.conversation_state });
+    assert.ok(validatedStateTimestamp(payload.conversationState.updated_at));
+  }
+});
+
+test('fetch diagnostics retain DNS/TLS/timeout cause identifiers and redact sensitive messages', () => {
+  const error = Object.assign(new TypeError('fetch failed'), { cause: Object.assign(new Error('getaddrinfo ENOTFOUND private-host.invalid'), { code: 'ENOTFOUND' }) });
+  assert.deepEqual(safeFetchErrorSummary(error), { name: 'TypeError', message: 'fetch failed',
+    cause: { name: 'Error', code: 'ENOTFOUND', message: 'getaddrinfo ENOTFOUND [details redacted]' } });
+  for (const [message, code] of [['self-signed certificate in certificate chain', 'SELF_SIGNED_CERT_IN_CHAIN'],
+    ['Connect Timeout Error (attempted address: private-host.invalid)', 'UND_ERR_CONNECT_TIMEOUT'],
+    ['connect ECONNREFUSED 127.0.0.1:5678', 'ECONNREFUSED'],
+    ['Authorization: Bearer fixture-secret; email=private@example.invalid; body=private-input', 'ERR_NETWORK']]) {
+    const summary = safeFetchErrorSummary(Object.assign(new TypeError('fetch failed'), {
+      cause: Object.assign(new Error(message), { code }),
+    }));
+    assert.equal((summary.cause as any).code, code);
+    assert.equal((summary.cause as any).name, 'Error');
+    assert.equal(typeof (summary.cause as any).message, 'string');
+    assert.ok(!/private-|fixture-secret|127\.0\.0\.1|Authorization/.test(JSON.stringify(summary)));
+  }
+  assert.deepEqual(safeFetchErrorSummary(new TypeError('fetch failed')), { name: 'TypeError', message: 'fetch failed' });
+});
+
+test('fetch failure route logs safe cause metadata and keeps 502/504 contracts unchanged', async () => {
+  const oldUrl = process.env.N8N_CHAT_WEBHOOK_URL, oldLog = console.error;
+  const logs: any[] = [];
+  process.env.N8N_CHAT_WEBHOOK_URL = 'https://workflow.example.invalid/diagnostic-test';
+  console.error = (...args: any[]) => { logs.push(args); };
+  const database: any = { $transaction: async (work: any) => work({
+    chatConversation: { upsert: async () => ({ id: 'mock-chat', context: null }) },
+    chatMessage: { findMany: async () => [], create: async () => ({}) },
+  }) };
+  try {
+    for (const abort of [false, true]) {
+      const error = abort ? Object.assign(new Error('aborted'), { name: 'AbortError' })
+        : Object.assign(new TypeError('fetch failed'), { cause: Object.assign(new Error('getaddrinfo ENOTFOUND private-host.invalid'), { code: 'ENOTFOUND' }) });
+      const router: any = createChatbotRouter({ database, fetcher: (async () => { throw error; }) as typeof fetch });
+      const handler = router.stack.find((entry: any) => entry.route?.path === '/message').route.stack[0].handle;
+      let status = 200, body: any;
+      const res = { status(value: number) { status = value; return this; }, json(value: any) { body = value; return this; } };
+      await handler({ body: { message: 'private-input', sessionId: 'diagnostic-session' } }, res);
+      assert.equal(status, abort ? 504 : 502);
+      assert.equal(body.response, abort ? 'Chat service timed out. Please try again later.' : 'Failed to communicate with chat service.');
+      assert.equal(body.result_type, 'error');
+    }
+    assert.equal(logs[0][1].cause.code, 'ENOTFOUND');
+    assert.equal(logs[0][1].cause.message, 'getaddrinfo ENOTFOUND [details redacted]');
+    assert.ok(!/private-|workflow\.example|Bearer/.test(JSON.stringify(logs)));
+  } finally {
+    console.error = oldLog;
+    if (oldUrl === undefined) delete process.env.N8N_CHAT_WEBHOOK_URL; else process.env.N8N_CHAT_WEBHOOK_URL = oldUrl;
+  }
+});
 
 test('safe backend error summary keeps Prisma/OS codes but omits messages and connection credentials', () => {
   const cause = Object.assign(new Error('postgresql://db-user:do-not-log@host/db'), {
@@ -545,11 +810,11 @@ test('latency proposal preserves auth, models, catalog endpoints, and a complete
     assert.ok(next);
     const reviewedChanges = ['Validate Router', 'Resolve Quotation Turn', 'Prepare Quote Filters', 'Build Conversation State', 'Format Product Detail'];
     if (!reviewedChanges.includes(node.name)) assert.deepEqual(next.parameters, node.parameters);
-    else assert.equal(next.parameters.jsCode, readFileSync(path.resolve(process.cwd(), 'scripts/n8n-quotation', {
+    else assert.equal(next.parameters.jsCode.replace(/\r\n/g, '\n'), readFileSync(path.resolve(process.cwd(), 'scripts/n8n-quotation', {
       'Validate Router': 'validate-router', 'Resolve Quotation Turn': 'resolve-quotation-turn',
       'Prepare Quote Filters': 'prepare-quote-filters', 'Build Conversation State': 'build-conversation-state',
       'Format Product Detail': 'format-product-detail',
-    }[node.name] + '.js'), 'utf8'));
+    }[node.name] + '.js'), 'utf8').replace(/\r\n/g, '\n'));
     if (node.type === 'n8n-nodes-base.httpRequest' || node.name === 'Webhook') assert.deepEqual(next, node);
   }
   for (const [name, types] of Object.entries(proposed.connections) as any) {
