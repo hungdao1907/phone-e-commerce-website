@@ -16,19 +16,14 @@ interface PromoCode {
   minOrderValue: number;
 }
 
-import { useAuthStore } from '@/store/authStore';
-
 export function PromoCodesSetting() {
-  const isStaff = useAuthStore((state) => state.user?.role === 'staff');
   const [promoCodes, setPromoCodes] = useState<PromoCode[]>([]);
   const [isAdding, setIsAdding] = useState(false);
-
+  
   // Fetch campaigns
   const fetchCampaigns = async () => {
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/promo-codes`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token') || ''}` },
-      });
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/promo-codes`);
       if (res.ok) {
         const data = await res.json();
         setPromoCodes(data);
@@ -41,7 +36,7 @@ export function PromoCodesSetting() {
   useEffect(() => {
     fetchCampaigns();
   }, []);
-
+  
   // States for form
   const [code, setCode] = useState('');
   const [discountAmount, setDiscountAmount] = useState('');
@@ -51,11 +46,11 @@ export function PromoCodesSetting() {
 
   const handleAdd = async () => {
     if (!code || !discountAmount || !expiresAt) return;
-
+    
     try {
       const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/promo-codes`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('token') || ''}` },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: code.toUpperCase(),
           description: '',
@@ -89,7 +84,7 @@ export function PromoCodesSetting() {
     try {
       await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/promo-codes/${id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('token') || ''}` },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ isActive: !currentActive })
       });
       fetchCampaigns();
@@ -102,8 +97,7 @@ export function PromoCodesSetting() {
     if(confirm('Xóa mã giảm giá này?')) {
       try {
         await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/promo-codes/${id}`, {
-          method: 'DELETE',
-          headers: { Authorization: `Bearer ${localStorage.getItem('token') || ''}` },
+          method: 'DELETE'
         });
         fetchCampaigns();
       } catch (error) {
@@ -119,7 +113,7 @@ export function PromoCodesSetting() {
           <h2 className="text-xl font-bold text-white">Promo Codes (Mã giảm giá)</h2>
           <p className="text-sm text-white/50 mt-1">Quản lý các mã giảm giá cho phép khách hàng áp dụng trong giỏ hàng.</p>
         </div>
-        <button
+        <button 
           onClick={() => setIsAdding(true)}
           className="flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-xl text-sm font-bold transition-colors shadow-lg shadow-emerald-500/20"
         >
@@ -181,7 +175,7 @@ export function PromoCodesSetting() {
                 return (
                   <tr key={promo.id} className="hover:bg-white/5 transition-colors">
                     <td className="py-4 px-6">
-                      <button
+                      <button 
                         onClick={() => toggleActive(promo.id, promo.isActive)}
                         className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${statusColor}`}
                       >
@@ -215,7 +209,7 @@ export function PromoCodesSetting() {
                       {isExpired && <span className="ml-2 text-[10px] bg-red-500/20 text-red-400 px-1.5 py-0.5 rounded uppercase font-bold">Hết hạn</span>}
                     </td>
                     <td className="py-4 px-6 text-right space-x-2">
-                      <button onClick={() => deletePromo(promo.id)} className="p-2 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-lg text-rose-600 transition-colors shadow-sm cursor-pointer" title="Xóa mã giảm giá">
+                      <button onClick={() => deletePromo(promo.id)} className="p-2 bg-red-500/10 hover:bg-red-500/20 rounded-lg text-red-500 transition-colors">
                         <Trash2 className="w-4 h-4" />
                       </button>
                     </td>

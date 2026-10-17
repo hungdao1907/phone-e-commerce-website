@@ -1,22 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import { useAuthStore } from '@/store/authStore';
 import { Plus, Search, Filter, Phone, Mail, CheckCircle, XCircle } from 'lucide-react';
+import { useAuthStore } from '@/store/authStore';
 
 export function LeadManager() {
-  const { token, user } = useAuthStore();
-  const isAdmin = user?.role === 'admin' || user?.role === 'superadmin';
-  const canManageAssignedLeads = isAdmin || user?.role === 'staff';
   const [leads, setLeads] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const token = useAuthStore((state) => state.token);
 
   const fetchLeads = async () => {
     try {
+      setIsLoading(true);
       const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/leads`, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
       });
       if (res.ok) {
         const data = await res.json();
-        setLeads(data);
+        setLeads(Array.isArray(data) ? data : []);
       }
     } catch (err) {
       console.error(err);
@@ -26,15 +25,18 @@ export function LeadManager() {
   };
 
   useEffect(() => {
-    if (canManageAssignedLeads) fetchLeads();
-  }, [canManageAssignedLeads, token]);
+    fetchLeads();
+  }, [token]);
 
   const handleConvert = async (leadId: string) => {
     // Basic converting just updates status for now, since user said no need to auto-create auth account.
     try {
       const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/leads/${leadId}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        headers: { 
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        },
         body: JSON.stringify({ status: 'converted' })
       });
       if (res.ok) {
@@ -53,7 +55,7 @@ export function LeadManager() {
     try {
       const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/leads/${leadId}`, {
         method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` },
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
       });
       if (res.ok) {
         alert('Đã xóa Lead');
@@ -84,10 +86,6 @@ export function LeadManager() {
     if (score >= 50) return <span className="text-orange-400 font-bold">{score} (Warm)</span>;
     return <span className="text-blue-400 font-bold">{score} (Cold)</span>;
   };
-
-  if (!canManageAssignedLeads) {
-    return <div className="rounded-xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-900">Vai trò này chưa được cấp quyền xem dữ liệu Lead.</div>;
-  }
 
   return (
     <div className="flex flex-col gap-6 h-full text-white">
@@ -127,7 +125,7 @@ export function LeadManager() {
       <div className="flex items-center gap-4">
         <div className="relative flex-1 max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
-          <input
+          <input 
             type="text"
             placeholder="Tìm kiếm theo tên, SĐT, email..."
             className="w-full bg-white/5 border border-white/10 rounded-xl py-2 pl-10 pr-4 text-sm text-white placeholder-white/40 focus:outline-none focus:border-[#99e300]"
@@ -168,10 +166,10 @@ export function LeadManager() {
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#99e300]/20 to-[#99e300]/5 border border-[#99e300]/20 flex items-center justify-center text-[#99e300] font-bold">
-                          {lead.fullName.charAt(0).toUpperCase()}
+                          {(lead.fullName?.trim()?.charAt(0) || lead.phone?.charAt(0) || 'K').toUpperCase()}
                         </div>
                         <div>
-                          <div className="font-semibold text-white">{lead.fullName}</div>
+                          <div className="font-semibold text-white">{lead.fullName || 'Khách hàng'}</div>
                           <div className="flex items-center gap-2 text-xs text-white/50 mt-1">
                             {lead.phone && <span className="flex items-center gap-1"><Phone className="w-3 h-3"/> {lead.phone}</span>}
                             {lead.email && <span className="flex items-center gap-1"><Mail className="w-3 h-3"/> {lead.email}</span>}
@@ -192,22 +190,19 @@ export function LeadManager() {
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-2">
                         {lead.status !== 'converted' && (
-                          <button
+                          <button 
                             onClick={() => handleConvert(lead.id)}
                             className="px-3 py-1.5 bg-[#99e300]/10 hover:bg-[#99e300]/20 text-[#99e300] border border-[#99e300]/20 rounded-lg text-xs font-medium transition-colors"
                           >
                             Convert
                           </button>
                         )}
-                        {canManageAssignedLeads && (
-                          <button
-                            onClick={() => handleDelete(lead.id)}
-                            className="p-1.5 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
-                            aria-label="Xóa lead"
-                          >
-                            <XCircle className="w-4 h-4" />
-                          </button>
-                        )}
+                        <button 
+                          onClick={() => handleDelete(lead.id)}
+                          className="p-1.5 text-red-400/70 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-colors"
+                        >
+                          <XCircle className="w-4 h-4" />
+                        </button>
                       </div>
                     </td>
                   </tr>

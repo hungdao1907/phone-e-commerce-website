@@ -9,8 +9,8 @@ interface InfoTabProps {
 
 export function InfoTab({ initialFullName, initialPhone, onUpdate }: InfoTabProps) {
   const { user } = useAuthStore();
-  const [fullName, setFullName] = useState(initialFullName);
-  const [phone, setPhone] = useState(initialPhone);
+  const [fullName, setFullName] = useState(initialFullName || '');
+  const [phone, setPhone] = useState(initialPhone || '');
   const [dob, setDob] = useState('1990-01-01'); // UI fake data
   const [gender, setGender] = useState('male'); // UI fake data
   const [isLoading, setIsLoading] = useState(false);
@@ -56,7 +56,7 @@ export function InfoTab({ initialFullName, initialPhone, onUpdate }: InfoTabProp
           <div className="flex flex-col items-center gap-3 sm:w-1/4">
             <div className="w-24 h-24 bg-neutral-100 rounded-full flex items-center justify-center border border-neutral-200 overflow-hidden">
               <span className="text-3xl text-neutral-400 font-bold uppercase">
-                {fullName.charAt(0) || user?.username.charAt(0) || 'U'}
+                {fullName?.charAt(0) || user?.username?.charAt(0) || 'U'}
               </span>
             </div>
             <button type="button" className="text-xs font-semibold text-neutral-600 hover:text-black hover:underline cursor-pointer">

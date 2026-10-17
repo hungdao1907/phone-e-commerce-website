@@ -80,7 +80,7 @@ export function SpecificationGroupEditor({ groups, onChange }: SpecificationGrou
               <span className="text-[10px] text-white/30 uppercase tracking-wider font-medium">Giá trị</span>
               <span />
             </div>
-
+            
             {group.items.map((item, ii) => (
               <div key={ii} className="grid grid-cols-[1fr_1fr_28px] gap-2 mb-1.5 group">
                 <input

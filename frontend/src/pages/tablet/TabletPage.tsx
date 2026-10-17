@@ -37,10 +37,11 @@ export function TabletPage({ brand }: TabletPageProps) {
             const isTablet = tabletSlugs.includes(p.category?.slug) || p.category?.name?.toLowerCase().includes('bảng');
             const pBrand = (p.brand || '').toLowerCase();
 
-            if (brand === 'ipad') {
+            const brandLower = (brand || '').toLowerCase();
+            if (brandLower === 'ipad') {
               return isTablet && (pBrand === 'apple' || p.name?.toLowerCase().includes('ipad'));
             }
-            return isTablet && (pBrand === brand.toLowerCase() || p.name?.toLowerCase().includes(brand.toLowerCase()));
+            return isTablet && (pBrand === brandLower || p.name?.toLowerCase().includes(brandLower));
           });
 
           if (apiProducts.length > 0) {

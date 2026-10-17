@@ -19,8 +19,7 @@ export function Invoices() {
   const [invoices, setInvoices] = useState<any[]>([]);
   const [search, setSearch] = useState('');
   const [isLoading, setIsLoading] = useState(true);
-  const { token, user } = useAuthStore();
-  const canAccess = user?.role === 'admin' || user?.role === 'superadmin' || user?.role === 'staff';
+  const { token } = useAuthStore();
 
   const [selectedInvoice, setSelectedInvoice] = useState<any>(null);
 
@@ -34,18 +33,13 @@ export function Invoices() {
     }
   };
 
-  useEffect(() => {
-    if (canAccess) fetchInvoices();
-  }, [canAccess, token]);
+  useEffect(() => { fetchInvoices(); }, []);
 
-  if (!canAccess) {
-    return <div className="rounded-xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-900">Chỉ người dùng có thẩm quyền mới được xem hóa đơn tổng hợp.</div>;
-  }
-
-  const filteredInvoices = invoices.filter(inv =>
-    inv.invoiceCode.toLowerCase().includes(search.toLowerCase()) ||
-    inv.order.orderCode.toLowerCase().includes(search.toLowerCase()) ||
-    (inv.order.customer.fullName ?? '').toLowerCase().includes(search.toLowerCase())
+  const filteredInvoices = invoices.filter(inv => 
+    inv.invoiceCode?.toLowerCase().includes(search.toLowerCase()) ||
+    inv.order?.orderCode?.toLowerCase().includes(search.toLowerCase()) ||
+    inv.order?.customer?.fullName?.toLowerCase().includes(search.toLowerCase()) ||
+    inv.order?.shippingPhone?.includes(search)
   );
 
   return (
@@ -92,11 +86,11 @@ export function Invoices() {
                 className="group grid grid-cols-12 gap-4 items-center p-3 rounded-xl hover:bg-white/5 transition-colors cursor-pointer"
                 onClick={() => setSelectedInvoice(inv)}
               >
-                <div className="col-span-2 font-mono text-sm font-semibold text-emerald-600 pl-2">{inv.invoiceCode}</div>
-                <div className="col-span-2 font-mono text-sm text-slate-500">{inv.order.orderCode}</div>
-                <div className="col-span-3 font-medium text-slate-900 truncate">{inv.order.customer.fullName || 'Khách hàng'}</div>
-                <div className="col-span-2 text-sm text-slate-600">{formatDate(inv.issuedAt)}</div>
-                <div className="col-span-2 text-right font-bold text-slate-900">{formatCurrency(inv.total)}</div>
+                <div className="col-span-2 font-mono text-sm font-medium text-emerald-400 pl-2">{inv.invoiceCode}</div>
+                <div className="col-span-2 font-mono text-sm text-white/60">{inv.order?.orderCode || '---'}</div>
+                <div className="col-span-3 font-medium text-white truncate">{inv.order?.customer?.fullName || inv.order?.shippingPhone || 'Khách vãng lai'}</div>
+                <div className="col-span-2 text-sm text-white/80">{formatDate(inv.issuedAt)}</div>
+                <div className="col-span-2 text-right font-bold text-white">{formatCurrency(inv.total)}</div>
                 <div className="col-span-1 flex justify-center">
                   <button className="p-2 hover:bg-white/10 rounded-lg text-white/50 hover:text-white transition-colors" onClick={(e) => { e.stopPropagation(); window.print(); }}>
                     <Printer className="w-4 h-4" />
@@ -131,7 +125,7 @@ export function Invoices() {
               {/* Mẫu Hóa Đơn A4 mô phỏng */}
               <div className="flex-1 overflow-y-auto bg-gray-50 p-8 custom-scrollbar">
                 <div className="bg-white p-10 max-w-2xl mx-auto shadow-sm border border-gray-200 min-h-[800px] text-gray-800" id="print-area">
-
+                  
                   {/* Tiêu đề */}
                   <div className="flex justify-between items-start mb-10">
                     <div>
@@ -149,15 +143,15 @@ export function Invoices() {
                   {/* Thông tin khách hàng & Đơn hàng */}
                   <div className="flex justify-between mb-10 pb-6 border-b border-gray-200">
                     <div>
-                      <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Thông tin khách hàng</h3>
-                      <p className="font-bold text-slate-900 text-lg mb-1">{selectedInvoice.order.customer.fullName || 'Khách hàng'}</p>
-                      <p className="text-sm text-slate-600 mb-1">{selectedInvoice.order.shippingPhone}</p>
-                      <p className="text-sm text-slate-600 max-w-[250px]">{selectedInvoice.order.shippingAddress}</p>
+                      <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Thông tin khách hàng</h3>
+                      <p className="font-bold text-black text-lg mb-1">{selectedInvoice.order?.customer?.fullName || selectedInvoice.order?.shippingPhone || 'Khách vãng lai'}</p>
+                      <p className="text-sm text-gray-600 mb-1">{selectedInvoice.order?.shippingPhone || selectedInvoice.order?.customer?.phone || '---'}</p>
+                      <p className="text-sm text-gray-600 max-w-[250px]">{selectedInvoice.order?.shippingAddress || 'Chưa có thông tin địa chỉ'}</p>
                     </div>
                     <div className="text-right">
                       <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Chi tiết thanh toán</h3>
-                      <p className="text-sm text-gray-600 mb-1">Mã đơn hàng: <strong className="text-black font-mono">{selectedInvoice.order.orderCode}</strong></p>
-                      <p className="text-sm text-gray-600 mb-1">PTTT: {selectedInvoice.order.paymentMethod.toUpperCase()}</p>
+                      <p className="text-sm text-gray-600 mb-1">Mã đơn hàng: <strong className="text-black font-mono">{selectedInvoice.order?.orderCode || '---'}</strong></p>
+                      <p className="text-sm text-gray-600 mb-1">PTTT: {(selectedInvoice.order?.paymentMethod || 'COD').toUpperCase()}</p>
                       <p className="text-sm text-emerald-600 font-medium">Đã thanh toán</p>
                     </div>
                   </div>
@@ -173,7 +167,7 @@ export function Invoices() {
                       </tr>
                     </thead>
                     <tbody>
-                      {selectedInvoice.order.items.map((item: any, i: number) => (
+                      {(selectedInvoice.order?.items || []).map((item: any, i: number) => (
                         <tr key={item.id} className="border-b border-gray-200">
                           <td className="py-4 px-2">
                             <p className="font-semibold text-black">{item.productName}</p>

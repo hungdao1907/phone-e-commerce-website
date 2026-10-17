@@ -143,5 +143,13 @@ export function buildSpecChipsFromRaw(specifications: { key: string; value: stri
   const chip = extractChipName(chipRaw);
   if (chip) chips.push(chip);
 
+  // Watch attributes (size, connectivity, material)
+  if (variants && variants.length > 0) {
+    const v0 = variants[0]?.attributes || {};
+    if (v0['Kích thước'] && !chips.includes(v0['Kích thước'])) chips.push(v0['Kích thước']);
+    if (v0['Kết nối'] && !chips.includes(v0['Kết nối'])) chips.push(v0['Kết nối']);
+    if (v0['Chất liệu'] && !chips.includes(v0['Chất liệu'])) chips.push(v0['Chất liệu']);
+  }
+
   return chips.slice(0, 4);
 }

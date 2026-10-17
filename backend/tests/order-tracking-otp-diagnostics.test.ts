@@ -75,15 +75,22 @@ test('tracking OTP diagnosis: generic 202 covers lookup misses, cooldown, skippe
     assert.equal(sent.length, 3); // failed send still consumes resend cooldown
 
     delete process.env.SMTP_EMAIL; delete process.env.SMTP_PASSWORD;
+    process.env.SMTP_HOST = 'smtp.fixture.invalid';
+    assert.equal(isEmailConfigured(), true);
+    order = fixture('smtp-host-only');
+    assert.equal((await request(order.orderCode, 'owner@example.invalid')).status, 202);
+    assert.equal(sent.length, 4); // custom SMTP remains available through the shared mailer
+
+    delete process.env.SMTP_HOST;
     process.env.BREVO_API_KEY = 'mock-only'; process.env.BREVO_SENDER_EMAIL = 'sender@example.invalid';
     assert.equal(isEmailConfigured(), true);
     order = fixture('brevo-only');
     assert.equal((await request(order.orderCode, 'owner@example.invalid')).status, 202);
-    assert.equal(sent.length, 3); // existing SMTP-only guard skips configured Brevo
+    assert.equal(sent.length, 5); // Brevo-only configuration is handled by the shared mailer
     delete process.env.BREVO_API_KEY; delete process.env.BREVO_SENDER_EMAIL;
     order = fixture('unconfigured');
     assert.equal((await request(order.orderCode, 'owner@example.invalid')).status, 202);
-    assert.equal(sent.length, 3);
+    assert.equal(sent.length, 5);
     assert.equal((await request('', '')).status, 400);
     order = null;
     for (let i = 0; i < 10; i++) assert.equal((await request('DH-limit', 'owner@example.invalid', 'rate-fixture')).status, 202);

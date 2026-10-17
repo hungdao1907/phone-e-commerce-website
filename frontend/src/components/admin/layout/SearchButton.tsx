@@ -20,12 +20,9 @@ import {
   MessageSquareWarning,
   UserPlus,
   ArrowLeft,
-  Bell,
-  UserCheck,
 } from 'lucide-react';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { LottieIcon } from '@/components/ui/LottieIcon';
-import { useAuthStore } from '@/store/authStore';
 
 // ─── Types ──────────────────────────────────────────────────────
 
@@ -72,7 +69,7 @@ const NAV_TREE: BreadcrumbNode[] = [
     icon: <Package size={16} />,
     children: [
       {
-        label: 'Danh sách sản phẩm',
+        label: 'Danh sách',
         icon: <Package size={16} />,
         viewId: 'product-list',
         apiEndpoint: '/api/products',
@@ -175,33 +172,6 @@ const NAV_TREE: BreadcrumbNode[] = [
           viewId: 'banners',
         }),
       },
-      {
-        label: 'Sản phẩm nổi bật',
-        icon: <Package size={16} />,
-        viewId: 'home-featured-products',
-      },
-    ],
-  },
-  {
-    label: 'Báo giá Chatbot',
-    icon: <FileText size={16} />,
-    viewId: 'quotations',
-    children: [
-      {
-        label: 'Danh sách báo giá',
-        icon: <FileText size={16} />,
-        viewId: 'quotations-list',
-      },
-      {
-        label: 'Báo giá chờ duyệt',
-        icon: <FileText size={16} />,
-        viewId: 'quotations-pending',
-      },
-      {
-        label: 'Báo giá đã xử lý',
-        icon: <FileText size={16} />,
-        viewId: 'quotations-processed',
-      },
     ],
   },
   {
@@ -225,50 +195,20 @@ const NAV_TREE: BreadcrumbNode[] = [
     label: 'Cài đặt',
     icon: <Settings size={16} />,
     viewId: 'settings',
-    children: [
-      {
-        label: 'Mốc thưởng Giỏ hàng',
-        icon: <Settings size={16} />,
-        viewId: 'cart-rewards',
-      },
-      {
-        label: 'Mã giảm giá',
-        icon: <Settings size={16} />,
-        viewId: 'promo-codes',
-      },
-      {
-        label: 'Quản lý Footer',
-        icon: <Settings size={16} />,
-        viewId: 'footer',
-      },
-    ],
   },
 ];
 
-const ADMIN_SHORTCUTS = [
-  { label: 'Tổng quan', lottiePath: '/lottie/dashboard.json', targetLabel: 'Tổng quan' },
-  { label: 'Lịch', lottiePath: '/lottie/calendar.json', targetLabel: 'Lịch' },
-  { label: 'Sản phẩm', lottiePath: '/lottie/product.json', targetLabel: 'Sản phẩm' },
-  { label: 'Đơn hàng', lottiePath: '/lottie/orders.json', targetLabel: 'Đơn hàng' },
-];
-
-const STAFF_SHORTCUTS = [
-  { label: 'Tổng quan', lottiePath: '/lottie/dashboard.json', targetLabel: 'Tổng quan' },
-  { label: 'Sản phẩm', lottiePath: '/lottie/product.json', targetLabel: 'Sản phẩm' },
-  { label: 'Đơn hàng', lottiePath: '/lottie/orders.json', targetLabel: 'Đơn hàng' },
-  { label: 'CRM', lottiePath: '/lottie/user.json', targetLabel: 'CRM' },
+// Lottie shortcut icons (the 4 floating buttons)
+const SHORTCUT_ICONS: { label: string; lottiePath: string; treeIndex: number }[] = [
+  { label: 'Tổng quan', lottiePath: '/lottie/dashboard.json', treeIndex: 0 },
+  { label: 'Lịch', lottiePath: '/lottie/calendar.json', treeIndex: 1 },
+  { label: 'Sản phẩm', lottiePath: '/lottie/product.json', treeIndex: 2 },
+  { label: 'Đơn hàng', lottiePath: '/lottie/orders.json', treeIndex: 3 },
 ];
 
 // ─── Component ──────────────────────────────────────────────────
 
 export const SearchButton = ({ onNavigate }: SearchButtonProps) => {
-  const token = useAuthStore((state) => state.token);
-  const currentUser = useAuthStore((state) => state.user);
-  const isStaff = currentUser?.role === 'staff';
-  const navTree = isStaff
-    ? NAV_TREE.filter((item) => item.label !== 'Nhân sự' && item.label !== 'Lịch')
-    : NAV_TREE;
-  const shortcutIcons = isStaff ? STAFF_SHORTCUTS : ADMIN_SHORTCUTS;
   const [hovered, setHovered] = useState(false);
   const [hoveredShortcut, setHoveredShortcut] = useState<number | null>(null);
 
@@ -296,9 +236,7 @@ export const SearchButton = ({ onNavigate }: SearchButtonProps) => {
       return;
     }
     setIsLoadingApi(true);
-    fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}${currentNode.apiEndpoint}`, {
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-    })
+    fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}${currentNode.apiEndpoint}`)
       .then(r => r.json())
       .then(data => {
         if (Array.isArray(data)) setApiData(data);
@@ -306,7 +244,7 @@ export const SearchButton = ({ onNavigate }: SearchButtonProps) => {
       })
       .catch(() => setApiData([]))
       .finally(() => setIsLoadingApi(false));
-  }, [currentNode?.apiEndpoint, token]);
+  }, [currentNode?.apiEndpoint]);
 
   // Build dropdown items
   const dropdownItems = React.useMemo(() => {
@@ -315,7 +253,7 @@ export const SearchButton = ({ onNavigate }: SearchButtonProps) => {
 
     if (!currentNode) {
       // Level 0: show top-level tree items
-      navTree.forEach(node => {
+      NAV_TREE.forEach(node => {
         if (q && !node.label.toLowerCase().includes(q)) return;
         items.push({
           icon: node.icon,
@@ -424,10 +362,8 @@ export const SearchButton = ({ onNavigate }: SearchButtonProps) => {
   }, [resetSearch]);
 
   // Handle shortcut button click
-  const handleShortcutClick = useCallback((shortcutIndex: number) => {
-    const shortcut = shortcutIcons[shortcutIndex];
-    if (!shortcut) return;
-    const node = navTree.find((n) => n.label === shortcut.targetLabel);
+  const handleShortcutClick = useCallback((treeIndex: number) => {
+    const node = NAV_TREE[treeIndex];
     if (!node) return;
     if (node.viewId && !node.children) {
       onNavigate?.(node.viewId);
@@ -438,7 +374,7 @@ export const SearchButton = ({ onNavigate }: SearchButtonProps) => {
       setHovered(true);
       setTimeout(() => inputRef.current?.focus(), 100);
     }
-  }, [navTree, onNavigate, resetSearch, shortcutIcons]);
+  }, [onNavigate, resetSearch]);
 
   return (
     <div
@@ -464,23 +400,30 @@ export const SearchButton = ({ onNavigate }: SearchButtonProps) => {
             key="search-input-container"
             layoutId="search-input-container"
             transition={{ layout: { duration: 0.5, type: 'spring', bounce: 0.2 } }}
-            style={{ transformOrigin: 'left center', borderRadius: 9999 }}
-            className="w-full flex flex-col items-center justify-start z-10 relative overflow-hidden bg-[#222222] border border-white/10"
+            style={{
+              transformOrigin: 'left center',
+              borderRadius: 9999,
+              background: 'rgba(4, 22, 15, 0.5)',
+              borderColor: 'rgba(255, 255, 255, 0.12)',
+              boxShadow: '0 0 16px rgba(62, 224, 140, 0.15)',
+              backdropFilter: 'blur(20px)'
+            }}
+            className="w-full flex flex-col items-center justify-start z-10 relative overflow-hidden border"
           >
             {/* Input row */}
             <div className="flex items-center w-full gap-2 px-4 h-10">
               {breadcrumb.length > 0 ? (
-                <button onClick={goBack} className="shrink-0 text-white/40 hover:text-white transition-colors">
+                <button onClick={goBack} className="shrink-0 text-[#eefaf3]/70 hover:text-white transition-colors">
                   <ArrowLeft size={16} />
                 </button>
               ) : (
-                <motion.div layoutId="search-icon"><Search size={16} /></motion.div>
+                <motion.div layoutId="search-icon" className="text-[#eefaf3]/60"><Search size={16} /></motion.div>
               )}
               <div className="flex-1 relative text-sm flex items-center">
                 {!displayValue && (
-                  <div className="absolute inset-0 flex items-center pointer-events-none z-10 text-gray-500">
+                  <div className="absolute inset-0 flex items-center pointer-events-none z-10 text-[#eefaf3]/55">
                     <span className="block truncate w-full">
-                      {hoveredShortcut !== null ? shortcutIcons[hoveredShortcut]?.label : isStaff ? 'Tìm kiếm công việc, đơn hàng...' : 'Tìm kiếm sản phẩm, đơn hàng...'}
+                      {hoveredShortcut !== null ? SHORTCUT_ICONS[hoveredShortcut].label : 'Tìm kiếm sản phẩm, đơn hàng...'}
                     </span>
                   </div>
                 )}
@@ -490,7 +433,7 @@ export const SearchButton = ({ onNavigate }: SearchButtonProps) => {
                   value={displayValue}
                   onChange={handleInputChange}
                   onFocus={() => setHovered(true)}
-                  className="w-full bg-transparent outline-none ring-0 border-none m-0 p-0 text-sm text-white truncate pr-4"
+                  className="w-full bg-transparent outline-none ring-0 border-none m-0 p-0 text-sm text-[#eefaf3] truncate pr-4 placeholder:text-[#eefaf3]/55"
                 />
               </div>
             </div>
@@ -506,7 +449,14 @@ export const SearchButton = ({ onNavigate }: SearchButtonProps) => {
                 transition={{ duration: 0.2 }}
                 className="absolute top-full left-0 w-full pt-2 z-50"
               >
-                <div className="w-full bg-[#222222] border border-white/10 rounded-2xl overflow-hidden shadow-2xl max-h-[420px] overflow-y-auto custom-scrollbar">
+                <div
+                  className="w-full rounded-2xl overflow-hidden shadow-2xl max-h-[420px] overflow-y-auto custom-scrollbar border"
+                  style={{
+                    background: 'rgba(4, 22, 15, 0.88)',
+                    borderColor: 'rgba(255, 255, 255, 0.12)',
+                    backdropFilter: 'blur(20px)'
+                  }}
+                >
                   {/* Breadcrumb trail */}
                   {breadcrumb.length > 0 && (
                     <div className="px-4 pt-3 pb-1 flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-white/30">
@@ -580,7 +530,7 @@ export const SearchButton = ({ onNavigate }: SearchButtonProps) => {
 
           {/* ─── Shortcut floating buttons ─── */}
           {hovered && !isDropdownVisible &&
-            shortcutIcons.map((shortcut, index) => (
+            SHORTCUT_ICONS.map((shortcut, index) => (
               <motion.div
                 key={`shortcut-${index}`}
                 onMouseEnter={() => setHoveredShortcut(index)}

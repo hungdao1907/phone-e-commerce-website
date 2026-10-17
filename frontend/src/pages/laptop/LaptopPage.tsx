@@ -31,10 +31,11 @@ export function LaptopPage({ brand }: LaptopPageProps) {
         const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/products`);
         if (res.ok) {
           const data = await res.json();
+          const brandLower = (brand || '').toLowerCase();
           const apiProducts = data.filter((p: any) =>
-            p.category?.name?.toLowerCase().includes(brand.toLowerCase()) ||
+            p.category?.name?.toLowerCase().includes(brandLower) ||
             p.category?.parent?.name?.toLowerCase().includes('laptop') ||
-            p.name?.toLowerCase().includes(brand.toLowerCase())
+            p.name?.toLowerCase().includes(brandLower)
           );
 
           if (apiProducts.length > 0) {
@@ -151,7 +152,10 @@ export function LaptopPage({ brand }: LaptopPageProps) {
               };
             });
 
-            const brandMappedProducts = mappedProducts.filter(mp => mp.brand.toLowerCase() === brand.toLowerCase() || mp.name.toLowerCase().includes(brand.toLowerCase()));
+            const brandMappedProducts = mappedProducts.filter(mp => 
+              (mp.brand?.toLowerCase() === brandLower) || 
+              (mp.name?.toLowerCase().includes(brandLower))
+            );
 
             if (brandMappedProducts.length > 0) {
                setProducts(brandMappedProducts);

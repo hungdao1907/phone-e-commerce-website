@@ -3,7 +3,6 @@ import { useAuthStore } from '@/store/authStore';
 import { MessageSquareWarning, AlertTriangle, CheckCircle, Clock, XCircle, ChevronRight, Search, Filter } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ComplaintDetail } from './ComplaintDetail'; // We will create this next
-import { AdminSelect } from '@/components/admin/common/AdminSelect';
 
 const STATUS_MAP: Record<string, { label: string, color: string, bg: string, icon: React.ElementType }> = {
   PENDING: { label: 'Chờ xử lý', color: 'text-orange-400', bg: 'bg-orange-400/10 border-orange-400/20', icon: Clock },
@@ -17,12 +16,12 @@ export function Complaints() {
   const { token } = useAuthStore();
   const [complaints, setComplaints] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-
+  
   // Pagination & Filter
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [statusFilter, setStatusFilter] = useState('');
-
+  
   const [selectedComplaint, setSelectedComplaint] = useState<any>(null);
 
   const fetchComplaints = async () => {
@@ -30,7 +29,7 @@ export function Complaints() {
     try {
       const query = new URLSearchParams({ page: page.toString(), limit: '10' });
       if (statusFilter) query.append('status', statusFilter);
-
+      
       const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/complaints/admin?${query.toString()}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -58,12 +57,12 @@ export function Complaints() {
 
   if (selectedComplaint) {
     return (
-      <ComplaintDetail
-        complaint={selectedComplaint}
+      <ComplaintDetail 
+        complaint={selectedComplaint} 
         onBack={() => {
           setSelectedComplaint(null);
           fetchComplaints(); // refresh data
-        }}
+        }} 
       />
     );
   }
@@ -111,22 +110,20 @@ export function Complaints() {
 
       {/* FILTERS */}
       <div className="flex flex-wrap items-center gap-4 shrink-0">
-        <AdminSelect
-          value={statusFilter}
-          onChange={(v) => {
-            setStatusFilter(v);
-            setPage(1);
-          }}
-          options={[
-            { value: '', label: 'Tất cả trạng thái' },
-            { value: 'PENDING', label: 'Chờ xử lý', dotColor: 'bg-amber-500' },
-            { value: 'PROCESSING', label: 'Đang xử lý', dotColor: 'bg-blue-500' },
-            { value: 'RESOLVED', label: 'Đã giải quyết', dotColor: 'bg-emerald-500' },
-            { value: 'REJECTED', label: 'Từ chối', dotColor: 'bg-rose-500' },
-          ]}
-          icon={<Filter className="w-3.5 h-3.5" />}
-          menuWidth="w-52"
-        />
+        <div className="flex items-center gap-2 bg-[#1A1A1A] border border-white/10 rounded-xl px-4 py-2">
+          <Filter className="w-4 h-4 text-white/40" />
+          <select 
+            value={statusFilter} 
+            onChange={e => { setStatusFilter(e.target.value); setPage(1); }}
+            className="bg-transparent text-sm text-white outline-none"
+          >
+            <option value="" className="text-black">Tất cả trạng thái</option>
+            <option value="PENDING" className="text-black">Chờ xử lý</option>
+            <option value="PROCESSING" className="text-black">Đang xử lý</option>
+            <option value="RESOLVED" className="text-black">Đã giải quyết</option>
+            <option value="REJECTED" className="text-black">Từ chối</option>
+          </select>
+        </div>
       </div>
 
       {/* LIST */}
@@ -150,12 +147,12 @@ export function Complaints() {
             ) : (
               complaints.map((complaint, i) => {
                 const statusInfo = STATUS_MAP[complaint.status] || STATUS_MAP.PENDING;
-
+                
                 return (
-                  <motion.div
-                    key={complaint.id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
+                  <motion.div 
+                    key={complaint.id} 
+                    initial={{ opacity: 0, y: 10 }} 
+                    animate={{ opacity: 1, y: 0 }} 
                     transition={{ delay: i * 0.05 }}
                     onClick={() => setSelectedComplaint(complaint)}
                     className="grid grid-cols-12 gap-4 px-6 py-4 border-b border-white/5 hover:bg-white/5 cursor-pointer items-center transition-colors group"
@@ -164,10 +161,10 @@ export function Complaints() {
                       <span className="font-mono text-sm text-white/80">#{complaint.id.slice(0,6).toUpperCase()}</span>
                       <span className="text-xs text-white/40">{new Date(complaint.createdAt).toLocaleDateString('vi-VN')}</span>
                     </div>
-
+                    
                     <div className="col-span-3 flex flex-col gap-0.5">
-                      <span className="text-sm font-medium text-slate-900">{complaint.customer?.fullName || 'Khách hàng'}</span>
-                      <span className="text-xs text-slate-500">{complaint.customer?.phone}</span>
+                      <span className="text-sm font-medium">{complaint.customer?.fullName}</span>
+                      <span className="text-xs text-white/40">{complaint.customer?.phone}</span>
                     </div>
 
                     <div className="col-span-3 flex flex-col gap-0.5">
@@ -198,15 +195,15 @@ export function Complaints() {
             Trang {page} / {totalPages}
           </div>
           <div className="flex items-center gap-2">
-            <button
-              disabled={page <= 1}
+            <button 
+              disabled={page <= 1} 
               onClick={() => setPage(p => p - 1)}
               className="px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 disabled:opacity-50 text-sm font-medium transition-colors"
             >
               Trước
             </button>
-            <button
-              disabled={page >= totalPages}
+            <button 
+              disabled={page >= totalPages} 
               onClick={() => setPage(p => p + 1)}
               className="px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 disabled:opacity-50 text-sm font-medium transition-colors"
             >

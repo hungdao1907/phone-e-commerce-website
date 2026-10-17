@@ -1,5 +1,5 @@
 import dotenv from 'dotenv';
-import { mailer } from './mailer';
+import { isEmailConfigured, mailer } from './mailer';
 import { trackingEmailErrorCategory, trackingOtpDiagnostic } from '../utils/tracking-otp-diagnostics';
 
 dotenv.config();
@@ -43,11 +43,11 @@ export const sendOrderReceivedEmail = async (order: any) => {
         <div style="text-align:center;margin-bottom:32px">
           <h1 style="color:#000;font-size:24px;font-weight:800;margin:0;letter-spacing:-0.5px">H&M Phone Store</h1>
         </div>
-
+        
         <h2 style="color:#111;font-size:20px;font-weight:600;margin:0 0 16px 0;text-align:center">Đã tiếp nhận đơn hàng của bạn!</h2>
         <p style="color:#444;font-size:15px;line-height:1.6;margin:0 0 16px 0">Xin chào <strong>${customerName}</strong>,</p>
         <p style="color:#444;font-size:15px;line-height:1.6;margin:0 0 24px 0">Cảm ơn bạn đã mua sắm tại H&M Phone Store.<br><br>Chúng tôi đã nhận được yêu cầu đặt hàng của bạn với mã đơn hàng <strong>${order.orderCode}</strong>.<br>Đơn hàng hiện đang được cửa hàng kiểm tra và xử lý. Chúng tôi sẽ gửi thông báo cho bạn ngay khi đơn hàng được xác nhận.</p>
-
+        
         <div style="background:#f9f9f9;padding:24px;border-radius:8px;margin-bottom:24px;">
           <h3 style="margin:0 0 16px 0;font-size:16px;color:#111;border-bottom:2px solid #99e300;display:inline-block;padding-bottom:4px;">Thông tin đơn hàng</h3>
           <p style="margin:0 0 8px 0;font-size:14px;color:#444;"><strong>Mã đơn hàng:</strong> ${order.orderCode}</p>
@@ -59,7 +59,7 @@ export const sendOrderReceivedEmail = async (order: any) => {
           <h3 style="margin:0 0 16px 0;font-size:16px;color:#111;border-bottom:2px solid #99e300;display:inline-block;padding-bottom:4px;">Sản phẩm</h3>
           ${itemsHtml}
         </div>
-
+        
         <div style="background:#f9f9f9;padding:24px;border-radius:8px;margin-bottom:24px;font-size:14px;color:#333;">
           <div style="display:flex;justify-content:space-between;margin-bottom:8px;"><span style="color:#666;">Tạm tính:</span> <span>${new Intl.NumberFormat('vi-VN').format(subtotal)}đ</span></div>
           <div style="display:flex;justify-content:space-between;margin-bottom:8px;"><span style="color:#666;">Phí vận chuyển:</span> <span>${new Intl.NumberFormat('vi-VN').format(order.shippingFee || 0)}đ</span></div>
@@ -144,11 +144,11 @@ export const sendOrderConfirmedEmail = async (order: any) => {
         <div style="text-align:center;margin-bottom:32px">
           <h1 style="color:#000;font-size:24px;font-weight:800;margin:0;letter-spacing:-0.5px">H&M Phone Store</h1>
         </div>
-
+        
         <h2 style="color:#111;font-size:20px;font-weight:600;margin:0 0 16px 0;text-align:center">Đơn hàng đã được xác nhận thành công! 🎉</h2>
         <p style="color:#444;font-size:15px;line-height:1.6;margin:0 0 16px 0">Xin chào <strong>${customerName}</strong>,</p>
         <p style="color:#444;font-size:15px;line-height:1.6;margin:0 0 24px 0">Đơn hàng <strong>${order.orderCode}</strong> của bạn đã được H&M Phone Store xác nhận thành công.<br><br>Cửa hàng đang chuẩn bị sản phẩm để giao đến bạn. Bạn có thể theo dõi tiến trình đơn hàng trực tiếp trên website.</p>
-
+        
         <div style="background:#f9f9f9;padding:24px;border-radius:8px;margin-bottom:24px;text-align:center;">
           <h3 style="margin:0 0 12px 0;font-size:16px;color:#111;">Đơn hàng của bạn đang được xử lý</h3>
           <p style="margin:0;font-size:14px;color:#99e300;font-weight:bold;">Đã đặt hàng → Đã xác nhận ✅ → Đang chuẩn bị hàng → Đang giao → Đã giao</p>
@@ -164,7 +164,7 @@ export const sendOrderConfirmedEmail = async (order: any) => {
           <h3 style="margin:0 0 16px 0;font-size:16px;color:#111;border-bottom:2px solid #99e300;display:inline-block;padding-bottom:4px;">Sản phẩm</h3>
           ${itemsHtml}
         </div>
-
+        
         <div style="background:#f9f9f9;padding:24px;border-radius:8px;margin-bottom:24px;font-size:14px;color:#333;">
           <div style="display:flex;justify-content:space-between;margin-bottom:8px;"><span style="color:#666;">Tạm tính:</span> <span>${new Intl.NumberFormat('vi-VN').format(subtotal)}đ</span></div>
           <div style="display:flex;justify-content:space-between;margin-bottom:8px;"><span style="color:#666;">Phí vận chuyển:</span> <span>${new Intl.NumberFormat('vi-VN').format(order.shippingFee || 0)}đ</span></div>
@@ -179,7 +179,7 @@ export const sendOrderConfirmedEmail = async (order: any) => {
         <div style="text-align:center;margin-bottom:32px;">
           <a href="${FRONTEND_URL}/profile/orders/${order.id}" style="display:inline-block;padding:14px 28px;background:#99e300;color:#000;font-weight:700;text-decoration:none;border-radius:8px;font-size:14px;letter-spacing:0.5px;">THEO DÕI ĐƠN HÀNG</a>
         </div>
-
+        
         <div style="background:#fff8f8;padding:24px;border-radius:8px;margin-bottom:32px;">
           <h3 style="margin:0 0 12px 0;font-size:16px;color:#111;">Cần hỗ trợ?</h3>
           <p style="margin:0;font-size:14px;color:#444;line-height:1.6;">Nếu bạn có bất kỳ câu hỏi nào về đơn hàng, vui lòng liên hệ bộ phận hỗ trợ của H&M Phone Store hoặc truy cập trang Hỗ trợ trên website.</p>
@@ -244,11 +244,11 @@ export const sendPaymentSuccessEmail = async (order: any) => {
         <div style="text-align:center;margin-bottom:32px">
           <h1 style="color:#000;font-size:24px;font-weight:800;margin:0;letter-spacing:-0.5px">H&M Phone Store</h1>
         </div>
-
+        
         <h2 style="color:#111;font-size:20px;font-weight:600;margin:0 0 16px 0;text-align:center">ĐẶT HÀNG THÀNH CÔNG</h2>
         <p style="color:#444;font-size:15px;line-height:1.6;margin:0 0 16px 0">Xin chào <strong>${customerName}</strong>,</p>
         <p style="color:#444;font-size:15px;line-height:1.6;margin:0 0 24px 0">Cảm ơn bạn đã mua hàng tại H&M Phone Store.<br><br>Chúng tôi đã xác nhận thanh toán thành công cho đơn hàng <strong>#${order.orderCode}</strong>.<br>Đơn hàng của bạn đã được tiếp nhận và đang được chuẩn bị để giao đến bạn.</p>
-
+        
         <div style="background:#f9f9f9;padding:24px;border-radius:8px;margin-bottom:24px;">
           <h3 style="margin:0 0 16px 0;font-size:16px;color:#111;border-bottom:2px solid #99e300;display:inline-block;padding-bottom:4px;">THÔNG TIN ĐƠN HÀNG</h3>
           <p style="margin:0 0 8px 0;font-size:14px;color:#444;"><strong>Mã đơn hàng:</strong> ${order.orderCode}</p>
@@ -261,7 +261,7 @@ export const sendPaymentSuccessEmail = async (order: any) => {
           <h3 style="margin:0 0 16px 0;font-size:16px;color:#111;border-bottom:2px solid #99e300;display:inline-block;padding-bottom:4px;">SẢN PHẨM</h3>
           ${itemsHtml}
         </div>
-
+        
         <div style="background:#f9f9f9;padding:24px;border-radius:8px;margin-bottom:24px;font-size:14px;color:#333;">
           <div style="display:flex;justify-content:space-between;margin-bottom:8px;"><span style="color:#666;">Tạm tính:</span> <span>${new Intl.NumberFormat('vi-VN').format(subtotal)}đ</span></div>
           <div style="display:flex;justify-content:space-between;margin-bottom:8px;"><span style="color:#666;">Phí vận chuyển:</span> <span>${new Intl.NumberFormat('vi-VN').format(order.shippingFee || 0)}đ</span></div>
@@ -336,20 +336,20 @@ export const sendTrackingOtpEmail = async (customerEmail: string, customerName: 
         </p>
 
         <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0;" />
-        <p style="font-size: 12px; color: #9ca3af; text-align: center; margin: 0;">AppleWeb Store • Hệ thống xác thực đơn hàng tự động</p>
+        <p style="font-size: 12px; color: #9ca3af; text-align: center; margin: 0;">H&M Phone Store • Hệ thống xác thực đơn hàng tự động</p>
       </div>
     `;
 
-    if (!process.env.SMTP_HOST && (!process.env.SMTP_EMAIL || !process.env.SMTP_PASSWORD)) {
+    if (!isEmailConfigured()) {
       trackingOtpDiagnostic('email_config', 'skipped');
       return;
     }
 
     trackingOtpDiagnostic('email_send', 'attempted');
     const result = await transporter.sendMail({
-      from: `"AppleWeb Store" <${process.env.SMTP_EMAIL || 'no-reply@localhost'}>`,
+      from: `"H&M Phone Store" <${process.env.SMTP_EMAIL || 'no-reply@localhost'}>`,
       to: customerEmail,
-      subject: `[AppleWeb] Mã xác thực OTP tra cứu đơn hàng #${orderCode}`,
+      subject: `[H&M Phone Store] Mã xác thực OTP tra cứu đơn hàng #${orderCode}`,
       html: htmlContent,
     });
     const accepted = Array.isArray(result?.accepted) && result.accepted.length > 0;
@@ -360,4 +360,3 @@ export const sendTrackingOtpEmail = async (customerEmail: string, customerName: 
     console.error('Error sending tracking OTP email.');
   }
 };
-

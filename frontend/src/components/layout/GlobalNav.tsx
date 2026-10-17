@@ -113,7 +113,7 @@ export function GlobalNav() {
 
     const visible = [
       { id: 'store', name: 'Cửa Hàng', slug: '', isStatic: true },
-      ...rootCats.filter(c => TARGET_SLUGS.includes(c.slug.toLowerCase())).map(c => ({
+      ...rootCats.filter(c => c?.slug && TARGET_SLUGS.includes(c.slug.toLowerCase())).map(c => ({
         ...c,
         slug: getCategoryPrefix(c.slug.toLowerCase())
       })),
@@ -198,32 +198,32 @@ export function GlobalNav() {
 
       if (prefix === 'phone') {
         const excludedPhoneBrands = ['vivo', 'realme'];
-        filteredChildren = filteredChildren.filter((c: any) => !excludedPhoneBrands.includes(c.name.toLowerCase()));
+        filteredChildren = filteredChildren.filter((c: any) => !c?.name || !excludedPhoneBrands.includes(c.name.toLowerCase()));
       } else if (prefix === 'laptop') {
         title = 'THƯƠNG HIỆU';
         const allowedLaptopBrands = ['MacBook', 'ASUS', 'Lenovo'];
-        filteredChildren = filteredChildren.filter((c: any) => allowedLaptopBrands.includes(c.name));
+        filteredChildren = filteredChildren.filter((c: any) => allowedLaptopBrands.includes(c?.name));
       } else if (prefix === 'tablet') {
         title = 'THƯƠNG HIỆU';
         const allowedTabletBrands = ['iPad', 'Samsung Galaxy Tab', 'Xiaomi Pad'];
-        filteredChildren = filteredChildren.filter((c: any) => allowedTabletBrands.includes(c.name));
+        filteredChildren = filteredChildren.filter((c: any) => allowedTabletBrands.includes(c?.name));
       }
 
       groups.push({
         title,
-        links: filteredChildren.map((c: any) => c.name),
+        links: filteredChildren.map((c: any) => c?.name || ''),
         slugs: filteredChildren.map((c: any) => {
           // Force iPad/Tablet slug mapping
           if (prefix === 'tablet') {
-            if (c.slug === 'apple' || c.slug === 'ipad') return `${prefix}/ipad`;
-            if (c.slug.includes('samsung')) return `${prefix}/samsung`;
-            if (c.slug.includes('xiaomi')) return `${prefix}/xiaomi`;
+            if (c?.slug === 'apple' || c?.slug === 'ipad') return `${prefix}/ipad`;
+            if (c?.slug?.includes('samsung')) return `${prefix}/samsung`;
+            if (c?.slug?.includes('xiaomi')) return `${prefix}/xiaomi`;
           }
           if (prefix === 'watch') {
-            if (c.name.toLowerCase().includes('samsung')) return 'watch/samsung';
-            if (c.name.toLowerCase().includes('xiaomi')) return 'watch/xiaomi';
+            if (c?.name?.toLowerCase().includes('samsung')) return 'watch/samsung';
+            if (c?.name?.toLowerCase().includes('xiaomi')) return 'watch/xiaomi';
           }
-          return `${prefix}/${c.slug}`;
+          return `${prefix}/${c?.slug || ''}`;
         })
       });
     } else {
@@ -239,7 +239,7 @@ export function GlobalNav() {
   };
 
   const getWatchImage = (name: string) => {
-    const n = name.toLowerCase();
+    const n = (name || '').toLowerCase();
     if (n.includes('ultra')) return '/images/watch/watch-ultra-studio.png';
     if (n.includes('se 3') || n.includes('se3') || n.includes('watch se')) return '/images/watch/watch-se-studio.png';
     if (n.includes('series 11') || n.includes('series-11')) return '/images/watch/watch-series11-studio.png';
@@ -265,7 +265,7 @@ export function GlobalNav() {
   );
 
   const renderItemVisual = (link: string, categoryName: string = '', isFeatured: boolean = false) => {
-    const n = (link + ' ' + categoryName).toLowerCase();
+    const n = ((link || '') + ' ' + (categoryName || '')).toLowerCase();
     const isWatchSection = n.includes('watch') || n.includes('đồng hồ');
 
     // 1. If in the Watch section or watch product, show actual watch thumbnail

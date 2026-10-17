@@ -1,19 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Trash2, Edit2, CheckCircle2 } from 'lucide-react';
 import { useRewardsStore, Milestone } from '@/store/useRewardsStore';
-import { AdminSelect } from '@/components/admin/common/AdminSelect';
-import { useAuthStore } from '@/store/authStore';
 
 export function CartRewardsSetting() {
-  const isStaff = useAuthStore((state) => state.user?.role === 'staff');
   const { milestones, setMilestones, fetchMilestones } = useRewardsStore();
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-
+  
   useEffect(() => {
     fetchMilestones();
   }, [fetchMilestones]);
-
+  
   // States for form
   const [amount, setAmount] = useState('');
   const [label, setLabel] = useState('');
@@ -22,12 +19,12 @@ export function CartRewardsSetting() {
 
   const handleSave = async () => {
     if (!amount || !label) return;
-
+    
     try {
       if (editingId !== null) {
         const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/rewards/${editingId}`, {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('token') || ''}` },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             amount,
             label,
@@ -41,7 +38,7 @@ export function CartRewardsSetting() {
       } else {
         const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/rewards`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('token') || ''}` },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             amount,
             label,
@@ -53,7 +50,7 @@ export function CartRewardsSetting() {
           fetchMilestones();
         }
       }
-
+      
       setIsAdding(false);
       setEditingId(null);
       setAmount('');
@@ -74,7 +71,7 @@ export function CartRewardsSetting() {
     setDiscount(milestone.discount ? milestone.discount.toString() : '');
     setIsAdding(true);
   };
-
+  
   const handleCancel = () => {
     setIsAdding(false);
     setEditingId(null);
@@ -88,7 +85,7 @@ export function CartRewardsSetting() {
     try {
       const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/rewards/${id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('token') || ''}` },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ isActive: !currentStatus })
       });
       if (response.ok) {
@@ -103,8 +100,7 @@ export function CartRewardsSetting() {
     if(confirm('Bạn có chắc chắn muốn xóa mốc thưởng này?')) {
       try {
         const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/rewards/${id}`, {
-          method: 'DELETE',
-          headers: { Authorization: `Bearer ${localStorage.getItem('token') || ''}` },
+          method: 'DELETE'
         });
         if (response.ok) {
           fetchMilestones();
@@ -123,7 +119,7 @@ export function CartRewardsSetting() {
           <h2 className="text-xl font-bold text-white">Cart Rewards (Mốc thưởng Giỏ hàng)</h2>
           <p className="text-sm text-white/50 mt-1">Quản lý các cột mốc ưu đãi hiển thị trên thanh tiến trình giỏ hàng.</p>
         </div>
-        <button
+        <button 
           onClick={() => {
             setEditingId(null);
             setAmount('');
@@ -145,49 +141,46 @@ export function CartRewardsSetting() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
             <div>
               <label className="block text-xs font-semibold text-white/60 mb-2">Giá trị đơn tối thiểu (VNĐ)</label>
-              <input
-                type="number"
+              <input 
+                type="number" 
                 value={amount}
                 onChange={e => setAmount(e.target.value)}
                 placeholder="VD: 500000"
-                className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-white/30"
+                className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-white/30" 
               />
             </div>
             <div>
               <label className="block text-xs font-semibold text-white/60 mb-2">Nhãn hiển thị</label>
-              <input
-                type="text"
+              <input 
+                type="text" 
                 value={label}
                 onChange={e => setLabel(e.target.value)}
                 placeholder="VD: Miễn phí vận chuyển"
-                className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-white/30"
+                className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-white/30" 
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-2">Loại phần thưởng</label>
-              <AdminSelect
+              <label className="block text-xs font-semibold text-white/60 mb-2">Loại phần thưởng</label>
+              <select 
                 value={type}
-                onChange={setType}
-                options={[
-                  { value: 'shipping', label: 'Miễn phí vận chuyển (Shipping)' },
-                  { value: 'voucher', label: 'Giảm giá theo % (Voucher)' },
-                  { value: 'gift', label: 'Tặng quà (Gift)' },
-                ]}
-                className="w-full"
-                menuWidth="w-full"
-                highlightActive={false}
-              />
+                onChange={e => setType(e.target.value)}
+                className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-white/30"
+              >
+                <option value="shipping">Miễn phí vận chuyển (Shipping)</option>
+                <option value="voucher">Giảm giá theo % (Voucher)</option>
+                <option value="gift">Tặng quà (Gift)</option>
+              </select>
             </div>
-
+            
             {type === 'voucher' && (
               <div>
                 <label className="block text-xs font-semibold text-white/60 mb-2">Mức giảm giá (%)</label>
-                <input
-                  type="number"
+                <input 
+                  type="number" 
                   value={discount}
                   onChange={e => setDiscount(e.target.value)}
                   placeholder="VD: 5 cho 5%"
-                  className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-white/30"
+                  className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-white/30" 
                   min="1" max="100"
                 />
               </div>
@@ -216,7 +209,7 @@ export function CartRewardsSetting() {
               {milestones.map((milestone) => (
                 <tr key={milestone.id} className="hover:bg-white/5 transition-colors">
                   <td className="py-4 px-6">
-                    <button
+                    <button 
                       onClick={() => toggleActive(milestone.id, milestone.isActive)}
                       className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${milestone.isActive ? 'bg-emerald-500' : 'bg-white/20'}`}
                     >
@@ -245,7 +238,7 @@ export function CartRewardsSetting() {
                     <button onClick={() => handleEditClick(milestone)} className="p-2 bg-white/5 hover:bg-white/10 rounded-lg text-white/60 transition-colors">
                       <Edit2 className="w-4 h-4" />
                     </button>
-                    <button onClick={() => deleteMilestone(milestone.id)} className="p-2 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-lg text-rose-600 transition-colors shadow-sm cursor-pointer" title="Xóa mốc thưởng">
+                    <button onClick={() => deleteMilestone(milestone.id)} className="p-2 bg-red-500/10 hover:bg-red-500/20 rounded-lg text-red-500 transition-colors">
                       <Trash2 className="w-4 h-4" />
                     </button>
                   </td>

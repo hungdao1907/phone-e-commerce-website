@@ -5,7 +5,7 @@ const SPEC_MAPPINGS: Record<string, string> = {
   // RAM
   'ram': 'ram',
   'dung lượng ram': 'ram',
-
+  
   // Storage
   'ssd': 'storage',
   'ổ cứng': 'storage',
@@ -13,20 +13,20 @@ const SPEC_MAPPINGS: Record<string, string> = {
   'dung lượng': 'storage',
   'rom': 'storage',
   'bộ nhớ trong': 'storage',
-
+  
   // CPU
   'cpu': 'cpu',
   'bộ xử lý': 'cpu',
   'chip': 'cpu',
-
+  
   // GPU
   'gpu': 'gpu',
   'card đồ họa': 'gpu',
-
+  
   // Screen
   'màn hình': 'screenSize',
   'kích thước màn hình': 'screenSize',
-
+  
   // Color
   'màu sắc': 'colors',
   'color': 'colors',
@@ -179,15 +179,19 @@ export function extractFiltersFromProducts(products: any[]) {
     if (Array.isArray(product.specifications)) {
       for (const spec of product.specifications) {
         if (!spec || typeof spec !== 'object') continue;
-        const key = spec.key || spec.label || spec.name;
-        const value = spec.value;
-        if (!key || !value || typeof value !== 'string') continue;
-        const normKey = normalizeKey(key);
-
-        // Add SHORTENED value to corresponding filter set
-        if (filters[normKey]) {
-          const shortVal = shortenSpecValue(normKey, spec.value);
-          if (shortVal) filters[normKey].add(shortVal);
+        const itemsToProcess = Array.isArray(spec.items) ? spec.items : [spec];
+        for (const item of itemsToProcess) {
+          if (!item || typeof item !== 'object') continue;
+          const key = item.key || item.label || item.name;
+          const value = item.value;
+          if (!key || !value || typeof value !== 'string') continue;
+          const normKey = normalizeKey(key);
+          
+          // Add SHORTENED value to corresponding filter set
+          if (filters[normKey]) {
+            const shortVal = shortenSpecValue(normKey, item.value);
+            if (shortVal) filters[normKey].add(shortVal);
+          }
         }
       }
     }
@@ -320,7 +324,7 @@ export function extractAdminFiltersFromProducts(products: any[]) {
       .map(([value, count]) => ({ value, count }))
       .sort((a, b) => a.value.localeCompare(b.value));
   }
-
+  
   result.priceRange = {
     min: hasValidPrice ? minPrice : 0,
     max: hasValidPrice ? maxPrice : 0

@@ -45,8 +45,6 @@ const createEmptyForm = (defaultType: FooterSectionType = 'column'): FooterSecti
 
 export function FooterManagement() {
   const token = useAuthStore((state) => state.token);
-  const user = useAuthStore((state) => state.user);
-  const isStaff = user?.role === 'staff';
   const authHeaders = useMemo<Record<string, string>>(() => {
     return token ? { Authorization: `Bearer ${token}` } : {};
   }, [token]);
@@ -713,7 +711,6 @@ export function FooterManagement() {
                   onDelete={() => setSectionPendingDelete(sec)}
                   onMove={(dir) => void moveSection(sec, dir)}
                   isUpdating={updatingSectionId === sec.id}
-                  canDelete={true}
                 />
               );
             })}
@@ -1455,7 +1452,6 @@ function FooterSectionRow({
   onDelete,
   onMove,
   isUpdating,
-  canDelete = true,
 }: {
   section: FooterSection;
   index: number;
@@ -1467,7 +1463,6 @@ function FooterSectionRow({
   onDelete: () => void;
   onMove: (direction: 'up' | 'down') => void;
   isUpdating?: boolean;
-  canDelete?: boolean;
 }) {
   const isColumn = section.type === 'column';
   const activeLinksCount = section.links.filter((l) => l.isActive).length;
@@ -1643,17 +1638,15 @@ function FooterSectionRow({
         </button>
 
         {/* Delete Button */}
-        {canDelete && (
-          <button
-            type="button"
-            onClick={onDelete}
-            className="p-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-600 transition-colors hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600 shadow-sm cursor-pointer"
-            aria-label={`Xóa ${section.title || section.copyrightText}`}
-            title="Xóa nội dung"
-          >
-            <Trash2 className="h-4 w-4" />
-          </button>
-        )}
+        <button
+          type="button"
+          onClick={onDelete}
+          className="p-2.5 rounded-xl border border-white/10 bg-black/30 text-white/60 transition-colors hover:border-red-400/40 hover:bg-red-500/20 hover:text-red-200 cursor-pointer"
+          aria-label={`Xóa ${section.title || section.copyrightText}`}
+          title="Xóa nội dung"
+        >
+          <Trash2 className="h-4 w-4" />
+        </button>
       </div>
     </motion.article>
   );
@@ -1864,7 +1857,7 @@ function FooterTypeDropdown({
                 className={`flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-left text-sm transition-colors ${
                   value === opt.value
                     ? 'bg-lime-400/15 text-lime-400'
-                    : opt.disabled
+                    : opt.disabled 
                     ? 'opacity-40 cursor-not-allowed text-white/40'
                     : 'text-white/70 hover:bg-white/10 hover:text-white cursor-pointer'
                 }`}

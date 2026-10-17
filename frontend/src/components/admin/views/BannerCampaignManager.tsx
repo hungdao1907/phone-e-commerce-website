@@ -418,9 +418,9 @@ export function BannerCampaignManager({ campaigns }: BannerCampaignManagerProps)
                   </label>
                   {!addForm.bannerImage ? (
                     <div className="border-2 border-dashed border-white/20 rounded-xl p-8 text-center relative hover:bg-white/5 transition-colors cursor-pointer">
-                      <input
-                        type="file"
-                        accept="image/png, image/webp"
+                      <input 
+                        type="file" 
+                        accept="image/png, image/webp" 
                         className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                         onChange={(e) => handleBannerUpload(e, false)}
                         disabled={isUploadingBanner}
@@ -442,9 +442,9 @@ export function BannerCampaignManager({ campaigns }: BannerCampaignManagerProps)
                     <div className="border border-white/20 rounded-xl p-4 bg-white/5 flex items-center justify-between">
                       <div className="flex items-center gap-4">
                         <div className="w-20 h-20 bg-[url('/images/transparent-bg.png')] bg-repeat rounded-lg overflow-hidden border border-white/10 flex items-center justify-center relative bg-[#ccc]">
-                          <img
-                            src={resolveImageUrl(addForm.bannerImage) || ''}
-                            alt="Banner Preview"
+                          <img 
+                            src={resolveImageUrl(addForm.bannerImage) || ''} 
+                            alt="Banner Preview" 
                             className="w-full h-full object-contain"
                           />
                         </div>
@@ -458,15 +458,15 @@ export function BannerCampaignManager({ campaigns }: BannerCampaignManagerProps)
                           <button className="px-3 py-1.5 bg-white/10 hover:bg-white/20 rounded-lg text-xs font-medium w-full transition-colors relative pointer-events-none">
                             {isUploadingBanner ? 'Đang tải...' : 'Thay ảnh'}
                           </button>
-                          <input
-                            type="file"
-                            accept="image/png, image/webp"
+                          <input 
+                            type="file" 
+                            accept="image/png, image/webp" 
                             className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                             onChange={(e) => handleBannerUpload(e, false)}
                             disabled={isUploadingBanner}
                           />
                         </div>
-                        <button
+                        <button 
                           onClick={() => setAddForm(prev => ({ ...prev, bannerImage: '' }))}
                           className="px-3 py-1.5 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg text-xs font-medium w-full transition-colors"
                         >
@@ -766,9 +766,9 @@ function BannerProductRow({
                 <div className="border border-white/20 rounded-xl p-3 bg-white/5 flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="w-12 h-12 bg-[url('/images/transparent-bg.png')] bg-repeat rounded-lg overflow-hidden border border-white/10 flex items-center justify-center relative bg-[#ccc]">
-                      <img
-                        src={resolveImageUrl(editBannerImage) || ''}
-                        alt="Preview"
+                      <img 
+                        src={resolveImageUrl(editBannerImage) || ''} 
+                        alt="Preview" 
                         className="w-full h-full object-contain"
                       />
                     </div>
@@ -777,9 +777,9 @@ function BannerProductRow({
                     <button className="px-3 py-1.5 bg-white/10 hover:bg-white/20 rounded-lg text-xs font-medium transition-colors relative pointer-events-none">
                       {isUploading ? 'Đang tải...' : 'Thay ảnh'}
                     </button>
-                    <input
-                      type="file"
-                      accept="image/png, image/webp"
+                    <input 
+                      type="file" 
+                      accept="image/png, image/webp" 
                       className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                       onChange={handleUpload}
                       disabled={isUploading}

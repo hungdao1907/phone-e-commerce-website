@@ -48,7 +48,7 @@ export function ProductImportModal({ isOpen, onClose, onSuccess, token }: Produc
       "Product Image URL", "Gallery Image URLs", "Status",
       "Specification JSON", "Specification Groups (LEGACY)", "Specifications (LEGACY)"
     ];
-
+    
     const demoJson = `[{"title":"Cấu hình & Bộ nhớ","items":[{"label":"Hệ điều hành","value":"iOS 18"},{"label":"RAM","value":"8 GB"}]},{"title":"Màn hình","items":[{"label":"Kích thước","value":"6.9 inch"}]}]`;
     const demoRow1 = [
       "iPhone 17 Pro Max", "Điện thoại", "Apple", "Siêu phẩm Apple", "34990000",
@@ -68,12 +68,12 @@ export function ProductImportModal({ isOpen, onClose, onSuccess, token }: Produc
       "https://example.com/mac.jpg", "", "active",
       `"${demoJson2.replace(/"/g, '""')}"`, "", ""
     ];
-
-    const csvContent = "data:text/csv;charset=utf-8,\uFEFF"
+    
+    const csvContent = "data:text/csv;charset=utf-8,\uFEFF" 
       + headers.join(",") + "\n"
       + demoRow1.join(",") + "\n"
       + demoRow2.join(",");
-
+      
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
@@ -89,13 +89,13 @@ export function ProductImportModal({ isOpen, onClose, onSuccess, token }: Produc
       setStep('importing');
       const formData = new FormData();
       formData.append('file', file);
-
+      
       const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/products/import/preview`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` },
         body: formData
       });
-
+      
       const data = await res.json();
       if (res.ok) {
         setPreviewData(data);
@@ -121,16 +121,16 @@ export function ProductImportModal({ isOpen, onClose, onSuccess, token }: Produc
     if (!previewData || !previewData.groupedProducts) return;
     try {
       setStep('importing');
-
+      
       const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/products/import/confirm`, {
         method: 'POST',
-        headers: {
+        headers: { 
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${token}` 
         },
         body: JSON.stringify({ groupedProducts: previewData.groupedProducts })
       });
-
+      
       const data = await res.json();
       if (res.ok) {
         setImportResult(data);
@@ -206,17 +206,17 @@ export function ProductImportModal({ isOpen, onClose, onSuccess, token }: Produc
                     </button>
                   </div>
 
-                  <div
+                  <div 
                     onClick={() => fileInputRef.current?.click()}
                     className={cn(
                       "border-2 border-dashed rounded-xl p-10 flex flex-col items-center justify-center gap-4 cursor-pointer transition-colors",
                       file ? "border-emerald-500/50 bg-emerald-500/5" : "border-white/20 hover:border-white/40 hover:bg-white/5"
                     )}
                   >
-                    <input
-                      type="file"
-                      accept=".xlsx, .xls, .csv"
-                      className="hidden"
+                    <input 
+                      type="file" 
+                      accept=".xlsx, .xls, .csv" 
+                      className="hidden" 
                       ref={fileInputRef}
                       onChange={handleFileChange}
                     />
@@ -398,7 +398,7 @@ export function ProductImportModal({ isOpen, onClose, onSuccess, token }: Produc
                   <div className="w-20 h-20 rounded-full bg-emerald-500/20 flex items-center justify-center">
                     <CheckCircle2 className="w-10 h-10 text-emerald-500" />
                   </div>
-
+                  
                   <div className="text-center">
                     <h3 className="text-2xl font-bold text-white mb-2">Import Thành Công</h3>
                     <p className="text-white/70">Quá trình nhập liệu đã hoàn tất.</p>

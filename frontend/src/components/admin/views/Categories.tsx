@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
+import { 
   Folder, FolderOpen, Smartphone, Laptop, Tablet, Headphones, Watch,
   ChevronRight, ChevronDown, Plus, Edit2, Trash2, X,
   LayoutGrid
@@ -42,10 +42,10 @@ const ICON_OPTIONS = [
 ];
 
 // ========== TREE NODE COMPONENT ==========
-const TreeNode = ({
+const TreeNode = ({ 
   node, depth = 0, activeId, onSelect, onRefresh
-}: {
-  node: Category; depth?: number; activeId: string | null;
+}: { 
+  node: Category; depth?: number; activeId: string | null; 
   onSelect: (node: Category) => void; onRefresh: () => void;
 }) => {
   const [isOpen, setIsOpen] = useState(depth === 0);
@@ -54,7 +54,7 @@ const TreeNode = ({
 
   return (
     <div className="flex flex-col w-full">
-      <div
+      <div 
         onClick={() => { onSelect(node); if (hasChildren) setIsOpen(!isOpen); }}
         className={cn(
           "group relative flex items-center gap-2 py-2 pr-3 cursor-pointer rounded-xl transition-all duration-200 select-none",
@@ -63,9 +63,9 @@ const TreeNode = ({
         style={{ paddingLeft: `${depth * 16 + 12}px` }}
       >
         {isSelected && (
-          <motion.div
+          <motion.div 
             layoutId="active-indicator"
-            className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-emerald-400 rounded-r-full"
+            className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-emerald-400 rounded-r-full" 
           />
         )}
 
@@ -107,8 +107,7 @@ export function Categories() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [activeCategory, setActiveCategory] = useState<Category | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const { token, user } = useAuthStore();
-  const isStaff = user?.role === 'staff';
+  const { token } = useAuthStore();
 
   // Modal states
   const [isCatModalOpen, setIsCatModalOpen] = useState(false);
@@ -194,22 +193,16 @@ export function Categories() {
   };
 
   const handleDeleteCat = async (id: string, name: string) => {
-    if (!window.confirm(`Xóa danh mục "${name}"? Chỉ danh mục không có sản phẩm, danh mục con hoặc thuộc tính mới có thể xóa.`)) return;
+    if (!window.confirm(`Xóa danh mục "${name}" và toàn bộ danh mục con?`)) return;
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/categories/${id}`, {
+      await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/categories/${id}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });
-      const data = await response.json().catch(() => ({}));
-      if (!response.ok) {
-        throw new Error(data.message || (response.status === 409
-          ? 'Không thể xóa danh mục đang được dữ liệu khác tham chiếu.'
-          : `Xóa danh mục thất bại (HTTP ${response.status}).`));
-      }
       if (activeCategory?.id === id) setActiveCategory(null);
       await fetchCategories();
     } catch (err) {
-      window.alert(err instanceof Error ? err.message : 'Lỗi khi xóa danh mục.');
+      alert('Lỗi khi xóa danh mục');
     }
   };
 
@@ -234,7 +227,7 @@ export function Categories() {
           <h1 className="text-2xl font-bold tracking-tight">Danh mục</h1>
           <p className="text-sm text-white/50 mt-1">Quản lý cấu trúc cây phân loại sản phẩm.</p>
         </div>
-        <button
+        <button 
           onClick={() => handleOpenCreateCat()}
           className="h-10 px-5 rounded-xl bg-white/10 border border-white/20 text-white flex items-center gap-2 hover:bg-white/20 transition-colors text-sm font-medium"
         >
@@ -245,7 +238,7 @@ export function Categories() {
 
       {/* SPLIT PANE */}
       <div className="flex-1 flex gap-6 min-h-0">
-
+        
         {/* LEFT: TREE */}
         <div className="w-[45%] flex flex-col bg-white/5 border border-white/10 rounded-2xl overflow-hidden shrink-0">
           <div className="p-4 border-b border-white/10 flex items-center justify-between bg-black/20">
@@ -253,7 +246,7 @@ export function Categories() {
               <LayoutGrid className="w-4 h-4 text-emerald-400" /> Cây Danh Mục
             </h2>
           </div>
-
+          
           <div className="flex-1 overflow-y-auto custom-scrollbar p-3 flex flex-col">
             {isLoading ? (
               <div className="flex items-center justify-center h-40">
@@ -290,19 +283,19 @@ export function Categories() {
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <button
+                    <button 
                       onClick={() => handleOpenCreateCat(activeCategory.id)}
                       className="h-9 px-3 rounded-lg bg-white/10 hover:bg-white/20 border border-white/10 transition-colors text-sm font-medium flex items-center gap-1.5"
                     >
                       <Plus className="w-3.5 h-3.5" /> Thêm con
                     </button>
-                    <button
+                    <button 
                       onClick={() => handleOpenEditCat(activeCategory)}
                       className="h-9 px-3 rounded-lg bg-white/10 hover:bg-white/20 border border-white/10 transition-colors text-sm font-medium flex items-center gap-1.5"
                     >
                       <Edit2 className="w-3.5 h-3.5" /> Sửa
                     </button>
-                    <button
+                    <button 
                       onClick={() => handleDeleteCat(activeCategory.id, activeCategory.name)}
                       className="h-9 px-3 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 transition-colors text-sm font-medium flex items-center gap-1.5"
                     >
@@ -320,14 +313,14 @@ export function Categories() {
                     <h3 className="font-semibold text-white/90">Trạng thái hiển thị</h3>
                     <p className="text-sm text-white/40 mt-1">Danh mục này sẽ hiển thị trên menu chính của website</p>
                   </div>
-                  <div
+                  <div 
                     onClick={() => handleToggleActive(activeCategory)}
                     className={cn(
                       "w-12 h-6 rounded-full p-1 cursor-pointer transition-colors relative",
                       activeCategory.isActive ? "bg-emerald-500" : "bg-white/10"
                     )}
                   >
-                    <motion.div
+                    <motion.div 
                       layout className="w-4 h-4 rounded-full bg-white shadow-sm"
                       animate={{ x: activeCategory.isActive ? 24 : 0 }}
                       transition={{ type: "spring", stiffness: 500, damping: 30 }}

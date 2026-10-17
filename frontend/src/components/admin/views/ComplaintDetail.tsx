@@ -16,7 +16,7 @@ export function ComplaintDetail({ complaint, onBack }: { complaint: any, onBack:
   const [status, setStatus] = useState(complaint.status);
   const [reply, setReply] = useState(complaint.resolution || '');
   const [isUpdating, setIsUpdating] = useState(false);
-
+  
   const statusInfo = STATUS_MAP[status] || STATUS_MAP.PENDING;
   const StatusIcon = statusInfo.icon;
 
@@ -59,7 +59,7 @@ export function ComplaintDetail({ complaint, onBack }: { complaint: any, onBack:
     <div className="flex flex-col h-full gap-6 text-white w-full overflow-hidden">
       {/* HEADER */}
       <div className="flex items-center gap-4 shrink-0">
-        <button
+        <button 
           onClick={onBack}
           className="p-2 bg-white/5 hover:bg-white/10 rounded-xl transition-colors"
         >
@@ -85,8 +85,8 @@ export function ComplaintDetail({ complaint, onBack }: { complaint: any, onBack:
             <h3 className="text-xs font-bold text-white/40 uppercase tracking-wider mb-4">Thông tin khách hàng</h3>
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
-                <span className="text-slate-500 block mb-1">Họ tên</span>
-                <span className="font-semibold text-slate-900">{complaint.customer?.fullName || 'Khách hàng'}</span>
+                <span className="text-white/40 block mb-1">Họ tên</span>
+                <span className="font-medium">{complaint.customer?.fullName}</span>
               </div>
               <div>
                 <span className="text-white/40 block mb-1">Số điện thoại</span>
@@ -104,9 +104,9 @@ export function ComplaintDetail({ complaint, onBack }: { complaint: any, onBack:
             <h3 className="text-xs font-bold text-white/40 uppercase tracking-wider mb-4">Sản phẩm & Đơn hàng</h3>
             <div className="flex gap-4 p-4 rounded-xl bg-white/5 border border-white/5">
               <div className="w-20 h-20 bg-black/50 rounded-lg overflow-hidden shrink-0 border border-white/10">
-                <img
-                  src={complaint.product?.image?.startsWith('/uploads') ? `${import.meta.env.VITE_API_URL || 'http://localhost:3001'}${complaint.product.image}` : (complaint.product?.image || 'https://via.placeholder.com/150')}
-                  alt="Product"
+                <img 
+                  src={complaint.product?.image?.startsWith('/uploads') ? `${import.meta.env.VITE_API_URL || 'http://localhost:3001'}${complaint.product.image}` : (complaint.product?.image || 'https://via.placeholder.com/150')} 
+                  alt="Product" 
                   className="w-full h-full object-cover"
                 />
               </div>

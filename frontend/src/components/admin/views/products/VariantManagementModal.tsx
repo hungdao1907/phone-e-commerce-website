@@ -59,10 +59,10 @@ export function VariantManagementModal({ product, onClose, onSaved }: VariantMan
         },
         body: JSON.stringify(payload)
       });
-
+      
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Lỗi khi lưu biến thể');
-
+      
       onSaved();
     } catch (err: any) {
       setErrorMsg(err.message);
@@ -76,7 +76,7 @@ export function VariantManagementModal({ product, onClose, onSaved }: VariantMan
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose}></div>
-      <motion.div
+      <motion.div 
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.95 }}
@@ -163,12 +163,12 @@ export function VariantManagementModal({ product, onClose, onSaved }: VariantMan
           <button onClick={onClose} disabled={isSaving} className="px-5 py-2 rounded-xl text-sm font-medium text-white/70 hover:bg-white/10 transition-colors">
             Hủy
           </button>
-          <button
-            onClick={handleSave}
+          <button 
+            onClick={handleSave} 
             disabled={isSaving}
             className="px-5 py-2 rounded-xl text-sm font-medium bg-emerald-500 text-black hover:bg-emerald-400 transition-colors flex items-center gap-2 shadow-[0_0_15px_rgba(52,211,153,0.2)] disabled:opacity-50"
           >
-            {isSaving ? <div className="w-4 h-4 border-2 border-black/20 border-t-black rounded-full animate-spin"/> : <Save className="w-4 h-4" />}
+            {isSaving ? <div className="w-4 h-4 border-2 border-black/20 border-t-black rounded-full animate-spin"/> : <Save className="w-4 h-4" />} 
             {isSaving ? 'Đang lưu...' : 'Lưu thay đổi'}
           </button>
         </div>

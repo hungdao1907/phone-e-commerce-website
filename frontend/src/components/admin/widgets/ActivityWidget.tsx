@@ -62,12 +62,18 @@ export function ActivityWidget() {
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ delay: 0.4, duration: 0.5 }}
-      className="bg-gradient-to-br from-[#5A827E]/90 to-[#26667F]/90 backdrop-blur-md  border border-white/[0.08] rounded-2xl flex flex-col h-full overflow-hidden"
+      className="backdrop-blur-md flex flex-col h-full overflow-hidden relative"
+      style={{
+        background: 'linear-gradient(145deg, #10241B 0%, #09140F 100%)',
+        border: '1px solid rgba(74, 222, 128, 0.14)',
+        borderRadius: '20px',
+        boxShadow: '0 10px 30px rgba(0, 0, 0, 0.45)'
+      }}
     >
       {/* Header */}
       <div className="px-5 pt-5 pb-3 flex items-center justify-between shrink-0">
         <h3 className="text-white font-semibold text-sm">Activities</h3>
-        <button className="text-white/30 hover:text-white/60 transition-colors">
+        <button className="text-[#86A899]/50 hover:text-white transition-colors">
           <ArrowRight className="w-4 h-4" />
         </button>
       </div>

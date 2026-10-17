@@ -209,8 +209,7 @@ export default function App() {
 
               {/* Dashboard Route Protected by Authentication */}
               <Route element={<ProtectedRoute allowedRoles={['superadmin', 'admin', 'manager', 'user', 'staff']} />}>
-                <Route path="/dashboard" element={<DashboardLayout />} />
-                <Route path="/dashboard/:view" element={<DashboardLayout />} />
+                <Route path="/dashboard/:view?" element={<DashboardLayout />} />
                 <Route path="/staff" element={<Navigate to="/dashboard" replace />} />
                 <Route path="/staff/quotations" element={<Navigate to="/dashboard/quotations" replace />} />
                 <Route path="/staff/orders" element={<Navigate to="/dashboard/orders" replace />} />

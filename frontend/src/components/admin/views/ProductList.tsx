@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Plus, Edit2, Trash2, X, Package, RefreshCw, ChevronDown, ChevronRight, ArrowLeft, Image as ImageIcon, Zap, Upload, LayoutGrid, List, ArrowDownUp, Download } from 'lucide-react';
+import { Search, Plus, Edit2, Trash2, X, Package, RefreshCw, ChevronDown, ChevronRight, ArrowLeft, Image as ImageIcon, Zap, Upload, LayoutGrid, List, Download } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { AdminSelect } from '@/components/admin/common/AdminSelect';
 
 import { AdminProductFilterSidebar } from './products/AdminProductFilterSidebar';
 import { AdminProductCard } from './products/AdminProductCard';
@@ -141,13 +140,12 @@ const PREDEFINED_OPTIONS: Record<string, string[]> = {
   "Chất liệu": ["Nhôm", "Nhôm Armor", "Titan", "Thép không gỉ", "Hợp kim nhôm"]
 };
 
-export function ProductList({ readOnly }: { readOnly?: boolean } = {}) {
+export function ProductList() {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [search, setSearch] = useState('');
   const [isLoading, setIsLoading] = useState(true);
-  const { token, user } = useAuthStore();
-  const isStaff = user?.role === 'staff';
+  const { token } = useAuthStore();
   const [view, setView] = useState<'list' | 'form'>('list');
 
   // --- Admin List State ---
@@ -202,7 +200,7 @@ export function ProductList({ readOnly }: { readOnly?: boolean } = {}) {
       if (listStatus) url.searchParams.append('status', listStatus);
       if (listStock) url.searchParams.append('stock', listStock);
       if (listSort) url.searchParams.append('sort', listSort);
-
+      
       Object.entries(listFilters).forEach(([key, values]) => {
         if (values.length > 0) {
           url.searchParams.append(key, values.join(','));
@@ -359,17 +357,19 @@ export function ProductList({ readOnly }: { readOnly?: boolean } = {}) {
     for (const cat of cats) {
       result.push({ id: cat.id, name: cat.name, slug: (cat as any).slug || '', depth });
       if (cat.children) {
-        result = result.concat(flattenCategories(cat.children, depth + 1));
+        if (cat.children && Array.isArray(cat.children) && cat.children.length > 0) {
+          result = result.concat(flattenCategories(cat.children, depth + 1));
+        }
       }
     }
     return result;
   };
-  const flatCats = flattenCategories(categories);
+  const flatCats = flattenCategories(categories || []);
   const selectableFormCategories = flatCats.filter((category) => (
-    Boolean(NAVBAR_CATEGORY_FAMILY_BY_SLUG[category.slug.toLowerCase()])
+    Boolean(category?.slug && NAVBAR_CATEGORY_FAMILY_BY_SLUG[category.slug.toLowerCase()])
   ));
   const filteredCats = selectableFormCategories.filter((category) => (
-    category.name.toLowerCase().includes(catSearch.toLowerCase())
+    Boolean(category?.name && category.name.toLowerCase().includes((catSearch || '').toLowerCase()))
   ));
 
   // Category Configuration logic
@@ -432,7 +432,7 @@ export function ProductList({ readOnly }: { readOnly?: boolean } = {}) {
     try {
       const uploadData = new FormData();
       uploadData.append('image', file);
-      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/upload`, { method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: uploadData });
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/upload`, { method: 'POST', body: uploadData });
       const data = await res.json();
       if (data.imageUrl) {
         setVariantOptions(prev => {
@@ -440,7 +440,7 @@ export function ProductList({ readOnly }: { readOnly?: boolean } = {}) {
           const attrArr = [...(newOpts[attrKey] || [])];
           if (attrArr[optIndex]) {
             attrArr[optIndex] = { ...attrArr[optIndex], image: data.imageUrl };
-
+            
             // Auto update image in variantRows that match this color
             if (attrKey === 'Màu sắc') {
               setVariantRows(currentRows => currentRows.map(row => {
@@ -474,15 +474,15 @@ export function ProductList({ readOnly }: { readOnly?: boolean } = {}) {
       if (file.size > 5 * 1024 * 1024) throw new Error(`Ảnh vượt quá 5MB`);
       const uploadData = new FormData();
       uploadData.append('image', file);
-      const res = await fetch(`${API_BASE_URL}/api/upload`, { method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: uploadData });
+      const res = await fetch(`${API_BASE_URL}/api/upload`, { method: 'POST', body: uploadData });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Lỗi tải ảnh');
-
+      
       const newImages = [...formData.images];
       newImages[slotIndex] = data.url || data.imageUrl;
-
-      setFormData(prev => ({
-        ...prev,
+      
+      setFormData(prev => ({ 
+        ...prev, 
         images: newImages,
         image: newImages[0] || prev.image
       }));
@@ -515,9 +515,10 @@ export function ProductList({ readOnly }: { readOnly?: boolean } = {}) {
         const file = files[i];
         const uploadData = new FormData();
         uploadData.append('image', file);
-        const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/upload`, { method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: uploadData });
+        const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/upload`, { method: 'POST', body: uploadData });
+        
         if (!res.ok) throw new Error('Upload failed');
-
+        
         const data = await res.json();
         if (data.url || data.imageUrl) {
           newUrls.push(data.url || data.imageUrl);
@@ -569,20 +570,20 @@ export function ProductList({ readOnly }: { readOnly?: boolean } = {}) {
       setSpecImages(imageSpecs.map(s => s.url || '').filter(Boolean));
 
       const realGroups = specs.filter(s => s.type !== 'specImage');
-
+      
       // Check if it's already in the nested format (has title or items array)
       const isNested = realGroups.some(g => g.title !== undefined || Array.isArray(g.items));
-
+      
       if (isNested) {
         const parsedGroups = realGroups.map((g: any) => {
           let title = g.title;
           if (title === undefined) title = g.key || '';
-          const items = Array.isArray(g.items)
+          const items = Array.isArray(g.items) 
             ? g.items.map((i: any) => ({ label: i.label || i.key || '', value: i.value || '' }))
             : (g.label || g.key ? [{ label: g.label || g.key || '', value: g.value || '' }] : []);
           return { title, items };
         });
-
+        
         // Filter out completely empty groups
         setSpecGroups(parsedGroups.filter(g => g.title || g.items.length > 0));
       } else if (realGroups.length > 0) {
@@ -598,7 +599,7 @@ export function ProductList({ readOnly }: { readOnly?: boolean } = {}) {
     }
 
     const existingOptions: Record<string, Map<string, VariantOption>> = {};
-
+    
     product.variants.forEach(v => {
       Object.entries(v.attributes || {}).forEach(([attrKey, attrValue]) => {
         if (!existingOptions[attrKey]) {
@@ -644,10 +645,10 @@ export function ProductList({ readOnly }: { readOnly?: boolean } = {}) {
   const handleGenerateVariants = () => {
     const keys = currentConfig.variants;
     const baseSku = formData.name ? generateSkuPart(formData.name.substring(0, 4)) : 'SKU';
-
+    
     // Check if any variant options exist
     const hasAnyOption = keys.some(key => variantOptions[key] && variantOptions[key].length > 0);
-
+    
     if (!hasAnyOption) {
       const defaultExisting = variantRows[0];
       setVariantRows([{
@@ -664,9 +665,9 @@ export function ProductList({ readOnly }: { readOnly?: boolean } = {}) {
     }
 
     const generateCombinations = (
-      keysList: string[],
-      currentAttr: Record<string, string>,
-      currentColor: VariantOption | null,
+      keysList: string[], 
+      currentAttr: Record<string, string>, 
+      currentColor: VariantOption | null, 
       currentPriceMap: number
     ): VariantFormRow[] => {
       if (keysList.length === 0) {
@@ -693,7 +694,7 @@ export function ProductList({ readOnly }: { readOnly?: boolean } = {}) {
 
       const key = keysList[0];
       const options = variantOptions[key] || [];
-
+      
       if (options.length === 0) {
         return generateCombinations(keysList.slice(1), currentAttr, currentColor, currentPriceMap);
       }
@@ -848,10 +849,10 @@ export function ProductList({ readOnly }: { readOnly?: boolean } = {}) {
 
         <div className="flex-1 overflow-y-auto custom-scrollbar pb-6">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-
+            
             {/* LEFT COLUMN */}
             <div className="lg:col-span-8 space-y-6">
-
+            
             {/* THÔNG TIN CƠ BẢN */}
             <div className="bg-[#1c1c1e] border border-white/10 rounded-2xl p-6">
               <h3 className="text-sm font-semibold text-white/50 uppercase tracking-wider mb-4">THÔNG TIN CƠ BẢN</h3>
@@ -862,61 +863,21 @@ export function ProductList({ readOnly }: { readOnly?: boolean } = {}) {
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="relative">
-                    <label className="block text-xs font-semibold text-slate-700 mb-1.5">Danh mục *</label>
-                    <div
-                      className={cn(
-                        "w-full h-11 bg-white border rounded-xl px-4 text-sm flex items-center justify-between cursor-pointer transition-all shadow-xs select-none",
-                        isCatDropdownOpen
-                          ? "border-emerald-500 ring-2 ring-emerald-500/15 text-slate-900"
-                          : "border-slate-200 hover:border-slate-300 text-slate-700"
-                      )}
-                      onClick={() => setIsCatDropdownOpen(!isCatDropdownOpen)}
-                    >
-                      <span className={formData.categoryId ? "text-slate-900 font-semibold" : "text-slate-400"}>
-                        {formData.categoryId ? flatCats.find(c => c.id === formData.categoryId)?.name : "-- Chọn danh mục --"}
-                      </span>
-                      <ChevronDown className={cn("w-4 h-4 text-slate-400 transition-transform duration-200", isCatDropdownOpen && "rotate-180 text-emerald-600")} />
+                    <label className="block text-xs font-medium text-white/50 mb-1.5">Danh mục *</label>
+                    <div className="w-full h-11 bg-black/20 border border-white/10 rounded-xl px-4 text-sm flex items-center justify-between cursor-pointer hover:border-emerald-500 transition-colors" onClick={() => setIsCatDropdownOpen(!isCatDropdownOpen)}>
+                      <span className={formData.categoryId ? "text-white" : "text-white/40"}>{formData.categoryId ? flatCats.find(c => c.id === formData.categoryId)?.name : "-- Chọn --"}</span>
+                      <ChevronDown className="w-4 h-4 text-white/40" />
                     </div>
                     <AnimatePresence>
                       {isCatDropdownOpen && (
-                        <motion.div
-                          initial={{ opacity: 0, y: -6, scale: 0.98 }}
-                          animate={{ opacity: 1, y: 0, scale: 1 }}
-                          exit={{ opacity: 0, y: -6, scale: 0.98 }}
-                          transition={{ duration: 0.15, ease: [0.22, 1, 0.36, 1] }}
-                          className="absolute z-50 top-full left-0 right-0 mt-1.5 bg-white/95 backdrop-blur-xl border border-slate-200/90 rounded-2xl shadow-[0_16px_40px_-8px_rgba(15,23,42,0.18),0_4px_12px_-2px_rgba(15,23,42,0.08)] overflow-hidden max-h-64 flex flex-col p-1.5"
-                        >
-                          <div className="p-1.5 border-b border-slate-100 shrink-0 sticky top-0 bg-white/80 backdrop-blur-md z-10 mb-1">
-                            <input
-                              autoFocus
-                              type="text"
-                              placeholder="Tìm danh mục..."
-                              value={catSearch}
-                              onChange={e => setCatSearch(e.target.value)}
-                              onClick={e => e.stopPropagation()}
-                              className="w-full h-8 bg-slate-50 border border-slate-200 rounded-lg px-3 text-xs text-slate-900 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 transition-all placeholder:text-slate-400"
-                            />
+                        <motion.div initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 5 }} className="absolute z-50 top-full left-0 right-0 mt-2 bg-[#2a2a2c] border border-white/10 rounded-xl shadow-xl overflow-hidden max-h-64 flex flex-col">
+                          <div className="p-2 border-b border-white/10 shrink-0 sticky top-0 bg-[#2a2a2c] z-10">
+                            <input autoFocus type="text" placeholder="Tìm..." value={catSearch} onChange={e => setCatSearch(e.target.value)} onClick={e => e.stopPropagation()} className="w-full h-9 bg-black/30 border border-white/10 rounded-lg px-3 text-sm focus:outline-none focus:border-emerald-500" />
                           </div>
-                          <div className="overflow-y-auto custom-scrollbar p-0.5 space-y-0.5">
+                          <div className="overflow-y-auto custom-scrollbar p-1">
                             {filteredCats.map(c => (
-                              <div
-                                key={c.id}
-                                onClick={() => handleSelectCategory(c.id)}
-                                className={cn(
-                                  "px-3 py-2 text-xs rounded-xl cursor-pointer transition-all flex items-center justify-between",
-                                  formData.categoryId === c.id
-                                    ? "bg-emerald-50 text-emerald-800 font-bold border border-emerald-200/60 shadow-xs"
-                                    : "text-slate-700 hover:bg-slate-50 hover:text-slate-900 border border-transparent"
-                                )}
-                                style={{ paddingLeft: `${(c.depth * 14) + 12}px` }}
-                              >
-                                <div className="flex items-center gap-1.5 truncate">
-                                  {c.depth > 0 && <ChevronRight className="w-3 h-3 text-slate-400 shrink-0" />}
-                                  <span className="truncate">{c.name}</span>
-                                </div>
-                                {formData.categoryId === c.id && (
-                                  <span className="text-emerald-600 font-bold text-xs shrink-0">✓</span>
-                                )}
+                              <div key={c.id} onClick={() => handleSelectCategory(c.id)} className={cn("px-3 py-2 text-sm rounded-lg cursor-pointer hover:bg-white/10 flex items-center gap-2", formData.categoryId === c.id ? "bg-emerald-500/10 text-emerald-400" : "text-white/80")} style={{ paddingLeft: `${(c.depth * 12) + 12}px` }}>
+                                {c.depth > 0 && <ChevronRight className="w-3 h-3 text-white/30" />} {c.name}
                               </div>
                             ))}
                           </div>
@@ -943,7 +904,7 @@ export function ProductList({ readOnly }: { readOnly?: boolean } = {}) {
             {/* HÌNH ẢNH SẢN PHẨM */}
             <div className="bg-[#1c1c1e] border border-white/10 rounded-2xl p-6">
               <h3 className="text-sm font-semibold text-white/50 uppercase tracking-wider mb-4">HÌNH ẢNH SẢN PHẨM</h3>
-
+              
               {isUploading && <div className="text-xs text-emerald-400 animate-pulse mb-3">Đang tải ảnh lên...</div>}
 
               <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4">
@@ -983,13 +944,13 @@ export function ProductList({ readOnly }: { readOnly?: boolean } = {}) {
                 <h3 className="text-sm font-semibold text-white/50 uppercase tracking-wider">BIẾN THỂ</h3>
                 <span className="text-xs text-emerald-400 font-medium">({variantRows.length} biến thể)</span>
               </div>
-
+              
               <div className="space-y-6">
                 {/* Dynamic Variant tags based on Category */}
                 {currentConfig.variants.map(attrKey => {
                   const opts = variantOptions[attrKey] || [];
                   const isColor = attrKey === 'Màu sắc';
-
+                  
                   return (
                     <div key={attrKey} className="pb-4 border-b border-white/5 last:border-0 last:pb-0">
                       <label className="block text-xs font-medium text-emerald-400 mb-2">{attrKey}</label>
@@ -1007,9 +968,9 @@ export function ProductList({ readOnly }: { readOnly?: boolean } = {}) {
                                 setVariantOptions(newOpts);
                               }} className="text-white/40 hover:text-white/90 transition-colors p-0.5 rounded-md hover:bg-white/10"><X className="w-3.5 h-3.5"/></button>
                             </div>
-
+                            
                             {!isColor && (
-                              <input type="number" placeholder="Giá..." value={opt.price || ''} onChange={e => {
+                              <input type="number" placeholder="Giá..." value={opt.price || ''} onChange={e => { 
                                 const newOpts = { ...variantOptions };
                                 newOpts[attrKey][i].price = e.target.value;
                                 setVariantOptions(newOpts);
@@ -1028,28 +989,28 @@ export function ProductList({ readOnly }: { readOnly?: boolean } = {}) {
                             )}
                           </div>
                         ))}
-
+                        
                         <div className="flex items-center gap-2 bg-black/20 border border-white/10 rounded-xl px-3 py-2 h-auto">
                           {isColor && (
                             <input type="color" value={colorHexInput} onChange={e => setColorHexInput(e.target.value)} className="w-6 h-6 rounded cursor-pointer bg-transparent border-0 p-0 shrink-0" />
                           )}
-                          <input type="text" value={attrInputs[attrKey] || ''} onChange={e => setAttrInputs({...attrInputs, [attrKey]: e.target.value})}
-                            onKeyDown={e => {
-                              if (e.key === 'Enter') {
-                                e.preventDefault();
+                          <input type="text" value={attrInputs[attrKey] || ''} onChange={e => setAttrInputs({...attrInputs, [attrKey]: e.target.value})} 
+                            onKeyDown={e => { 
+                              if (e.key === 'Enter') { 
+                                e.preventDefault(); 
                                 const val = attrInputs[attrKey];
-                                if (val && !opts.find(o => o.name === val)) {
+                                if (val && !opts.find(o => o.name === val)) { 
                                   const newOpts = { ...variantOptions };
                                   newOpts[attrKey] = [...opts, { name: val, hex: isColor ? colorHexInput : undefined }];
                                   setVariantOptions(newOpts);
-                                  setAttrInputs({...attrInputs, [attrKey]: ''});
-                                }
-                              }
-                            }}
+                                  setAttrInputs({...attrInputs, [attrKey]: ''}); 
+                                } 
+                              } 
+                            }} 
                             placeholder={`Thêm ${attrKey}...`} className="w-28 bg-transparent text-sm focus:outline-none placeholder:text-white/30" />
                         </div>
                       </div>
-
+                      
                       {/* Predefined options */}
                       {isColor ? (
                         <div className="flex flex-wrap gap-2 mt-3">
@@ -1156,7 +1117,7 @@ export function ProductList({ readOnly }: { readOnly?: boolean } = {}) {
                       </button>
                     </div>
                   ))}
-
+                  
                   {specImages.length < 5 && (
                     <label className="w-24 h-24 rounded-lg border-2 border-dashed border-white/20 hover:border-emerald-500/50 flex flex-col items-center justify-center cursor-pointer transition-colors bg-white/5 flex-shrink-0">
                       <Upload className="w-5 h-5 text-white/40 mb-1" />
@@ -1183,59 +1144,72 @@ export function ProductList({ readOnly }: { readOnly?: boolean } = {}) {
 
   // ===== RENDER LIST VIEW =====
   return (
-    <div className="flex flex-col h-full gap-4 text-white w-full relative">
+    <div className="flex flex-col h-full gap-5 text-white w-full relative">
       {/* HEADER */}
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shrink-0 bg-[#A4CE95]/70 backdrop-blur-md p-4 rounded-2xl border border-white/10">
-        <div>
-          <h1 className="text-xl font-bold tracking-tight text-white">Sản phẩm</h1>
-          <p className="text-xs text-white/50 mt-1">Quản lý {pagination.total} sản phẩm</p>
+      <section className="header-glow-green px-7 py-5 flex flex-wrap items-center justify-between gap-4 shrink-0">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 rounded-2xl glass-btn-3d flex items-center justify-center text-emerald-300 shrink-0">
+            <Package className="w-6 h-6" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2.5">
+              <h1 className="text-2xl font-bold tracking-tight text-white">Sản phẩm</h1>
+              <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/20 text-[#2ee88a] border border-emerald-400/30">
+                {pagination.total} mặt hàng
+              </span>
+            </div>
+            <p className="text-xs text-zinc-400 mt-0.5">Quản lý danh mục sản phẩm, biến thể SKU và cảnh báo tồn kho</p>
+          </div>
         </div>
-
-        <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
+        
+        <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
           {/* Bulk Actions */}
           {selectedProductIds.length > 0 && (
-            <div className="flex items-center gap-2 bg-emerald-500/10 px-3 py-1.5 rounded-xl border border-emerald-500/20 mr-2">
-              <span className="text-xs text-emerald-400 font-medium">Đã chọn {selectedProductIds.length}</span>
+            <div className="flex items-center gap-2 glass-btn-3d px-3 py-1.5 rounded-xl border border-emerald-500/30 mr-1">
+              <span className="text-xs text-[#2ee88a] font-medium">Đã chọn {selectedProductIds.length}</span>
               <div className="h-4 w-px bg-emerald-500/20 mx-1"></div>
-              <button onClick={() => handleBulkAction('activate')} className="text-[10px] bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 px-2 py-1 rounded transition-colors">Hiện</button>
-              <button onClick={() => handleBulkAction('deactivate')} className="text-[10px] bg-orange-500/20 text-orange-400 hover:bg-orange-500/30 px-2 py-1 rounded transition-colors">Ẩn</button>
-              <button onClick={() => handleBulkAction('delete')} className="text-[10px] bg-red-500/20 text-red-400 hover:bg-red-500/30 px-2 py-1 rounded transition-colors">Xoá</button>
+              <button onClick={() => handleBulkAction('activate')} className="text-[10px] bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30 px-2 py-1 rounded transition-colors font-medium">Hiện</button>
+              <button onClick={() => handleBulkAction('deactivate')} className="text-[10px] bg-amber-500/20 text-amber-300 hover:bg-amber-500/30 px-2 py-1 rounded transition-colors font-medium">Ẩn</button>
+              <button onClick={() => handleBulkAction('delete')} className="text-[10px] bg-red-500/20 text-red-300 hover:bg-red-500/30 px-2 py-1 rounded transition-colors font-medium">Xoá</button>
             </div>
           )}
 
-          <div className="relative flex-1 md:w-64">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
-            <input
-              type="text"
-              placeholder="Tìm tên, SKU..."
-              value={search}
+          {/* Search */}
+          <div className="relative flex-1 sm:w-56 md:w-60">
+            <Search className="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+            <input 
+              type="text" 
+              placeholder="Tìm tên, SKU..." 
+              value={search} 
               onChange={e => setSearch(e.target.value)}
-              className="w-full h-10 pl-9 pr-4 rounded-xl bg-black/20 border border-white/10 text-sm outline-none focus:border-emerald-500 transition-colors placeholder:text-white/30"
+              className="w-full pl-10 pr-4 py-2 rounded-xl bg-black/45 border border-white/10 text-sm text-white placeholder-zinc-400 focus:outline-none focus:border-emerald-400/60 transition" 
             />
           </div>
 
-          <AdminSelect
-            value={listSort}
-            onChange={setListSort}
-            options={[
-              { value: 'newest', label: 'Mới nhất' },
-              { value: 'price_asc', label: 'Giá tăng dần' },
-              { value: 'price_desc', label: 'Giá giảm dần' },
-              { value: 'name_asc', label: 'Tên A-Z' },
-              { value: 'name_desc', label: 'Tên Z-A' },
-            ]}
-            icon={<ArrowDownUp className="w-3.5 h-3.5" />}
-            menuWidth="w-48"
-          />
+          {/* Sort */}
+          <div className="relative">
+            <select 
+              value={listSort} 
+              onChange={e => setListSort(e.target.value)}
+              className="glass-btn-3d px-4 py-2 pr-9 rounded-xl text-sm text-zinc-200 outline-none appearance-none cursor-pointer"
+            >
+              <option value="newest" className="bg-[#06120d] text-white">Mới nhất</option>
+              <option value="price_asc" className="bg-[#06120d] text-white">Giá tăng dần</option>
+              <option value="price_desc" className="bg-[#06120d] text-white">Giá giảm dần</option>
+              <option value="name_asc" className="bg-[#06120d] text-white">Tên A-Z</option>
+              <option value="name_desc" className="bg-[#06120d] text-white">Tên Z-A</option>
+            </select>
+            <ChevronDown className="w-4 h-4 text-zinc-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+          </div>
 
           {/* View Toggle */}
-          <div className="flex items-center bg-black/20 border border-white/10 rounded-xl p-1 h-10 shrink-0">
+          <div className="flex items-center p-1 rounded-xl bg-black/50 border border-white/10">
             <button
               onClick={() => setViewMode('grid')}
               aria-label="Chuyển sang dạng lưới"
               className={cn(
-                "p-1.5 rounded-lg flex items-center justify-center transition-all duration-200 w-9 h-full",
-                viewMode === 'grid' ? "bg-white/10 text-white shadow-sm" : "text-white/40 hover:text-white/80 hover:bg-white/5"
+                "p-1.5 rounded-lg transition-all duration-200",
+                viewMode === 'grid' ? "bg-emerald-500/25 text-[#2ee88a] border border-emerald-400/30 shadow-sm" : "text-zinc-400 hover:text-white"
               )}
             >
               <LayoutGrid className="w-4 h-4" />
@@ -1244,37 +1218,36 @@ export function ProductList({ readOnly }: { readOnly?: boolean } = {}) {
               onClick={() => setViewMode('list')}
               aria-label="Chuyển sang dạng danh sách"
               className={cn(
-                "p-1.5 rounded-lg flex items-center justify-center transition-all duration-200 w-9 h-full",
-                viewMode === 'list' ? "bg-white/10 text-white shadow-sm" : "text-white/40 hover:text-white/80 hover:bg-white/5"
+                "p-1.5 rounded-lg transition-all duration-200",
+                viewMode === 'list' ? "bg-emerald-500/25 text-[#2ee88a] border border-emerald-400/30 shadow-sm" : "text-zinc-400 hover:text-white"
               )}
             >
               <List className="w-4 h-4" />
             </button>
           </div>
 
-          <button onClick={handleExport} className="h-10 px-4 rounded-xl bg-slate-100 text-slate-700 flex items-center gap-2 border border-slate-200"><Download className="w-4 h-4" /> Export</button>
-          {!readOnly ? (
-            <>
-              <button onClick={() => setIsImportModalOpen(true)} className="h-10 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center gap-2 transition-colors text-sm font-semibold whitespace-nowrap border border-slate-200">
-                <Upload className="w-4 h-4" /> Import
-              </button>
-              <button onClick={handleOpenCreate} className="h-10 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white flex items-center gap-2 transition-colors text-sm font-bold shadow-sm whitespace-nowrap">
-                <Plus className="w-4 h-4" /> Thêm mới
-              </button>
-            </>
-          ) : (
-            <span className="h-10 px-4 rounded-xl bg-blue-50 text-blue-700 border border-blue-200 flex items-center text-xs font-semibold whitespace-nowrap">
-              Chế độ chỉ xem
-            </span>
-          )}
+          {/* Export */}
+          <button onClick={handleExport} className="glass-btn-3d px-4 py-2 rounded-xl text-sm font-medium text-zinc-200 flex items-center gap-2">
+            <Download className="w-4 h-4 text-emerald-300" /> Export
+          </button>
+
+          {/* Import */}
+          <button onClick={() => setIsImportModalOpen(true)} className="glass-btn-3d px-4 py-2 rounded-xl text-sm font-medium text-zinc-200 flex items-center gap-2">
+            <Upload className="w-4 h-4 text-amber-300" /> Import
+          </button>
+
+          {/* Add New */}
+          <button onClick={handleOpenCreate} className="btn-neon-primary px-5 py-2 rounded-xl text-sm flex items-center gap-2 font-semibold">
+            <Plus className="w-4 h-4" /> Thêm mới
+          </button>
         </div>
-      </div>
+      </section>
 
       {/* MAIN CONTENT AREA */}
-      <div className="flex-1 flex gap-6 min-h-0 relative">
+      <div className="flex-1 flex flex-col lg:flex-row gap-5 min-h-0 relative items-start">
         {/* SIDEBAR */}
-        <div className="hidden lg:block w-64 shrink-0 overflow-y-auto custom-scrollbar pb-4 pr-1">
-          <AdminProductFilterSidebar
+        <div className="w-full lg:w-64 xl:w-72 shrink-0">
+          <AdminProductFilterSidebar 
             categories={flatCats}
             currentCategory={listCategory}
             onCategoryChange={c => { setListCategory(c); setPagination(p => ({...p, page: 1})); }}
@@ -1290,46 +1263,57 @@ export function ProductList({ readOnly }: { readOnly?: boolean } = {}) {
           />
         </div>
 
-        {/* GRID VIEW */}
-        <div className="flex-1 flex flex-col min-h-0 bg-gradient-to-br from-[#5A827E]/90 to-[#26667F]/90 backdrop-blur-md border border-white/[0.08] rounded-2xl p-4 overflow-hidden">
-
-          <div className="flex items-center justify-between mb-4 text-xs font-semibold text-white/50 px-2 shrink-0">
-            <div className="flex items-center">
-              <label className="flex items-center gap-2 cursor-pointer hover:text-white transition-colors">
-                <input
-                  type="checkbox"
-                  className="rounded border-white/20 bg-transparent text-emerald-500 focus:ring-emerald-500 focus:ring-offset-gray-900"
-                  checked={listData.length > 0 && selectedProductIds.length === listData.length}
-                  onChange={(e) => {
-                    if (e.target.checked) {
-                      setSelectedProductIds(listData.map(p => p.id));
-                    } else {
-                      setSelectedProductIds([]);
-                    }
-                  }}
-                />
-                Chọn tất cả trang này
-              </label>
-              {isFetchingList && <div className="ml-4 flex items-center gap-2 text-emerald-400"><RefreshCw className="w-3 h-3 animate-spin"/> Đang tải...</div>}
+        {/* PRODUCT GRID / LIST PANEL */}
+        <div className="flex-1 w-full neon-panel p-6 flex flex-col justify-between min-h-[500px] overflow-hidden relative">
+          
+          {/* Header of Product Panel */}
+          <div className="flex items-center justify-between pb-4 mb-4 border-b border-white/10 shrink-0">
+            <label className="flex items-center gap-3 text-sm text-zinc-300 cursor-pointer select-none">
+              <input 
+                type="checkbox" 
+                className="neon-checkbox cursor-pointer"
+                checked={listData.length > 0 && selectedProductIds.length === listData.length}
+                onChange={(e) => {
+                  if (e.target.checked) {
+                    setSelectedProductIds(listData.map(p => p.id));
+                  } else {
+                    setSelectedProductIds([]);
+                  }
+                }}
+              />
+              <span>Chọn tất cả trang này</span>
+            </label>
+            <div className="flex items-center gap-3">
+              {isFetchingList && (
+                <div className="flex items-center gap-2 text-emerald-400 text-xs font-medium">
+                  <RefreshCw className="w-3.5 h-3.5 animate-spin"/> Đang tải...
+                </div>
+              )}
+              <span className="text-xs text-zinc-400">
+                Hiển thị <strong className="text-white">{listData.length}</strong> trên <strong className="text-white">{pagination.total}</strong> kết quả
+              </span>
             </div>
-            <div>{listData.length} kết quả</div>
           </div>
 
-          <div className="flex-1 overflow-y-auto custom-scrollbar pb-10">
+          {/* Cards or Table */}
+          <div className="flex-1 overflow-y-auto custom-scrollbar pb-6 pr-1">
             {listData.length === 0 && !isFetchingList ? (
-              <div className="h-full flex flex-col items-center justify-center text-white/40">
-                <Package className="w-12 h-12 mb-3 opacity-20" />
-                <p>Không tìm thấy sản phẩm nào</p>
+              <div className="h-full min-h-[300px] flex flex-col items-center justify-center text-zinc-400">
+                <div className="w-16 h-16 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mb-3">
+                  <Package className="w-8 h-8 text-emerald-300/40" />
+                </div>
+                <p className="text-sm font-medium">Không tìm thấy sản phẩm nào</p>
+                <p className="text-xs text-zinc-500 mt-1">Hãy thử thay đổi từ khóa hoặc bộ lọc</p>
               </div>
             ) : viewMode === 'grid' ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4 p-1">
                 {listData.map((product) => (
                   <AdminProductCard
                     key={product.id}
                     product={product}
                     isSelected={selectedProductIds.includes(product.id)}
                     onSelect={() => {
-                      setSelectedProductIds(prev =>
+                      setSelectedProductIds(prev => 
                         prev.includes(product.id) ? prev.filter(id => id !== product.id) : [...prev, product.id]
                       );
                     }}
@@ -1340,15 +1324,14 @@ export function ProductList({ readOnly }: { readOnly?: boolean } = {}) {
                     }}
                     onManageVariants={() => setShowVariantModalFor(product)}
                     viewMode="grid"
-                    canDelete={true}
                   />
                 ))}
               </div>
             ) : (
-              <div className="w-full overflow-x-auto p-2">
+              <div className="w-full overflow-x-auto p-1">
                 <table className="w-full text-left border-collapse">
                   <thead>
-                    <tr className="text-[11px] font-bold text-white/40 uppercase tracking-wider border-b border-white/10">
+                    <tr className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider border-b border-white/10">
                       <th className="p-3 w-10"></th>
                       <th className="p-3 min-w-[250px]">Sản phẩm</th>
                       <th className="p-3">Danh mục</th>
@@ -1377,7 +1360,6 @@ export function ProductList({ readOnly }: { readOnly?: boolean } = {}) {
                         }}
                         onManageVariants={() => setShowVariantModalFor(product)}
                         viewMode="list"
-                        canDelete={true}
                       />
                     ))}
                   </tbody>
@@ -1388,33 +1370,39 @@ export function ProductList({ readOnly }: { readOnly?: boolean } = {}) {
 
           {/* PAGINATION */}
           {pagination.totalPages > 1 && (
-            <div className="mt-4 pt-4 border-t border-white/10 flex items-center justify-between shrink-0 px-2">
-              <div className="text-xs text-white/40">
-                Trang {pagination.page} / {pagination.totalPages}
-              </div>
+            <div className="flex flex-wrap items-center justify-between gap-4 pt-5 mt-3 border-t border-white/10 shrink-0 px-2">
+              <span className="text-xs text-zinc-400">
+                Trang <strong className="text-white">{pagination.page}</strong> / {pagination.totalPages}
+              </span>
+
               <div className="flex items-center gap-2">
-                <button
+                <button 
                   disabled={pagination.page <= 1}
                   onClick={() => setPagination(p => ({ ...p, page: p.page - 1 }))}
-                  className="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-sm hover:bg-white/10 disabled:opacity-30 transition-colors"
+                  className="glass-btn-3d px-3.5 py-1.5 rounded-xl text-xs text-zinc-300 hover:text-white disabled:opacity-30 disabled:pointer-events-none transition-colors"
                 >
                   Trước
                 </button>
-                <div className="flex items-center gap-1 overflow-x-auto max-w-[200px] sm:max-w-none">
+                <div className="flex items-center gap-1.5 overflow-x-auto max-w-[200px] sm:max-w-none">
                   {Array.from({ length: pagination.totalPages }).map((_, i) => (
                     <button
                       key={i}
                       onClick={() => setPagination(p => ({ ...p, page: i + 1 }))}
-                      className={`w-8 h-8 shrink-0 rounded-lg text-sm flex items-center justify-center transition-colors ${pagination.page === i + 1 ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'hover:bg-white/10 text-white/60'}`}
+                      className={cn(
+                        "w-8 h-8 rounded-xl text-xs flex items-center justify-center transition-all",
+                        pagination.page === i + 1 
+                          ? "btn-neon-primary font-bold" 
+                          : "glass-btn-3d text-zinc-300 hover:text-white"
+                      )}
                     >
                       {i + 1}
                     </button>
                   ))}
                 </div>
-                <button
+                <button 
                   disabled={pagination.page >= pagination.totalPages}
                   onClick={() => setPagination(p => ({ ...p, page: p.page + 1 }))}
-                  className="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-sm hover:bg-white/10 disabled:opacity-30 transition-colors"
+                  className="glass-btn-3d px-3.5 py-1.5 rounded-xl text-xs text-zinc-300 hover:text-white disabled:opacity-30 disabled:pointer-events-none transition-colors"
                 >
                   Sau
                 </button>
@@ -1426,13 +1414,13 @@ export function ProductList({ readOnly }: { readOnly?: boolean } = {}) {
       </div>
 
       {showVariantModalFor && (
-        <VariantManagementModal
-          product={showVariantModalFor}
-          onClose={() => setShowVariantModalFor(null)}
+        <VariantManagementModal 
+          product={showVariantModalFor} 
+          onClose={() => setShowVariantModalFor(null)} 
           onSaved={() => {
             setShowVariantModalFor(null);
             fetchAdminProducts();
-          }}
+          }} 
         />
       )}
 

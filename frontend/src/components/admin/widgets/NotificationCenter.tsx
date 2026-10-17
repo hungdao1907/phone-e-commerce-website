@@ -203,21 +203,21 @@ export function NotificationCenter({ isOpen, onClose }: NotificationCenterProps)
           className={cn(
             'fixed right-0 top-0 bottom-0 z-[201] w-[400px] max-w-[90vw]',
             'flex flex-col',
-            'bg-[#0D1F16]/95 backdrop-blur-md',
-            'border-l border-white/10',
-            'shadow-[-20px_0_60px_rgba(0,0,0,0.4)]',
+            'bg-[#0B1D16]/95 backdrop-blur-md',
+            'border-l border-[rgba(46,232,138,0.15)]',
+            'shadow-[-20px_0_60px_rgba(0,0,0,0.5)]',
           )}
         >
             {/* ── Header ── */}
-            <div className="flex items-center justify-between px-5 py-4 border-b border-white/10 shrink-0">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-white/[0.08] shrink-0">
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-blue-500/20 border border-blue-500/30 flex items-center justify-center">
-                  <Bell className="w-4 h-4 text-blue-400" />
+                <div className="w-9 h-9 rounded-xl bg-[#2EE88A]/15 border border-[#2EE88A]/30 flex items-center justify-center">
+                  <Bell className="w-4 h-4 text-[#2EE88A]" />
                 </div>
                 <div>
                   <h2 className="text-white font-bold text-base leading-tight">Thông báo</h2>
                   {unreadCount > 0 && (
-                    <p className="text-[11px] text-white/40">{unreadCount} chưa đọc</p>
+                    <p className="text-[11px] text-[#86A899]">{unreadCount} chưa đọc</p>
                   )}
                 </div>
               </div>
@@ -226,15 +226,15 @@ export function NotificationCenter({ isOpen, onClose }: NotificationCenterProps)
                   <button
                     onClick={() => markAllRead()}
                     title="Đánh dấu tất cả đã đọc"
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 transition-colors text-white/50 hover:text-white/80 text-[11px] font-medium"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 transition-colors text-[#86A899] hover:text-white text-[11px] font-medium"
                   >
-                    <CheckCheck className="w-3.5 h-3.5" />
+                    <CheckCheck className="w-3.5 h-3.5 text-[#2EE88A]" />
                     Đọc tất cả
                   </button>
                 )}
                 <button
                   onClick={onClose}
-                  className="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center transition-colors text-white/50 hover:text-white/90"
+                  className="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center transition-colors text-[#86A899] hover:text-white"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -250,8 +250,8 @@ export function NotificationCenter({ isOpen, onClose }: NotificationCenterProps)
                   className={cn(
                     'px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all',
                     activeFilter === f.type
-                      ? 'bg-white/15 text-white border border-white/20'
-                      : 'bg-gradient-to-br from-[#5A827E]/90 to-[#26667F]/90 backdrop-blur-md text-white/40 border border-transparent hover:bg-white/[0.08] hover:text-white/60',
+                      ? 'bg-[#2EE88A] text-[#06120E] font-bold border border-[#2EE88A]'
+                      : 'bg-white/5 text-[#86A899] border border-white/5 hover:bg-white/10 hover:text-white',
                   )}
                 >
                   {f.label}
