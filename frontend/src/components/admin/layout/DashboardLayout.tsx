@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { VerticalDock } from './VerticalDock';
+import { dashboardViewPath, isQuotationView } from './dashboard-navigation';
 import InteractiveCalendar from '@/components/admin/widgets/InteractiveCalendar';
 import { SearchButton } from '@/components/admin/layout/SearchButton';
 import { ProductList } from '@/components/admin/views/ProductList';
@@ -56,7 +57,7 @@ export function DashboardLayout() {
   const [isNotifCenterOpen, setIsNotifCenterOpen] = useState(false);
 
   const handleNavigate = (newView: string) => {
-    navigate(newView === 'dashboard' ? '/dashboard' : `/dashboard/${newView}`);
+    navigate(dashboardViewPath(newView));
   };
 
   const handleOpenNotifCenter = useCallback(() => setIsNotifCenterOpen(true), []);
@@ -133,7 +134,7 @@ export function DashboardLayout() {
               <Complaints />
             ) : activeView === 'orders-invoices' ? (
               <Invoices />
-            ) : activeView === 'quotations' || activeView === 'quotations-list' || activeView === 'quotations-pending' || activeView === 'quotations-processed' ? (
+            ) : isQuotationView(activeView) ? (
               isStaff ? <StaffQuotations initialTab={activeView} /> : isAdmin ? <AdminQuotationAssignments /> : (
                 <div className="rounded-2xl border border-rose-200 bg-rose-50 p-5 text-sm text-rose-800">Chỉ Staff được phân công xem báo giá; chỉ Admin/Superadmin được quản lý phân công.</div>
               )
