@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Trash2, Edit2, Tag } from 'lucide-react';
+import { useAuthStore } from '@/store/authStore';
 
 interface PromoCode {
   id: string;
@@ -17,13 +18,16 @@ interface PromoCode {
 }
 
 export function PromoCodesSetting() {
+  const { token } = useAuthStore();
   const [promoCodes, setPromoCodes] = useState<PromoCode[]>([]);
   const [isAdding, setIsAdding] = useState(false);
   
   // Fetch campaigns
   const fetchCampaigns = async () => {
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/promo-codes`);
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/promo-codes`, {
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+      });
       if (res.ok) {
         const data = await res.json();
         setPromoCodes(data);
@@ -35,7 +39,7 @@ export function PromoCodesSetting() {
 
   useEffect(() => {
     fetchCampaigns();
-  }, []);
+  }, [token]);
   
   // States for form
   const [code, setCode] = useState('');
@@ -43,6 +47,7 @@ export function PromoCodesSetting() {
   const [minOrderValue, setMinOrderValue] = useState('');
   const [usageLimit, setUsageLimit] = useState('');
   const [expiresAt, setExpiresAt] = useState('');
+  const [discountType, setDiscountType] = useState<'fixed' | 'percentage'>('fixed');
 
   const handleAdd = async () => {
     if (!code || !discountAmount || !expiresAt) return;
@@ -50,11 +55,14 @@ export function PromoCodesSetting() {
     try {
       const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/promo-codes`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        },
         body: JSON.stringify({
           name: code.toUpperCase(),
           description: '',
-          discountType: 'fixed', // assume fixed amount for now, or percentage?
+          discountType,
           discountValue: Number(discountAmount),
           startDate: new Date().toISOString(),
           endDate: new Date(expiresAt).toISOString(),
@@ -67,12 +75,14 @@ export function PromoCodesSetting() {
         })
       });
 
+      const data = await res.json().catch(() => ({}));
+
       if (res.ok) {
         fetchCampaigns();
         setIsAdding(false);
         setCode(''); setDiscountAmount(''); setExpiresAt(''); setMinOrderValue(''); setUsageLimit('');
       } else {
-        alert('Tạo mã thất bại');
+        alert(data.message || 'Tạo mã thất bại');
       }
     } catch (error) {
       console.error(error);
@@ -84,7 +94,7 @@ export function PromoCodesSetting() {
     try {
       await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/promo-codes/${id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...(token ? { 'Authorization': `Bearer ${token}` } : {}) },
         body: JSON.stringify({ isActive: !currentActive })
       });
       fetchCampaigns();
@@ -97,7 +107,8 @@ export function PromoCodesSetting() {
     if(confirm('Xóa mã giảm giá này?')) {
       try {
         await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/promo-codes/${id}`, {
-          method: 'DELETE'
+          method: 'DELETE',
+          headers: token ? { 'Authorization': `Bearer ${token}` } : {}
         });
         fetchCampaigns();
       } catch (error) {
@@ -130,8 +141,24 @@ export function PromoCodesSetting() {
               <input type="text" value={code} onChange={e => setCode(e.target.value)} placeholder="VD: TET2026" className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white uppercase focus:outline-none focus:border-white/30" />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-white/60 mb-2">Mức giảm (VNĐ hoặc %)</label>
-              <input type="number" value={discountAmount} onChange={e => setDiscountAmount(e.target.value)} placeholder="VD: 100000" className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-white/30" />
+              <label className="block text-xs font-semibold text-white/60 mb-2">Mức giảm</label>
+              <div className="flex gap-2">
+                <input
+                  type="number"
+                  value={discountAmount}
+                  onChange={e => setDiscountAmount(e.target.value)}
+                  placeholder={discountType === 'percentage' ? 'VD: 10' : 'VD: 100000'}
+                  className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-white/30"
+                />
+                <select
+                  value={discountType}
+                  onChange={e => setDiscountType(e.target.value as "fixed" | "percentage")}
+                  className="bg-black/40 border border-white/10 rounded-xl px-3 py-2 text-xs font-semibold text-white focus:outline-none focus:border-white/30 shrink-0"
+                >
+                  <option value="fixed" className="bg-[#1c1c1e] text-white">VNĐ</option>
+                  <option value="percentage" className="bg-[#1c1c1e] text-white">%</option>
+                </select>
+              </div>
             </div>
             <div>
               <label className="block text-xs font-semibold text-white/60 mb-2">Đơn tối thiểu (VNĐ)</label>

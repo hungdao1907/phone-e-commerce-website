@@ -24,6 +24,42 @@ export function VariantManagementModal({ product, onClose, onSaved }: VariantMan
     }
   }, [product]);
 
+  const [isUploading, setIsUploading] = useState(false);
+
+  const handleUploadVariantImage = async (e: React.ChangeEvent<HTMLInputElement>, idx: number) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    setErrorMsg("");
+    try {
+      if (file.size > 5 * 1024 * 1024) throw new Error("Ảnh vượt quá 5MB");
+      const uploadData = new FormData();
+      uploadData.append("image", file);
+      const apiUrl = (import.meta.env.VITE_API_URL || "http://localhost:3001").replace(/\/$/, "");
+      const res = await fetch(`${apiUrl}/api/upload`, {
+        method: "POST",
+        headers: token ? { "Authorization": `Bearer ${token}` } : {},
+        body: uploadData
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Lỗi tải ảnh");
+      const uploadedUrl = data.url || data.imageUrl;
+      if (uploadedUrl) {
+        setVariants(prev => {
+          const next = [...prev];
+          if (next[idx]) next[idx] = { ...next[idx], image: uploadedUrl };
+          return next;
+        });
+      }
+    } catch (err: any) {
+      setErrorMsg(err.message || "Lỗi tải ảnh biến thể");
+    } finally {
+      setIsUploading(false);
+      if (e.target) e.target.value = "";
+    }
+  };
+
   const handleSave = async () => {
     setIsSaving(true);
     setErrorMsg('');
@@ -123,13 +159,16 @@ export function VariantManagementModal({ product, onClose, onSaved }: VariantMan
                       <tr key={idx} className="hover:bg-white/5 transition-colors">
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-3">
-                            {v.image ? (
-                              <img src={resolveMediaUrl(v.image)} alt="var" className="w-8 h-8 object-cover rounded bg-black/40 border border-white/10" />
-                            ) : v.colorCode ? (
-                              <div className="w-8 h-8 rounded border border-white/20" style={{ backgroundColor: v.colorCode }} />
-                            ) : (
-                              <div className="w-8 h-8 rounded bg-white/5 border border-white/10 flex items-center justify-center"><ImageIcon className="w-4 h-4 text-white/20"/></div>
-                            )}
+                            <label className="relative w-8 h-8 rounded overflow-hidden border border-white/20 hover:border-emerald-500 cursor-pointer flex items-center justify-center bg-black/40 group shrink-0" title="Nhấn để tải/đổi ảnh">
+                              {v.image ? (
+                                <img src={resolveMediaUrl(v.image)} alt="var" className="w-full h-full object-cover" />
+                              ) : v.colorCode ? (
+                                <div className="w-full h-full" style={{ backgroundColor: v.colorCode }} />
+                              ) : (
+                                <ImageIcon className="w-4 h-4 text-white/20 group-hover:text-emerald-400" />
+                              )}
+                              <input type="file" accept="image/*" className="hidden" onChange={e => handleUploadVariantImage(e, idx)} disabled={isUploading} />
+                            </label>
                             <span className="font-medium text-white/90">{variantName}</span>
                           </div>
                         </td>

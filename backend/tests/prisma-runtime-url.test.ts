@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { applyPrismaRuntimeUrl, resolvePrismaRuntimeUrl } from '../src/config/prisma-runtime-url';
 
-test('persistent backend prefers explicit runtime URL, then the Supabase session/direct URL', () => {
+test('persistent backend prefers explicit runtime URL, then Supabase session/direct URL', () => {
   assert.equal(resolvePrismaRuntimeUrl({
     PRISMA_RUNTIME_URL: ' postgres://runtime ',
     DIRECT_URL: 'postgres://session',
@@ -14,8 +14,9 @@ test('persistent backend prefers explicit runtime URL, then the Supabase session
   }), 'postgres://session');
 });
 
-test('Prisma runtime URL falls back to DATABASE_URL and handles missing values', () => {
-  assert.equal(resolvePrismaRuntimeUrl({ DATABASE_URL: ' postgres://transaction ' }), 'postgres://transaction');
+test('Prisma runtime URL falls back to DATABASE_URL only when DIRECT_URL is absent', () => {
+  assert.equal(resolvePrismaRuntimeUrl({ DIRECT_URL: ' postgres://session ' }), 'postgres://session');
+  assert.equal(resolvePrismaRuntimeUrl({ DATABASE_URL: ' postgres://fallback ' }), 'postgres://fallback');
   assert.equal(resolvePrismaRuntimeUrl({}), undefined);
 });
 
