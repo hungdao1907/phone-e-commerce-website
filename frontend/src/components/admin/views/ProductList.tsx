@@ -13,7 +13,7 @@ import { SpecificationGroupEditor, SpecGroup } from '../editors/SpecificationGro
 import { useAuthStore } from '@/store/authStore';
 import { resolveMediaUrl } from '@/utils/media';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL ?? `${import.meta.env.VITE_API_URL || 'http://localhost:3001'}`;
+const API_BASE_URL = (import.meta.env.VITE_API_URL || 'http://localhost:3001').replace(/\/$/, '');
 
 // --- TYPES ---
 interface ProductVariant {
@@ -429,23 +429,31 @@ export function ProductList() {
     const file = e.target.files?.[0];
     if (!file) return;
     setIsUploading(true);
+    setErrorMsg('');
     try {
+      if (file.size > 5 * 1024 * 1024) throw new Error('Ảnh vượt quá 5MB');
       const uploadData = new FormData();
       uploadData.append('image', file);
-      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/upload`, { method: 'POST', body: uploadData });
+      const res = await fetch(`${API_BASE_URL}/api/upload`, {
+        method: 'POST',
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+        body: uploadData
+      });
       const data = await res.json();
-      if (data.imageUrl) {
+      if (!res.ok) throw new Error(data.message || 'Lỗi tải ảnh màu');
+      const uploadedUrl = data.url || data.imageUrl;
+      if (uploadedUrl) {
         setVariantOptions(prev => {
           const newOpts = { ...prev };
           const attrArr = [...(newOpts[attrKey] || [])];
           if (attrArr[optIndex]) {
-            attrArr[optIndex] = { ...attrArr[optIndex], image: data.imageUrl };
+            attrArr[optIndex] = { ...attrArr[optIndex], image: uploadedUrl };
             
             // Auto update image in variantRows that match this color
             if (attrKey === 'Màu sắc') {
               setVariantRows(currentRows => currentRows.map(row => {
                 if (row.attributes['Màu sắc'] === attrArr[optIndex].name) {
-                  return { ...row, image: data.imageUrl };
+                  return { ...row, image: uploadedUrl };
                 }
                 return row;
               }));
@@ -455,10 +463,48 @@ export function ProductList() {
           return newOpts;
         });
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error uploading color image', err);
+      setErrorMsg(err.message || 'Lỗi khi tải ảnh màu');
     } finally {
       setIsUploading(false);
+      if (e.target) e.target.value = '';
+    }
+  };
+
+  const handleUploadVariantRowImage = async (e: React.ChangeEvent<HTMLInputElement>, rowIndex: number) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    setErrorMsg('');
+    try {
+      if (file.size > 5 * 1024 * 1024) throw new Error('Ảnh vượt quá 5MB');
+      const uploadData = new FormData();
+      uploadData.append('image', file);
+      const res = await fetch(`${API_BASE_URL}/api/upload`, {
+        method: 'POST',
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+        body: uploadData
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Lỗi tải ảnh biến thể');
+      const uploadedUrl = data.url || data.imageUrl;
+      if (uploadedUrl) {
+        setVariantRows(prev => {
+          const next = [...prev];
+          if (next[rowIndex]) {
+            next[rowIndex] = { ...next[rowIndex], image: uploadedUrl };
+          }
+          return next;
+        });
+      }
+    } catch (err: any) {
+      console.error('Error uploading variant row image', err);
+      setErrorMsg(err.message || 'Lỗi khi tải ảnh biến thể');
+    } finally {
+      setIsUploading(false);
+      if (e.target) e.target.value = '';
     }
   };
 
@@ -474,12 +520,17 @@ export function ProductList() {
       if (file.size > 5 * 1024 * 1024) throw new Error(`Ảnh vượt quá 5MB`);
       const uploadData = new FormData();
       uploadData.append('image', file);
-      const res = await fetch(`${API_BASE_URL}/api/upload`, { method: 'POST', body: uploadData });
+      const res = await fetch(`${API_BASE_URL}/api/upload`, {
+        method: 'POST',
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+        body: uploadData
+      });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Lỗi tải ảnh');
       
+      const uploadedUrl = data.url || data.imageUrl;
       const newImages = [...formData.images];
-      newImages[slotIndex] = data.url || data.imageUrl;
+      newImages[slotIndex] = uploadedUrl;
       
       setFormData(prev => ({ 
         ...prev, 
@@ -487,7 +538,7 @@ export function ProductList() {
         image: newImages[0] || prev.image
       }));
     } catch (error: any) {
-      setErrorMsg(error.message);
+      setErrorMsg(error.message || 'Lỗi tải ảnh');
     } finally {
       setIsUploading(false);
       if (e.target) e.target.value = '';
@@ -509,25 +560,35 @@ export function ProductList() {
     if (!files || files.length === 0) return;
 
     setIsUploading(true);
+    setErrorMsg('');
     try {
       const newUrls: string[] = [];
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
+        if (file.size > 5 * 1024 * 1024) throw new Error(`Ảnh "${file.name}" vượt quá 5MB`);
         const uploadData = new FormData();
         uploadData.append('image', file);
-        const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/upload`, { method: 'POST', body: uploadData });
+        const res = await fetch(`${API_BASE_URL}/api/upload`, {
+          method: 'POST',
+          headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+          body: uploadData
+        });
         
-        if (!res.ok) throw new Error('Upload failed');
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(errData.message || 'Lỗi khi tải ảnh thông số');
+        }
         
         const data = await res.json();
-        if (data.url || data.imageUrl) {
-          newUrls.push(data.url || data.imageUrl);
+        const uploadedUrl = data.url || data.imageUrl;
+        if (uploadedUrl) {
+          newUrls.push(uploadedUrl);
         }
       }
       setSpecImages(prev => [...prev, ...newUrls]);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error uploading spec images', err);
-      alert('Lỗi khi tải ảnh lên');
+      setErrorMsg(err.message || 'Lỗi khi tải ảnh thông số');
     } finally {
       setIsUploading(false);
       if (e.target) e.target.value = '';
@@ -1077,11 +1138,16 @@ export function ProductList() {
                             <tr key={idx} className="hover:bg-white/5 transition-colors">
                               <td className="px-4 py-3 font-medium text-white/90">
                                 <div className="flex items-center gap-2">
-                                  {row.image ? (
-                                    <img src={resolveMediaUrl(row.image)} alt="v" className="w-6 h-6 object-cover rounded border border-white/10" />
-                                  ) : row.colorCode ? (
-                                    <span className="w-4 h-4 rounded-full border border-white/20 inline-block shrink-0" style={{ backgroundColor: row.colorCode }} />
-                                  ) : null}
+                                  <label className="relative w-7 h-7 rounded border border-white/20 hover:border-emerald-500 overflow-hidden cursor-pointer flex items-center justify-center shrink-0 bg-black/40 group/vimg" title="Nhấn để đổi ảnh biến thể">
+                                    {row.image ? (
+                                      <img src={resolveMediaUrl(row.image)} alt="v" className="w-full h-full object-cover" />
+                                    ) : row.colorCode ? (
+                                      <span className="w-full h-full" style={{ backgroundColor: row.colorCode }} />
+                                    ) : (
+                                      <Upload className="w-3.5 h-3.5 text-white/40 group-hover/vimg:text-emerald-400" />
+                                    )}
+                                    <input type="file" accept="image/*" className="hidden" onChange={e => handleUploadVariantRowImage(e, idx)} disabled={isUploading} />
+                                  </label>
                                   <span>{variantName}</span>
                                 </div>
                               </td>
