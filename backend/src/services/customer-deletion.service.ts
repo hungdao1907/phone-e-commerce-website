@@ -25,7 +25,7 @@ export async function deleteCustomerSafely(database: PrismaClient, customerId: s
       throw new CustomerDeletionError('NOT_FOUND', 'Không tìm thấy khách hàng.');
     }
 
-    const [orders, payments, invoices, quotations, disputes, reviews, wishlists] = await Promise.all([
+    const [orders, payments, invoices, quotations, disputes, reviews, wishlists, quotationKeys] = await Promise.all([
       tx.order.count({ where: { customerId } }),
       tx.payment.count({ where: { order: { customerId } } }),
       tx.invoice.count({ where: { order: { customerId } } }),
@@ -33,12 +33,17 @@ export async function deleteCustomerSafely(database: PrismaClient, customerId: s
       tx.dispute.count({ where: { customerId } }),
       tx.review.count({ where: { customerId } }),
       tx.wishlist.count({ where: { customerId } }),
+      tx.quotationCreateIdempotency.count({ where: { customerId } }),
     ]);
 
-    if (orders + payments + invoices + quotations + disputes + reviews + wishlists > 0) {
+    if (orders + payments + invoices + quotations + disputes + reviews + wishlists + quotationKeys > 0) {
+      const dependencies = [
+        ['đơn hàng', orders], ['thanh toán', payments], ['hóa đơn', invoices], ['báo giá', quotations],
+        ['khiếu nại', disputes], ['đánh giá', reviews], ['yêu thích', wishlists], ['khóa idempotency báo giá', quotationKeys],
+      ].filter(([, count]) => Number(count) > 0).map(([label, count]) => `${label}: ${count}`).join(', ');
       throw new CustomerDeletionError(
         'PROTECTED_HISTORY',
-        'Không thể xóa khách hàng vì còn đơn hàng hoặc dữ liệu liên quan cần được bảo toàn.',
+        `Không thể xóa khách hàng vì còn dữ liệu liên quan cần được bảo toàn (${dependencies}).`,
       );
     }
 

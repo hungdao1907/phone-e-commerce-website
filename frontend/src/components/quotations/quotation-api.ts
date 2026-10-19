@@ -41,6 +41,7 @@ export function quotationApiEnabled(): boolean {
 }
 
 export type CustomerQuotationCreateRequest = {
+  recipientName?: string;
   items: Array<{ variantId: string; quantity: number }>;
   shippingAddress: string;
   shippingPhone: string;

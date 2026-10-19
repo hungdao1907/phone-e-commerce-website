@@ -5,10 +5,11 @@ export type CheckoutIntentPayload = {
   paymentMethod?: string | null;
   shippingAddress: string;
   shippingPhone: string;
+  recipientName?: string;
   note?: string | null;
 };
 
-export type CheckoutIntent = { key: string; estimatedDelivery: string };
+export type CheckoutIntent = { key: string; estimatedDelivery: string; omitRecipientName?: boolean };
 
 type StorageLike = Pick<Storage, 'getItem' | 'setItem' | 'removeItem'>;
 type CryptoLike = Pick<Crypto, 'subtle' | 'getRandomValues'>;
@@ -37,6 +38,7 @@ function canonicalIntent(customerId: string, payload: CheckoutIntentPayload): st
     shippingAddress: payload.shippingAddress,
     shippingPhone: payload.shippingPhone,
     note: payload.note ?? null,
+    ...(payload.recipientName === undefined ? {} : { recipientName: payload.recipientName.trim() }),
   };
   return JSON.stringify(normalized);
 }
@@ -80,21 +82,26 @@ export async function getCheckoutIntent(
   storage?: StorageLike,
   cryptoApi?: CryptoLike,
   now = Date.now(),
+  isCurrentSession: () => boolean = () => true,
 ): Promise<CheckoutIntent> {
   const targetStorage = getStorage(storage);
   const targetCrypto = getCrypto(cryptoApi);
   const recordKey = storageKey(customerId);
   const fingerprint = await sha256(canonicalIntent(customerId, payload), targetCrypto);
+  const legacyFingerprint = payload.recipientName === undefined ? null
+    : await sha256(canonicalIntent(customerId, { ...payload, recipientName: undefined }), targetCrypto);
+  if (!isCurrentSession()) throw new Error('Checkout account changed before retry key creation.');
 
   try {
     const previous = targetStorage.getItem(recordKey);
     if (previous) {
       try {
         const parsed = JSON.parse(previous) as Partial<CheckoutIntent & { fingerprint: string }>;
-        if (parsed.fingerprint === fingerprint
+        if ((parsed.fingerprint === fingerprint || parsed.fingerprint === legacyFingerprint)
           && typeof parsed.key === 'string'
           && typeof parsed.estimatedDelivery === 'string') {
-          return { key: parsed.key, estimatedDelivery: parsed.estimatedDelivery };
+          return { key: parsed.key, estimatedDelivery: parsed.estimatedDelivery,
+            ...(parsed.fingerprint === legacyFingerprint ? { omitRecipientName: true } : {}) };
         }
       } catch {
         // Discard a corrupt record and generate a fresh checkout key below.

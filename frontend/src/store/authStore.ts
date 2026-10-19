@@ -1,7 +1,8 @@
 import { create } from 'zustand';
 
 const ADMIN_CHAT_SESSION_KEY = 'webphone_admin_chat_session_id';
-const QUOTATION_CREATE_RECOVERY_KEY = 'webphone_quotation_create_recovery_v1';
+// Opaque quotation recovery markers survive logout/expiration. The quotation
+// helpers scope new markers by account; legacy markers require owner-checked recovery.
 
 interface User {
   id: string;
@@ -80,7 +81,6 @@ if (storedToken && !storedTokenIsValid) {
   localStorage.removeItem('token');
   localStorage.removeItem('user');
   sessionStorage.removeItem(ADMIN_CHAT_SESSION_KEY);
-  sessionStorage.removeItem(QUOTATION_CREATE_RECOVERY_KEY);
 }
 
 // ---------------------------------------------------------------------------
@@ -91,12 +91,6 @@ export const useAuthStore = create<AuthState>((set) => ({
   user:  storedTokenIsValid && storedUser ? JSON.parse(storedUser) : null,
 
   setAuth: (token, user) => {
-    let previousUserId: string | null = null;
-    try {
-      const previousUser = JSON.parse(localStorage.getItem('user') || 'null') as { id?: unknown } | null;
-      if (typeof previousUser?.id === 'string') previousUserId = previousUser.id;
-    } catch { /* malformed prior identity must not retain a recovery key */ }
-    if (previousUserId !== user.id) sessionStorage.removeItem(QUOTATION_CREATE_RECOVERY_KEY);
     localStorage.setItem('token', token);
     localStorage.setItem('user', JSON.stringify(user));
     set({ token, user });
@@ -106,7 +100,6 @@ export const useAuthStore = create<AuthState>((set) => ({
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     sessionStorage.removeItem(ADMIN_CHAT_SESSION_KEY);
-    sessionStorage.removeItem(QUOTATION_CREATE_RECOVERY_KEY);
     set({ token: null, user: null });
   },
 }));

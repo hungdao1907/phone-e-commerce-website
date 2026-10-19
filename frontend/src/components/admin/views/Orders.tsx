@@ -1,9 +1,11 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Filter, Eye, Edit2, Trash2, CheckCircle2, Clock, Truck, Package, X, ChevronRight, ChevronLeft, MapPin, Phone, CreditCard, CheckSquare, Square, Calendar, Download, AlertTriangle, MoreVertical, Ban, RefreshCw, XCircle, ArrowDownUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/store/authStore';
 import { BankHistoryPanel } from './BankHistoryPanel';
+import { OrderDeleteDialog } from './OrderDeleteDialog';
+import { canPermanentlyDeleteOrder, requestPermanentOrderDeletion } from './order-delete';
 
 // --- TYPES ---
 interface OrderItem {
@@ -30,6 +32,7 @@ interface Order {
   paymentStatus: string;
   shippingAddress: string;
   shippingPhone: string;
+  recipientName?: string | null;
   shippingFee: number;
   totalAmount: number;
   discountAmount?: number;
@@ -97,7 +100,14 @@ export function Orders() {
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
 
   const [isLoading, setIsLoading] = useState(true);
-  const { token } = useAuthStore();
+  const { token, user } = useAuthStore();
+  const [deleteTarget, setDeleteTarget] = useState<Order | null>(null);
+  const [deleteCode, setDeleteCode] = useState('');
+  const [deleteBusy, setDeleteBusy] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
+  const [deleteNotice, setDeleteNotice] = useState('');
+  const deleteInFlight = useRef(false);
+  const deletedIds = useRef(new Set<string>());
 
   // Modal Detail
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
@@ -108,13 +118,36 @@ export function Orders() {
   const [confirmAction, setConfirmAction] = useState<{ orderId: string, actionLabel: string, newStatus: string, newPaymentStatus?: string, tone: 'danger' | 'success' } | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
 
+  const handleDeleteOrder = async () => {
+    if (deleteInFlight.current || !deleteTarget || !canPermanentlyDeleteOrder(user?.role) || deleteCode !== deleteTarget.orderCode) return;
+    deleteInFlight.current = true;
+    setDeleteBusy(true); setDeleteError('');
+    const target = deleteTarget;
+    try {
+      await requestPermanentOrderDeletion({ baseUrl: import.meta.env.VITE_API_URL || 'http://localhost:3001', token, role: user?.role,
+        id: target.id, orderCode: target.orderCode, confirmationCode: deleteCode });
+      deletedIds.current.add(target.id);
+      setOrders(previous => previous.filter(order => order.id !== target.id));
+      setSelectedIds(previous => previous.filter(id => id !== target.id));
+      if (selectedOrder?.id === target.id) { setSelectedOrder(null); setIsDetailOpen(false); }
+      setDeleteTarget(null); setDeleteCode(''); setDeleteNotice(`Đã xóa vĩnh viễn đơn ${target.orderCode}.`);
+    } catch (error) {
+      setDeleteError(error instanceof Error ? error.message : 'Không thể xóa đơn hàng. Vui lòng thử lại.');
+    } finally {
+      deleteInFlight.current = false; setDeleteBusy(false);
+    }
+  };
+
   const fetchOrders = async () => {
     try {
       setIsLoading(true);
       const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/orders`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
-      if (res.ok) setOrders(await res.json());
+      if (res.ok) {
+        const loaded: Order[] = await res.json();
+        setOrders(loaded.filter(order => !deletedIds.current.has(order.id)));
+      }
     } catch (error) {
       console.error('Lỗi tải đơn hàng:', error);
     } finally {
@@ -170,6 +203,7 @@ export function Orders() {
         (o.customer?.fullName && o.customer.fullName.toLowerCase().includes(q)) ||
         (o.customer?.phone && o.customer.phone.includes(q)) ||
         (o.customer?.email && o.customer.email.toLowerCase().includes(q)) ||
+        (o.recipientName && o.recipientName.toLowerCase().includes(q)) ||
         (o.shippingPhone && o.shippingPhone.includes(q)) ||
         (o.shippingAddress && o.shippingAddress.toLowerCase().includes(q))
       );
@@ -224,7 +258,7 @@ export function Orders() {
   }, [page, totalPages]);
 
   useEffect(() => {
-    if (page > totalPages) setPage(1);
+    if (page > totalPages) setPage(totalPages);
   }, [totalPages, page]);
 
   const handleExportData = () => {
@@ -352,6 +386,7 @@ export function Orders() {
 
   return (
     <div className="flex flex-col min-h-full gap-5 text-white w-full pb-16">
+      {deleteNotice && <p role="status" className="rounded-xl border border-emerald-400/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-300">{deleteNotice}</p>}
       {/* HEADER */}
       <header className="flex flex-wrap items-center justify-between gap-4 px-1 pt-1 shrink-0">
         <div>
@@ -610,10 +645,10 @@ export function Orders() {
                           </div>
                           <div className="flex flex-col">
                             <span className="font-medium text-white truncate max-w-[150px]">
-                              {order.customer?.fullName || order.shippingPhone || 'Khách vãng lai'}
+                              {order.customer?.fullName || 'Khách vãng lai'}
                             </span>
                             <span className="text-[11px] text-zinc-400">
-                              {order.customer?.phone || order.shippingPhone || '---'}
+                              {order.customer?.phone || '---'}
                             </span>
                           </div>
                         </div>
@@ -669,6 +704,14 @@ export function Orders() {
                                   <button onClick={(e) => { setActiveMenu(null); openConfirm(order.id, 'Hủy đơn hàng', 'cancelled', 'danger', undefined, e); }} className="flex items-center gap-2 px-4 py-2 text-sm text-rose-400 hover:bg-rose-500/10 w-full text-left transition-colors">
                                     <Ban className="w-4 h-4" /> Hủy đơn hàng
                                   </button>
+                                )}
+                                {canPermanentlyDeleteOrder(user?.role) && (
+                                  <div className="mt-1 border-t border-white/10 pt-1">
+                                    <button onClick={() => { setActiveMenu(null); setDeleteTarget(order); setDeleteCode(''); setDeleteError(''); setDeleteNotice(''); }}
+                                      className="flex items-center gap-2 px-4 py-2 text-sm text-red-400 hover:bg-red-500/10 w-full text-left transition-colors">
+                                      <Trash2 className="w-4 h-4" /> Xóa đơn hàng
+                                    </button>
+                                  </div>
                                 )}
                               </div>
                             </div>
@@ -801,15 +844,21 @@ export function Orders() {
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center shrink-0"><User className="w-4 h-4 text-white/60" /></div>
                         <div>
-                          <p className="font-medium text-white text-sm">{selectedOrder.customer?.fullName || selectedOrder.shippingPhone || 'Khách vãng lai'}</p>
+                          <p className="font-medium text-white text-sm">{selectedOrder.customer?.fullName || 'Khách vãng lai'}</p>
                           {selectedOrder.customer?.email && <p className="text-xs text-white/50 mt-0.5">{selectedOrder.customer.email}</p>}
                         </div>
                       </div>
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center shrink-0"><Phone className="w-4 h-4 text-white/60" /></div>
                         <div>
-                          <p className="font-medium text-white text-sm">{selectedOrder.customer?.phone || selectedOrder.shippingPhone || '---'}</p>
+                          <p className="text-xs text-white/50">SĐT tài khoản</p>
+                          <p className="font-medium text-white text-sm">{selectedOrder.customer?.phone || '---'}</p>
                         </div>
+                      </div>
+                      <h4 className="text-xs font-semibold text-white/40 uppercase tracking-wider border-t border-white/5 pt-4">Thông tin giao hàng</h4>
+                      <div className="text-sm text-white/80 space-y-2">
+                        <p><span className="text-white/50">Người nhận:</span> {selectedOrder.recipientName?.trim() || selectedOrder.customer?.fullName || 'Chưa có thông tin'}</p>
+                        <p><span className="text-white/50">SĐT giao hàng:</span> {selectedOrder.shippingPhone || '---'}</p>
                       </div>
                       <div className="flex items-start gap-3">
                         <div className="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center shrink-0 mt-0.5"><MapPin className="w-4 h-4 text-white/60" /></div>
@@ -999,6 +1048,10 @@ export function Orders() {
       </AnimatePresence>
 
       {/* ===== BANK HISTORY PANEL ===== */}
+      {deleteTarget && canPermanentlyDeleteOrder(user?.role) && <OrderDeleteDialog orderCode={deleteTarget.orderCode} value={deleteCode} busy={deleteBusy} error={deleteError}
+        onChange={value => { setDeleteCode(value); setDeleteError(''); }}
+        onCancel={() => { if (!deleteInFlight.current) { setDeleteTarget(null); setDeleteCode(''); setDeleteError(''); } }}
+        onConfirm={handleDeleteOrder} />}
       <BankHistoryPanel isOpen={isBankHistoryOpen} onClose={() => setIsBankHistoryOpen(false)} />
     </div>
   );

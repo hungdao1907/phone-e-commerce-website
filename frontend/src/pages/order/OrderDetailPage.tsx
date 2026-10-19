@@ -307,11 +307,11 @@ export function CustomerOrderDetailView({ order: initialOrder, onChanged }: { or
                   <>
                     <div className="flex items-start gap-4">
                       <div className="text-neutral-500 w-28 shrink-0 flex items-center gap-2">👤 Người nhận</div>
-                      <div className="font-medium text-neutral-900">{order.customer?.fullName || 'Chưa có thông tin'}</div>
+                      <div className="font-medium text-neutral-900">{order.recipientName?.trim() || order.customer?.fullName || 'Chưa có thông tin'}</div>
                     </div>
                     <div className="flex items-start gap-4">
                       <div className="text-neutral-500 w-28 shrink-0 flex items-center gap-2">☎ Số điện thoại</div>
-                      <div className="font-medium text-neutral-900">{order.shippingPhone || order.customer?.phone || 'Chưa có thông tin'}</div>
+                      <div className="font-medium text-neutral-900">{order.shippingPhone || 'Chưa có thông tin'}</div>
                     </div>
                     <div className="flex items-start gap-4">
                       <div className="text-neutral-500 w-28 shrink-0 flex items-center gap-2">📍 Địa chỉ</div>

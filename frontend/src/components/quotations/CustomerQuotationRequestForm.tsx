@@ -3,6 +3,9 @@ import { AlertCircle, FileText, Loader2, Trash2 } from 'lucide-react';
 import { fetchChatbotCatalogProducts } from '@/services/chatbot.api';
 import type { ChatbotProduct, ChatbotVariant } from '@/components/chatbot/types';
 import { useAuthStore } from '@/store/authStore';
+import { checkoutProfileError, useCheckoutStore } from '../../store/useCheckoutStore';
+import { useQuotationContactStore } from '../../store/useQuotationContactStore';
+import { useRecipientProfile } from '../profile/use-recipient-profile';
 import { createCustomerQuotation, quotationApiEnabled, recoverCustomerQuotation, type CustomerQuotationCreateRequest } from './quotation-api';
 import {
   clearQuotationCreateRecoveryMarker,
@@ -35,14 +38,27 @@ function getVariant(product: ChatbotProduct | undefined, variantId: string): Cha
 }
 
 export function CustomerQuotationRequestForm({ onCreated }: CustomerQuotationRequestFormProps) {
+  const revision = useCheckoutStore(state => state.sessionRevision);
+  return <AccountQuotationRequestForm key={revision} onCreated={onCreated} />;
+}
+
+function AccountQuotationRequestForm({ onCreated }: CustomerQuotationRequestFormProps) {
   const token = useAuthStore(state => state.token);
+  const accountId = useAuthStore(state => state.user?.id);
+  const { profileEmail, profileError, profileStatus, sessionRevision } = useRecipientProfile();
+  const { contact: { recipientName, shippingAddress, shippingPhone }, update: updateContact } = useQuotationContactStore();
+  const mounted = useRef(true);
+  useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
+  const currentSession = () => mounted.current && !!useAuthStore.getState().token
+    && useAuthStore.getState().user?.id === accountId
+    && useCheckoutStore.getState().sessionRevision === sessionRevision;
   const [lines, setLines] = useState<DraftLine[]>(() => loadQuotationDraft().map(item => ({ ...item, quantityText: String(item.quantity) })));
   const [products, setProducts] = useState<ChatbotProduct[]>([]);
   const [catalogRefreshRevision, setCatalogRefreshRevision] = useState(0);
   const [catalogLoading, setCatalogLoading] = useState(false);
   const [catalogError, setCatalogError] = useState('');
-  const [shippingAddress, setShippingAddress] = useState('');
-  const [shippingPhone, setShippingPhone] = useState('');
+  const setShippingAddress = (shippingAddress: string) => updateContact({ shippingAddress });
+  const setShippingPhone = (shippingPhone: string) => updateContact({ shippingPhone });
   const [paymentMethod, setPaymentMethod] = useState<'COD' | 'BANK_TRANSFER'>('COD');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -61,7 +77,7 @@ export function CustomerQuotationRequestForm({ onCreated }: CustomerQuotationReq
   }), []);
 
   useEffect(() => {
-    const marker = token ? loadQuotationCreateRecoveryMarker() : null;
+    const marker = token && accountId ? loadQuotationCreateRecoveryMarker(undefined, accountId) : null;
     if (!marker || !token) {
       setRecoveryState('idle');
       return;
@@ -69,9 +85,9 @@ export function CustomerQuotationRequestForm({ onCreated }: CustomerQuotationReq
     let cancelled = false;
     setRecoveryState('checking');
     void recoverCustomerQuotation(marker.key, token).then(result => {
-      if (cancelled) return;
+      if (cancelled || !currentSession()) return;
       if (result.status === 'found') {
-        clearQuotationCreateRecoveryMarker();
+        clearQuotationCreateRecoveryMarker(undefined, marker.accountId);
         createIntentRef.current = null;
         setRecoveryState('idle');
         onCreatedRef.current(result.quotation);
@@ -113,7 +129,7 @@ export function CustomerQuotationRequestForm({ onCreated }: CustomerQuotationReq
       && isQuantityValid(line.quantityText, variant.stock));
     return { line, product, variant, valid };
   });
-  const canSubmit = Boolean(token && quotationApiEnabled() && recoveryState !== 'checking' && lines.length > 0 && !catalogLoading && !catalogError
+  const canSubmit = Boolean(token && profileStatus === 'ready' && recipientName.trim().length > 0 && recipientName.trim().length <= 200 && quotationApiEnabled() && recoveryState !== 'checking' && lines.length > 0 && !catalogLoading && !catalogError
     && resolvedLines.every(item => item.valid)
     && shippingAddress.trim().length > 0 && shippingAddress.trim().length <= 1000
     && shippingPhone.trim().length >= 6 && shippingPhone.trim().length <= 40 && !busy);
@@ -139,6 +155,11 @@ export function CustomerQuotationRequestForm({ onCreated }: CustomerQuotationReq
     event.preventDefault();
     if (submittingRef.current) return;
     setError('');
+    const identityError = checkoutProfileError();
+    if (!currentSession() || identityError) {
+      setError(identityError || 'Phiên đăng nhập đã thay đổi.');
+      return;
+    }
     if (!token) {
       setError('Vui lòng đăng nhập bằng tài khoản khách hàng để gửi yêu cầu báo giá.');
       return;
@@ -155,6 +176,7 @@ export function CustomerQuotationRequestForm({ onCreated }: CustomerQuotationReq
       items: lines.map(line => ({ variantId: line.variantId, quantity: Number(line.quantityText) })),
       shippingAddress: shippingAddress.trim(),
       shippingPhone: shippingPhone.trim(),
+      recipientName: recipientName.trim(),
       paymentMethod,
       deliveryMethod: 'delivery',
     };
@@ -171,7 +193,7 @@ export function CustomerQuotationRequestForm({ onCreated }: CustomerQuotationReq
       return;
     }
     createIntentRef.current = intent;
-    if (!saveQuotationCreateRecoveryMarker({ key: intent.key, createdAt: Date.now() })) {
+    if (!accountId || !saveQuotationCreateRecoveryMarker({ key: intent.key, createdAt: Date.now(), accountId })) {
       setError('Secure session storage is unavailable. The request was not sent to avoid losing its recovery key on refresh.');
       return;
     }
@@ -179,20 +201,24 @@ export function CustomerQuotationRequestForm({ onCreated }: CustomerQuotationReq
     setBusy(true);
     try {
       const quotation = await createCustomerQuotation(request, token, intent.key);
-      clearQuotationCreateRecoveryMarker();
+      if (!currentSession()) return;
+      clearQuotationCreateRecoveryMarker(undefined, accountId);
       createIntentRef.current = null;
       clearQuotationDraft();
       setLines([]);
       setRecoveryState('idle');
-      if (useAuthStore.getState().token === token) onCreatedRef.current(quotation);
+      onCreatedRef.current(quotation);
     } catch (cause) {
+      if (!currentSession()) return;
       setRecoveryState('unresolved');
       setError(cause instanceof Error
         ? cause.message
         : 'Chưa xác nhận được kết quả. Hãy thử lại đúng nội dung hiện tại để khôi phục kết quả báo giá.');
     } finally {
-      submittingRef.current = false;
-      setBusy(false);
+      if (currentSession()) {
+        submittingRef.current = false;
+        setBusy(false);
+      }
     }
   };
 
@@ -246,10 +272,14 @@ export function CustomerQuotationRequestForm({ onCreated }: CustomerQuotationReq
           </div>}
           {catalogError && <p role="alert" className="rounded-lg bg-amber-50 p-3 text-sm text-amber-900">{catalogError}</p>}
           <div className="grid gap-3 sm:grid-cols-2">
+            <label className="text-xs font-semibold text-slate-600">Email tài khoản<input type="email" value={profileEmail} readOnly aria-readonly="true" className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm font-normal" /></label>
+            <label className="text-xs font-semibold text-slate-600">Tên người nhận<input required maxLength={200} value={recipientName} onChange={event => updateContact({ recipientName: event.target.value })} className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm font-normal" autoComplete="name" /></label>
             <label className="text-xs font-semibold text-slate-600">Địa chỉ giao hàng<input required maxLength={1000} value={shippingAddress} onChange={event => setShippingAddress(event.target.value)} className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm font-normal" autoComplete="street-address" /></label>
             <label className="text-xs font-semibold text-slate-600">Số điện thoại<input required minLength={6} maxLength={40} value={shippingPhone} onChange={event => setShippingPhone(event.target.value)} className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm font-normal" autoComplete="tel" /></label>
           </div>
           <PaymentMethodDropdown value={paymentMethod} onChange={setPaymentMethod} disabled={busy} />
+          {profileStatus === 'loading' && <p role="status">Đang tải hồ sơ khách hàng…</p>}
+          {profileError && <p role="alert" className="text-sm text-rose-800">{profileError}</p>}
 
           {error && <p role="alert" className="flex items-start gap-2 rounded-lg bg-rose-50 p-3 text-sm text-rose-800"><AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />{error}</p>}
           {!token && <p className="text-sm text-amber-800">Bạn cần đăng nhập bằng tài khoản khách hàng trước khi gửi yêu cầu.</p>}

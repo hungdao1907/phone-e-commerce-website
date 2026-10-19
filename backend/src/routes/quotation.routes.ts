@@ -58,6 +58,8 @@ const CUSTOMER_QUOTATION_SELECT = {
   promoCodeId: true,
   shippingAddress: true,
   shippingPhone: true,
+  recipientName: true,
+  customer: { select: { fullName: true } },
   note: true,
   expiresAt: true,
   customerConfirmedAt: true,
@@ -152,7 +154,7 @@ function hasEmptyBody(body: unknown): boolean {
 
 export function parseCreateQuotationDto(body: unknown): Omit<CreateQuotationInput, 'expiresAt'> | null {
   if (!isPlainObject(body)
-    || !hasOnlyKeys(body, ['items', 'shippingAddress', 'shippingPhone', 'paymentMethod', 'note', 'sourceSessionId', 'deliveryMethod', 'promoCode'])
+    || !hasOnlyKeys(body, ['items', 'shippingAddress', 'shippingPhone', 'recipientName', 'paymentMethod', 'note', 'sourceSessionId', 'deliveryMethod', 'promoCode'])
     || !Array.isArray(body.items)
     || body.items.length === 0
     || body.items.length > 100
@@ -162,6 +164,8 @@ export function parseCreateQuotationDto(body: unknown): Omit<CreateQuotationInpu
     || typeof body.shippingPhone !== 'string'
     || body.shippingPhone.trim().length < 6
     || body.shippingPhone.trim().length > 40
+    || (body.recipientName !== undefined && (typeof body.recipientName !== 'string'
+      || body.recipientName.trim().length === 0 || body.recipientName.trim().length > 200))
     || (body.paymentMethod !== 'COD' && body.paymentMethod !== 'BANK_TRANSFER')
     || (body.deliveryMethod !== undefined && body.deliveryMethod !== 'delivery' && body.deliveryMethod !== 'pickup')
     || (body.promoCode !== undefined && body.promoCode !== null
@@ -189,6 +193,7 @@ export function parseCreateQuotationDto(body: unknown): Omit<CreateQuotationInpu
     items,
     shippingAddress: body.shippingAddress.trim(),
     shippingPhone: body.shippingPhone.trim(),
+    ...(typeof body.recipientName === 'string' ? { recipientName: body.recipientName.trim() } : {}),
     paymentMethod: body.paymentMethod,
     deliveryMethod: body.deliveryMethod === 'pickup' || (body.deliveryMethod === undefined && body.shippingAddress.trim().startsWith('Nhận tại cửa hàng'))
       ? 'pickup' : 'delivery',
@@ -249,7 +254,8 @@ function customerQuotationDto(value: any, customerId: string): Record<string, un
         saleUnitPrice: item.saleUnitPrice,
         lineTotal: item.lineTotal,
       }));
-    } else if (field === 'files') dto[field] = Array.isArray(value.files) ? value.files : [];
+    } else if (field === 'customer') dto[field] = value.customer ? { fullName: value.customer.fullName } : null;
+    else if (field === 'files') dto[field] = Array.isArray(value.files) ? value.files : [];
     else if (field === 'previousVersion' || field === 'nextVersion') dto[field] = value[field] ?? null;
     else dto[field] = value[field];
   }
@@ -385,10 +391,11 @@ async function createPrivatePdfForScope(
       totalAmount: true,
       shippingAddress: true,
       shippingPhone: true,
+      recipientName: true,
       note: true,
       expiresAt: true,
       createdAt: true,
-      customer: { select: { fullName: true, email: true } },
+      customer: { select: { fullName: true, email: true, phone: true } },
       items: {
         select: {
           productName: true,

@@ -53,6 +53,7 @@ interface OrderData {
   estimatedDelivery?: string;
   createdAt: string;
   recipientName?: string | null;
+  customer?: { fullName?: string | null } | null;
   items?: OrderItem[];
 }
 
@@ -743,7 +744,7 @@ export function OrderTrackingPage() {
                   </h4>
                   <div className="space-y-2 text-xs sm:text-sm">
                     <p className="font-bold text-neutral-900">
-                      {verifiedOrder.recipientName || 'Khách hàng'}
+                      {verifiedOrder.recipientName?.trim() || verifiedOrder.customer?.fullName || 'Khách hàng'}
                     </p>
                     <p className="text-neutral-600 font-mono">
                       {verifiedOrder.shippingPhone || 'Chưa có SĐT'}

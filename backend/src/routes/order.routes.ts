@@ -46,6 +46,9 @@ import { safeErrorSummary } from '../utils/safe-error-summary';
 import { trackingOtpDiagnostic } from '../utils/tracking-otp-diagnostics';
 import { presentCustomerOrderDetail } from '../services/customer-order-detail';
 import { cancelUnpaidOrder, OrderCancellationError } from '../services/order-cancellation.service';
+import { createOrderDeleteHandler } from './order-delete.handler';
+import { createOrderNotificationSafely } from '../services/order-reference.service';
+import { CheckoutRecipientError, resolveCheckoutRecipient } from '../services/checkout-recipient.service';
 
 const router = express.Router();
 
@@ -315,6 +318,7 @@ router.get('/track/details', async (req, res) => {
         paymentStatus: true,
         shippingAddress: true,
         shippingPhone: true,
+        recipientName: true,
         totalAmount: true,
         shippingFee: true,
         discountAmount: true,
@@ -345,7 +349,7 @@ router.get('/track/details', async (req, res) => {
       success: true,
       order: {
         ...safeOrder,
-        recipientName: customer?.fullName || null,
+        recipientName: order.recipientName?.trim() || customer?.fullName || null,
         items: items.map(item => ({
           productName: item.productName,
           variantInfo: item.variantInfo,
@@ -433,6 +437,7 @@ const BASE_ORDER_FIELDS = {
   paymentStatus: true,
   shippingAddress: true,
   shippingPhone: true,
+  recipientName: true,
   shippingFee: true,
   totalAmount: true,
   discountAmount: true,
@@ -586,6 +591,9 @@ router.post('/', authenticateToken, async (req, res) => {
   if (req.body?.customerId && req.body.customerId !== principal.id) {
     return res.status(403).json({ message: 'customerId không khớp với tài khoản đăng nhập' });
   }
+  if (['email', 'customerEmail', 'customer', 'fullName', 'phone'].some(field => Object.prototype.hasOwnProperty.call(req.body || {}, field))) {
+    return res.status(400).json({ code: 'CUSTOMER_IDENTITY_READ_ONLY', message: 'Thông tin tài khoản chỉ được lấy từ Customer đã đăng nhập. Hãy dùng các trường người nhận cho thông tin giao hàng.' });
+  }
   const validatedItems = validateAndAggregateCheckoutItems(req.body?.items);
   if (!validatedItems.ok) return res.status(400).json({ message: validatedItems.message });
   const pricingRequest = getCheckoutPricingRequest(req.body, validatedItems.items);
@@ -629,12 +637,14 @@ router.post('/', authenticateToken, async (req, res) => {
       paymentMethod,
       shippingAddress,
       shippingPhone,
+      ...(req.body.recipientName !== undefined ? { recipientName: req.body.recipientName } : {}),
       note,
       estimatedDelivery,
     };
 
     const checkoutResult = await withOrderCodeCollisionRetry(async orderCode => {
       const createOrderInTransaction = async (tx: any) => {
+      const recipient = await resolveCheckoutRecipient(tx, principal.id, req.body.recipientName);
       const pricing = await calculateCheckoutPricing(tx, pricingRequest, new Date());
       if (!verifyCheckoutPricingConfirmation(
         req.body.pricingConfirmation,
@@ -681,6 +691,7 @@ router.post('/', authenticateToken, async (req, res) => {
           status: initialStatus,
           shippingAddress,
           shippingPhone,
+          recipientName: recipient.recipientName,
           shippingFee,
           totalAmount,
           discountAmount: totalDiscountAmount,
@@ -742,14 +753,12 @@ router.post('/', authenticateToken, async (req, res) => {
       sendOrderReceivedEmail(newOrder).catch(console.error);
     }
     if (!checkoutResult.replayed) {
-      prisma.notification.create({
-        data: {
+      createOrderNotificationSafely(prisma, newOrder.id, {
           type: 'ORDER',
           title: `Đơn hàng mới #${newOrder.orderCode}`,
           message: `${newOrder.customer?.fullName || 'Khách hàng'} vừa đặt hàng. Tổng: ${new Intl.NumberFormat('vi-VN').format(newOrder.totalAmount)}đ.`,
           referenceType: 'Order',
           referenceId: newOrder.id,
-        },
       }).catch(console.error);
     }
 
@@ -766,6 +775,9 @@ router.post('/', authenticateToken, async (req, res) => {
       paymentConfig,
     });
   } catch (error) {
+    if (error instanceof CheckoutRecipientError) {
+      return res.status(error.status).json({ code: error.code, message: error.message });
+    }
     if (error instanceof CheckoutIdempotencyError) {
       return res.status(error.status).json({ code: error.code, message: error.message });
     }
@@ -918,6 +930,8 @@ router.patch('/:id/cancel', authenticateToken, async (req: AuthRequest, res) => 
     res.status(500).json({ message: 'Lỗi server' });
   }
 });
+
+router.delete('/:id', authenticateToken, requireRoles('superadmin'), createOrderDeleteHandler(prisma));
 
 export default router;
 

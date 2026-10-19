@@ -1,4 +1,5 @@
 import express from 'express';
+import { recordBankEventWithOrderReference } from '../services/order-reference.service';
 import prisma from '../config/prisma';
 import crypto from 'crypto';
 import { authenticateToken } from '../middleware/auth.middleware';
@@ -146,6 +147,15 @@ router.post('/webhook', async (req, res) => {
       if (order.totalAmount === amount && ['pending', 'pending_payment'].includes(order.status) && order.paymentMethod === 'BANK_TRANSFER') {
         // LEVEL 1: Exact Match! Process within a transaction
         const paidOrder = await prisma.$transaction(async (txPrisma) => {
+          const locked = await txPrisma.$queryRaw<Array<{ id: string }>>`SELECT "id" FROM "Order" WHERE "id" = ${order.id} FOR UPDATE`;
+          if (locked.length === 0) {
+            // Preserve the bank event even if cleanup won the race; never attach a stale Order ID.
+            await txPrisma.bankTransaction.create({ data: {
+              transactionId, amount, description, transactionDate: new Date(transactionDate), bankName, accountNumber,
+              transactionType, status: 'UNMATCHED', orderCode: extractedOrderCode, rawData: tx,
+            } });
+            return null;
+          }
           // Update Order Status
           if (!await markPendingOrderPaid(txPrisma, order.id)) {
             await txPrisma.bankTransaction.create({ data: {
@@ -195,27 +205,26 @@ router.post('/webhook', async (req, res) => {
         const isAlreadyPaid = order.paymentStatus === 'PAID' || order.status === 'confirmed';
         const finalStatus = isAlreadyPaid ? 'MANUAL_REVIEW' : 'INVALID_AMOUNT';
 
-        await prisma.bankTransaction.create({
-          data: {
+        await prisma.$transaction(async txPrisma => {
+          const { orderExists: exists } = await recordBankEventWithOrderReference(txPrisma, order.id, {
             transactionId, amount, description, transactionDate: new Date(transactionDate),
             bankName, accountNumber, transactionType, status: finalStatus,
-            orderId: order.id,
             orderCode: extractedOrderCode,
             rawData: tx
+          });
+
+          if (exists) {
+            await txPrisma.notification.create({
+              data: {
+                type: 'PAYMENT',
+                title: 'Giao dịch cần đối soát',
+                message: `Nhận được ${amount.toLocaleString('vi-VN')}đ cho đơn ${order.orderCode} nhưng số tiền/trạng thái không khớp.`,
+                referenceType: 'Order',
+                referenceId: order.id
+              }
+            });
           }
         });
-
-        try {
-          await prisma.notification.create({
-            data: {
-              type: 'PAYMENT',
-              title: 'Giao dịch cần đối soát',
-              message: `Nhận được ${amount.toLocaleString('vi-VN')}đ cho đơn ${order.orderCode} nhưng số tiền/trạng thái không khớp.`,
-              referenceType: 'Order',
-              referenceId: order.id
-            }
-          });
-        } catch(e) {}
       }
 
       processedCount++;

@@ -68,6 +68,16 @@ test('Quotation create DTO accepts identifiers and quantities, normalizes text, 
   });
 });
 
+test('Quotation recipient name is optional and accepts only trimmed strings of 1 to 200 characters', () => {
+  assert.equal(Object.hasOwn(parseCreateQuotationDto(baseQuotationDto)!, 'recipientName'), false);
+  assert.equal(parseCreateQuotationDto({ ...baseQuotationDto, recipientName: '  Recipient  ' })?.recipientName, 'Recipient');
+  assert.equal(parseCreateQuotationDto({ ...baseQuotationDto, recipientName: ' ' + 'a'.repeat(200) + ' ' })?.recipientName?.length, 200);
+  for (const recipientName of [null, 42, {}, [], '', '  ', 'a'.repeat(201)]) {
+    assert.equal(parseCreateQuotationDto({ ...baseQuotationDto, recipientName }), null);
+  }
+  assert.equal(parseCreateQuotationDto({ ...baseQuotationDto, recipientName: 'Recipient', customerId: 'spoofed' }), null);
+});
+
 test('Quotation create DTO rejects client totals, identity fields, invalid quantities, and unsupported payments', () => {
   assert.equal(parseCreateQuotationDto({ ...baseQuotationDto, customerId: 'customer-1' }), null);
   assert.equal(parseCreateQuotationDto({ ...baseQuotationDto, totalAmount: 1 }), null);
@@ -180,9 +190,13 @@ async function invokeQuotationRoute(router: any, method: string, path: string, p
 
 test('Quotation detail routes enforce Customer ownership and Staff assignment; Admin alone can assign', async () => {
   const { routers, quotation } = quotationRouteFixture();
+  quotation.recipientName = null;
+  quotation.customer = { fullName: 'Legacy Account Name' };
   const owner = await invokeQuotationRoute(routers.customer, 'get', '/:id', { id: 'customer-a', role: 'customer' });
   const otherCustomer = await invokeQuotationRoute(routers.customer, 'get', '/:id', { id: 'customer-b', role: 'customer' });
   assert.equal(owner.statusCode, 200);
+  assert.equal(owner.body.quotation.recipientName, null);
+  assert.deepEqual(owner.body.quotation.customer, { fullName: 'Legacy Account Name' });
   assert.equal(otherCustomer.statusCode, 404);
 
   const assignedStaff = await invokeQuotationRoute(routers.staff, 'get', '/:id', { id: 'staff-a', role: 'staff' });
@@ -245,8 +259,9 @@ test('durable same-key replay returns its Customer-owned Quotation without consu
     id: 'quote-replayed', customerId: 'customer-a', quoteNumber: 'QT-REPLAY', status: 'PENDING_CUSTOMER_CONFIRMATION',
     currency: 'VND', subtotal: 100, discountAmount: 0, shippingFee: 0, totalAmount: 100,
     paymentMethod: 'COD', deliveryMethod: 'delivery', promoCodeId: null, shippingAddress: 'Address', shippingPhone: '0900000000',
-    note: null, expiresAt: new Date('2026-10-11T00:00:00Z'), customerConfirmedAt: null, customerRejectedAt: null,
+    recipientName: 'Saved Recipient', note: null, expiresAt: new Date('2026-10-11T00:00:00Z'), customerConfirmedAt: null, customerRejectedAt: null,
     approvedAt: null, convertedAt: null, createdAt: new Date('2026-10-10T00:00:00Z'), updatedAt: new Date('2026-10-10T00:00:00Z'),
+    customer: { fullName: 'Replay Account', email: 'not-for-customer-dto@example.test', phone: 'private' },
     items: [], files: [], previousVersion: null, nextVersion: null,
   };
   let rateLimitCalls = 0;
@@ -264,13 +279,35 @@ test('durable same-key replay returns its Customer-owned Quotation without consu
   const response = await invokeQuotationRoute(routers.customer, 'post', '/', { id: 'customer-a', role: 'customer' }, input, key);
   assert.equal(response.statusCode, 201);
   assert.equal(response.body.quotation.id, 'quote-replayed');
+  assert.equal(response.body.quotation.recipientName, 'Saved Recipient');
+  assert.deepEqual(response.body.quotation.customer, { fullName: 'Replay Account' });
   assert.equal(rateLimitCalls, 0);
+});
+
+test('Customer detail and PDF data fetch select recipientName within the authenticated scope', async () => {
+  const queries: any[] = [];
+  const { routers } = quotationRouteFixture({ databasePatch: {
+    quotation: { findFirst: async (query: any) => { queries.push(query); return null; } },
+  } });
+  for (const [method, path] of [['get', '/:id'], ['post', '/:id/pdf']]) {
+    const response = await invokeQuotationRoute(routers.customer, method!, path!, { id: 'customer-a', role: 'customer' });
+    assert.equal(response.statusCode, 404);
+  }
+  assert.equal(queries.length, 2);
+  for (const query of queries) {
+    assert.equal(query.where.customerId, 'customer-a');
+    assert.equal(query.select.recipientName, true);
+  }
+  assert.equal(queries[1].select.customer.select.fullName, true, 'PDF retains legacy profile fallback data');
+  assert.deepEqual(queries[0].select.customer, { select: { fullName: true } }, 'Own detail exposes only the fallback name');
+  assert.equal(queries[1].select.customer.select.phone, true, 'PDF receives the account phone');
 });
 
 test('Quotation recovery returns a committed result only in the authenticated Customer scope', async () => {
   const key = 'recovery-key-cross-owner-1';
   const saved = {
     id: 'quote-recovery', customerId: 'customer-a', quoteNumber: 'QT-RECOVERY', status: 'CUSTOMER_CONFIRMED',
+    recipientName: null, customer: { fullName: 'Legacy Account Name' },
     currency: 'VND', subtotal: 250, discountAmount: 0, shippingFee: 0, totalAmount: 250,
     paymentMethod: 'COD', deliveryMethod: 'delivery', promoCodeId: null, shippingAddress: 'private address', shippingPhone: '0900000000',
     note: null, expiresAt: new Date('2026-10-11T00:00:00Z'), customerConfirmedAt: null, customerRejectedAt: null,
@@ -291,6 +328,8 @@ test('Quotation recovery returns a committed result only in the authenticated Cu
   const other = await invokeQuotationRoute(routers.customer, 'post', '/recovery', { id: 'customer-b', role: 'customer' }, undefined, key);
   assert.equal(owner.statusCode, 200);
   assert.equal(owner.body.quotation.id, 'quote-recovery');
+  assert.equal(owner.body.quotation.recipientName, null);
+  assert.deepEqual(owner.body.quotation.customer, { fullName: 'Legacy Account Name' });
   assert.equal(other.statusCode, 404);
   assert.equal(other.body.code, 'IDEMPOTENCY_RESULT_NOT_FOUND');
   assert.equal(JSON.stringify(other.body).includes('customer-a'), false);

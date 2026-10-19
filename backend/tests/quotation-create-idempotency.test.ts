@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import crypto from 'node:crypto';
 import test from 'node:test';
 import {
   fingerprintQuotationCreateRequest,
@@ -171,6 +172,55 @@ test('quotation request fingerprint normalizes duplicate variants and whitespace
   assert.equal(first.includes('0900000000'), false);
   assert.equal(first.includes('Test Address'), false);
   assert.notEqual(first, fingerprintQuotationCreateRequest('customer-b', baseInput));
+});
+
+test('Recipient fingerprints preserve the historical omitted-field hash and normalize explicit names', () => {
+  const legacyHash = crypto.createHash('sha256').update(JSON.stringify({
+    customerId: 'customer-a', items: [{ variantId: 'variant-a', quantity: 2 }],
+    shippingAddress: 'Test Address', shippingPhone: '0900000000', paymentMethod: 'COD',
+    deliveryMethod: 'delivery', promoCode: null, note: null, sourceSessionId: null,
+  })).digest('hex');
+  assert.equal(fingerprintQuotationCreateRequest('customer-a', baseInput), legacyHash);
+  const named = { ...baseInput, recipientName: ' Recipient ' };
+  assert.equal(fingerprintQuotationCreateRequest('customer-a', named),
+    fingerprintQuotationCreateRequest('customer-a', { ...named, recipientName: 'Recipient' }));
+  assert.notEqual(fingerprintQuotationCreateRequest('customer-a', named), legacyHash);
+  for (const recipientName of [null, 42, '', ' ', 'a'.repeat(201)]) {
+    assert.throws(() => fingerprintQuotationCreateRequest('customer-a', { ...baseInput, recipientName: recipientName as any }),
+      { code: 'INVALID_QUOTATION_DTO' });
+  }
+});
+
+test('Recipient changes conflict on same key; legacy retries and recovery survive profile changes', async () => {
+  const database = createMemoryDatabase();
+  let profileName = 'Original Profile';
+  let creates = 0;
+  const create = async (transaction: any) => {
+    creates += 1;
+    const quotation = await transaction.quotation.create({ data: { customerId: 'customer-a' } });
+    quotation.recipientName = profileName;
+    return quotation;
+  };
+  const key = 'recipient-profile-retry-01';
+  const first = await runner(database, 'customer-a', key, baseInput, create);
+  profileName = 'Changed Profile';
+  const retry = await runner(database, 'customer-a', key, baseInput, create);
+  const recovered = await recoverQuotationCreateResult<any>({ database, customerId: 'customer-a', rawKey: key, quotationSelect: selectedQuotation });
+  assert.equal(creates, 1);
+  assert.equal(retry.quotation.recipientName, 'Original Profile');
+  assert.equal(recovered.recipientName, first.quotation.recipientName);
+  const explicitKey = 'recipient-explicit-retry-01';
+  const runNamed = (recipientName: string) => runIdempotentQuotationCreate({
+    database, customerId: 'customer-a', rawKey: explicitKey, input: { ...baseInput, recipientName },
+    quotationSelect: selectedQuotation, createQuotation: create,
+  });
+  await runNamed('Recipient');
+  assert.equal((await runNamed(' Recipient ')).replayed, true);
+  await assert.rejects(runNamed('Different Recipient'), { code: 'IDEMPOTENCY_KEY_PAYLOAD_MISMATCH', httpStatus: 409 });
+  await assert.rejects(runIdempotentQuotationCreate({
+    database, customerId: 'customer-a', rawKey: key, input: { ...baseInput, recipientName: 'Original Profile' },
+    quotationSelect: selectedQuotation, createQuotation: create,
+  }), { code: 'IDEMPOTENCY_KEY_PAYLOAD_MISMATCH' });
 });
 
 test('same-key replay and simultaneous duplicate submits return one committed Quotation', async () => {

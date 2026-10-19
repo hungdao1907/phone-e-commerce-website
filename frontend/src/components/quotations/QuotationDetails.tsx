@@ -27,6 +27,7 @@ export type QuotationRecord = {
   paymentMethod?: string;
   shippingAddress?: string;
   shippingPhone?: string;
+  recipientName?: string | null;
   note?: string | null;
   expiresAt: string;
   createdAt?: string;
@@ -128,6 +129,7 @@ export function QuotationDetails({
       )}
       {showCustomer && quotation.customer && (
         <div className="mt-4 rounded-xl bg-slate-50 p-3 text-sm text-slate-700">
+          <div className="text-xs font-semibold text-slate-500">Thông tin tài khoản</div>
           <div className="font-semibold text-slate-900">{quotation.customer.fullName || 'Khách hàng'}</div>
           <div>{quotation.customer.email || '—'}{quotation.customer.phone ? ` · ${quotation.customer.phone}` : ''}</div>
         </div>
@@ -176,9 +178,10 @@ export function QuotationDetails({
         <dd className="border-t border-slate-200 pt-2 text-right font-bold text-emerald-700 tabular-nums">{formatVnd(quotation.totalAmount)}</dd>
       </dl>
 
-      {(quotation.shippingPhone || quotation.shippingAddress || quotation.paymentMethod || quotation.note) && (
+      {(quotation.recipientName || quotation.customer?.fullName || quotation.shippingPhone || quotation.shippingAddress || quotation.paymentMethod || quotation.note) && (
         <div className="mt-5 grid gap-2 border-t border-slate-100 pt-4 text-sm text-slate-600 sm:grid-cols-2">
-          {quotation.shippingPhone && <p><span className="font-medium text-slate-800">Điện thoại:</span> {quotation.shippingPhone}</p>}
+          <p><span className="font-medium text-slate-800">Người nhận:</span> {quotation.recipientName?.trim() || quotation.customer?.fullName || '—'}</p>
+          {quotation.shippingPhone && <p><span className="font-medium text-slate-800">SĐT giao hàng:</span> {quotation.shippingPhone}</p>}
           {quotation.paymentMethod && <p><span className="font-medium text-slate-800">Thanh toán:</span> {quotation.paymentMethod === 'COD' ? 'COD' : quotation.paymentMethod}</p>}
           {quotation.shippingAddress && <p className="sm:col-span-2"><span className="font-medium text-slate-800">Địa chỉ:</span> {quotation.shippingAddress}</p>}
           {quotation.note && <p className="sm:col-span-2"><span className="font-medium text-slate-800">Ghi chú:</span> {quotation.note}</p>}

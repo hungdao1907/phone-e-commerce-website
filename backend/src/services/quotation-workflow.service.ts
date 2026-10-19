@@ -18,6 +18,7 @@ type DbMethod = (args: any) => Promise<any>;
 
 export type QuotationTransaction = {
   $queryRaw: (strings: TemplateStringsArray, ...values: any[]) => Promise<any>;
+  customer: { findUnique: DbMethod };
   quotation: {
     findUnique: DbMethod;
     create: DbMethod;
@@ -70,6 +71,7 @@ export type CreateQuotationInput = {
   items: QuoteLineRequest[];
   shippingAddress: string;
   shippingPhone: string;
+  recipientName?: string;
   paymentMethod: 'COD' | 'BANK_TRANSFER';
   deliveryMethod?: 'delivery' | 'pickup';
   promoCode?: string | null;
@@ -148,6 +150,7 @@ export function createQuotationOrderConverter(options: {
         data: {
           orderCode,
           customerId: quotation.customerId,
+          recipientName: await resolveQuotationRecipientName(transaction, quotation.customerId, quotation.recipientName),
           quotationId: quotation.id,
           assignedStaffId: quotation.assignedStaffId,
           paymentMethod: quotation.paymentMethod,
@@ -191,6 +194,23 @@ export type ApprovalResult =
 
 function fail(code: string, status: number, message: string): never {
   throw new QuotationWorkflowError(code, status, message);
+}
+
+async function resolveQuotationRecipientName(
+  transaction: QuotationTransaction,
+  customerId: string,
+  snapshot: unknown,
+): Promise<string> {
+  let name = typeof snapshot === 'string' ? snapshot.trim() : '';
+  if (!name) {
+    const customer = await transaction.customer.findUnique({ where: { id: customerId }, select: { fullName: true } });
+    if (!customer) fail('CUSTOMER_NOT_FOUND', 404, 'Authenticated Customer not found.');
+    name = typeof customer.fullName === 'string' ? customer.fullName.trim() : '';
+  }
+  if (!name || name.length > 200) {
+    fail('INVALID_QUOTATION_DETAILS', 400, 'Quotation recipient name must contain 1 to 200 characters.');
+  }
+  return name;
 }
 
 function isApproverForQuotation(principal: QuotationPrincipal, quotation: { assignedStaffId: string | null }): boolean {
@@ -237,6 +257,12 @@ export async function createQuotationDraftInTransaction(
     || input.expiresAt.getTime() <= now.getTime()) {
     fail('INVALID_QUOTATION_DETAILS', 400, 'Quotation delivery details or expiry are invalid.');
   }
+  if (input.recipientName !== undefined && (typeof input.recipientName !== 'string'
+    || !input.recipientName.trim() || input.recipientName.trim().length > 200)) {
+    fail('INVALID_QUOTATION_DETAILS', 400, 'Quotation recipient name must contain 1 to 200 characters.');
+  }
+  // Resolve only within creation: the raw DTO has already been fingerprinted.
+  const recipientName = await resolveQuotationRecipientName(transaction, principal.id, input.recipientName);
 
   const activePricing = typeof pricing === 'function' ? await pricing(transaction, input) : pricing;
   const ids = [...new Set(input.items.map(item => item.variantId))];
@@ -292,6 +318,7 @@ export async function createQuotationDraftInTransaction(
     data: {
       quoteNumber,
       customerId: principal.id,
+      recipientName,
       status: 'PENDING_CUSTOMER_CONFIRMATION',
       subtotal,
       discountAmount: totals.discountAmount,
@@ -688,6 +715,7 @@ export async function approveAndConvertQuotation(
             data: {
               quoteNumber,
               customerId: quotation.customerId,
+              recipientName: quotation.recipientName ?? null,
               assignedStaffId: quotation.assignedStaffId,
               status: 'PENDING_CUSTOMER_CONFIRMATION',
               version: (quotation.version ?? 1) + 1,

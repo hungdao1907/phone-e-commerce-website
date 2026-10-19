@@ -7,7 +7,9 @@ import { CheckoutProgress } from '../../components/checkout/CheckoutProgress';
 import { CheckoutSidebar } from '../../components/checkout/CheckoutSidebar';
 import { useVNAddress } from '../../hooks/useVNAddress';
 import { MapPin, Truck, Store, FileText, ArrowRight } from 'lucide-react';
-import { deliveryContactFromProfile } from '../../components/profile/delivery-contact';
+import { deliveryContactFromProfile, savedDeliveryAddress } from '../../components/profile/delivery-contact';
+import { useRecipientProfile } from '../../components/profile/use-recipient-profile';
+import { checkoutProfileError } from '../../store/useCheckoutStore';
 
 export function CheckoutPage() {
   const { user, token } = useAuthStore();
@@ -16,106 +18,34 @@ export function CheckoutPage() {
   const { deliveryInfo, setDeliveryInfo, setVATInfo } = useCheckoutStore();
   const { provinces, districts, wards, fetchDistricts, fetchWards } = useVNAddress();
 
-  const [profileAddress, setProfileAddress] = useState('');
+  const { profileAddress, profileEmail, profileError, profileStatus } = useRecipientProfile();
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [redirectProgress, setRedirectProgress] = useState(0);
 
-  const applySavedAddress = async (addrString: string) => {
+  const applySavedAddress = (address: string) => {
     setErrors({});
-    try {
-      const parsed = JSON.parse(addrString);
-      let cCode = parsed.cityCode;
-      let dCode = parsed.districtCode;
-      let wCode = parsed.wardCode;
-
-      const normalize = (s: string) => s.toLowerCase().replace(/(thành phố|tỉnh|quận|huyện|phường|xã|tp\.|tp)/g, '').trim();
-
-      if (!cCode && parsed.city && provinces.length > 0) {
-         const search = normalize(parsed.city);
-         const match = provinces.find(p => normalize(p.name).includes(search) || search.includes(normalize(p.name)));
-         if (match) cCode = match.code;
-      }
-
-      if (cCode && !dCode && parsed.district) {
-         const res = await fetch(`https://provinces.open-api.vn/api/p/${cCode}?depth=2`);
-         const data = await res.json();
-         const search = normalize(parsed.district);
-         const match = (data.districts || []).find((d: any) => normalize(d.name).includes(search) || search.includes(normalize(d.name)));
-         if (match) dCode = match.code;
-      }
-
-      if (dCode && !wCode && parsed.ward) {
-         const res = await fetch(`https://provinces.open-api.vn/api/d/${dCode}?depth=2`);
-         const data = await res.json();
-         const search = normalize(parsed.ward);
-         const match = (data.wards || []).find((w: any) => normalize(w.name).includes(search) || search.includes(normalize(w.name)));
-         if (match) wCode = match.code;
-      }
-
-      setDeliveryInfo({
-        city: parsed.city || '',
-        cityCode: cCode,
-        district: parsed.district || '',
-        districtCode: dCode,
-        ward: parsed.ward || '',
-        wardCode: wCode,
-        address: parsed.detailAddress || '',
-        ...(parsed.recipientName ? { fullName: parsed.recipientName } : {}),
-        ...(parsed.recipientPhone ? { phone: parsed.recipientPhone } : {})
-      });
-
-      if (cCode) fetchDistricts(cCode);
-      if (dCode) fetchWards(dCode);
-    } catch (e) {
-      setDeliveryInfo({ address: addrString });
-    }
+    const contact = deliveryContactFromProfile({ address });
+    setDeliveryInfo({ ...savedDeliveryAddress(address),
+      ...(contact.fullName ? { fullName: contact.fullName } : {}),
+      ...(contact.phone ? { phone: contact.phone } : {}) });
   };
 
   useEffect(() => {
-    if (items.length === 0) {
-      navigate('/');
-      return;
-    }
+    if (items.length === 0) navigate('/');
+  }, [items.length, navigate]);
 
-    if (!token || !user) {
-      // Allow guest users to fill checkout form
-      return;
-    }
-
-    // Fetch user profile for default address
-    fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/customers/profile`, {
-      headers: { 'Authorization': `Bearer ${token}` }
-    })
-    .then(res => res.json())
-    .then(data => {
-      if (data.address) {
-        setProfileAddress(data.address);
-        // Automatically fill if empty
-        if (!deliveryInfo.address && !deliveryInfo.city && provinces.length > 0) {
-          applySavedAddress(data.address);
-        } else if (!deliveryInfo.address && !deliveryInfo.city) {
-          // Fallback if provinces are not loaded yet
-          setTimeout(() => applySavedAddress(data.address), 1000);
-        }
-      }
-      const recipient = deliveryContactFromProfile(data);
-      if (recipient.phone && !deliveryInfo.phone) {
-        setDeliveryInfo({ phone: recipient.phone });
-      }
-      if (recipient.fullName && !deliveryInfo.fullName) {
-        setDeliveryInfo({ fullName: recipient.fullName });
-      }
-      if (data.email && !deliveryInfo.email) {
-        setDeliveryInfo({ email: data.email });
-      }
-    })
-    .catch(console.error);
-  }, [token, items, navigate, provinces.length]);
+  useEffect(() => {
+    if (deliveryInfo.cityCode) void fetchDistricts(deliveryInfo.cityCode);
+  }, [deliveryInfo.cityCode]);
+  useEffect(() => {
+    if (deliveryInfo.districtCode) void fetchWards(deliveryInfo.districtCode);
+  }, [deliveryInfo.districtCode]);
 
   const validate = () => {
     const newErrors: Record<string, string> = {};
     if (!deliveryInfo.fullName.trim()) newErrors.fullName = 'Vui lòng nhập họ và tên';
+    if (deliveryInfo.fullName.trim().length > 200) newErrors.fullName = 'Tên người nhận tối đa 200 ký tự';
 
     // VN Phone validation: 10 digits starting with 03, 05, 07, 08, 09
     const phoneRegex = /^(03|05|07|08|09)[0-9]{8}$/;
@@ -125,12 +55,8 @@ export function CheckoutPage() {
       newErrors.phone = 'Số điện thoại không hợp lệ (10 số, bắt đầu bằng 03,05,07,08,09)';
     }
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!deliveryInfo.email) {
-      newErrors.email = 'Vui lòng nhập email';
-    } else if (!emailRegex.test(deliveryInfo.email)) {
-      newErrors.email = 'Địa chỉ email không hợp lệ';
-    }
+    const identityError = checkoutProfileError();
+    if (identityError) newErrors.email = identityError;
 
     if (deliveryInfo.deliveryMethod === 'shipping') {
       if (!deliveryInfo.city.trim()) newErrors.city = 'Vui lòng nhập Tỉnh/Thành phố';
@@ -153,6 +79,10 @@ export function CheckoutPage() {
   };
 
   const handleNextStep = () => {
+    if (!user || !token) {
+      navigate('/login?returnUrl=/checkout');
+      return;
+    }
     if (validate()) {
       if (!user || !token) {
         setShowLoginModal(true);
@@ -214,6 +144,7 @@ export function CheckoutPage() {
                   <input
                     type="text"
                     value={deliveryInfo.fullName}
+                    maxLength={200}
                     onChange={(e) => {
                       setDeliveryInfo({ fullName: e.target.value });
                       if(errors.fullName) setErrors({...errors, fullName: ''});
@@ -243,14 +174,14 @@ export function CheckoutPage() {
                   <label className="block text-sm font-bold text-neutral-700 mb-1.5">Email *</label>
                   <input
                     type="email"
-                    value={deliveryInfo.email}
-                    onChange={(e) => {
-                      setDeliveryInfo({ email: e.target.value });
-                      if(errors.email) setErrors({...errors, email: ''});
-                    }}
+                    value={profileEmail}
+                    readOnly
+                    aria-readonly="true"
                     placeholder="Nhập địa chỉ email"
                     className={`w-full h-11 px-4 bg-white border ${errors.email ? 'border-red-500 focus:ring-red-500' : 'border-neutral-200 focus:ring-black'} rounded-xl text-sm text-neutral-900 focus:outline-none focus:ring-2 focus:border-transparent transition-shadow`}
                   />
+                  {profileStatus === 'loading' && <p role="status">Đang tải email đăng ký…</p>}
+                  {profileError && <p role="alert" className="text-xs text-red-500 mt-1.5">{profileError}</p>}
                   {errors.email && <p className="text-xs text-red-500 mt-1.5 font-medium">{errors.email}</p>}
                 </div>
 
@@ -542,6 +473,7 @@ export function CheckoutPage() {
                 </div> as any
               }
               onNext={handleNextStep}
+              disableButton={!!token && profileStatus !== 'ready'}
               shippingFeeOverride={deliveryInfo.deliveryMethod === 'store_pickup' ? 0 : undefined}
             />
           </div>

@@ -12,6 +12,7 @@ type Counts = {
   disputes?: number;
   reviews?: number;
   wishlists?: number;
+  quotationKeys?: number;
 };
 
 function fixture(counts: Counts = {}, deleteError?: unknown) {
@@ -37,6 +38,7 @@ function fixture(counts: Counts = {}, deleteError?: unknown) {
         dispute: { count: async () => counts.disputes ?? 0 },
         review: { count: async () => counts.reviews ?? 0 },
         wishlist: { count: async () => counts.wishlists ?? 0 },
+        quotationCreateIdempotency: { count: async () => counts.quotationKeys ?? 0 },
       };
       const result = await callback(tx);
       state.customerExists = nextCustomerExists;
@@ -101,3 +103,11 @@ test('Customer role cannot invoke Staff customer deletion; no database transacti
   assert.equal(response.statusCode, 403);
   assert.equal(state.transactionCalls, 0);
 });
+for (const [field, label] of [['quotations', 'báo giá'], ['reviews', 'đánh giá'], ['disputes', 'khiếu nại'], ['wishlists', 'yêu thích'], ['quotationKeys', 'idempotency']] as const) {
+  test(`Customer deletion explains remaining ${field} and retains protection`, async () => {
+    const { database, state } = fixture({ [field]: 1 });
+    const { response } = await invokeAuthorizedDelete('superadmin', database);
+    assert.equal(response.statusCode, 409); assert.ok(response.body.message.includes(label));
+    assert.equal(state.customerExists, true); assert.equal(state.deleteCalls, 0);
+  });
+}

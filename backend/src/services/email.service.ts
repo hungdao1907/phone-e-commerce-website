@@ -8,9 +8,16 @@ const transporter = mailer;
 
 const FRONTEND_URL = process.env.FRONTEND_URL || process.env.VITE_APP_URL || 'http://localhost:3000';
 
+function escapeHtml(value: unknown): string {
+  return String(value ?? '').replace(/[&<>"']/g, character => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+  }[character]!));
+}
+
 export const sendOrderReceivedEmail = async (order: any) => {
   try {
-    const customerName = order.customer?.fullName || 'Khách hàng';
+    const customerName = escapeHtml(order.customer?.fullName || 'Khách hàng');
+    const recipientName = escapeHtml(order.recipientName?.trim() || order.customer?.fullName || 'Khách hàng');
     const customerEmail = order.customer?.email;
     if (!customerEmail) return;
 
@@ -69,9 +76,9 @@ export const sendOrderReceivedEmail = async (order: any) => {
 
         <div style="background:#f9f9f9;padding:24px;border-radius:8px;margin-bottom:24px;">
           <h3 style="margin:0 0 16px 0;font-size:16px;color:#111;border-bottom:2px solid #99e300;display:inline-block;padding-bottom:4px;">Thông tin giao hàng</h3>
-          <p style="margin:0 0 8px 0;font-size:14px;color:#444;"><strong>Người nhận:</strong> ${customerName}</p>
-          <p style="margin:0 0 8px 0;font-size:14px;color:#444;"><strong>Số điện thoại:</strong> ${order.shippingPhone}</p>
-          <p style="margin:0;font-size:14px;color:#444;line-height:1.5;"><strong>Địa chỉ:</strong> ${order.shippingAddress}</p>
+          <p style="margin:0 0 8px 0;font-size:14px;color:#444;"><strong>Người nhận:</strong> ${recipientName}</p>
+          <p style="margin:0 0 8px 0;font-size:14px;color:#444;"><strong>Số điện thoại giao hàng:</strong> ${escapeHtml(order.shippingPhone)}</p>
+          <p style="margin:0;font-size:14px;color:#444;line-height:1.5;"><strong>Địa chỉ:</strong> ${escapeHtml(order.shippingAddress)}</p>
         </div>
 
         <div style="background:#f9f9f9;padding:24px;border-radius:8px;margin-bottom:32px;">
@@ -111,7 +118,8 @@ export const sendOrderReceivedEmail = async (order: any) => {
 
 export const sendOrderConfirmedEmail = async (order: any) => {
   try {
-    const customerName = order.customer?.fullName || 'Khách hàng';
+    const customerName = escapeHtml(order.customer?.fullName || 'Khách hàng');
+    const recipientName = escapeHtml(order.recipientName?.trim() || order.customer?.fullName || 'Khách hàng');
     const customerEmail = order.customer?.email;
     if (!customerEmail) return;
 
@@ -176,6 +184,13 @@ export const sendOrderConfirmedEmail = async (order: any) => {
           </div>
         </div>
 
+        <div style="background:#f9f9f9;padding:24px;border-radius:8px;margin-bottom:24px;">
+          <h3 style="margin:0 0 16px 0;font-size:16px;color:#111;border-bottom:2px solid #99e300;display:inline-block;padding-bottom:4px;">Thông tin giao hàng</h3>
+          <p style="margin:0 0 8px 0;font-size:14px;color:#444;"><strong>Người nhận:</strong> ${recipientName}</p>
+          <p style="margin:0 0 8px 0;font-size:14px;color:#444;"><strong>Số điện thoại giao hàng:</strong> ${escapeHtml(order.shippingPhone)}</p>
+          <p style="margin:0;font-size:14px;color:#444;line-height:1.5;"><strong>Địa chỉ:</strong> ${escapeHtml(order.shippingAddress)}</p>
+        </div>
+
         <div style="text-align:center;margin-bottom:32px;">
           <a href="${FRONTEND_URL}/profile/orders/${order.id}" style="display:inline-block;padding:14px 28px;background:#99e300;color:#000;font-weight:700;text-decoration:none;border-radius:8px;font-size:14px;letter-spacing:0.5px;">THEO DÕI ĐƠN HÀNG</a>
         </div>
@@ -211,7 +226,8 @@ export const sendOrderConfirmedEmail = async (order: any) => {
 
 export const sendPaymentSuccessEmail = async (order: any) => {
   try {
-    const customerName = order.customer?.fullName || 'Khách hàng';
+    const customerName = escapeHtml(order.customer?.fullName || 'Khách hàng');
+    const recipientName = escapeHtml(order.recipientName?.trim() || order.customer?.fullName || 'Khách hàng');
     const customerEmail = order.customer?.email;
     if (!customerEmail) return;
 
@@ -271,9 +287,9 @@ export const sendPaymentSuccessEmail = async (order: any) => {
 
         <div style="background:#f9f9f9;padding:24px;border-radius:8px;margin-bottom:24px;">
           <h3 style="margin:0 0 16px 0;font-size:16px;color:#111;border-bottom:2px solid #99e300;display:inline-block;padding-bottom:4px;">THÔNG TIN GIAO HÀNG</h3>
-          <p style="margin:0 0 8px 0;font-size:14px;color:#444;"><strong>Người nhận:</strong> ${customerName}</p>
-          <p style="margin:0 0 8px 0;font-size:14px;color:#444;"><strong>Số điện thoại:</strong> ${order.shippingPhone}</p>
-          <p style="margin:0;font-size:14px;color:#444;line-height:1.5;"><strong>Địa chỉ:</strong> ${order.shippingAddress}</p>
+          <p style="margin:0 0 8px 0;font-size:14px;color:#444;"><strong>Người nhận:</strong> ${recipientName}</p>
+          <p style="margin:0 0 8px 0;font-size:14px;color:#444;"><strong>Số điện thoại giao hàng:</strong> ${escapeHtml(order.shippingPhone)}</p>
+          <p style="margin:0;font-size:14px;color:#444;line-height:1.5;"><strong>Địa chỉ:</strong> ${escapeHtml(order.shippingAddress)}</p>
         </div>
 
         <div style="background:#f9f9f9;padding:24px;border-radius:8px;margin-bottom:32px;">

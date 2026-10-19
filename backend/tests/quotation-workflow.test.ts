@@ -29,7 +29,7 @@ function matches(actual: any, where: any): boolean {
   });
 }
 
-function databaseFixture(initial: Partial<MockState> = {}) {
+function databaseFixture(initial: Partial<MockState> = {}, customer: any = { fullName: 'Account Name' }) {
   let state: MockState = {
     quotation: null,
     revisions: [],
@@ -49,6 +49,11 @@ function databaseFixture(initial: Partial<MockState> = {}) {
       transactionCalls += 1;
       const working = clone(state);
       const tx = {
+        customer: { findUnique: async ({ where, select }: any) => {
+          assert.equal(where.id, 'customer-1');
+          assert.deepEqual(select, { fullName: true });
+          return clone(customer);
+        } },
         $queryRaw: async (strings: TemplateStringsArray, id: string) => {
           if (strings.join('').includes('information_schema')) return [{ is_nullable: 'YES' }];
           assert.ok(strings.join('').includes('FOR UPDATE'));
@@ -211,6 +216,77 @@ test('Draft uses backend catalog prices and rejects duplicate lines whose combin
     shippingAddress: 'Address', shippingPhone: '0900000000', paymentMethod: 'COD', expiresAt: new Date('2026-10-11T00:00:00Z'),
   }, pricing, now), (error: any) => error instanceof QuotationWorkflowError && error.code === 'OUT_OF_STOCK');
   assert.equal(shortStock.state.quotation, null);
+});
+
+test('Recipient name snapshots explicit input or authenticated Customer profile at creation', async () => {
+  for (const recipientName of [undefined, '  Delivery Recipient  ']) {
+    const fixture = databaseFixture();
+    const created = await createQuotationDraft(fixture.database, { id: 'customer-1', role: 'customer' }, {
+      items: [{ variantId: 'variant-1', quantity: 1 }], shippingAddress: 'Address',
+      shippingPhone: '0900000000', paymentMethod: 'COD', expiresAt: quoteExpiry(now), recipientName,
+    }, pricing, now);
+    assert.equal(created.recipientName, recipientName?.trim() ?? 'Account Name');
+    assert.equal(created.customerId, 'customer-1');
+  }
+  for (const recipientName of [null, 42, '', '  ', 'a'.repeat(201)]) {
+    const fixture = databaseFixture();
+    await assert.rejects(createQuotationDraft(fixture.database, { id: 'customer-1', role: 'customer' }, {
+      items: [{ variantId: 'variant-1', quantity: 1 }], shippingAddress: 'Address',
+      shippingPhone: '0900000000', paymentMethod: 'COD', expiresAt: quoteExpiry(now), recipientName: recipientName as any,
+    }, pricing, now), { code: 'INVALID_QUOTATION_DETAILS' });
+    assert.equal(fixture.state.quotation, null);
+  }
+});
+
+test('Conversion snapshots quote recipient and falls back to Customer for legacy quotes', async () => {
+  for (const recipientName of ['Delivery Recipient', null, undefined, '', '  ']) {
+    const fixture = databaseFixture({ quotation: quoteState({ recipientName }) });
+    await approveAndConvertQuotation(fixture.database, { id: 'staff-1', role: 'staff' }, 'quotation-1',
+      'recipient-conversion-key', pricing, createQuotationOrderConverter({ generateOrderCode: () => 'DH-RECIPIENT' }), now);
+    assert.equal(fixture.state.orders[0].recipientName, recipientName?.trim() || 'Account Name');
+    assert.equal(fixture.state.orders[0].customerId, 'customer-1');
+  }
+});
+
+test('Legacy recipient fallback rejects unusable profiles and conversion rolls back', async () => {
+  for (const customer of [null, {}, { fullName: null }, { fullName: '' }, { fullName: '  ' }, { fullName: 'a'.repeat(201) }]) {
+    const code = customer === null ? 'CUSTOMER_NOT_FOUND' : 'INVALID_QUOTATION_DETAILS';
+    const draftFixture = databaseFixture({}, customer);
+    await assert.rejects(createQuotationDraft(draftFixture.database, { id: 'customer-1', role: 'customer' }, {
+      items: [{ variantId: 'variant-1', quantity: 1 }], shippingAddress: 'Address', shippingPhone: '0900000000',
+      paymentMethod: 'COD', expiresAt: quoteExpiry(now),
+    }, pricing, now), { code });
+    assert.equal(draftFixture.state.quotation, null);
+
+    const fixture = databaseFixture({ quotation: quoteState({ recipientName: '  ' }) }, customer);
+    await assert.rejects(approveAndConvertQuotation(fixture.database, { id: 'staff-1', role: 'staff' }, 'quotation-1',
+      'recipient-invalid-profile', pricing, createQuotationOrderConverter(), now), { code });
+    assert.equal(fixture.state.orders.length, 0);
+    assert.equal(fixture.state.variants[0].stock, 5);
+    assert.equal(fixture.state.quotation.status, 'CUSTOMER_CONFIRMED');
+  }
+});
+
+test('Profile fallback trims names; valid quote snapshots convert without a usable profile', async () => {
+  const fixture = databaseFixture({ quotation: quoteState({ recipientName: null }) }, { fullName: '  Profile Recipient  ' });
+  await approveAndConvertQuotation(fixture.database, { id: 'staff-1', role: 'staff' }, 'quotation-1',
+    'recipient-trim-profile', pricing, createQuotationOrderConverter(), now);
+  assert.equal(fixture.state.orders[0].recipientName, 'Profile Recipient');
+  const snapshotFixture = databaseFixture({ quotation: quoteState({ recipientName: 'Saved Recipient' }) }, null);
+  await approveAndConvertQuotation(snapshotFixture.database, { id: 'staff-1', role: 'staff' }, 'quotation-1',
+    'recipient-snapshot-profile', pricing, createQuotationOrderConverter(), now);
+  assert.equal(snapshotFixture.state.orders[0].recipientName, 'Saved Recipient');
+});
+
+test('Requotes preserve the stored recipient snapshot including legacy null and blank', async () => {
+  for (const recipientName of ['Delivery Recipient', null, '', '  ']) {
+    const fixture = databaseFixture({ quotation: quoteState({ recipientName }) });
+    await approveAndConvertQuotation(fixture.database, { id: 'staff-1', role: 'staff' }, 'quotation-1',
+      'recipient-requote-key', { ...pricing, calculateTotals: subtotal => ({ discountAmount: 0, shippingFee: 1, totalAmount: subtotal + 1 }) },
+      createQuotationOrderConverter(), now, {}, quoteExpiry);
+    assert.equal(fixture.state.revisions[0].recipientName, recipientName);
+    assert.equal(fixture.state.orders.length, 0);
+  }
 });
 
 test('Customer confirmation is owner-only and atomically advances Draft to confirmed', async () => {

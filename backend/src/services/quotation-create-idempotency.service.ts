@@ -33,6 +33,7 @@ export type QuotationCreateFingerprintInput = {
   items: Array<{ variantId: string; quantity: number }>;
   shippingAddress: string;
   shippingPhone: string;
+  recipientName?: string;
   paymentMethod: 'COD' | 'BANK_TRANSFER';
   deliveryMethod?: 'delivery' | 'pickup';
   promoCode?: string | null;
@@ -79,7 +80,9 @@ function normalizeRequest(customerId: string, input: QuotationCreateFingerprintI
   if (typeof input.shippingAddress !== 'string' || !input.shippingAddress.trim()
     || typeof input.shippingPhone !== 'string' || !input.shippingPhone.trim()
     || (input.paymentMethod !== 'COD' && input.paymentMethod !== 'BANK_TRANSFER')
-    || (input.deliveryMethod !== undefined && input.deliveryMethod !== 'delivery' && input.deliveryMethod !== 'pickup')) {
+    || (input.deliveryMethod !== undefined && input.deliveryMethod !== 'delivery' && input.deliveryMethod !== 'pickup')
+    || (input.recipientName !== undefined && (typeof input.recipientName !== 'string'
+      || !input.recipientName.trim() || input.recipientName.trim().length > 200))) {
     throw new QuotationCreateIdempotencyError('INVALID_QUOTATION_DTO', 400, 'Quotation request is invalid.');
   }
 
@@ -93,6 +96,8 @@ function normalizeRequest(customerId: string, input: QuotationCreateFingerprintI
     promoCode: typeof input.promoCode === 'string' ? input.promoCode.trim().toLocaleUpperCase('en-US') || null : null,
     note: typeof input.note === 'string' ? input.note.trim() || null : null,
     sourceSessionId: typeof input.sourceSessionId === 'string' ? input.sourceSessionId.trim() || null : null,
+    // Omitted names must retain the historical hash, independent of profile changes.
+    ...(input.recipientName !== undefined ? { recipientName: input.recipientName.trim() } : {}),
   };
 }
 

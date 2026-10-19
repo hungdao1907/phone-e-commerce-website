@@ -17,10 +17,11 @@ export type QuotationPdfSnapshot = {
   totalAmount: number;
   shippingAddress: string;
   shippingPhone: string;
+  recipientName?: string | null;
   note: string | null;
   expiresAt: Date | string;
   createdAt: Date | string;
-  customer: { fullName: string | null; email: string };
+  customer: { fullName: string | null; email: string; phone?: string | null };
   items: Array<{
     productName: string;
     variantSku: string | null;
@@ -189,8 +190,10 @@ export function buildQuotationPdfRows(snapshot: QuotationPdfSnapshot): Quotation
     { text: `Tr\u1ea1ng th\u00e1i: ${quotationPdfStatusLabel(snapshot.status)}    Ti\u1ec1n t\u1ec7: ${text(snapshot.currency, 12)}`, fontSize: 9 },
     { text: `Kh\u00e1ch h\u00e0ng: ${unicodeText(snapshot.customer.fullName || 'Kh\u00e1ch h\u00e0ng', 160)}`, fontSize: 9 },
     { text: `Email: ${unicodeText(snapshot.customer.email, 200)}`, fontSize: 9 },
+    { text: `SĐT tài khoản: ${unicodeText(snapshot.customer.phone || '—', 40)}`, fontSize: 9 },
+    { text: `Người nhận: ${unicodeText(snapshot.recipientName?.trim() || snapshot.customer.fullName || 'Khách hàng', 160)}`, fontSize: 9 },
     { text: `\u0110\u1ecba ch\u1ec9 giao h\u00e0ng: ${unicodeText(snapshot.shippingAddress, 1000)}`, fontSize: 9 },
-    { text: `S\u1ed1 \u0111i\u1ec7n tho\u1ea1i: ${unicodeText(snapshot.shippingPhone, 40)}`, fontSize: 9, gapAfter: 0.7 },
+    { text: `SĐT giao hàng: ${unicodeText(snapshot.shippingPhone, 40)}`, fontSize: 9, gapAfter: 0.7 },
     { text: 'S\u1ea2N PH\u1ea8M | S\u1ed0 L\u01af\u1ee2NG | \u0110\u01a0N GI\u00c1 | TH\u00c0NH TI\u1ec0N', fontSize: 9, gapAfter: 0.3 },
   ];
 
@@ -260,14 +263,16 @@ export async function renderQuotationPdf(snapshot: QuotationPdfSnapshot): Promis
   const customerLines = [
     { value: unicodeText(snapshot.customer.fullName || 'Khách hàng', 160), size: 11, bold: true },
     { value: 'Email: ' + unicodeText(snapshot.customer.email, 200), size: 9, bold: false },
-    { value: 'Điện thoại: ' + unicodeText(snapshot.shippingPhone, 40), size: 9, bold: false },
+    { value: 'SĐT tài khoản: ' + unicodeText(snapshot.customer.phone || '—', 40), size: 9, bold: false },
+    { value: 'Người nhận: ' + unicodeText(snapshot.recipientName?.trim() || snapshot.customer.fullName || 'Khách hàng', 160), size: 9, bold: true },
+    { value: 'SĐT giao hàng: ' + unicodeText(snapshot.shippingPhone, 40), size: 9, bold: false },
     { value: 'Giao nhận: ' + unicodeText(snapshot.shippingAddress, 1000), size: 9, bold: false },
   ];
   const customerHeight = 39 + customerLines.reduce((sum, entry) =>
     sum + t.wrap(entry.value, entry.size, contentWidth - 32, entry.bold).length * entry.size * 1.4 + 5, 0);
   ensure(customerHeight);
   document.roundedRect(left, y, contentWidth, customerHeight, 7).fill(soft);
-  t.line('THÔNG TIN KHÁCH HÀNG', left + 16, y + 14, 8, muted, true);
+  t.line('THÔNG TIN KHÁCH HÀNG / GIAO HÀNG', left + 16, y + 14, 8, muted, true);
   let customerY = y + 33;
   customerLines.forEach(entry => { customerY += t.block(entry.value, left + 16, customerY, contentWidth - 32, entry.size, ink, entry.bold) + 5; });
   y += customerHeight + 24;

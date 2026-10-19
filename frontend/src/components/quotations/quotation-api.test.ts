@@ -36,6 +36,7 @@ test('Create Quotation sends only variant/quantity and customer form fields with
     const quotation = await createCustomerQuotation({
       items: [{ variantId: 'variant-1', quantity: 2 }],
       shippingAddress: 'Address', shippingPhone: '0900000000',
+      recipientName: 'Trần Văn B',
       paymentMethod: 'COD', deliveryMethod: 'delivery',
     }, 'customer-jwt', 'safe-idempotency-key-00001');
     assert.equal(quotation.id, 'quote-1');
@@ -45,9 +46,10 @@ test('Create Quotation sends only variant/quantity and customer form fields with
     assert.equal(headers.get('Authorization'), 'Bearer customer-jwt');
     assert.equal(headers.get('Idempotency-Key'), 'safe-idempotency-key-00001');
     const body = JSON.parse(String(captured!.init?.body));
-    assert.deepEqual(Object.keys(body).sort(), ['deliveryMethod', 'items', 'paymentMethod', 'shippingAddress', 'shippingPhone']);
+    assert.deepEqual(Object.keys(body).sort(), ['deliveryMethod', 'items', 'paymentMethod', 'recipientName', 'shippingAddress', 'shippingPhone']);
+    assert.equal(body.recipientName, 'Trần Văn B');
     assert.deepEqual(body.items, [{ variantId: 'variant-1', quantity: 2 }]);
-    for (const forbidden of ['productId', 'customerId', 'unitPrice', 'discountAmount', 'shippingFee', 'grandTotal', 'totalAmount', 'token', 'sessionId']) {
+    for (const forbidden of ['email', 'customerEmail', 'fullName', 'productId', 'customerId', 'unitPrice', 'discountAmount', 'shippingFee', 'grandTotal', 'totalAmount', 'token', 'sessionId']) {
       assert.equal(JSON.stringify(body).includes(forbidden), false);
     }
   } finally {

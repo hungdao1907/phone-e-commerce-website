@@ -180,6 +180,7 @@ model Order {
   paymentStatus     String     @default("PENDING") // PENDING, PAID, REFUNDED
   shippingAddress   String
   shippingPhone     String
+  recipientName     String?
   shippingFee       Int        @default(0)
   totalAmount       Int
   discountAmount    Int        @default(0)
@@ -248,6 +249,7 @@ model Quotation {
   promoCodeId         String?
   shippingAddress     String
   shippingPhone       String
+  recipientName       String?
   note                String?
   sourceSessionId     String?
   expiresAt           DateTime

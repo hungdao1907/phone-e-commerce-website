@@ -1,6 +1,8 @@
 export type CustomerOrderDetail = {
   id: string; customerId: string; orderCode: string; createdAt: string; status: string;
   paymentMethod: string; paymentStatus: string; shippingAddress: string; shippingPhone: string;
+  recipientName?: string | null;
+  customer?: { fullName?: string | null; email?: string | null; phone?: string | null } | null;
   subtotal: number; discountAmount: number; shippingFee: number; totalAmount: number; note?: string | null;
   items: Array<{ id: string; productName: string; variantInfo: string; quantity: number; unitPrice: number; lineTotal: number }>;
 };

@@ -9,6 +9,7 @@ export type DirectCheckoutIdempotencyPayload = {
   paymentMethod?: string | null;
   shippingAddress: string;
   shippingPhone: string;
+  recipientName?: string;
   note?: string | null;
   estimatedDelivery?: string | Date | null;
 };
@@ -98,6 +99,10 @@ function normalizePayload(customerId: string, payload: DirectCheckoutIdempotency
   if (payload.note !== undefined && payload.note !== null && typeof payload.note !== 'string') {
     throw new CheckoutIdempotencyError('INVALID_IDEMPOTENCY_PAYLOAD', 'Checkout note is invalid.', 400);
   }
+  if (payload.recipientName !== undefined && (typeof payload.recipientName !== 'string'
+    || !payload.recipientName.trim() || payload.recipientName.trim().length > 200)) {
+    throw new CheckoutIdempotencyError('INVALID_IDEMPOTENCY_PAYLOAD', 'Checkout recipient name is invalid.', 400);
+  }
 
   const quantityByVariant = new Map<string, number>();
   for (const item of payload.items) {
@@ -140,6 +145,8 @@ function normalizePayload(customerId: string, payload: DirectCheckoutIdempotency
     shippingPhone: payload.shippingPhone,
     note: payload.note ?? null,
     estimatedDelivery,
+    // Keep legacy hashes stable when the old client omitted this new field.
+    ...(payload.recipientName !== undefined ? { recipientName: payload.recipientName.trim() } : {}),
   };
 }
 

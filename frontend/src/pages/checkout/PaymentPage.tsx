@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import { useCartStore } from '../../store/useCartStore';
-import { useCheckoutStore } from '../../store/useCheckoutStore';
+import { checkoutProfileError, useCheckoutStore } from '../../store/useCheckoutStore';
+import { useRecipientProfile } from '../../components/profile/use-recipient-profile';
 import { CheckoutProgress } from '../../components/checkout/CheckoutProgress';
 import { useQuery } from '@tanstack/react-query';
 import { CheckoutSidebar } from '../../components/checkout/CheckoutSidebar';
@@ -12,10 +13,22 @@ import { CreditCard, Wallet, Banknote, Loader2, CheckCircle2, AlertTriangle, Clo
 const checkoutIdempotencyEnabled = import.meta.env.VITE_CHECKOUT_IDEMPOTENCY_ENABLED === 'true';
 
 export function PaymentPage() {
+  const revision = useCheckoutStore(state => state.sessionRevision);
+  return <AccountPaymentPage key={revision} />;
+}
+
+function AccountPaymentPage() {
   const { user, token } = useAuthStore();
   const { items, clearCart } = useCartStore();
   const navigate = useNavigate();
   const { deliveryInfo, paymentMethod, setPaymentMethod } = useCheckoutStore();
+  const { profileStatus, profileError, sessionRevision } = useRecipientProfile();
+  const mounted = useRef(true);
+  const submitting = useRef(false);
+  useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
+  const currentSession = () => mounted.current && !!useAuthStore.getState().token
+    && useAuthStore.getState().user?.id === user?.id
+    && useCheckoutStore.getState().sessionRevision === sessionRevision;
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [paymentData, setPaymentData] = useState<any>(null);
@@ -32,7 +45,7 @@ export function PaymentPage() {
 
   // React Query for polling payment status
   const { data: paymentStatusData } = useQuery({
-    queryKey: ['payment-status', orderCode],
+    queryKey: ['payment-status', user?.id, sessionRevision, orderCode],
     queryFn: async () => {
       const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/orders/${orderCode}/payment-status`, {
         headers: { 'Authorization': `Bearer ${token}` }
@@ -40,7 +53,7 @@ export function PaymentPage() {
       if (!res.ok) throw new Error('Network error');
       return res.json();
     },
-    enabled: !!orderCode,
+    enabled: !!orderCode && !!token && !!user,
     refetchInterval: (query) => {
       const data = query.state?.data as any;
       if (data?.paymentStatus === 'PAID') return false; // Stop when paid
@@ -81,7 +94,6 @@ export function PaymentPage() {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
           body: JSON.stringify({
-            customerId: user.id,
             items: items.map(item => ({ variantId: item.variantId || item.id, quantity: item.quantity })),
             promoCode: appliedPromo?.name || null,
        deliveryMethod: (deliveryInfo.deliveryMethod === 'store_pickup' ? 'pickup' : 'delivery') as 'pickup' | 'delivery',
@@ -116,12 +128,23 @@ export function PaymentPage() {
   }, [token, user?.id, items, appliedPromo?.name, deliveryInfo.deliveryMethod, isOrderPlaced]);
 
   const handlePlaceOrder = async () => {
+    if (submitting.current) return;
+    const identityError = checkoutProfileError();
+    if (!currentSession() || identityError) {
+      setPricingMessage(identityError || 'Phiên đăng nhập đã thay đổi.');
+      return;
+    }
     if (!user || !token) return;
+    if (!deliveryInfo.fullName.trim() || deliveryInfo.fullName.trim().length > 200 || !/^(03|05|07|08|09)[0-9]{8}$/.test(deliveryInfo.phone)) {
+      navigate('/checkout');
+      return;
+    }
     if (!pricingConfirmation || !serverPricing) {
       setPricingMessage('Chưa nhận được xác nhận giá chính thức. Vui lòng chờ hoặc tải lại giá trước khi đặt hàng.');
       return;
     }
     setIsSubmitting(true);
+    submitting.current = true;
     
     // Determine actual address
     let finalAddress = deliveryInfo.address;
@@ -132,7 +155,6 @@ export function PaymentPage() {
     }
 
       const orderPayload = {
-      customerId: user.id,
       items: items.map(i => ({
         productId: i.productId || i.id,
         variantId: i.variantId || null,
@@ -141,6 +163,7 @@ export function PaymentPage() {
       paymentMethod,
       shippingAddress: finalAddress,
       shippingPhone: deliveryInfo.phone,
+      recipientName: deliveryInfo.fullName.trim() as string | undefined,
        deliveryMethod: (deliveryInfo.deliveryMethod === 'store_pickup' ? 'pickup' : 'delivery') as 'pickup' | 'delivery',
       promoCode: appliedPromo?.name,
       pricingConfirmation,
@@ -165,9 +188,11 @@ export function PaymentPage() {
           paymentMethod: orderPayload.paymentMethod,
           shippingAddress: orderPayload.shippingAddress,
           shippingPhone: orderPayload.shippingPhone,
+          recipientName: orderPayload.recipientName,
           note: orderPayload.note,
-        });
+        }, undefined, undefined, Date.now(), currentSession);
         pendingIdempotencyKey = intent.key;
+        if (intent.omitRecipientName) delete orderPayload.recipientName;
         orderPayload.estimatedDelivery = intent.estimatedDelivery;
         requestHeaders['Idempotency-Key'] = intent.key;
         const controller = new AbortController();
@@ -177,6 +202,7 @@ export function PaymentPage() {
 
       let res: Response;
       try {
+        if (!currentSession() || checkoutProfileError()) return;
         checkoutRequestSent = true;
         res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/orders`, {
         method: 'POST',
@@ -189,6 +215,7 @@ export function PaymentPage() {
       }
       if (res.ok) {
         const result = await res.json();
+        if (!currentSession()) return;
         if (pendingIdempotencyKey) clearCheckoutIntent(user.id, pendingIdempotencyKey);
         setIsOrderPlaced(true);
         clearCart();
@@ -213,6 +240,7 @@ export function PaymentPage() {
         navigate('/order-success', { state: { orderId: result.orderId || result.order?.id || '#ORD-SUCCESS' } });
       } else {
         const error = await res.json();
+        if (!currentSession()) return;
         if (res.status === 409 && error.code === 'PRICE_CONFIRMATION_REQUIRED' && error.pricing && error.pricingConfirmation) {
           const previousTotal = serverPricing?.grandTotal;
           setServerPricing(error.pricing);
@@ -228,6 +256,7 @@ export function PaymentPage() {
         setIsSubmitting(false);
       }
     } catch (e) { 
+      if (!currentSession()) return;
       console.error(e);
       if (!checkoutRequestSent && e instanceof Error) {
         alert(e.message);
@@ -237,6 +266,9 @@ export function PaymentPage() {
         alert('Không xác định được máy chủ đã nhận đơn hay chưa. Hãy kiểm tra mục đơn hàng trước khi gửi lại để tránh tạo đơn trùng.');
       }
       setIsSubmitting(false);
+    } finally {
+      submitting.current = false;
+      if (currentSession()) setIsSubmitting(false);
     }
   };
 
@@ -314,8 +346,8 @@ export function PaymentPage() {
               shippingFeeOverride={deliveryInfo.deliveryMethod === 'store_pickup' ? 0 : undefined}
               pricingSnapshot={serverPricing}
               pricingLoading={isLoadingPricing}
-              pricingMessage={pricingMessage}
-              disableButton={!pricingConfirmation || !serverPricing}
+              pricingMessage={profileError || pricingMessage}
+              disableButton={!token || !user || profileStatus !== 'ready' || !pricingConfirmation || !serverPricing}
               backendPricingRequired
             />
           </div>
