@@ -7,6 +7,7 @@ import { CheckoutProgress } from '../../components/checkout/CheckoutProgress';
 import { CheckoutSidebar } from '../../components/checkout/CheckoutSidebar';
 import { useVNAddress } from '../../hooks/useVNAddress';
 import { MapPin, Truck, Store, FileText, ArrowRight } from 'lucide-react';
+import { deliveryContactFromProfile } from '../../components/profile/delivery-contact';
 
 export function CheckoutPage() {
   const { user, token } = useAuthStore();
@@ -59,7 +60,9 @@ export function CheckoutPage() {
         districtCode: dCode,
         ward: parsed.ward || '',
         wardCode: wCode,
-        address: parsed.detailAddress || ''
+        address: parsed.detailAddress || '',
+        ...(parsed.recipientName ? { fullName: parsed.recipientName } : {}),
+        ...(parsed.recipientPhone ? { phone: parsed.recipientPhone } : {})
       });
 
       if (cCode) fetchDistricts(cCode);
@@ -96,11 +99,12 @@ export function CheckoutPage() {
           setTimeout(() => applySavedAddress(data.address), 1000);
         }
       }
-      if (data.phone && !deliveryInfo.phone) {
-        setDeliveryInfo({ phone: data.phone });
+      const recipient = deliveryContactFromProfile(data);
+      if (recipient.phone && !deliveryInfo.phone) {
+        setDeliveryInfo({ phone: recipient.phone });
       }
-      if (data.fullName && !deliveryInfo.fullName) {
-        setDeliveryInfo({ fullName: data.fullName });
+      if (recipient.fullName && !deliveryInfo.fullName) {
+        setDeliveryInfo({ fullName: recipient.fullName });
       }
       if (data.email && !deliveryInfo.email) {
         setDeliveryInfo({ email: data.email });

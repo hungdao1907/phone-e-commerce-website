@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "vite --port=3000 --host=0.0.0.0",
     "build": "vite build",
+    "test:customer-account": "node --import tsx --test src/pages/auth/customer-account.test.tsx",
+    "posttest": "npm run test:customer-account",
     "test": "node --import tsx --test src/components/quotations/quotation-api.test.ts src/components/quotations/quotation-draft.test.ts src/components/quotations/customer-quotation-pdf.test.ts src/components/quotations/quotation-delete.test.ts src/components/checkout/checkout-idempotency.test.ts src/services/chatbot.api.test.ts src/components/chatbot/quotation-intent.test.ts src/pages/order/customer-order-detail.test.ts src/components/admin/layout/VerticalDock.test.ts",
     "preview": "vite preview",
     "generate:admin-knowledge": "node scripts/generate-admin-knowledge.mjs",

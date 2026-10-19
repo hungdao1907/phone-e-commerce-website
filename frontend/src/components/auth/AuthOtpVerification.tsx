@@ -104,20 +104,10 @@ export const AuthOtpVerification = ({ email, purpose, onVerified, onBack }: Auth
 
     try {
       const endpoint = purpose === 'register'
-        ? '/api/auth/customer/register' // Wait, register re-sends OTP? But register requires password.
-        // Actually, for register, we might need a dedicated resend endpoint if we don't want to re-pass password.
-        // Let's assume the backend supports a standard forgot-password for resending if we don't have a dedicated one,
-        // or for register, we just use the forgot-password endpoint to send an OTP? No, they use different templates.
-        // Let's just use forgot-password for forgot-password. For register, let's call the forgot-password as well since it just generates an OTP, or just let user go back.
+        ? '/api/auth/customer/resend-otp'
         : '/api/auth/customer/forgot-password';
 
-      if (purpose === 'register') {
-        // We can't easily resend register OTP without the full payload (password, etc) in current backend.
-        // Let's just alert for now or let them go back.
-        // Or actually we can just call forgot-password API to generate an OTP for them since the OTP field is the same.
-      }
-
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/auth/customer/forgot-password`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: email.trim().toLowerCase() })

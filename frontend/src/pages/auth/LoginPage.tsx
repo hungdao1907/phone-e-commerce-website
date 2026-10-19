@@ -4,6 +4,7 @@ import { useAuthStore } from '@/store/authStore';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Phone, Eye, EyeOff } from 'lucide-react';
 import { AuthOtpVerification } from '../../components/auth/AuthOtpVerification';
+import { isEmail, normalizeEmail, passwordError, validateRegistration } from './customer-account';
 
 // Custom inline SVG icons for Google and Apple
 const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
@@ -99,7 +100,7 @@ const ForgotPasswordFlow = ({ onBack }: { onBack: () => void }) => {
 
   const handleRequestOTP = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    if (!email.trim() || !/^\S+@\S+\.\S+$/.test(email)) {
+    if (!isEmail(normalizeEmail(email))) {
       setMessage({ text: 'Vui lòng nhập định dạng email hợp lệ.', type: 'error' });
       return;
     }
@@ -130,8 +131,8 @@ const ForgotPasswordFlow = ({ onBack }: { onBack: () => void }) => {
 
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newPassword || newPassword.length < 6) {
-      setMessage({ text: 'Mật khẩu mới phải có ít nhất 6 ký tự.', type: 'error' });
+    if (passwordError(newPassword)) {
+      setMessage({ text: passwordError(newPassword)!, type: 'error' });
       return;
     }
     if (newPassword !== confirmPassword) {
@@ -290,6 +291,7 @@ const ForgotPasswordFlow = ({ onBack }: { onBack: () => void }) => {
 
 const SignInForm = () => {
   const [view, setView] = useState<'login' | 'forgot_password'>('login');
+  const [internalLogin, setInternalLogin] = useState(false);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -309,8 +311,8 @@ const SignInForm = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!username.trim()) {
-      setError({ field: 'username', message: 'Vui lòng nhập tên đăng nhập hoặc email.' });
+    if (!username.trim() || (!internalLogin && !isEmail(normalizeEmail(username)))) {
+      setError({ field: 'username', message: internalLogin ? 'Vui lòng nhập tên đăng nhập.' : 'Vui lòng nhập Gmail hợp lệ.' });
       return;
     }
     if (!password.trim()) {
@@ -322,17 +324,18 @@ const SignInForm = () => {
     setIsLoading(true);
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/auth/login`, {
+      const endpoint = internalLogin ? '/api/auth/login' : '/api/auth/customer/login';
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password })
+        body: JSON.stringify(internalLogin ? { username: username.trim(), password } : { email: normalizeEmail(username), password })
       });
 
       const data = await response.json();
 
       if (!response.ok) {
         if (response.status === 401 || response.status === 400 || response.status === 404) {
-           throw new Error('Tên đăng nhập hoặc mật khẩu không chính xác.');
+           throw new Error(internalLogin ? 'Tên đăng nhập hoặc mật khẩu không chính xác.' : 'Gmail hoặc mật khẩu không chính xác.');
         } else if (response.status === 403) {
            throw new Error('Tài khoản của bạn hiện không thể đăng nhập. Vui lòng liên hệ hỗ trợ.');
         }
@@ -377,16 +380,20 @@ const SignInForm = () => {
       </div>
       <SocialIcons onProviderClick={handleSocialClick} />
       {socialMessage && <div className="text-amber-500 text-xs bg-amber-500/10 border border-amber-500/30 p-2 rounded-lg">{socialMessage}</div>}
-      <form className="space-y-3.5" onSubmit={handleLogin}>
+      <button type="button" className="text-xs text-neutral-400 hover:text-[#99e300]" onClick={() => { setInternalLogin(!internalLogin); setUsername(''); setPassword(''); setError(null); }}>
+        {internalLogin ? 'Đăng nhập khách hàng bằng Gmail' : 'Đăng nhập dành cho Admin / Staff'}
+      </button>
+      <form className="space-y-3.5" onSubmit={handleLogin} noValidate>
         {error && !error.field && <div className="text-red-500 text-sm bg-red-500/10 border border-red-500/30 p-2.5 rounded-lg">{error.message}</div>}
 
         <div className="space-y-1">
           <input
-            type="text"
-            placeholder="Tên đăng nhập"
+            type={internalLogin ? 'text' : 'email'}
+            aria-label={internalLogin ? 'Tên đăng nhập nhân viên' : 'Gmail'}
+            placeholder={internalLogin ? 'Tên đăng nhập nhân viên' : 'Gmail'}
             value={username}
             onChange={(e) => { setUsername(e.target.value); setError(null); }}
-            autoComplete="username"
+            autoComplete={internalLogin ? 'username' : 'email'}
             className={`w-full h-10 px-4 bg-white/5 border ${error?.field === 'username' ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-white/10 focus:ring-[#99e300] focus:border-[#99e300]'} rounded-lg text-sm text-white placeholder-neutral-400 focus:outline-none focus:ring-1 transition-colors`}
           />
           {error?.field === 'username' && <p className="text-xs text-red-500">{error.message}</p>}
@@ -439,7 +446,8 @@ const SignInForm = () => {
 
 const SignUpForm = () => {
   const [step, setStep] = useState(1);
-  const [username, setUsername] = useState('');
+  const [fullName, setFullName] = useState('');
+  const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -454,7 +462,7 @@ const SignUpForm = () => {
 
   const getPasswordStrength = (pass: string) => {
     if (!pass) return { label: '', color: 'bg-transparent' };
-    if (pass.length < 6) return { label: 'Yếu', color: 'bg-red-500', text: 'text-red-500' };
+    if (passwordError(pass)) return { label: 'Yếu', color: 'bg-red-500', text: 'text-red-500' };
     if (pass.length < 10 || !/[A-Z]/.test(pass) || !/[0-9]/.test(pass)) return { label: 'Trung bình', color: 'bg-amber-500', text: 'text-amber-500' };
     return { label: 'Mạnh', color: 'bg-[#99e300]', text: 'text-[#99e300]' };
   };
@@ -466,31 +474,9 @@ const SignUpForm = () => {
     setErrors({});
     setMessage({ text: '', type: '' });
 
-    let hasError = false;
-    const newErrors: Record<string, string> = {};
-
-    if (!username.trim() || username.includes(' ')) {
-      newErrors.username = 'Tên đăng nhập không hợp lệ (không chứa khoảng trắng).';
-      hasError = true;
-    }
-    if (!email.trim() || !/^\S+@\S+\.\S+$/.test(email)) {
-      newErrors.email = 'Email không hợp lệ.';
-      hasError = true;
-    }
-    if (!password) {
-      newErrors.password = 'Vui lòng nhập mật khẩu.';
-      hasError = true;
-    }
-    if (password !== confirmPassword) {
-      newErrors.confirmPassword = 'Mật khẩu xác nhận không khớp.';
-      hasError = true;
-    }
-    if (!agreed) {
-      newErrors.agreed = 'Bạn phải đồng ý với Điều khoản sử dụng.';
-      hasError = true;
-    }
-
-    if (hasError) {
+    if (isLoading) return;
+    const { errors: newErrors, payload } = validateRegistration({ fullName, email, phone, password, confirmPassword }, agreed);
+    if (Object.keys(newErrors).length) {
       setErrors(newErrors);
       return;
     }
@@ -501,17 +487,13 @@ const SignUpForm = () => {
       const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/auth/customer/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: username.trim(), email: email.trim().toLowerCase(), password })
+        body: JSON.stringify(payload)
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        if (response.status === 409 && data.message.includes('đăng nhập')) {
-           newErrors.username = data.message;
-           setErrors(newErrors);
-           throw new Error('');
-        }
+        if (data.errors) setErrors(data.errors);
         if (response.status === 409 && data.message.includes('Email')) {
            newErrors.email = data.message;
            setErrors(newErrors);
@@ -550,22 +532,22 @@ const SignUpForm = () => {
       )}
 
       {step === 1 && (
-        <form className="space-y-3.5" onSubmit={handleRegister}>
+        <form className="space-y-3.5" onSubmit={handleRegister} noValidate>
           <div className="space-y-1">
             <input
               type="text"
-              placeholder="Nhập tên đăng nhập"
-              value={username}
-              onChange={(e) => { setUsername(e.target.value); setErrors(prev => ({...prev, username: ''})); }}
-              className={`w-full h-10 px-4 bg-white/5 border ${errors.username ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-white/10 focus:ring-[#99e300] focus:border-[#99e300]'} rounded-lg text-sm text-white placeholder-neutral-400 focus:outline-none focus:ring-1 transition-colors`}
+              placeholder="Họ và tên" aria-label="Họ và tên" autoComplete="name" required maxLength={150}
+              value={fullName}
+              onChange={(e) => { setFullName(e.target.value); setErrors(prev => ({...prev, fullName: ''})); }}
+              className={`w-full h-10 px-4 bg-white/5 border ${errors.fullName ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-white/10 focus:ring-[#99e300] focus:border-[#99e300]'} rounded-lg text-sm text-white placeholder-neutral-400 focus:outline-none focus:ring-1 transition-colors`}
             />
-            {errors.username && <p className="text-xs text-red-500">{errors.username}</p>}
+            {errors.fullName && <p className="text-xs text-red-500">{errors.fullName}</p>}
           </div>
 
           <div className="space-y-1">
             <input
               type="email"
-              placeholder="Email"
+              placeholder="Gmail" aria-label="Gmail" autoComplete="email" required
               value={email}
               onChange={(e) => { setEmail(e.target.value); setErrors(prev => ({...prev, email: ''})); }}
               className={`w-full h-10 px-4 bg-white/5 border ${errors.email ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-white/10 focus:ring-[#99e300] focus:border-[#99e300]'} rounded-lg text-sm text-white placeholder-neutral-400 focus:outline-none focus:ring-1 transition-colors`}
@@ -574,10 +556,17 @@ const SignUpForm = () => {
           </div>
 
           <div className="space-y-1">
+            <input type="tel" placeholder="Số điện thoại" aria-label="Số điện thoại" autoComplete="tel" required value={phone}
+              onChange={e => { setPhone(e.target.value); setErrors(prev => ({ ...prev, phone: '' })); }}
+              className={`w-full h-10 px-4 bg-white/5 border ${errors.phone ? 'border-red-500' : 'border-white/10'} rounded-lg text-sm text-white placeholder-neutral-400 focus:outline-none focus:ring-1 focus:ring-[#99e300]`} />
+            {errors.phone && <p className="text-xs text-red-500">{errors.phone}</p>}
+          </div>
+
+          <div className="space-y-1">
             <div className="relative">
               <input
                 type={showPassword ? 'text' : 'password'}
-                placeholder="Mật khẩu"
+                placeholder="Mật khẩu" aria-label="Mật khẩu" autoComplete="new-password" required
                 value={password}
                 onChange={(e) => { setPassword(e.target.value); setErrors(prev => ({...prev, password: ''})); }}
                 className={`w-full h-10 pl-4 pr-10 bg-white/5 border ${errors.password ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-white/10 focus:ring-[#99e300] focus:border-[#99e300]'} rounded-lg text-sm text-white placeholder-neutral-400 focus:outline-none focus:ring-1 transition-colors`}
@@ -605,7 +594,7 @@ const SignUpForm = () => {
             <div className="relative">
               <input
                 type={showConfirmPassword ? 'text' : 'password'}
-                placeholder="Nhập lại mật khẩu"
+                placeholder="Xác nhận mật khẩu" aria-label="Xác nhận mật khẩu" autoComplete="new-password" required
                 value={confirmPassword}
                 onChange={(e) => { setConfirmPassword(e.target.value); setErrors(prev => ({...prev, confirmPassword: ''})); }}
                 className={`w-full h-10 pl-4 pr-10 bg-white/5 border ${errors.confirmPassword ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-white/10 focus:ring-[#99e300] focus:border-[#99e300]'} rounded-lg text-sm text-white placeholder-neutral-400 focus:outline-none focus:ring-1 transition-colors`}
@@ -653,7 +642,7 @@ const SignUpForm = () => {
           email={email}
           purpose="register"
           onVerified={() => {
-            setMessage({ text: 'Đăng ký thành công! Bạn có thể đăng nhập bằng tên đăng nhập.', type: 'success' });
+            setMessage({ text: 'Đăng ký thành công! Bạn có thể đăng nhập bằng Gmail.', type: 'success' });
             setStep(3);
           }}
           onBack={() => setStep(1)}
@@ -706,7 +695,7 @@ export function LoginPage() {
         DESKTOP VIEW: SLIDING PANELS (md:block hidden)
         ========================================================================
       */}
-      <div className="hidden md:block relative w-full max-w-[850px] min-h-[520px] bg-black/0 backdrop-blur-sm border border-white/10 rounded-2xl overflow-hidden shadow-[0_8px_32px_0_rgba(0,0,0,0.5)] z-10">
+      <div className="hidden md:block relative w-full max-w-[850px] min-h-[700px] bg-black/0 backdrop-blur-sm border border-white/10 rounded-2xl overflow-hidden shadow-[0_8px_32px_0_rgba(0,0,0,0.5)] z-10">
 
         {/* SIGN IN FORM (Left Side) */}
         <motion.div

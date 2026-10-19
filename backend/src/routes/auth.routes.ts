@@ -1,7 +1,7 @@
 import express from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import prisma from '../config/prisma';
+import defaultPrisma from '../config/prisma';
 import dns from 'node:dns';
 import { authenticateToken } from '../middleware/auth.middleware';
 import { requireRoles } from '../middleware/authorization.middleware';
@@ -15,15 +15,17 @@ import {
   parseCustomerRegistrationOtpChallenge,
   verifyCustomerRegistrationOtpAttempt,
 } from '../services/customer-registration-otp';
-import { mailer, isEmailConfigured } from '../services/mailer';
+import { mailer, isEmailConfigured as defaultEmailConfigured } from '../services/mailer';
+import { customerPasswordError, isCustomerEmail, normalizeCustomerEmail, validateCustomerRegistration } from '../services/customer-account-policy';
 
 // Fix IPv6 timeout issues on Render/Node 18+ by forcing IPv4 resolution first
 dns.setDefaultResultOrder('ipv4first');
-const router = express.Router();
 
 import { JWT_SECRET } from '../config/auth';
 
-const smtpTransporter = mailer;
+export function createAuthRouter({ prisma = defaultPrisma, smtpTransporter = mailer, isEmailConfigured = defaultEmailConfigured } = {}) {
+const router = express.Router();
+const findCustomerByEmail = (email: string) => prisma.customer.findFirst({ where: { email: { equals: email, mode: 'insensitive' } } });
 
 function escapeHtml(value: string): string {
   return value.replace(/[&<>"']/g, character => ({
@@ -39,12 +41,9 @@ function escapeHtml(value: string): string {
 // CUSTOMER OTP REGISTRATION ROUTES
 // ----------------------------------------------------
 router.post('/customer/register', async (req, res) => {
-  const { email, password } = req.body;
-  const username = typeof req.body.username === 'string' ? req.body.username.trim() : undefined;
-  const fullName = typeof req.body.fullName === 'string' ? req.body.fullName : username;
-
-  if (typeof fullName !== 'string' || !fullName.trim() || typeof email !== 'string' || !email.trim() || typeof password !== 'string' || !password) {
-    return res.status(400).json({ message: 'Vui lòng điền đủ thông tin.' });
+  const { fullName, email, phone, password, errors } = validateCustomerRegistration(req.body || {});
+  if (Object.keys(errors).length) {
+    return res.status(400).json({ message: 'Vui lòng kiểm tra thông tin đăng ký.', errors });
   }
 
   if (!isEmailConfigured()) {
@@ -52,11 +51,7 @@ router.post('/customer/register', async (req, res) => {
   }
 
   try {
-    const existing = await prisma.customer.findUnique({ where: { email } });
-    const existingUsername = username ? await prisma.customer.findUnique({ where: { username } }) : null;
-    if (existingUsername && existingUsername.id !== existing?.id) {
-      return res.status(409).json({ message: 'Tên đăng nhập này đã được sử dụng.' });
-    }
+    const existing = await findCustomerByEmail(email);
 
     if (existing && existing.verified) {
       return res.status(409).json({ message: 'Email này đã được sử dụng.' });
@@ -82,7 +77,7 @@ router.post('/customer/register', async (req, res) => {
         async (expectedChallenge, challengeUpdate) => {
           const updated = await prisma.customer.updateMany({
             where: { id: existing.id, verified: false, otp: expectedChallenge },
-            data: { fullName: fullName.trim(), ...(username ? { username } : {}), password: hashedPassword, ...challengeUpdate }
+            data: { fullName, phone, password: hashedPassword, ...challengeUpdate }
           });
           return updated.count === 1;
         }
@@ -93,7 +88,7 @@ router.post('/customer/register', async (req, res) => {
       customerId = existing.id;
     } else {
       const customer = await prisma.customer.create({
-        data: { fullName: fullName.trim(), ...(username ? { username } : {}), email, password: hashedPassword, otp: storedChallenge, otpExpiry }
+        data: { fullName, phone, email, password: hashedPassword, verified: false, otp: storedChallenge, otpExpiry }
       });
       customerId = customer.id;
     }
@@ -133,14 +128,44 @@ router.post('/customer/register', async (req, res) => {
   }
 });
 
+router.post('/customer/resend-otp', async (req, res) => {
+  const email = normalizeCustomerEmail(req.body?.email);
+  if (!isCustomerEmail(email)) return res.status(400).json({ message: 'Email không hợp lệ.' });
+  const message = 'Nếu tài khoản đang chờ xác minh, mã OTP đã được gửi về email.';
+  try {
+    const customer = await findCustomerByEmail(email);
+    if (!customer || customer.verified) return res.json({ message });
+    if (!isEmailConfigured()) return res.status(503).json({ message: 'Dịch vụ gửi mã xác thực hiện không khả dụng.' });
+    const now = new Date();
+    const otp = generateCustomerRegistrationOtp();
+    const challenge = hashCustomerRegistrationOtp(otp, JWT_SECRET);
+    const result = await issueCustomerRegistrationOtpChallenge(customer.otp, customer.otpExpiry, challenge,
+      new Date(now.getTime() + CUSTOMER_REGISTRATION_OTP_TTL_MS), now,
+      async (expected, data) => (await prisma.customer.updateMany({ where: { id: customer.id, verified: false, otp: expected }, data })).count === 1);
+    if (result !== 'issued') return res.status(429).json({ message: 'Vui lòng đợi trước khi yêu cầu gửi lại mã xác thực.' });
+    try {
+      await smtpTransporter.sendMail({ to: customer.email, subject: '[WebPhone] Mã xác thực đăng ký tài khoản',
+        html: `<p>Mã xác thực đăng ký WebPhone: <strong>${otp}</strong>. Mã có hiệu lực 5 phút.</p>` });
+    } catch {
+      await prisma.customer.updateMany({ where: { id: customer.id, verified: false, otp: challenge }, data: { otp: null, otpExpiry: null } });
+      return res.status(503).json({ message: 'Không thể gửi mã xác thực lúc này. Vui lòng thử lại sau.' });
+    }
+    return res.json({ message });
+  } catch {
+    console.error('Customer registration OTP resend failed.');
+    return res.status(500).json({ message: 'Lỗi server.' });
+  }
+});
+
 router.post('/customer/verify-otp', async (req, res) => {
-  const { email, otp } = req.body;
+  const email = normalizeCustomerEmail(req.body?.email);
+  const { otp } = req.body || {};
   if (typeof email !== 'string' || !email.trim() || typeof otp !== 'string' || !/^\d{6}$/.test(otp)) {
     return res.status(400).json({ message: 'Vui lòng cung cấp email và mã OTP.' });
   }
 
   try {
-    const customer = await prisma.customer.findUnique({ where: { email } });
+    const customer = await findCustomerByEmail(email);
     if (!customer) {
       return res.status(404).json({ message: 'Không tìm thấy tài khoản.' });
     }
@@ -199,13 +224,13 @@ router.post('/customer/verify-otp', async (req, res) => {
 // CUSTOMER FORGOT PASSWORD ROUTES
 // ----------------------------------------------------
 router.post('/customer/forgot-password', async (req, res) => {
-  const { email } = req.body;
+  const email = normalizeCustomerEmail(req.body?.email);
   if (typeof email !== 'string' || !email.trim()) {
     return res.status(400).json({ message: 'Dữ liệu không hợp lệ.' });
   }
 
   try {
-    const customer = await prisma.customer.findUnique({ where: { email } });
+    const customer = await findCustomerByEmail(email);
     if (!customer || !customer.verified || !isEmailConfigured()) {
       // Security: Do not reveal if email exists.
       return res.json({ message: 'Nếu email này đã được đăng ký, mã xác thực sẽ được gửi đến email của bạn.' });
@@ -233,7 +258,7 @@ router.post('/customer/forgot-password', async (req, res) => {
 
             <h2 style="color:#111;font-size:20px;font-weight:600;margin:0 0 16px 0;text-align:center">Xác thực yêu cầu khôi phục mật khẩu</h2>
 
-            <p style="color:#444;font-size:15px;line-height:1.6;margin:0 0 16px 0">Xin chào <strong>${customer.username}</strong>,</p>
+            <p style="color:#444;font-size:15px;line-height:1.6;margin:0 0 16px 0">Xin chào <strong>${escapeHtml(customer.fullName || 'bạn')}</strong>,</p>
 
             <p style="color:#444;font-size:15px;line-height:1.6;margin:0 0 24px 0">Chúng tôi nhận được yêu cầu khôi phục mật khẩu cho tài khoản H&M Phone Store của bạn.<br><br>Nếu đây là yêu cầu của bạn, hãy nhập mã xác thực gồm 6 chữ số bên dưới để tiếp tục đặt lại mật khẩu.</p>
 
@@ -266,19 +291,20 @@ router.post('/customer/forgot-password', async (req, res) => {
 
     res.json({ message: 'Nếu email này đã được đăng ký, mã xác thực sẽ được gửi đến email của bạn.' });
   } catch (error) {
-    console.error('Forgot password error:', error);
+    console.error('Forgot password request failed.');
     res.status(500).json({ message: 'Đã xảy ra lỗi hệ thống. Vui lòng thử lại sau.' });
   }
 });
 
 router.post('/customer/verify-reset-otp', async (req, res) => {
-  const { email, otp } = req.body;
+  const email = normalizeCustomerEmail(req.body?.email);
+  const { otp } = req.body || {};
   if (typeof email !== 'string' || typeof otp !== 'string' || !/^\d{6}$/.test(otp)) {
     return res.status(400).json({ message: 'Dữ liệu không hợp lệ.' });
   }
 
   try {
-    const customer = await prisma.customer.findUnique({ where: { email } });
+    const customer = await findCustomerByEmail(email);
     if (!customer || !customer.verified) {
       return res.status(400).json({ message: 'Mã xác thực không chính xác. Vui lòng thử lại.' });
     }
@@ -296,19 +322,20 @@ router.post('/customer/verify-reset-otp', async (req, res) => {
 
     res.json({ resetToken });
   } catch (error) {
-    console.error('Verify reset OTP error:', error);
+    console.error('Password reset OTP verification failed.');
     res.status(500).json({ message: 'Đã xảy ra lỗi hệ thống. Vui lòng thử lại sau.' });
   }
 });
 
 router.post('/customer/reset-password', async (req, res) => {
-  const { email, resetToken, newPassword } = req.body;
-  if (typeof email !== 'string' || typeof resetToken !== 'string' || typeof newPassword !== 'string' || newPassword.length < 6) {
+  const email = normalizeCustomerEmail(req.body?.email);
+  const { resetToken, newPassword } = req.body || {};
+  if (!isCustomerEmail(email) || typeof resetToken !== 'string' || customerPasswordError(newPassword)) {
     return res.status(400).json({ message: 'Dữ liệu không hợp lệ.' });
   }
 
   try {
-    const customer = await prisma.customer.findUnique({ where: { email } });
+    const customer = await findCustomerByEmail(email);
     if (!customer) {
       return res.status(400).json({ message: 'Phiên đặt lại mật khẩu đã hết hạn hoặc không hợp lệ. Vui lòng thực hiện lại từ đầu.' });
     }
@@ -316,7 +343,7 @@ router.post('/customer/reset-password', async (req, res) => {
     const resetSecret = JWT_SECRET + customer.password;
     try {
       const claims = jwt.verify(resetToken, resetSecret, { audience: 'customer-password-reset', subject: customer.id });
-      if (typeof claims === 'string' || claims.email !== email || claims.purpose !== 'password-reset') throw new Error('Invalid reset claims');
+      if (typeof claims === 'string' || normalizeCustomerEmail(claims.email) !== email || claims.purpose !== 'password-reset') throw new Error('Invalid reset claims');
     } catch (err) {
       return res.status(400).json({ message: 'Phiên đặt lại mật khẩu đã hết hạn. Vui lòng thực hiện lại từ đầu.' });
     }
@@ -330,8 +357,31 @@ router.post('/customer/reset-password', async (req, res) => {
 
     res.json({ message: 'Mật khẩu đã được đặt lại thành công.' });
   } catch (error) {
-    console.error('Reset password error:', error);
+    console.error('Password reset failed.');
     res.status(500).json({ message: 'Đã xảy ra lỗi hệ thống. Vui lòng thử lại sau.' });
+  }
+});
+
+// Dedicated customer endpoint; the legacy endpoint below still accepts customer email
+// for deployed clients while preserving internal username authentication.
+router.post('/customer/login', async (req, res) => {
+  const email = normalizeCustomerEmail(req.body?.email);
+  const password = req.body?.password;
+  if (!isCustomerEmail(email) || typeof password !== 'string' || !password) {
+    return res.status(400).json({ message: 'Vui lòng nhập Gmail và mật khẩu hợp lệ.' });
+  }
+  try {
+    const customer = await findCustomerByEmail(email);
+    if (!customer || !(await bcrypt.compare(password, customer.password))) {
+      return res.status(401).json({ message: 'Sai thông tin đăng nhập' });
+    }
+    if (!customer.verified) return res.status(403).json({ message: 'Tài khoản chưa được xác thực email.' });
+    const token = jwt.sign({ id: customer.id, username: customer.username || customer.email, role: 'customer' }, JWT_SECRET, { expiresIn: '24h' });
+    const { password: _, otp, otpExpiry, ...safeCustomer } = customer;
+    return res.json({ message: 'Đăng nhập thành công', token, user: { ...safeCustomer, role: 'customer', username: customer.username || customer.email } });
+  } catch {
+    console.error('Customer login failed.');
+    return res.status(500).json({ message: 'Lỗi server' });
   }
 });
 
@@ -341,7 +391,7 @@ router.post('/login', async (req, res) => {
     const { username, password } = req.body;
 
     // Validate request
-    if (!username || !password) {
+    if (typeof username !== 'string' || !username || typeof password !== 'string' || !password) {
       return res.status(400).json({ message: 'Tên đăng nhập và mật khẩu là bắt buộc' });
     }
 
@@ -352,17 +402,11 @@ router.post('/login', async (req, res) => {
     let role = accountInfo?.role || 'user'; // default role for users is what they have in DB
 
     // If not found in User, try finding a Customer (using username field as email)
-    if (!accountInfo) {
-      accountInfo = await prisma.customer.findFirst({
-        where: { OR: [{ email: username }, { username }] }
-      });
+    if (!accountInfo && isCustomerEmail(normalizeCustomerEmail(username))) {
+      accountInfo = await findCustomerByEmail(normalizeCustomerEmail(username));
       if (accountInfo) {
         role = 'customer'; // Assign a virtual role for customers
 
-        // Ensure customer is verified
-        if (!accountInfo.verified) {
-          return res.status(403).json({ message: 'Tài khoản chưa được xác thực email.' });
-        }
       }
     }
 
@@ -375,6 +419,9 @@ router.post('/login', async (req, res) => {
 
     if (!isPasswordValid) {
       return res.status(401).json({ message: 'Sai thông tin đăng nhập' });
+    }
+    if (role === 'customer' && !accountInfo.verified) {
+      return res.status(403).json({ message: 'Tài khoản chưa được xác thực email.' });
     }
 
     // Generate token
@@ -401,7 +448,7 @@ router.post('/login', async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Login error:', error);
+    console.error('Login failed.');
     res.status(500).json({ message: 'Lỗi server' });
   }
 });
@@ -452,4 +499,7 @@ router.post('/register', authenticateToken, requireRoles('admin', 'superadmin'),
   }
 });
 
-export default router;
+return router;
+}
+
+export default createAuthRouter();

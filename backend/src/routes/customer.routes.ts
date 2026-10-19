@@ -1,11 +1,12 @@
 import express, { Response } from 'express';
 import bcrypt from 'bcryptjs';
-import prisma from '../config/prisma';
+import defaultPrisma from '../config/prisma';
 import { authenticateToken, AuthRequest } from '../middleware/auth.middleware';
 import { requireRoles } from '../middleware/authorization.middleware';
 import { createCustomerDeleteHandler } from './customer-delete.handler';
 import { safeErrorSummary } from '../utils/safe-error-summary';
 
+export function createCustomerRouter(prisma = defaultPrisma) {
 const router = express.Router();
 
 // Get customer profile (Authenticated)
@@ -38,17 +39,24 @@ router.put('/profile', authenticateToken, requireRoles('customer'), async (req: 
       return res.status(403).json({ message: 'Không có quyền truy cập' });
     }
 
-    const { fullName, phone, address } = req.body;
+    // Only the delivery address is editable here. Reject rather than ignore protected fields.
+    const body = req.body;
+    if (!body || typeof body !== 'object' || Array.isArray(body)
+      || Object.keys(body).some(key => key !== 'address')
+      || typeof body.address !== 'string' || body.address.length > 5000) {
+      return res.status(400).json({ message: 'Thông tin đăng ký không thể chỉnh sửa. Chỉ được cập nhật địa chỉ nhận hàng.' });
+    }
+    const { address } = body;
 
     const updatedCustomer = await prisma.customer.update({
       where: { id: req.user.id },
-      data: { fullName, phone, address }
+      data: { address }
     });
 
     const { password: _, otp, otpExpiry, ...safeCustomer } = updatedCustomer;
     res.json({ message: 'Cập nhật thành công', customer: safeCustomer });
   } catch (error) {
-    console.error('Error updating profile:', error);
+    console.error('Error updating profile:', safeErrorSummary(error));
     res.status(500).json({ message: 'Lỗi server' });
   }
 });
@@ -132,4 +140,7 @@ router.post('/', authenticateToken, requireRoles('staff', 'admin', 'superadmin')
 // deletes customers without dependent or historical records.
 router.delete('/:id', authenticateToken, requireRoles('staff', 'admin', 'superadmin'), createCustomerDeleteHandler(prisma));
 
-export default router;
+return router;
+}
+
+export default createCustomerRouter();

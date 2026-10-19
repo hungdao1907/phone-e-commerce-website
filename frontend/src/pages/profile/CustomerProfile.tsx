@@ -34,7 +34,9 @@ export const CustomerProfile = () => {
   }, [user?.id, user?.role]);
   
   // Profile state
-  const [fullName, setFullName] = useState(user?.username || '');
+  const [fullName, setFullName] = useState('');
+  const [email, setEmail] = useState('');
+  const [profileError, setProfileError] = useState('');
   const [phone, setPhone] = useState('');
   const [address, setAddress] = useState('');
   const [isFetching, setIsFetching] = useState(true);
@@ -63,23 +65,30 @@ export const CustomerProfile = () => {
   };
 
   useEffect(() => {
+    const controller = new AbortController();
     const fetchProfile = async () => {
+      setIsFetching(true);
+      setProfileError('');
+      setFullName(''); setEmail(''); setPhone(''); setAddress('');
       try {
         const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/customers/profile`, {
+          signal: controller.signal,
           headers: {
             'Authorization': `Bearer ${token}`
           }
         });
         if (response.ok) {
           const data = await response.json();
+          if (controller.signal.aborted) return;
           setFullName(data.fullName || '');
+          setEmail(data.email || '');
           setPhone(data.phone || '');
           setAddress(data.address || '');
-        }
+        } else throw new Error('Không thể tải thông tin tài khoản.');
       } catch (error) {
-        console.error('Error fetching profile', error);
+        if (!controller.signal.aborted) setProfileError('Không thể tải thông tin tài khoản. Vui lòng thử lại sau.');
       } finally {
-        setIsFetching(false);
+        if (!controller.signal.aborted) setIsFetching(false);
       }
     };
 
@@ -89,14 +98,11 @@ export const CustomerProfile = () => {
     } else {
       setIsFetching(false);
     }
+    return () => controller.abort();
   }, [token]);
 
-  const handleUpdateProfile = async (dataToUpdate: { fullName?: string; phone?: string; address?: string }) => {
-    const payload = {
-      fullName: dataToUpdate.fullName !== undefined ? dataToUpdate.fullName : fullName,
-      phone: dataToUpdate.phone !== undefined ? dataToUpdate.phone : phone,
-      address: dataToUpdate.address !== undefined ? dataToUpdate.address : address,
-    };
+  const handleUpdateProfile = async (dataToUpdate: { address: string }) => {
+    const payload = { address: dataToUpdate.address };
 
     const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/customers/profile`, {
       method: 'PUT',
@@ -113,9 +119,7 @@ export const CustomerProfile = () => {
       throw new Error(data.message || 'Cập nhật thất bại');
     }
 
-    if (dataToUpdate.fullName !== undefined) setFullName(dataToUpdate.fullName);
-    if (dataToUpdate.phone !== undefined) setPhone(dataToUpdate.phone);
-    if (dataToUpdate.address !== undefined) setAddress(dataToUpdate.address);
+    setAddress(data.customer.address || '');
   };
 
   const handleCompleteOrder = async (id: string) => {
@@ -188,15 +192,16 @@ export const CustomerProfile = () => {
               <OverviewTab orders={orders} onChangeTab={setActiveTab} />
             )}
             
-            {activeTab === 'info' && (
+            {profileError && <div role="alert" className="mb-6 p-4 bg-red-50 text-red-700 rounded-xl">{profileError}</div>}
+            {activeTab === 'info' && !profileError && (
               <InfoTab 
                 initialFullName={fullName} 
+                initialEmail={email}
                 initialPhone={phone} 
-                onUpdate={handleUpdateProfile} 
               />
             )}
 
-            {activeTab === 'address' && (
+            {activeTab === 'address' && !profileError && (
               <AddressTab 
                 initialFullName={fullName} 
                 initialPhone={phone} 

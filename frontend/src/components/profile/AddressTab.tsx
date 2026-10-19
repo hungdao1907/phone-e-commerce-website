@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useAuthStore } from '@/store/authStore';
+import { normalizePhone } from '../../pages/auth/customer-account';
 import { MapPin, Edit2, Plus, Save, X } from 'lucide-react';
 import { useVNAddress } from '@/hooks/useVNAddress';
 
@@ -7,11 +7,10 @@ interface AddressTabProps {
   initialFullName: string;
   initialPhone: string;
   initialAddress: string;
-  onUpdate: (data: { fullName?: string, phone?: string, address?: string }) => Promise<void>;
+  onUpdate: (data: { address: string }) => Promise<void>;
 }
 
 export function AddressTab({ initialFullName, initialPhone, initialAddress, onUpdate }: AddressTabProps) {
-  const { user } = useAuthStore();
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState({ text: '', type: '' });
@@ -41,6 +40,8 @@ export function AddressTab({ initialFullName, initialPhone, initialAddress, onUp
     if (initialAddress) {
       try {
         const parsed = JSON.parse(initialAddress);
+        setFullName(parsed.recipientName || initialFullName);
+        setPhone(parsed.recipientPhone || initialPhone);
         setDetailAddress(parsed.detailAddress || '');
         if (parsed.cityCode) {
           setCityCode(parsed.cityCode);
@@ -97,7 +98,7 @@ export function AddressTab({ initialFullName, initialPhone, initialAddress, onUp
     setIsLoading(true);
     setMessage({ text: '', type: '' });
 
-    if (!fullName.trim() || !phone.trim() || !cityCode || !districtCode || !wardCode || !detailAddress.trim()) {
+    if (!fullName.trim() || !normalizePhone(phone) || !cityCode || !districtCode || !wardCode || !detailAddress.trim()) {
       setMessage({ text: 'Vui lòng điền đầy đủ các trường bắt buộc', type: 'error' });
       setIsLoading(false);
       return;
@@ -105,6 +106,8 @@ export function AddressTab({ initialFullName, initialPhone, initialAddress, onUp
 
     try {
       const addressJson = JSON.stringify({
+        recipientName: fullName.trim(),
+        recipientPhone: normalizePhone(phone),
         city: cityName,
         cityCode,
         district: districtName,
@@ -114,11 +117,7 @@ export function AddressTab({ initialFullName, initialPhone, initialAddress, onUp
         detailAddress: detailAddress.trim()
       });
 
-      await onUpdate({ 
-        fullName: fullName.trim(), 
-        phone: phone.trim(), 
-        address: addressJson 
-      });
+      await onUpdate({ address: addressJson });
       
       setMessage({ text: 'Cập nhật địa chỉ thành công!', type: 'success' });
       setIsEditing(false);
@@ -134,13 +133,15 @@ export function AddressTab({ initialFullName, initialPhone, initialAddress, onUp
     setMessage({ text: '', type: '' });
   };
 
-  const displayName = initialFullName || user?.username?.split('@')[0] || 'Người dùng';
-  const displayPhone = initialPhone || 'Chưa cập nhật số điện thoại';
+  let displayName = initialFullName || 'Chưa có thông tin';
+  let displayPhone = initialPhone || 'Chưa có thông tin';
   
   let formattedAddress = '';
   if (initialAddress) {
     try {
       const parsed = JSON.parse(initialAddress);
+      displayName = parsed.recipientName || displayName;
+      displayPhone = parsed.recipientPhone || displayPhone;
       formattedAddress = [parsed.detailAddress, parsed.ward, parsed.district, parsed.city].filter(Boolean).join(', ');
     } catch (e) {
       formattedAddress = initialAddress;
