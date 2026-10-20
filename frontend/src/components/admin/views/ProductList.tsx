@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import { createLatestRequest } from '@/lib/latest-request';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Plus, Edit2, Trash2, X, Package, RefreshCw, ChevronDown, ChevronRight, ArrowLeft, Image as ImageIcon, Zap, Upload, LayoutGrid, List, Download } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -176,20 +177,28 @@ export function ProductList() {
     return () => clearTimeout(handler);
   }, [search]);
 
+  const filtersRequest = useRef(createLatestRequest());
+  const productsRequest = useRef(createLatestRequest());
+
   // Fetch Admin Filters
   const fetchAdminFilters = async () => {
+    const request = filtersRequest.current.start();
     try {
       const url = new URL(`${API_BASE_URL}/api/products/admin/filters`);
       if (listCategory) url.searchParams.append('category', listCategory);
-      const res = await fetch(url.toString(), { headers: { 'Authorization': `Bearer ${token}` } });
-      if (res.ok) setAdminFilters(await res.json());
+      const res = await fetch(url.toString(), { signal: request.signal, headers: { 'Authorization': `Bearer ${token}` } });
+      if (res.ok) {
+        const data = await res.json();
+        if (request.isCurrent()) setAdminFilters(data);
+      }
     } catch (e) {
-      console.error(e);
+      if (request.isCurrent()) console.error(e);
     }
   };
 
   // Fetch Admin Products
   const fetchAdminProducts = async () => {
+    const request = productsRequest.current.start();
     try {
       setIsFetchingList(true);
       const url = new URL(`${API_BASE_URL}/api/products/admin/search`);
@@ -207,16 +216,17 @@ export function ProductList() {
         }
       });
 
-      const res = await fetch(url.toString(), { headers: { 'Authorization': `Bearer ${token}` } });
+      const res = await fetch(url.toString(), { signal: request.signal, headers: { 'Authorization': `Bearer ${token}` } });
       if (res.ok) {
         const data = await res.json();
+        if (!request.isCurrent()) return;
         setListData(data.data);
         setPagination(data.pagination);
       }
     } catch (e) {
-      console.error(e);
+      if (request.isCurrent()) console.error(e);
     } finally {
-      setIsFetchingList(false);
+      if (request.isCurrent()) setIsFetchingList(false);
     }
   };
 
@@ -243,13 +253,15 @@ export function ProductList() {
     if (view === 'list') {
       fetchAdminFilters();
     }
-  }, [listCategory, view]);
+    return () => filtersRequest.current.cancel();
+  }, [listCategory, view, token]);
 
   useEffect(() => {
     if (view === 'list') {
       fetchAdminProducts();
     }
-  }, [debouncedSearch, listCategory, listStatus, listStock, listSort, listFilters, pagination.page, view]);
+    return () => productsRequest.current.cancel();
+  }, [debouncedSearch, listCategory, listStatus, listStock, listSort, listFilters, pagination.page, view, token]);
 
   const handleFilterChange = (groupKey: string, value: string) => {
     setListFilters(prev => {
@@ -327,29 +339,47 @@ export function ProductList() {
   const [catSearch, setCatSearch] = useState('');
   const [isCatDropdownOpen, setIsCatDropdownOpen] = useState(false);
 
+  const catalogRequest = useRef(createLatestRequest());
+  const categoriesRequest = useRef(createLatestRequest());
+
   // Fetch Data
   const fetchProducts = async () => {
+    const request = catalogRequest.current.start();
     try {
       setIsLoading(true);
-      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/products`);
-      if (res.ok) setProducts(await res.json());
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/products`, { signal: request.signal });
+      if (res.ok) {
+        const data = await res.json();
+        if (request.isCurrent()) setProducts(data);
+      }
     } catch (err) {
-      console.error('Error fetching products', err);
+      if (request.isCurrent()) console.error('Error fetching products', err);
     } finally {
-      setIsLoading(false);
+      if (request.isCurrent()) setIsLoading(false);
     }
   };
 
   const fetchCategories = async () => {
+    const request = categoriesRequest.current.start();
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/categories`);
-      if (res.ok) setCategories(await res.json());
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/categories`, { signal: request.signal });
+      if (res.ok) {
+        const data = await res.json();
+        if (request.isCurrent()) setCategories(data);
+      }
     } catch (error) {
-      console.error('Lỗi tải danh mục:', error);
+      if (request.isCurrent()) console.error('Lỗi tải danh mục:', error);
     }
   };
 
-  useEffect(() => { fetchProducts(); fetchCategories(); }, []);
+  useEffect(() => {
+    void fetchProducts();
+    void fetchCategories();
+    return () => {
+      catalogRequest.current.cancel();
+      categoriesRequest.current.cancel();
+    };
+  }, []);
 
   // Flatten Categories
   const flattenCategories = (cats: Category[], depth = 0): { id: string; name: string; slug: string; depth: number }[] => {

@@ -2,6 +2,9 @@ import express from 'express';
 import crypto from 'crypto';
 import { authenticateToken, AuthRequest } from '../middleware/auth.middleware';
 import { requireRoles } from '../middleware/authorization.middleware';
+import { safeErrorSummary, safeFetchErrorSummary } from '../utils/safe-error-summary';
+
+const ADMIN_CHATBOT_UPSTREAM_TIMEOUT_MS = 90_000;
 
 const router = express.Router();
 
@@ -86,11 +89,29 @@ router.post('/message', authenticateToken, requireRoles('admin', 'superadmin'), 
     };
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 90000); // 90 seconds timeout
+    let abortReason: 'deadline' | 'client_disconnected' | undefined;
+    const abortUpstream = (reason: 'deadline' | 'client_disconnected') => {
+      if (controller.signal.aborted) return;
+      abortReason = reason;
+      controller.abort();
+    };
+    const onDisconnect = () => {
+      if (!res.writableEnded) abortUpstream('client_disconnected');
+    };
+    res.once('close', onDisconnect);
+    if (req.aborted || res.destroyed) abortUpstream('client_disconnected');
+    const deadlineAt = performance.now() + ADMIN_CHATBOT_UPSTREAM_TIMEOUT_MS;
+    const timeoutId = setTimeout(() => abortUpstream('deadline'), ADMIN_CHATBOT_UPSTREAM_TIMEOUT_MS);
+    const checkDeadline = () => {
+      if (abortReason === 'client_disconnected') throw new Error('ADMIN_CHAT_CLIENT_DISCONNECTED');
+      if (abortReason === 'deadline' || performance.now() >= deadlineAt) {
+        abortUpstream('deadline');
+        throw new Error('ADMIN_CHAT_TIMEOUT');
+      }
+    };
 
-    let n8nResponse;
     try {
-      n8nResponse = await fetch(n8nUrl, {
+      const n8nResponse = await fetch(n8nUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -98,86 +119,83 @@ router.post('/message', authenticateToken, requireRoles('admin', 'superadmin'), 
         body: JSON.stringify(n8nPayload),
         signal: controller.signal
       });
-    } catch (fetchError: any) {
-      clearTimeout(timeoutId);
-      if (fetchError.name === 'AbortError') {
-        console.error('[Admin Chatbot Route] n8n request timed out.');
-        return res.status(504).json({
+      checkDeadline();
+
+      // A failed upstream response never needs to be retained. Cancel its body without waiting
+      // indefinitely for a peer that has already failed the request.
+      if (!n8nResponse.ok) {
+        void n8nResponse.body?.cancel().catch(() => undefined);
+        console.error('[Admin Chatbot Route] n8n returned an error status.', { status: n8nResponse.status });
+        return res.status(502).json({
           result_type: 'error',
           response_type: 'text',
           success: false,
-          response: 'Kết nối đến dịch vụ Admin Chat bị quá hạn.',
+          response: 'Dịch vụ Admin Chat gặp lỗi phản hồi.',
           sessionId
         });
       }
-      console.error('[Admin Chatbot Route] Network error calling n8n:', fetchError.message);
-      return res.status(502).json({
-        result_type: 'error',
-        response_type: 'text',
-        success: false,
-        response: 'Không thể kết nối đến dịch vụ Admin Chat.',
-        sessionId
-      });
-    }
 
-    clearTimeout(timeoutId);
+      // The deadline remains armed through body consumption, not only through headers.
+      const rawBody = await n8nResponse.text();
+      checkDeadline();
 
-    // Read the body once
-    const rawBody = await n8nResponse.text();
-
-    let responseData;
-    let parseError = false;
-    try {
-      responseData = JSON.parse(rawBody);
-    } catch (e) {
-      parseError = true;
-    }
-
-    // Normalize if array with 1 item
-    if (!parseError && Array.isArray(responseData) && responseData.length === 1) {
-      responseData = responseData[0];
-    }
-
-    // Check if it's a valid chatbot response
-    const isValidResponse = !parseError && responseData && typeof responseData === 'object' && !Array.isArray(responseData) && typeof responseData.response === 'string';
-
-    // 5. Handle non-2xx Response
-    if (!n8nResponse.ok) {
-      console.error(`[Admin Chatbot Route] n8n returned status ${n8nResponse.status} ${n8nResponse.statusText}`);
-      return res.status(502).json({
-        result_type: 'error',
-        response_type: 'text',
-        success: false,
-        response: 'Dịch vụ Admin Chat gặp lỗi phản hồi.',
-        sessionId
-      });
-    }
-
-    // 6. Handle JSON Response errors
-    if (parseError || !isValidResponse) {
-      console.error('[Admin Chatbot Route] Failed to parse n8n JSON response or invalid payload');
-      return res.status(502).json({
-        result_type: 'error',
-        response_type: 'text',
-        success: false,
-        response: 'Dữ liệu trả về từ Admin Chat không hợp lệ.',
-        sessionId
-      });
-    }
-
-
-
-    // Fallback to inject sessionId if missing
-    if (typeof responseData === 'object' && responseData !== null && !Array.isArray(responseData)) {
-      if (!responseData.sessionId) {
-        responseData.sessionId = sessionId;
+      let responseData;
+      let parseError = false;
+      try {
+        responseData = JSON.parse(rawBody);
+      } catch {
+        parseError = true;
       }
+
+      // Normalize if array with 1 item
+      if (!parseError && Array.isArray(responseData) && responseData.length === 1) {
+        responseData = responseData[0];
+      }
+
+      // Check if it's a valid chatbot response
+      const isValidResponse = !parseError && responseData && typeof responseData === 'object' && !Array.isArray(responseData) && typeof responseData.response === 'string';
+
+      // 6. Handle JSON Response errors
+      if (parseError || !isValidResponse) {
+        console.error('[Admin Chatbot Route] Failed to parse n8n JSON response or invalid payload');
+        return res.status(502).json({
+          result_type: 'error',
+          response_type: 'text',
+          success: false,
+          response: 'Dữ liệu trả về từ Admin Chat không hợp lệ.',
+          sessionId
+        });
+      }
+
+      // Fallback to inject sessionId if missing
+      if (typeof responseData === 'object' && responseData !== null && !Array.isArray(responseData)) {
+        if (!responseData.sessionId) {
+          responseData.sessionId = sessionId;
+        }
+      }
+
+      return res.status(200).json(responseData);
+    } catch (fetchError) {
+      if (abortReason === 'client_disconnected' || res.destroyed || req.aborted) return;
+      if (abortReason === 'deadline' || performance.now() >= deadlineAt) {
+        console.error('[Admin Chatbot Route] n8n request timed out.');
+        return res.status(504).json({
+          result_type: 'error', response_type: 'text', success: false,
+          response: 'Kết nối đến dịch vụ Admin Chat bị quá hạn.', sessionId
+        });
+      }
+      console.error('[Admin Chatbot Route] Network error calling n8n:', safeFetchErrorSummary(fetchError));
+      return res.status(502).json({
+        result_type: 'error', response_type: 'text', success: false,
+        response: 'Không thể kết nối đến dịch vụ Admin Chat.', sessionId
+      });
+    } finally {
+      clearTimeout(timeoutId);
+      res.off('close', onDisconnect);
     }
 
-    return res.status(200).json(responseData);
-
-  } catch (err: any) {
-    console.error('[Admin Chatbot Route] Unexpected error:', err.message);
+  } catch (err) {
+    console.error('[Admin Chatbot Route] Unexpected error:', safeErrorSummary(err));
     return res.status(500).json({
       result_type: 'error',
       response_type: 'text',

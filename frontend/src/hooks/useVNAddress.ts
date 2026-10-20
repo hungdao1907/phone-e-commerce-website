@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { createLatestRequest } from '../lib/latest-request';
 
 export interface Province {
   code: number;
@@ -22,50 +23,69 @@ export function useVNAddress() {
   const [districts, setDistricts] = useState<District[]>([]);
   const [wards, setWards] = useState<Ward[]>([]);
   
-  const [isLoading, setIsLoading] = useState(false);
+  const [districtsLoading, setDistrictsLoading] = useState(false);
+  const [wardsLoading, setWardsLoading] = useState(false);
+  const districtRequest = useRef(createLatestRequest());
+  const wardRequest = useRef(createLatestRequest());
 
   useEffect(() => {
-    fetch('https://provinces.open-api.vn/api/p/')
-      .then(res => res.json())
-      .then(data => setProvinces(data))
-      .catch(console.error);
+    const controller = new AbortController();
+    fetch('https://provinces.open-api.vn/api/p/', { signal: controller.signal })
+      .then(res => {
+        if (!res.ok) throw new Error('Failed to fetch provinces');
+        return res.json();
+      })
+      .then(data => { if (!controller.signal.aborted) setProvinces(data); })
+      .catch(error => { if (!controller.signal.aborted) console.error(error); });
+    return () => {
+      controller.abort();
+      districtRequest.current.cancel();
+      wardRequest.current.cancel();
+    };
   }, []);
 
-  const fetchDistricts = async (provinceCode: number | string) => {
+  const fetchDistricts = useCallback(async (provinceCode: number | string) => {
+    const request = districtRequest.current.start();
+    wardRequest.current.cancel();
+    setWardsLoading(false);
+    setDistricts([]);
+    setWards([]);
     if (!provinceCode) {
-      setDistricts([]);
-      setWards([]);
+      setDistrictsLoading(false);
       return;
     }
-    setIsLoading(true);
+    setDistrictsLoading(true);
     try {
-      const res = await fetch(`https://provinces.open-api.vn/api/p/${provinceCode}?depth=2`);
+      const res = await fetch(`https://provinces.open-api.vn/api/p/${provinceCode}?depth=2`, { signal: request.signal });
+      if (!res.ok) throw new Error('Failed to fetch districts');
       const data = await res.json();
-      setDistricts(data.districts || []);
-      setWards([]);
+      if (request.isCurrent()) setDistricts(data.districts || []);
     } catch (error) {
-      console.error(error);
+      if (request.isCurrent()) console.error(error);
     } finally {
-      setIsLoading(false);
+      if (request.isCurrent()) setDistrictsLoading(false);
     }
-  };
+  }, []);
 
-  const fetchWards = async (districtCode: number | string) => {
+  const fetchWards = useCallback(async (districtCode: number | string) => {
+    const request = wardRequest.current.start();
+    setWards([]);
     if (!districtCode) {
-      setWards([]);
+      setWardsLoading(false);
       return;
     }
-    setIsLoading(true);
+    setWardsLoading(true);
     try {
-      const res = await fetch(`https://provinces.open-api.vn/api/d/${districtCode}?depth=2`);
+      const res = await fetch(`https://provinces.open-api.vn/api/d/${districtCode}?depth=2`, { signal: request.signal });
+      if (!res.ok) throw new Error('Failed to fetch wards');
       const data = await res.json();
-      setWards(data.wards || []);
+      if (request.isCurrent()) setWards(data.wards || []);
     } catch (error) {
-      console.error(error);
+      if (request.isCurrent()) console.error(error);
     } finally {
-      setIsLoading(false);
+      if (request.isCurrent()) setWardsLoading(false);
     }
-  };
+  }, []);
 
   return {
     provinces,
@@ -73,6 +93,6 @@ export function useVNAddress() {
     wards,
     fetchDistricts,
     fetchWards,
-    isLoading
+    isLoading: districtsLoading || wardsLoading
   };
 }

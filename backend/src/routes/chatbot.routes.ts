@@ -9,9 +9,13 @@ import { isQuotationDraftResponse, prepareQuotationDraftResponse } from '../serv
 import { chatbotWebhookHeaders } from '../services/chatbot-webhook-auth';
 import { verifiedCatalogAdvice } from '../services/chatbot-verified-advice';
 import { filterGroundedCatalogProducts, groundedCatalogResponseText, GroundedContractError, MAX_GROUNDED_VND, normalizeGroundedText, parseGroundedBudget, parseGroundedConstraints, requestedGroundedBudget, validatedStateTimestamp } from '../services/chatbot-grounded-constraints';
+import { abandonChatTurn, CHATBOT_UPSTREAM_TIMEOUT_MS, claimChatTurn, completeChatTurn, renewChatLeaseBeforeDispatch, signChatSession, verifyChatSession } from '../services/chatbot-conversation-lease.service';
+import type { ChatClaim } from '../services/chatbot-conversation-lease.service';
+import { beginChatbotTurnObservation } from '../services/chatbot-observability.service';
 
 const CHAT_CONTEXT_MESSAGE_LIMIT = 6;
 const CHAT_CONTEXT_MESSAGE_CHAR_LIMIT = 600;
+const CHAT_HISTORY_TURN_LIMIT = 50;
 
 type ChatContextMessage = {
   role: 'user' | 'assistant';
@@ -20,16 +24,17 @@ type ChatContextMessage = {
 
 type ChatConversationState = Record<string, unknown>;
 
-type ChatContextSnapshot = {
-  history: ChatContextMessage[];
-  state: ChatConversationState | null;
-};
-
 function isChatConversationState(value: unknown): value is ChatConversationState {
   return Boolean(value && typeof value === 'object' && !Array.isArray(value));
 }
 
 type PublicChatbotRecord = Record<string, unknown>;
+
+class ChatbotTurnFailure extends Error {
+  constructor(readonly status: number, readonly code: string, readonly publicMessage: string) {
+    super(code);
+  }
+}
 
 export const CHATBOT_QUOTATION_NOT_ACTIVATED_MESSAGE =
   'Hãy cho biết tên hoặc dòng sản phẩm cần báo giá để WebPhone tìm trong danh mục; bạn sẽ chọn phiên bản trước khi tiếp tục.';
@@ -303,11 +308,15 @@ function sanitizeNormalizedCustomerChatbotResponse(value: PublicChatbotRecord, s
 }
 
 /** All displayed facts come from the same Backend catalog snapshot; n8n supplies intent/prose/ordered ID hints only. */
-export async function prepareCustomerChatbotResponse(value: unknown, sessionId: string, database: typeof prisma, requestContext?: { message: string; priorState?: ChatConversationState | null }): Promise<PublicChatbotRecord> {
+export async function prepareCustomerChatbotResponse(value: unknown, sessionId: string, database: typeof prisma, requestContext?: {
+  message: string;
+  priorState?: ChatConversationState | null;
+  onCatalogRehydrationAttempt?: () => void;
+}): Promise<PublicChatbotRecord> {
   const record = normalizeChatbotWorkflowResponse(value);
   if (record && isQuotationDraftResponse(record)) {
     try {
-      const draft = await prepareQuotationDraftResponse(record, sessionId, database);
+      const draft = await prepareQuotationDraftResponse(record, sessionId, database, requestContext?.onCatalogRehydrationAttempt);
       draft.conversation_state = projectChatbotConversationState(draft.conversation_state);
       return draft;
     } catch (error) {
@@ -330,6 +339,7 @@ export async function prepareCustomerChatbotResponse(value: unknown, sessionId: 
   let verified: Awaited<ReturnType<typeof resolveChatbotCatalogProducts>> = [];
   let available = true;
   if (lookupIds.length) {
+    requestContext?.onCatalogRehydrationAttempt?.();
     try { verified = await resolveChatbotCatalogProducts(database, lookupIds); }
     catch (error) { available = false; console.warn('[Chatbot Route] Response grounding unavailable.', safeErrorSummary(error)); }
   }
@@ -435,71 +445,6 @@ function toPrismaConversationState(value: unknown): Prisma.InputJsonObject | nul
     : null;
 }
 
-async function saveUserMessageAndLoadHistory(sessionId: string, content: string, database = prisma): Promise<ChatContextSnapshot> {
-  try {
-    return await database.$transaction(async (tx) => {
-      const conversation = await tx.chatConversation.upsert({
-        where: { sessionId },
-        create: { sessionId },
-        update: {}
-      });
-
-      const previousMessages = await tx.chatMessage.findMany({
-        where: { conversationId: conversation.id },
-        orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
-        take: CHAT_CONTEXT_MESSAGE_LIMIT,
-        select: { role: true, content: true }
-      });
-
-      await tx.chatMessage.create({
-        data: {
-          conversationId: conversation.id,
-          role: 'user',
-          content
-        }
-      });
-
-      return {
-        history: previousMessages
-          .reverse()
-          .filter((message): message is ChatContextMessage => message.role === 'user' || message.role === 'assistant')
-          .map((message) => ({ role: message.role, content: message.content })),
-        state: isChatConversationState(conversation.context) ? conversation.context : null
-      };
-    });
-  } catch (error) {
-    // Chat should remain usable if the optional history store is unavailable.
-    console.warn('[Chatbot Route] Conversation context unavailable; continuing stateless.');
-    return { history: [], state: null };
-  }
-}
-
-async function saveAssistantMessage(sessionId: string, content: string, state?: unknown, database = prisma) {
-  const trimmedContent = content.trim();
-  const nextState = toPrismaConversationState(state);
-  if (!trimmedContent && !nextState) return;
-
-  try {
-    const conversation = await database.chatConversation.upsert({
-      where: { sessionId },
-      create: nextState ? { sessionId, context: nextState } : { sessionId },
-      update: nextState ? { context: nextState } : {}
-    });
-
-    if (nextState && !trimmedContent) return;
-
-    await database.chatMessage.create({
-      data: {
-        conversationId: conversation.id,
-        role: 'assistant',
-        content: trimmedContent
-      }
-    });
-  } catch (error) {
-    console.warn('[Chatbot Route] Assistant message could not be stored.');
-  }
-}
-
 /** Dependency injection permits real HTTP route tests without touching production storage/workflows. */
 export function createChatbotRouter(dependencies: { database?: typeof prisma; fetcher?: typeof fetch } = {}) {
 const router = express.Router();
@@ -519,136 +464,251 @@ router.post('/catalog', async (req, res) => {
   }
 });
 
-router.post('/message', async (req, res) => {
-  try {
-    // 1. Validate 'message'
-    const { message } = req.body;
-    if (!message || typeof message !== 'string') {
-      return res.status(400).json({ result_type: 'error', response_type: 'text', success: false, response: 'Nội dung tin nhắn không được để trống.' });
+// Bootstrap before sending the first user turn. Losing this response cannot duplicate a turn:
+// no conversation, message, or n8n execution is created here. A bare old ID is never signed.
+router.post('/session', async (req, res) => {
+  res.setHeader('Cache-Control', 'private, no-store');
+  const suppliedId = typeof req.body?.sessionId === 'string' ? req.body.sessionId.trim() : '';
+  if (req.body?.sessionToken !== undefined) {
+    if (!suppliedId || suppliedId.length > 100 || !verifyChatSession(suppliedId, req.body.sessionToken)) {
+      return res.status(403).json({ code: 'CHAT_SESSION_INVALID', result_type: 'error', response: 'Phiên chat không còn hợp lệ. Hãy bắt đầu cuộc trò chuyện mới.' });
     }
-
-    const trimmedMessage = message.trim();
-    if (trimmedMessage.length === 0) {
-      return res.status(400).json({ result_type: 'error', response_type: 'text', success: false, response: 'Nội dung tin nhắn không được để trống.' });
-    }
-
-    if (trimmedMessage.length > 2000) {
-      return res.status(400).json({ result_type: 'error', response_type: 'text', success: false, response: 'Tin nhắn không được vượt quá 2000 ký tự.' });
-    }
-
-    // 2. Validate or generate 'sessionId'
-    let sessionId = req.body.sessionId;
-    if (!sessionId || typeof sessionId !== 'string' || sessionId.trim().length === 0 || sessionId.length > 100) {
-      sessionId = crypto.randomUUID();
-    } else {
-      sessionId = sessionId.trim();
-    }
-
-    const n8nUrl = process.env.N8N_CHAT_WEBHOOK_URL;
-    let n8nHeaders: Record<string, string>;
     try {
-      if (!n8nUrl) throw new Error('Webhook URL missing');
-      const endpoint = new URL(n8nUrl);
-      n8nHeaders = chatbotWebhookHeaders(process.env, endpoint.pathname.endsWith('/webphone-chatbot'));
-    } catch {
-      return res.status(503).json({ result_type: 'error', response_type: 'text', success: false, response: 'Chat service is temporarily unavailable', sessionId });
+      const conversation = await database.chatConversation.findUnique({ where: { sessionId: suppliedId }, select: { id: true } });
+      const turns = conversation ? await database.chatTurn.findMany({
+        where: { conversationId: conversation.id, status: 'COMPLETED', completedVersion: { not: null } },
+        orderBy: { completedVersion: 'desc' },
+        take: CHAT_HISTORY_TURN_LIMIT + 1,
+        select: {
+          requestId: true,
+          messages: { orderBy: { createdAt: 'asc' }, select: { role: true, content: true, createdAt: true } },
+        },
+      }) : [];
+      const pendingTurn = conversation ? await database.chatTurn.findFirst({
+        where: { conversationId: conversation.id, status: 'PENDING' },
+        orderBy: { createdAt: 'desc' },
+        select: { requestId: true, messages: { where: { role: 'user' }, take: 1, select: { content: true } } },
+      }) : null;
+      const historyTruncated = turns.length > CHAT_HISTORY_TURN_LIMIT;
+      const history = turns.slice(0, CHAT_HISTORY_TURN_LIMIT).reverse().flatMap(turn =>
+        turn.messages
+          .filter(message => message.role === 'user' || message.role === 'assistant')
+          .map(message => ({ requestId: turn.requestId, role: message.role, content: message.content, createdAt: message.createdAt.toISOString() })));
+      const pending = pendingTurn?.messages[0] ? { requestId: pendingTurn.requestId, text: pendingTurn.messages[0].content } : null;
+      return res.json({ sessionId: suppliedId, sessionToken: signChatSession(suppliedId), history, historyTruncated, pendingTurn: pending });
+    } catch (error) {
+      console.error('[Chatbot Route] Conversation history restore failed.', safeErrorSummary(error));
+      return res.status(503).json({ code: 'CHAT_STORAGE_UNAVAILABLE', result_type: 'error', response: 'Không thể tải lịch sử chat lúc này.' });
     }
+  }
+  const sessionId = crypto.randomUUID();
+  return res.json({ sessionId, sessionToken: signChatSession(sessionId), previousSessionPreserved: Boolean(suppliedId) });
+});
 
-    // 3. Load bounded, session-scoped context and record the current user turn.
-    const contextSnapshot = await saveUserMessageAndLoadHistory(sessionId, trimmedMessage, database);
-    const history = contextSnapshot.history;
+router.post('/message', async (req, res) => {
+  res.setHeader('Cache-Control', 'private, no-store');
+  const trimmedMessage = typeof req.body?.message === 'string' ? req.body.message.trim() : '';
+  if (!trimmedMessage || trimmedMessage.length > 2000) {
+    return res.status(400).json({ result_type: 'error', response_type: 'text', success: false,
+      response: trimmedMessage ? 'Tin nhắn không được vượt quá 2000 ký tự.' : 'Nội dung tin nhắn không được để trống.' });
+  }
+  const observation = beginChatbotTurnObservation();
+  let observationOutcome: Parameters<typeof observation.finish>[0] = 'unknown_error';
+  const finishObservation = (outcome: Parameters<typeof observation.finish>[0]) => {
+    observationOutcome = outcome;
+    observation.finish(outcome);
+  };
+  const sessionId = typeof req.body?.sessionId === 'string' ? req.body.sessionId.trim() : '';
+  const sessionToken = req.body?.sessionToken;
+  if (!sessionToken) {
+    finishObservation('request_rejected');
+    return res.status(409).json({ code: 'CHAT_SESSION_UPGRADE_REQUIRED', result_type: 'error', response_type: 'text', success: false,
+      response: 'Vui lòng tải lại trang để cập nhật phiên chat. Lịch sử cũ vẫn được giữ nguyên.' });
+  }
+  if (!sessionId || sessionId.length > 100 || !verifyChatSession(sessionId, sessionToken)) {
+    finishObservation('request_rejected');
+    return res.status(403).json({ code: 'CHAT_SESSION_INVALID', result_type: 'error', response_type: 'text', success: false,
+      response: 'Phiên chat không còn hợp lệ. Hãy bắt đầu cuộc trò chuyện mới.' });
+  }
+  const suppliedRequestId = req.body?.requestId;
+  if (suppliedRequestId !== undefined && suppliedRequestId !== null &&
+      (typeof suppliedRequestId !== 'string' || !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(suppliedRequestId))) {
+    finishObservation('request_rejected');
+    return res.status(400).json({ code: 'CHAT_REQUEST_ID_INVALID', result_type: 'error', response: 'requestId phải là UUID hợp lệ.' });
+  }
+  // Token-aware clients without requestId get a stable internal key. Successful replies rotate
+  // the signed token: retries reuse the old token/key, intentional next turns use the new token.
+  const requestId = typeof suppliedRequestId === 'string' ? suppliedRequestId.toLowerCase()
+    : `compat-${crypto.createHash('sha256').update(sessionToken).update('\0').update(trimmedMessage).digest('hex')}`;
+  const fail = (status: number, code: string, response: string, outcome: Parameters<typeof observation.finish>[0] = 'request_rejected') => {
+    finishObservation(outcome);
+    return res.status(status).json({ code, result_type: 'error', response_type: 'text', success: false, response, sessionId, requestId });
+  };
 
-    // 4. Ensure Environment Variable
-    if (!n8nUrl) {
-      console.error('[Chatbot Route] N8N_CHAT_WEBHOOK_URL is not configured.');
-      return res.status(503).json({ result_type: 'error', response_type: 'text', success: false, response: 'Chat service is temporarily unavailable', sessionId });
+  const n8nUrl = process.env.N8N_CHAT_WEBHOOK_URL;
+  let n8nHeaders: Record<string, string>;
+  try {
+    if (!n8nUrl) throw new Error('Webhook URL missing');
+    const endpoint = new URL(n8nUrl);
+    n8nHeaders = chatbotWebhookHeaders(process.env, endpoint.pathname.endsWith('/webphone-chatbot'));
+  } catch {
+    return fail(503, 'CHAT_SERVICE_UNAVAILABLE', 'Chat service is temporarily unavailable', 'request_rejected');
+  }
+
+  let claim: ChatClaim;
+  try {
+    claim = await claimChatTurn(sessionId, requestId, trimmedMessage, database);
+  } catch (error) {
+    console.error('[Chatbot Route] Conversation claim failed.', safeErrorSummary(error));
+    return fail(503, 'CHAT_STORAGE_UNAVAILABLE', 'Không thể lưu lượt chat lúc này. Vui lòng thử lại.', 'storage_error');
+  }
+  if (claim.kind === 'busy') {
+    res.setHeader('Retry-After', '5');
+    return fail(409, 'CHAT_SESSION_BUSY', 'Chatbot đang xử lý tin nhắn trước. Vui lòng thử lại sau.', 'busy');
+  }
+  if (claim.kind === 'conflict') return fail(409, 'CHAT_REQUEST_ID_CONFLICT', 'Mã lượt chat đã được dùng cho nội dung khác.', 'request_rejected');
+  if (claim.kind === 'completed') {
+    finishObservation('replay');
+    return res.json({ ...claim.response, sessionId, requestId: claim.requestId, sessionToken: signChatSession(sessionId) });
+  }
+
+  const { lease, snapshot } = claim;
+  if (claim.reclaimedExpiredLease) observation.markReclaimedExpiredLease();
+  const controller = new AbortController();
+  let abortReason: 'deadline' | 'client_disconnected' | undefined;
+  let upstreamOutcomeKnown = false;
+  const abortUpstream = (reason: 'deadline' | 'client_disconnected') => {
+    if (controller.signal.aborted) return;
+    abortReason = reason;
+    controller.abort();
+  };
+  const onDisconnect = () => {
+    // Once the entire n8n body was received, persist the guarded result even if this client
+    // disappeared. A retry of the same requestId can then replay it without another n8n call.
+    if (!upstreamOutcomeKnown && !res.writableEnded) abortUpstream('client_disconnected');
+  };
+  res.once('close', onDisconnect);
+  if (req.aborted || res.destroyed) abortUpstream('client_disconnected');
+  // This deadline intentionally starts at n8n dispatch, rather than charging bounded local
+  // catalog preparation against the upstream's full response budget.
+  let deadlineAt: number | undefined;
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+  let completed = false;
+  let releaseNow = true;
+  const clearN8nDeadline = () => {
+    if (timeoutId) clearTimeout(timeoutId);
+    timeoutId = undefined;
+  };
+  const checkN8nDeadline = () => {
+    if (abortReason === 'client_disconnected') throw new ChatbotTurnFailure(499, 'CHAT_CLIENT_DISCONNECTED', 'Client disconnected.');
+    if (abortReason === 'deadline' || (deadlineAt !== undefined && performance.now() >= deadlineAt)) {
+      abortUpstream('deadline');
+      throw new ChatbotTurnFailure(504, 'CHAT_REQUEST_TIMEOUT', 'Chat service timed out. Please try again later.');
     }
-
-    // 5. Prepare n8n Request
-    const previousIds = chatbotProductHints({ products: contextSnapshot.state?.last_result_set });
+  };
+  try {
+    const previousIds = chatbotProductHints({ products: snapshot.state?.last_result_set });
     let verifiedContext: Awaited<ReturnType<typeof resolveChatbotCatalogProducts>> | undefined;
     if (previousIds.length) {
+      observation.markCatalogRehydrationAttempt();
       try { verifiedContext = await resolveChatbotCatalogProducts(database, previousIds); }
-      catch { /* Keep bounded identity/position hints; do not forward unverified prices. */ }
+      catch { /* Preserve existing identity hints without forwarding unverified prices. */ }
     }
-    const n8nPayload = buildCustomerN8nPayload({
-      message: trimmedMessage,
-      sessionId,
-      history,
-      conversationState: contextSnapshot.state,
-      verifiedCatalog: verifiedContext,
-    });
-
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 90000); // 90 seconds timeout
-
-    let n8nResponse;
+    const n8nPayload = buildCustomerN8nPayload({ message: trimmedMessage, sessionId,
+      history: snapshot.history, conversationState: snapshot.state, verifiedCatalog: verifiedContext });
+    checkN8nDeadline();
+    if (!await renewChatLeaseBeforeDispatch(lease, database)) {
+      throw new ChatbotTurnFailure(409, 'CHAT_SESSION_STALE', 'Lượt chat đã hết hạn. Vui lòng gửi lại tin nhắn.');
+    }
+    // Abort only cancels our HTTP client. Keep the lease until expiry when upstream completion
+    // is unknown, instead of immediately allowing another request into the same n8n session.
+    // The conditional renewal above gives this dispatch a full lease window after local work.
+    releaseNow = false;
+    deadlineAt = performance.now() + CHATBOT_UPSTREAM_TIMEOUT_MS;
+    timeoutId = setTimeout(() => abortUpstream('deadline'), CHATBOT_UPSTREAM_TIMEOUT_MS);
+    let n8nResponse: Response;
     try {
+      observation.markN8nDispatch();
       n8nResponse = await (dependencies.fetcher || fetch)(n8nUrl, {
-        method: 'POST',
-        headers: n8nHeaders,
-        body: JSON.stringify(n8nPayload),
-        signal: controller.signal
+        method: 'POST', headers: n8nHeaders, body: JSON.stringify(n8nPayload), signal: controller.signal
       });
-    } catch (fetchError: any) {
-      clearTimeout(timeoutId);
-      if (fetchError.name === 'AbortError') {
-        console.error('[Chatbot Route] n8n request timed out.');
-        return res.status(504).json({ result_type: 'error', response_type: 'text', success: false, response: 'Chat service timed out. Please try again later.', sessionId });
-      }
-      console.error('[Chatbot Route] Network error calling n8n:', safeFetchErrorSummary(fetchError));
-      return res.status(502).json({ result_type: 'error', response_type: 'text', success: false, response: 'Failed to communicate with chat service.', sessionId });
+    } catch (error) {
+      checkN8nDeadline();
+      console.error('[Chatbot Route] Network error calling n8n:', safeFetchErrorSummary(error));
+      throw new ChatbotTurnFailure(502, 'CHAT_UPSTREAM_UNAVAILABLE', 'Failed to communicate with chat service.');
     }
-
-    clearTimeout(timeoutId);
-
-    // 6. Handle non-2xx Response
     if (!n8nResponse.ok) {
-      console.error(`[Chatbot Route] n8n returned status ${n8nResponse.status} ${n8nResponse.statusText}`);
-      return res.status(502).json({ result_type: 'error', response_type: 'text', success: false, response: 'Chat service encountered an error.', sessionId });
+      console.error('[Chatbot Route] n8n returned status', n8nResponse.status);
+      await n8nResponse.body?.cancel();
+      throw new ChatbotTurnFailure(502, 'CHAT_UPSTREAM_ERROR', 'Chat service encountered an error.');
     }
-
-    // 7. Check Content-Type for Binary/PDF
     const contentType = n8nResponse.headers.get('content-type') || '';
-
+    let publicResponse: PublicChatbotRecord;
     if (contentType.includes('application/pdf') || contentType.includes('application/octet-stream') || contentType.includes('application/vnd.')) {
-      await saveAssistantMessage(sessionId, CHATBOT_QUOTATION_NOT_ACTIVATED_MESSAGE, undefined, database);
-      res.setHeader('Cache-Control', 'private, no-store');
+      const reader = n8nResponse.body?.getReader();
+      if (reader) {
+        try { while (!(await reader.read()).done) checkN8nDeadline(); }
+        finally { reader.releaseLock(); }
+      }
+      upstreamOutcomeKnown = true;
+      clearN8nDeadline();
+      observation.markN8nResponseComplete();
+      releaseNow = true;
+      publicResponse = { result_type: 'quotation', response_type: 'text', success: false,
+        quote_status: 'NOT_ACTIVATED', response: CHATBOT_QUOTATION_NOT_ACTIVATED_MESSAGE };
       res.setHeader('X-Content-Type-Options', 'nosniff');
-      return res.status(200).json({
-        sessionId,
-        result_type: 'quotation',
-        response_type: 'text',
-        success: false,
-        quote_status: 'NOT_ACTIVATED',
-        response: CHATBOT_QUOTATION_NOT_ACTIVATED_MESSAGE,
-      });
+    } else {
+      const responseText = await n8nResponse.text(); // Deadline remains active through the body.
+      checkN8nDeadline();
+      upstreamOutcomeKnown = true;
+      clearN8nDeadline();
+      observation.markN8nResponseComplete();
+      releaseNow = true;
+      let responseData: unknown;
+      try { responseData = JSON.parse(responseText); }
+      catch {
+        throw new ChatbotTurnFailure(502, 'CHAT_UPSTREAM_INVALID_RESPONSE', 'Received invalid data from chat service.');
+      }
+      publicResponse = await prepareCustomerChatbotResponse(responseData, sessionId, database,
+        { message: trimmedMessage, priorState: n8nPayload.conversationState,
+          onCatalogRehydrationAttempt: () => observation.markCatalogRehydrationAttempt() });
     }
-
-    // 8. Handle JSON Response
-    let responseData;
-    try {
-      responseData = await n8nResponse.json();
-    } catch (parseError) {
-      console.error('[Chatbot Route] Failed to parse n8n JSON response:', parseError);
-      return res.status(502).json({ result_type: 'error', response_type: 'text', success: false, response: 'Received invalid data from chat service.', sessionId });
+    const assistantContent = typeof publicResponse.response === 'string' ? publicResponse.response
+      : typeof publicResponse.message === 'string' ? publicResponse.message : '';
+    const replayResponse = { ...publicResponse, sessionId, requestId: claim.requestId };
+    completed = await completeChatTurn(lease, assistantContent, toPrismaConversationState(publicResponse.conversation_state), replayResponse, database);
+    if (!completed) return fail(409, 'CHAT_SESSION_STALE', 'Lượt chat đã hết hạn. Vui lòng thử lại.', 'stale_completion');
+    finishObservation('success');
+    return res.json({ ...replayResponse, sessionToken: signChatSession(sessionId) });
+  } catch (error) {
+    if (abortReason === 'client_disconnected' || res.destroyed || req.aborted) {
+      finishObservation('client_disconnected');
+      return;
     }
-
-    const publicResponse = await prepareCustomerChatbotResponse(responseData, sessionId, database, { message: trimmedMessage, priorState: n8nPayload.conversationState });
-    const assistantContent = isPublicChatbotRecord(publicResponse)
-      ? typeof publicResponse.response === 'string'
-        ? publicResponse.response
-        : typeof publicResponse.message === 'string'
-          ? publicResponse.message
-          : ''
-      : '';
-    await saveAssistantMessage(sessionId, assistantContent, isPublicChatbotRecord(publicResponse) ? publicResponse.conversation_state : undefined, database);
-    res.setHeader('Cache-Control', 'private, no-store');
-    return res.status(200).json(publicResponse);
-
-  } catch (err: any) {
-    console.error('[Chatbot Route] Unexpected error:', err.message);
-    return res.status(500).json({ result_type: 'error', response_type: 'text', success: false, response: 'Internal server error' });
+    if (abortReason === 'deadline' || (deadlineAt !== undefined && performance.now() >= deadlineAt)) return fail(504, 'CHAT_REQUEST_TIMEOUT', 'Chat service timed out. Please try again later.', 'timeout');
+    if (error instanceof ChatbotTurnFailure) {
+      const outcome = error.code === 'CHAT_UPSTREAM_INVALID_RESPONSE' ? 'upstream_invalid_response'
+        : error.code === 'CHAT_UPSTREAM_ERROR' ? 'upstream_http_error'
+        : error.code === 'CHAT_UPSTREAM_UNAVAILABLE' ? 'upstream_network_error'
+        : error.code === 'CHAT_SESSION_STALE' ? 'stale_completion'
+        : 'unknown_error';
+      return fail(error.status, error.code, error.publicMessage, outcome);
+    }
+    if (!releaseNow) {
+      console.error('[Chatbot Route] Upstream response could not be read.', safeFetchErrorSummary(error));
+      return fail(502, 'CHAT_UPSTREAM_UNAVAILABLE', 'Failed to communicate with chat service.', 'upstream_network_error');
+    }
+    console.error('[Chatbot Route] Turn could not be committed.', safeErrorSummary(error));
+    return fail(503, 'CHAT_STORAGE_UNAVAILABLE', 'Không thể hoàn tất lượt chat lúc này. Vui lòng thử lại.', 'storage_error');
+  } finally {
+    clearN8nDeadline();
+    res.off('close', onDisconnect);
+    if (!completed) {
+      if (!releaseNow) observation.markLeaseRetainedForExpiryRecovery();
+      try { await abandonChatTurn(lease, database, releaseNow); }
+      catch (error) { console.error('[Chatbot Route] Lease cleanup failed; expiry will recover it.', safeErrorSummary(error)); }
+    }
+    observation.finish(observationOutcome);
   }
 });
 

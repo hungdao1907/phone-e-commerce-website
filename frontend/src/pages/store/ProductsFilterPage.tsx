@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useQuery, keepPreviousData } from '@tanstack/react-query';
+import { productFilterQuery } from '@/lib/product-filter-query';
 import { SidebarFilter } from '@/components/store/SidebarFilter';
 import { ActiveFilterChips } from '@/components/store/ActiveFilterChips';
 import { FilteredProductCard } from '@/components/store/FilteredProductCard';
@@ -12,25 +13,21 @@ export function ProductsFilterPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
-  const fetchFilters = async () => {
-    const params = new URLSearchParams(searchParams);
-    params.delete('page');
-    params.delete('limit');
-    params.delete('sort');
-    
-    const res = await fetch(`${API_URL}/api/products/filters?${params.toString()}`);
+  const filtersQuery = productFilterQuery(searchParams, {});
+  const fetchFilters = async ({ signal }: { signal: AbortSignal }) => {
+    const res = await fetch(`${API_URL}/api/products/filters?${filtersQuery}`, { signal });
     if (!res.ok) throw new Error('Failed to fetch filters');
     return res.json();
   };
 
-  const fetchProducts = async () => {
-    const res = await fetch(`${API_URL}/api/products/search?${searchParams.toString()}`);
+  const fetchProducts = async ({ signal }: { signal: AbortSignal }) => {
+    const res = await fetch(`${API_URL}/api/products/search?${searchParams.toString()}`, { signal });
     if (!res.ok) throw new Error('Failed to fetch products');
     return res.json();
   };
 
   const { data: filtersData, isLoading: isLoadingFilters } = useQuery({
-    queryKey: ['productsFilters', searchParams.toString()],
+    queryKey: ['productsFilters', API_URL, filtersQuery],
     queryFn: fetchFilters,
     placeholderData: keepPreviousData,
   });

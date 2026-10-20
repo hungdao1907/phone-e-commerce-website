@@ -21,6 +21,9 @@ export function ProductPurchasePage() {
 
   useEffect(() => {
     if (!slug) return;
+    const controller = new AbortController();
+    setLoading(true);
+    setProduct(null);
     const fetchProduct = async () => {
       try {
         let dbProduct = null;
@@ -29,7 +32,7 @@ export function ProductPurchasePage() {
         const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slug);
 
         if (isUUID) {
-          const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/products/${slug}`);
+          const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/products/${slug}`, { signal: controller.signal });
           if (res.ok) dbProduct = await res.json();
         } else {
           // It's a mock product slug!
@@ -43,11 +46,12 @@ export function ProductPurchasePage() {
             if (res.ok) dbProduct = await res.json();
           } else {
             // Try fetching by ID anyway just in case
-            const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/products/${slug}`);
+            const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/products/${slug}`, { signal: controller.signal });
             if (res.ok) dbProduct = await res.json();
           }
         }
 
+        if (controller.signal.aborted) return;
         if (dbProduct) {
 
           const uniqueColors = new Map();
@@ -156,15 +160,16 @@ export function ProductPurchasePage() {
             ratingAverage: dbProduct.ratingAverage || 0,
             reviewCount: dbProduct.reviewCount || 0
           };
-          setProduct(mappedProduct);
+          if (!controller.signal.aborted) setProduct(mappedProduct);
         }
       } catch (err) {
-        console.error(err);
+        if (!controller.signal.aborted) console.error(err);
       } finally {
-        setLoading(false);
+        if (!controller.signal.aborted) setLoading(false);
       }
     };
     fetchProduct();
+    return () => controller.abort();
   }, [slug]);
 
   const initialVariant = product?.variants?.[0];

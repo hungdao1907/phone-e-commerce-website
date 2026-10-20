@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 import { useQuery, keepPreviousData } from '@tanstack/react-query';
+import { productFilterQuery } from '@/lib/product-filter-query';
 import { SidebarFilter } from '@/components/store/SidebarFilter';
 import { ActiveFilterChips } from '@/components/store/ActiveFilterChips';
 import { FilteredProductCard } from '@/components/store/FilteredProductCard';
@@ -60,34 +61,26 @@ export function WatchBrandAllProductsSection({ config, products = [] }: WatchBra
   const activeSort = searchParams.get('sort') || 'newest';
   const searchQuery = searchParams.get('q') || '';
 
-  const fetchFilters = async () => {
-    const params = new URLSearchParams(searchParams);
-    params.delete('page');
-    params.delete('limit');
-    params.delete('sort');
-    params.delete('series');
-    params.delete('q');
-    params.set('category', categorySlug);
-    params.set('brand', brandName);
-    
-    const res = await fetch(`${API_URL}/api/products/filters?${params.toString()}`);
+  const filtersQuery = productFilterQuery(searchParams, { category: categorySlug, brand: brandName }, ['page', 'limit', 'sort', 'series', 'q']);
+  const fetchFilters = async ({ signal }: { signal: AbortSignal }) => {
+    const res = await fetch(`${API_URL}/api/products/filters?${filtersQuery}`, { signal });
     if (!res.ok) throw new Error('Failed to fetch filters');
     return res.json();
   };
 
-  const fetchProducts = async () => {
+  const fetchProducts = async ({ signal }: { signal: AbortSignal }) => {
     const params = new URLSearchParams(searchParams);
     params.set('category', categorySlug);
     params.set('brand', brandName);
     params.set('limit', '8');
 
-    const res = await fetch(`${API_URL}/api/products/search?${params.toString()}`);
+    const res = await fetch(`${API_URL}/api/products/search?${params.toString()}`, { signal });
     if (!res.ok) throw new Error('Failed to fetch products');
     return res.json();
   };
 
   const { data: filtersData, isLoading: isLoadingFilters } = useQuery({
-    queryKey: ['productsFilters', categorySlug, brandName, searchParams.toString()],
+    queryKey: ['productsFilters', API_URL, filtersQuery],
     queryFn: fetchFilters,
     placeholderData: keepPreviousData,
   });

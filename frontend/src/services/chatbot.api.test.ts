@@ -40,7 +40,11 @@ test('guest chatbot message sends no auth token or customer identity to n8n rela
     await sendChatMessage('hello', 'guest-session');
     assert.ok(captured);
     assert.equal(captured!.url.endsWith('/api/chatbot/message'), true);
-    assert.deepEqual(JSON.parse(String(captured!.init?.body)), { message: 'hello', sessionId: 'guest-session' });
+    const body = JSON.parse(String(captured!.init?.body));
+    assert.equal(body.message, 'hello');
+    assert.equal(body.sessionId, 'guest-session');
+    assert.match(body.requestId, /^[0-9a-f-]{36}$/i);
+    assert.equal(body.sessionToken, undefined);
     assert.equal('Authorization' in (captured!.init?.headers as Record<string, string>), false);
     assert.equal(String(captured!.init?.body).includes('customerId'), false);
   } finally {

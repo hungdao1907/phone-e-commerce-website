@@ -160,20 +160,13 @@ router.get('/', async (req, res) => {
     ]);
 
     const productIds = products.map(p => p.id);
-    const _reviews = await prisma.review.findMany({
-      where: { productId: { in: productIds }, status: 'APPROVED' },
-      select: { productId: true, rating: true }
-    });
+    const reviewSummaries = await getApprovedReviewSummaries(productIds);
 
     // Attach campaign and reviews to products
     const productsWithData = products.map((product) => {
       const campaign = getBestCampaign(product, activeCampaigns);
 
-      const pReviews = _reviews.filter(r => r.productId === product.id);
-      const reviewCount = pReviews.length;
-      const ratingAverage = reviewCount > 0
-        ? Number((pReviews.reduce((sum, r) => sum + r.rating, 0) / reviewCount).toFixed(1))
-        : 0;
+      const { reviewCount, ratingAverage } = reviewSummaries.get(product.id) ?? EMPTY_REVIEW_SUMMARY;
 
       return {
         ...product,
@@ -193,6 +186,23 @@ router.get('/', async (req, res) => {
     res.status(500).json({ message: 'Lỗi server' });
   }
 });
+
+const EMPTY_REVIEW_SUMMARY = { reviewCount: 0, ratingAverage: 0 };
+
+async function getApprovedReviewSummaries(productIds: string[]) {
+  if (productIds.length === 0) return new Map<string, typeof EMPTY_REVIEW_SUMMARY>();
+
+  const groups = await prisma.review.groupBy({
+    by: ['productId'],
+    where: { productId: { in: productIds }, status: 'APPROVED' },
+    _count: { _all: true },
+    _avg: { rating: true },
+  });
+  return new Map(groups.map(group => [group.productId, {
+    reviewCount: group._count._all,
+    ratingAverage: group._avg.rating === null ? 0 : Number(Number(group._avg.rating).toFixed(1)),
+  }]));
+}
 
 function getVariantAttrMap(attributes: unknown): Record<string, string> {
   const map: Record<string, string> = {};
@@ -239,9 +249,11 @@ router.get('/filters', async (req, res) => {
 
     const products = await prisma.product.findMany({
       where: whereClause,
-      include: {
-        variants: true
-      }
+      select: {
+        brand: true,
+        specifications: true,
+        variants: { select: { attributes: true, colorCode: true, price: true, salePrice: true } },
+      },
     });
 
     const filters = extractFiltersFromProducts(products);
@@ -296,7 +308,11 @@ router.get('/admin/filters', authenticateToken, requireRoles('staff', 'admin', '
 
     const products = await prisma.product.findMany({
       where: whereClause,
-      include: { variants: true }
+      select: {
+        brand: true,
+        specifications: true,
+        variants: { select: { attributes: true, price: true, salePrice: true } },
+      },
     });
 
     const filters = extractAdminFiltersFromProducts(products);
@@ -664,6 +680,22 @@ router.get('/search', async (req, res) => {
       ];
     }
 
+    // A matching variant's effective price cannot exceed maxPrice unless both
+    // stored prices do. Keep the existing in-memory check as the final authority:
+    // this OR is deliberately a superset when a sale price is 0 or absent.
+    if (maxPrice !== undefined && maxPrice !== '') {
+      const upperBound = parseInt(maxPrice as string, 10);
+      if (Number.isFinite(upperBound)) {
+        whereClause.AND = [
+          ...(whereClause.AND || []),
+          { variants: { some: { OR: [
+            { salePrice: { lte: upperBound } },
+            { price: { lte: upperBound } },
+          ] } } },
+        ];
+      }
+    }
+
     let products = await prisma.product.findMany({
       where: whereClause,
       include: {
@@ -857,10 +889,7 @@ router.get('/search', async (req, res) => {
 
     // Fetch review aggregates for the paginated products
     const productIds = paginatedProducts.map(p => p.id);
-    const _reviews = await prisma.review.findMany({
-      where: { productId: { in: productIds }, status: 'APPROVED' },
-      select: { productId: true, rating: true }
-    });
+    const reviewSummaries = await getApprovedReviewSummaries(productIds);
 
     // Fetch active campaigns
     const activeCampaigns = await prisma.campaign.findMany({
@@ -872,11 +901,7 @@ router.get('/search', async (req, res) => {
     });
 
     const paginatedProductsWithReviews = paginatedProducts.map(p => {
-      const pReviews = _reviews.filter(r => r.productId === p.id);
-      const reviewCount = pReviews.length;
-      const ratingAverage = reviewCount > 0
-        ? Number((pReviews.reduce((acc, curr) => acc + curr.rating, 0) / reviewCount).toFixed(1))
-        : 0;
+      const { reviewCount, ratingAverage } = reviewSummaries.get(p.id) ?? EMPTY_REVIEW_SUMMARY;
       const campaign = getBestCampaign(p, activeCampaigns);
       return {
         ...p,
@@ -926,14 +951,8 @@ router.get('/:id', async (req, res) => {
     const campaign = getBestCampaign(product, activeCampaigns);
 
     // Calculate rating summary
-    const _reviews = await prisma.review.findMany({
-      where: { productId: product.id, status: 'APPROVED' },
-      select: { rating: true }
-    });
-    const reviewCount = _reviews.length;
-    const ratingAverage = reviewCount > 0
-      ? Number((_reviews.reduce((acc, curr) => acc + curr.rating, 0) / reviewCount).toFixed(1))
-      : 0;
+    const reviewSummaries = await getApprovedReviewSummaries([product.id]);
+    const { reviewCount, ratingAverage } = reviewSummaries.get(product.id) ?? EMPTY_REVIEW_SUMMARY;
 
     res.json({
       ...product,

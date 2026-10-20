@@ -3,12 +3,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { MessageSquare, X, Send, Bot, RotateCcw, Sparkles, HelpCircle, Loader2 } from 'lucide-react';
 import { ChatMessage, QuickPrompt } from './types';
 import { ChatMessageItem } from './ChatMessageItem';
-import { extractSuggestedProductIds, fetchChatbotCatalogProducts, readVerifiedChatbotProducts, resolveChatbotProductResponse, sendChatMessage } from '../../services/chatbot.api';
+import { bootstrapChatSession, ChatbotMessageError, extractSuggestedProductIds, fetchChatbotCatalogProducts, readVerifiedChatbotProducts, resolveChatbotProductResponse, sendChatMessage } from '../../services/chatbot.api';
 import { resolveQuotationIntent } from './quotation-intent';
 import { MeshGradientSVG } from '../ui/shader-svg';
 import { CustomerQuotationPanel } from './CustomerQuotationPanel';
-
-const SESSION_KEY = 'webphone_chat_session_id';
+import { currentChatSession, readChatInputDraft, readPendingChatTurn, storeChatInputDraft, storeChatSession, storePendingChatTurn } from './chat-session';
+import type { PendingChatTurn } from './chat-session';
 
 const QUICK_PROMPTS: QuickPrompt[] = [
   {
@@ -36,13 +36,20 @@ const QUICK_PROMPTS: QuickPrompt[] = [
 export function ChatWidget() {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [input, setInput] = useState('');
+  const [input, setInput] = useState(readChatInputDraft);
   const [isSending, setIsSending] = useState(false);
+  const [isRestoringSession, setIsRestoringSession] = useState(() => Boolean(currentChatSession().sessionToken));
+  const [unsentMessage, setUnsentMessage] = useState(() => readPendingChatTurn()?.text || '');
+  const [sendNotice, setSendNotice] = useState('');
+  const [invalidSession, setInvalidSession] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const pendingRequestRef = useRef<PendingChatTurn | null>(readPendingChatTurn());
+  const sendingRef = useRef(false);
+  const mountedRef = useRef(false);
 
   const resizeInput = () => {
     const textarea = inputRef.current;
@@ -61,21 +68,6 @@ export function ChatWidget() {
     }
   };
 
-  const getNewSessionId = () => {
-    return crypto.randomUUID
-      ? crypto.randomUUID()
-      : `session-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
-  };
-
-  const getCurrentSessionId = () => {
-    const existingSessionId = sessionStorage.getItem(SESSION_KEY);
-    if (existingSessionId) return existingSessionId;
-
-    const newSessionId = getNewSessionId();
-    sessionStorage.setItem(SESSION_KEY, newSessionId);
-    return newSessionId;
-  };
-
   const initWelcomeMessage = () => {
     const hours = new Date().getHours();
     const greeting = hours < 12 ? 'Chào buổi sáng!' : hours < 18 ? 'Chào buổi chiều!' : 'Chào buổi tối!';
@@ -92,16 +84,69 @@ export function ChatWidget() {
 
   // Initialize session and welcome message
   useEffect(() => {
-    getCurrentSessionId();
+    mountedRef.current = true;
+    const session = currentChatSession();
+    const pending = readPendingChatTurn();
+    pendingRequestRef.current = pending;
+    setUnsentMessage(pending?.text || '');
     initWelcomeMessage();
+
+    let cancelled = false;
+    if (session.sessionToken) {
+      setIsRestoringSession(true);
+      void bootstrapChatSession(session.sessionId, session.sessionToken).then(restored => {
+        if (!restored || cancelled || !mountedRef.current || currentChatSession().sessionId !== session.sessionId) return;
+        storeChatSession({ sessionId: restored.sessionId, sessionToken: restored.sessionToken });
+        const restoredMessages: ChatMessage[] = restored.history.map(entry => ({
+          id: `${entry.role}-${entry.requestId}`,
+          role: entry.role,
+          text: entry.content,
+          createdAt: Date.parse(entry.createdAt),
+        }));
+        setMessages(previous => [...previous.filter(message => message.id === 'welcome-1'), ...restoredMessages]);
+
+        const savedPending = readPendingChatTurn();
+        const pendingTurnCompleted = savedPending?.sessionId === session.sessionId
+          && restored.history.some(entry => entry.role === 'assistant' && entry.requestId === savedPending.requestId);
+        if (pendingTurnCompleted) {
+          pendingRequestRef.current = null;
+          storePendingChatTurn(null);
+          setUnsentMessage('');
+        } else if (restored.pendingTurn && (!savedPending || savedPending.sessionId !== session.sessionId)) {
+          const recoveredPending: PendingChatTurn = { ...restored.pendingTurn, sessionId: session.sessionId, dispatched: true };
+          pendingRequestRef.current = recoveredPending;
+          storePendingChatTurn(recoveredPending);
+          setUnsentMessage(recoveredPending.text);
+        }
+        if (restored.historyTruncated) setSendNotice('Đang hiển thị các lượt chat gần đây; lịch sử cũ vẫn được lưu.');
+      }).catch(error => {
+        if (cancelled || !mountedRef.current || currentChatSession().sessionId !== session.sessionId) return;
+        if (error instanceof ChatbotMessageError && error.code === 'CHAT_SESSION_INVALID') {
+          setInvalidSession(true);
+          setSendNotice('Phiên chat đã hết hạn. Lịch sử cũ vẫn được giữ nguyên; bạn có thể bắt đầu cuộc trò chuyện mới.');
+        } else {
+          setSendNotice('Chưa tải được lịch sử chat. Phiên hội thoại vẫn được giữ; hãy thử tải lại trang nếu cần xem lịch sử.');
+        }
+      }).finally(() => {
+        if (!cancelled && mountedRef.current) setIsRestoringSession(false);
+      });
+    } else {
+      setIsRestoringSession(false);
+    }
 
     // Show tooltip after 2.5 seconds if not open
     const timer = setTimeout(() => {
       setShowTooltip(true);
     }, 2500);
 
-    return () => clearTimeout(timer);
+    return () => {
+      cancelled = true;
+      mountedRef.current = false;
+      clearTimeout(timer);
+    };
   }, []);
+
+  useEffect(() => { storeChatInputDraft(input); }, [input]);
 
   // Auto scroll to bottom
   useEffect(() => {
@@ -112,30 +157,60 @@ export function ChatWidget() {
 
   // Reset conversation handler
   const handleResetChat = () => {
-    const newSession = getNewSessionId();
-    sessionStorage.setItem(SESSION_KEY, newSession);
+    if (sendingRef.current || isRestoringSession) return;
+    const sessionId = crypto.randomUUID();
+    storeChatSession({ sessionId });
+    // Start a new turn only after the customer explicitly sends the retained draft. Never
+    // transfer a dispatched requestId to another conversation or silently replay it.
+    const pending = pendingRequestRef.current;
+    pendingRequestRef.current = null;
+    storePendingChatTurn(null);
+    setUnsentMessage('');
+    if (pending?.text) {
+      setInput(pending.text);
+      storeChatInputDraft(pending.text);
+    }
+    setSendNotice('Đã bắt đầu cuộc trò chuyện mới. Lịch sử cũ vẫn được giữ nguyên.');
+    setInvalidSession(false);
     initWelcomeMessage();
   };
 
   const handleSend = async (customText?: string) => {
     const text = (customText || input).trim();
-    if (!text || isSending) return;
+    if (!text || sendingRef.current || isRestoringSession || invalidSession) return;
+    const pending = pendingRequestRef.current;
+    if (pending && pending.text !== text) {
+      setSendNotice('Hãy hoàn tất tin nhắn đang chờ trước. Nội dung bạn đang soạn vẫn được giữ lại.');
+      return;
+    }
 
     if (text.length > 2000) {
       alert('Tin nhắn quá dài (tối đa 2000 ký tự).');
       return;
     }
 
-    const sessionId = getCurrentSessionId();
+    let session = currentChatSession();
+    if (pending && pending.sessionId !== session.sessionId && pending.dispatched) {
+      setSendNotice('Tin nhắn đang chờ thuộc phiên khác. Hãy bắt đầu cuộc trò chuyện mới để gửi lại.');
+      setInvalidSession(true);
+      return;
+    }
+    const requestId = pending?.requestId || crypto.randomUUID();
+    const previouslyDispatched = pending?.dispatched === true;
+    pendingRequestRef.current = { text, sessionId: session.sessionId, requestId, dispatched: pending?.dispatched ?? false };
+    storePendingChatTurn(pendingRequestRef.current);
+    sendingRef.current = true; // Covers two click/Enter events before React commits isSending.
+    setUnsentMessage('');
+    setSendNotice('');
 
     const userMessage: ChatMessage = {
-      id: crypto.randomUUID(),
+      id: `user-${requestId}`,
       role: 'user',
       text,
       createdAt: Date.now()
     };
 
-    const loadingId = crypto.randomUUID();
+    const loadingId = `loading-${requestId}`;
     const loadingMessage: ChatMessage = {
       id: loadingId,
       role: 'assistant',
@@ -143,18 +218,38 @@ export function ChatWidget() {
       createdAt: Date.now()
     };
 
-    setMessages(prev => [...prev, userMessage, loadingMessage]);
-    setInput('');
+    setMessages(prev => [...prev.filter(m => m.id !== userMessage.id && m.id !== loadingId), userMessage, loadingMessage]);
+    if (!customText || input.trim() === text) setInput('');
     requestAnimationFrame(resizeInput);
     setIsSending(true);
 
     try {
-      const response = await sendChatMessage(text, sessionId);
-
-      // Update session if backend sent a new one
-      if (response.sessionId && response.sessionId !== sessionId) {
-        sessionStorage.setItem(SESSION_KEY, response.sessionId);
+      if (!session.sessionToken) {
+        const secured = await bootstrapChatSession(session.sessionId);
+        if (!mountedRef.current || currentChatSession().sessionId !== session.sessionId || readPendingChatTurn()?.requestId !== requestId) return;
+        if (secured) {
+          if (pendingRequestRef.current?.dispatched) throw new ChatbotMessageError(409, 'CHAT_SESSION_LEGACY_RECOVERY_REQUIRED');
+          session = secured;
+          storeChatSession(session);
+          if (secured.previousSessionPreserved) setSendNotice('Phiên chat cũ vẫn được giữ, nhưng không thể khôi phục lịch sử nếu thiếu mã xác thực phiên.');
+          pendingRequestRef.current = { text, sessionId: session.sessionId, requestId, dispatched: false };
+          storePendingChatTurn(pendingRequestRef.current);
+        }
       }
+      // The session and requestId have been persisted before any user turn can be accepted.
+      pendingRequestRef.current = { text, sessionId: session.sessionId, requestId, dispatched: true };
+      storePendingChatTurn(pendingRequestRef.current);
+      const response = await sendChatMessage(text, session.sessionId, session.sessionToken, requestId);
+      // A late response from an unmounted widget must not replace an explicitly reset session.
+      if (currentChatSession().sessionId !== session.sessionId || readPendingChatTurn()?.requestId !== requestId) return;
+      const returnedId = typeof response.sessionId === 'string' && response.sessionId.length > 0 && response.sessionId.length <= 100
+        ? response.sessionId : session.sessionId;
+      const returnedToken = typeof response.sessionToken === 'string' && response.sessionToken.length <= 512
+        ? response.sessionToken : returnedId === session.sessionId ? session.sessionToken : undefined;
+      storeChatSession({ sessionId: returnedId, sessionToken: returnedToken });
+      pendingRequestRef.current = { text, sessionId: returnedId, requestId, dispatched: true };
+      storePendingChatTurn(pendingRequestRef.current);
+      if (!mountedRef.current) return;
 
       // Build assistant message from response
       const assistantMessage: ChatMessage = {
@@ -200,20 +295,28 @@ export function ChatWidget() {
         assistantMessage.text = response.response || 'Đã nhận được phản hồi từ hệ thống.';
       }
 
+      if (!mountedRef.current || currentChatSession().sessionId !== returnedId || readPendingChatTurn()?.requestId !== requestId) return;
       setMessages(prev => prev.map(m => m.id === loadingId ? assistantMessage : m));
+      pendingRequestRef.current = null;
+      storePendingChatTurn(null);
+      setUnsentMessage('');
     } catch (error) {
-      const previousProducts = [...messages].reverse().find(message => message.products?.length)?.products || [];
-      const quotationFallback = await resolveQuotationIntent(text, {}, previousProducts);
-      setMessages(prev => prev.map(m => m.id === loadingId ? {
-        id: crypto.randomUUID(),
-        role: 'assistant',
-        createdAt: Date.now(),
-        isError: quotationFallback?.isError ?? !quotationFallback,
-        text: quotationFallback?.text || 'Không thể kết nối chatbot. Vui lòng thử lại.' ,
-        products: quotationFallback?.products,
-      } : m));
+      if (readPendingChatTurn()?.requestId !== requestId) return;
+      if (!previouslyDispatched && error instanceof ChatbotMessageError && ['CHAT_SESSION_BUSY', 'CHAT_SESSION_UPGRADE_REQUIRED', 'CHAT_SERVICE_UNAVAILABLE'].includes(error.code || '') && pendingRequestRef.current) {
+        pendingRequestRef.current.dispatched = false; // These responses precede user-turn creation.
+        storePendingChatTurn(pendingRequestRef.current);
+      }
+      if (!mountedRef.current) return;
+      // Keep a single persisted pending turn. No quotation fallback or automatic resend on a
+      // transport error: the server may already have committed this exact requestId.
+      setMessages(prev => prev.filter(m => m.id !== loadingId && m.id !== userMessage.id));
+      setUnsentMessage(text);
+      setSendNotice(error instanceof ChatbotMessageError ? error.message : 'Chưa nhận được phản hồi. Tin nhắn đang chờ vẫn được giữ để thử lại.');
+      setInvalidSession(error instanceof ChatbotMessageError &&
+        (error.code === 'CHAT_SESSION_INVALID' || error.code === 'CHAT_REQUEST_ID_CONFLICT' || error.code === 'CHAT_SESSION_LEGACY_RECOVERY_REQUIRED'));
     } finally {
-      setIsSending(false);
+      sendingRef.current = false;
+      if (mountedRef.current) setIsSending(false);
     }
   };
 
@@ -326,6 +429,7 @@ export function ChatWidget() {
               <div className="flex items-center gap-1">
                 <button
                   onClick={handleResetChat}
+                  disabled={isSending}
                   className="w-8 h-8 flex items-center justify-center text-neutral-400 hover:text-neutral-700 hover:bg-neutral-100/80 rounded-full transition-colors"
                   title="Làm mới hội thoại"
                   aria-label="Làm mới hội thoại"
@@ -371,6 +475,7 @@ export function ChatWidget() {
                       <button
                         key={idx}
                         onClick={() => handleSend(prompt.query)}
+                        disabled={isSending || isRestoringSession || Boolean(unsentMessage) || invalidSession}
                         className="group flex items-center justify-between p-2.5 bg-white/90 hover:bg-white border border-neutral-200/80 hover:border-blue-300 rounded-xl text-left shadow-xs hover:shadow-sm transition-all duration-200"
                       >
                         <div className="flex items-center gap-2 min-w-0">
@@ -405,7 +510,6 @@ export function ChatWidget() {
                   placeholder="Hỏi về sản phẩm, giá, cấu hình..."
                   className="w-full max-h-28 overflow-y-hidden bg-transparent resize-none outline-none py-2 text-[13.5px] text-neutral-900 placeholder:text-neutral-400 font-normal leading-relaxed"
                   rows={1}
-                  disabled={isSending}
                   style={{
                     minHeight: '38px',
                     height: '38px',
@@ -414,9 +518,9 @@ export function ChatWidget() {
 
                 <button
                   onClick={() => handleSend()}
-                  disabled={!input.trim() || isSending}
+                  disabled={!input.trim() || isSending || isRestoringSession || Boolean(unsentMessage) || invalidSession}
                   className={`w-9 h-9 shrink-0 rounded-xl flex items-center justify-center transition-all duration-200 mb-0.5 mr-0.5 ${
-                    input.trim() && !isSending
+                    input.trim() && !isSending && !isRestoringSession && !unsentMessage && !invalidSession
                       ? 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-md shadow-blue-500/25 active:scale-95'
                       : 'bg-neutral-200/70 text-neutral-400 cursor-not-allowed'
                   }`}
@@ -429,6 +533,25 @@ export function ChatWidget() {
                   )}
                 </button>
               </div>
+
+              {isSending && (
+                <p role="status" className="mt-2 px-1 text-xs text-neutral-500">Đang xử lý. Bạn có thể soạn tin tiếp theo.</p>
+              )}
+              {isRestoringSession && !isSending && (
+                <p role="status" className="mt-2 px-1 text-xs text-neutral-500">Đang khôi phục phiên chat…</p>
+              )}
+              {(unsentMessage || sendNotice) && !isSending && (
+                <div role="status" className="mt-2 rounded-xl bg-amber-50 px-3 py-2 text-xs text-amber-900">
+                  <p>{sendNotice || 'Có tin nhắn đang chờ hoàn tất. Bạn có thể thử lại khi sẵn sàng.'}</p>
+                  {unsentMessage && <p className="mt-1 break-words whitespace-pre-wrap">{unsentMessage}</p>}
+                  {unsentMessage && !invalidSession && (
+                    <button type="button" className="mt-1 font-semibold underline" onClick={() => handleSend(unsentMessage)}>Thử lại tin nhắn</button>
+                  )}
+                  {invalidSession && (
+                    <button type="button" className="mt-1 font-semibold underline" onClick={handleResetChat}>Bắt đầu cuộc trò chuyện mới</button>
+                  )}
+                </div>
+              )}
 
               {/* Micro-hint */}
               <div className="mt-2 px-1 flex items-center justify-between text-[11px] text-neutral-400">

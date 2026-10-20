@@ -62,7 +62,7 @@ function CategoryPageContent({ config }: { config: (typeof CATEGORY_CONFIGS)[str
   const currentPage = Math.max(1, parseInt(searchParams.get('page') || '1', 10) || 1);
 
   // Fetch products (server-side filtering + pagination)
-  const fetchProducts = async () => {
+  const fetchProducts = async ({ signal }: { signal: AbortSignal }) => {
     const params = new URLSearchParams(searchParams);
     // Overwrite category filter
     params.set('category', config.slug);
@@ -72,7 +72,7 @@ function CategoryPageContent({ config }: { config: (typeof CATEGORY_CONFIGS)[str
     }
     params.set('page', String(currentPage));
     params.set('limit', String(pageSize));
-    const res = await fetch(`${API_URL}/api/products/search?${params.toString()}`);
+    const res = await fetch(`${API_URL}/api/products/search?${params.toString()}`, { signal });
     if (!res.ok) throw new Error('Failed to fetch products');
     return res.json();
   };
@@ -89,10 +89,10 @@ function CategoryPageContent({ config }: { config: (typeof CATEGORY_CONFIGS)[str
   // Actually, standard API should provide filters, but for UI sake, we can map brands from `productsData.products`
   // or use a predefined list if API doesn't return aggregated brands.
   // Wait, let's fetch available filters as well
-  const fetchFilters = async () => {
+  const fetchFilters = async ({ signal }: { signal: AbortSignal }) => {
     const params = new URLSearchParams();
     params.set('category', config.slug);
-    const res = await fetch(`${API_URL}/api/products/filters?${params.toString()}`);
+    const res = await fetch(`${API_URL}/api/products/filters?${params.toString()}`, { signal });
     if (!res.ok) throw new Error('Failed to fetch filters');
     return res.json();
   };

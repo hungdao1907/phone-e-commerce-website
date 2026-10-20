@@ -659,12 +659,16 @@ model BankTransaction {
 // ========== CUSTOMER CHAT CONTEXT ==========
 
 model ChatConversation {
-  id        String        @id @default(uuid())
-  sessionId String        @unique
-  context   Json?
-  createdAt DateTime      @default(now())
-  updatedAt DateTime      @updatedAt
-  messages  ChatMessage[]
+  id             String        @id @default(uuid())
+  sessionId      String        @unique
+  context        Json?
+  leaseToken     String?
+  leaseExpiresAt DateTime?
+  fencingVersion BigInt        @default(0)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  messages       ChatMessage[]
+  turns          ChatTurn[]
 
   @@index([updatedAt])
 }
@@ -674,8 +678,28 @@ model ChatMessage {
   conversationId String
   role           String // user, assistant
   content        String
+  turnId         String?
   createdAt      DateTime         @default(now())
   conversation   ChatConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  turn           ChatTurn?         @relation(fields: [turnId], references: [id], onDelete: Cascade)
 
   @@index([conversationId, createdAt])
+  @@index([turnId])
+}
+
+model ChatTurn {
+  id               String           @id @default(uuid())
+  conversationId   String
+  requestId        String
+  requestHash      String
+  status           String           @default("PENDING")
+  response         Json?
+  createdAt        DateTime         @default(now())
+  completedAt      DateTime?
+  completedVersion BigInt?
+  conversation     ChatConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  messages         ChatMessage[]
+
+  @@unique([conversationId, requestId])
+  @@index([conversationId, status, completedVersion])
 }

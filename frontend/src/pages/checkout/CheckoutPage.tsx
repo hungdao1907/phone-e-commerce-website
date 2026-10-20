@@ -36,11 +36,11 @@ export function CheckoutPage() {
   }, [items.length, navigate]);
 
   useEffect(() => {
-    if (deliveryInfo.cityCode) void fetchDistricts(deliveryInfo.cityCode);
-  }, [deliveryInfo.cityCode]);
+    void fetchDistricts(deliveryInfo.cityCode || '');
+  }, [deliveryInfo.cityCode, fetchDistricts]);
   useEffect(() => {
-    if (deliveryInfo.districtCode) void fetchWards(deliveryInfo.districtCode);
-  }, [deliveryInfo.districtCode]);
+    void fetchWards(deliveryInfo.districtCode || '');
+  }, [deliveryInfo.districtCode, fetchWards]);
 
   const validate = () => {
     const newErrors: Record<string, string> = {};
@@ -272,7 +272,6 @@ export function CheckoutPage() {
                             wardCode: undefined, ward: ''
                           });
                           if(errors.city) setErrors({...errors, city: ''});
-                          fetchDistricts(code);
                         }}
                         className={`w-full h-11 px-4 bg-white border ${errors.city ? 'border-red-500 focus:ring-red-500' : 'border-neutral-200 focus:ring-black'} rounded-xl text-sm text-neutral-900 focus:outline-none focus:ring-2 focus:border-transparent transition-shadow cursor-pointer`}
                       >
@@ -296,7 +295,6 @@ export function CheckoutPage() {
                             wardCode: undefined, ward: ''
                           });
                           if(errors.district) setErrors({...errors, district: ''});
-                          fetchWards(code);
                         }}
                         disabled={!deliveryInfo.cityCode}
                         className={`w-full h-11 px-4 bg-white border ${errors.district ? 'border-red-500 focus:ring-red-500' : 'border-neutral-200 focus:ring-black'} rounded-xl text-sm text-neutral-900 focus:outline-none focus:ring-2 focus:border-transparent transition-shadow cursor-pointer disabled:opacity-50 disabled:bg-neutral-100`}

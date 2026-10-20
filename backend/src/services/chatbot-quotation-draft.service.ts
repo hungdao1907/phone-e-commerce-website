@@ -17,12 +17,15 @@ export function isQuotationDraftResponse(value: Record<string, any>): boolean {
 }
 
 /** Workflow IDs are hints. Money, attributes and stock are re-read from the Backend catalog. */
-export async function prepareQuotationDraftResponse(value: Record<string, any>, sessionId: string, database: ChatbotCatalogDatabase) {
+export async function prepareQuotationDraftResponse(
+  value: Record<string, any>, sessionId: string, database: ChatbotCatalogDatabase, onCatalogRehydrationAttempt?: () => void
+) {
   const rawResults: Record<string, any>[] = value.request_results.filter(record);
   const ids = [...new Set(rawResults.flatMap(item => {
     const id = item.product?.id || item.resolved_product?.product_id || item.resolved_product?.id;
     return safeId(id) ? [id] : [];
   }))].slice(0, 12);
+  if (ids.length) onCatalogRehydrationAttempt?.();
   const catalog = ids.length ? await resolveChatbotCatalogProducts(database, ids) : [];
   const productsById = new Map(catalog.map(product => [product.id, product]));
   const products: Array<(typeof catalog)[number] & { selected_variant_id?: string; quotation_quantity?: number }> = [];

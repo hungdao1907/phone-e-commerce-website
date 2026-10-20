@@ -15,6 +15,8 @@ import {
   Loader2,
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { navSearchQuery } from './nav-search-query';
 
 interface NavSearchModalProps {
   isOpen: boolean;
@@ -73,45 +75,19 @@ function formatVND(amount: number): string {
 
 export function NavSearchModal({ isOpen, onClose }: NavSearchModalProps) {
   const [query, setQuery] = useState('');
-  const [products, setProducts] = useState<ProductItem[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const { data: products = [], isFetching: isLoading, isError, refetch } = useQuery(
+    navSearchQuery<ProductItem>(import.meta.env.VITE_API_URL || 'http://localhost:3001', isOpen),
+  );
   const inputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
-
-  // Load products on initial open or mount
-  useEffect(() => {
-    let isMounted = true;
-    const fetchProducts = async () => {
-      try {
-        setIsLoading(true);
-        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
-        const res = await fetch(`${apiUrl}/api/products`);
-        if (res.ok) {
-          const data = await res.json();
-          if (isMounted && Array.isArray(data)) {
-            setProducts(data);
-          }
-        }
-      } catch (err) {
-        console.error('Error fetching search products:', err);
-      } finally {
-        if (isMounted) setIsLoading(false);
-      }
-    };
-
-    fetchProducts();
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
 
   // Focus input on open
   useEffect(() => {
     if (isOpen) {
-      setTimeout(() => {
+      const timer = setTimeout(() => {
         inputRef.current?.focus();
       }, 50);
+      return () => clearTimeout(timer);
     } else {
       setQuery('');
     }
@@ -241,6 +217,8 @@ export function NavSearchModal({ isOpen, onClose }: NavSearchModalProps) {
 
           {/* Body Content */}
           <div className="mt-5 max-h-[65vh] overflow-y-auto pr-1">
+            {isLoading && !query.trim() && <p role="status" className="py-3 text-sm text-neutral-500">Đang tải sản phẩm…</p>}
+            {isError && <div role="alert" className="mb-3 text-sm text-red-600">Không thể tải sản phẩm. <button type="button" onClick={() => void refetch()} disabled={isLoading} className="underline disabled:opacity-50">Thử lại</button></div>}
             {/* 1. STATE: Query Typed -> Show Results */}
             {query.trim() ? (
               <div>
@@ -249,7 +227,7 @@ export function NavSearchModal({ isOpen, onClose }: NavSearchModalProps) {
                     KẾT QUẢ TÌM KIẾM ({searchResults.length})
                   </span>
                   {isLoading && (
-                    <span className="flex items-center gap-1.5 text-xs text-neutral-400">
+                    <span role="status" className="flex items-center gap-1.5 text-xs text-neutral-400">
                       <Loader2 className="w-3.5 h-3.5 animate-spin" /> Đang tìm...
                     </span>
                   )}
@@ -315,7 +293,7 @@ export function NavSearchModal({ isOpen, onClose }: NavSearchModalProps) {
                       );
                     })}
                   </div>
-                ) : (
+                ) : isLoading || isError ? null : (
                   <div className="py-8 text-center text-neutral-500">
                     <p className="text-sm font-medium">
                       Không tìm thấy sản phẩm nào khớp với từ khóa{' '}
